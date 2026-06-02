@@ -2,6 +2,8 @@
 
 個人用の full-stack 実験場です。ポートフォリオ、日記、試作、小さな有料サービスなどを載せる想定です。
 
+**ディレクトリ構造・基盤の詳細** → [docs/project-guide.md](./docs/project-guide.md)
+
 ## 技術スタック
 
 - Next.js 16（App Router）+ TypeScript + React 19

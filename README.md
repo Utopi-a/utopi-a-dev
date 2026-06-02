@@ -1,44 +1,133 @@
 # utopi-a.dev
 
-Personal full-stack lab — portfolio, diary, experiments, and mini services.
+個人用の full-stack 実験場です。ポートフォリオ、日記、試作、小さな有料サービスなどを載せる想定です。
 
-## Stack
+## 技術スタック
 
-- Next.js 16 (App Router) + TypeScript + React 19
+- Next.js 16（App Router）+ TypeScript + React 19
 - Tailwind CSS v4 + shadcn/ui
 - Drizzle ORM + PostgreSQL
-- Better Auth (GitHub OAuth)
-- Hono (RPC API on Route Handlers)
+- Better Auth（GitHub OAuth）
+- Hono（Route Handler 上の RPC API）
 - Biome + Lefthook + Vitest
+- [Doppler](https://www.doppler.com/)（環境変数の共有・同期）
 
-## Development
+## 開発の始め方
+
+### 1. 依存関係のインストール
 
 ```bash
 pnpm install
-cp .env.example .env.local
-# Fill DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, GitHub OAuth keys
+```
+
+### 2. 環境変数（Doppler）
+
+シークレットの正は **Doppler** です。`.env.local` は使わず、`doppler run` でプロセスに注入します。
+
+#### 初回セットアップ（自分のマシン）
+
+```bash
+# CLI が未導入の場合（macOS）
+brew install dopplerhq/cli/doppler
+
+doppler login
+pnpm env:setup   # リポジトリの doppler.yaml に従って紐付け
+```
+
+#### チームで同じシークレットを使う
+
+1. Doppler の Workplace にメンバーを招待（Dashboard → Team）
+2. リポジトリを clone し、`doppler login` → `pnpm env:setup` を実行
+3. Dashboard の `utopi-a-dev` → **dev** config で値を確認・編集（権限のあるメンバーが設定済みならそのまま利用可能）
+
+Workplace にプロジェクトがまだない場合:
+
+```bash
+doppler import   # doppler-template.yaml から utopi-a-dev を作成
+pnpm env:setup
+```
+
+#### シークレットの編集
+
+```bash
+pnpm env:open    # Doppler Dashboard を開く
+```
+
+CLI から設定する例:
+
+```bash
+doppler secrets set DATABASE_URL="postgresql://..." --plain
+```
+
+`.env.example` は **変数名の一覧** 用です。実際の値は Doppler にのみ保存してください。
+
+| Config | 用途 |
+| --- | --- |
+| `dev` | ローカル開発（`pnpm dev` が参照） |
+| `stg` | ステージング / Vercel Preview |
+| `prd` | 本番 / Vercel Production |
+
+### 3. データベースと開発サーバー
+
+```bash
+# dev config に DATABASE_URL などを設定したあと
 pnpm db:migrate
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+ブラウザで [http://localhost:3000](http://localhost:3000) を開きます。
 
-## Scripts
+Doppler を使わず Next だけ起動する場合（UI の確認など、シークレット不要なとき）:
 
-| Script | Description |
+```bash
+pnpm exec next dev --turbopack
+```
+
+## npm スクリプト
+
+| コマンド | 説明 |
 | --- | --- |
-| `pnpm dev` | Dev server (Turbopack) |
-| `pnpm build` | Production build |
-| `pnpm check` | Biome format + lint |
-| `pnpm test:run` | Vitest |
-| `pnpm typecheck` | TypeScript |
-| `pnpm db:generate` | Drizzle migration generate |
-| `pnpm db:migrate` | Apply migrations |
+| `pnpm dev` | 開発サーバー（Turbopack、Doppler 経由で env 注入） |
+| `pnpm build` | 本番ビルド |
+| `pnpm start` | 本番サーバー起動 |
+| `pnpm check` | Biome による format + lint |
+| `pnpm test:run` | Vitest（単発実行） |
+| `pnpm typecheck` | TypeScript の型チェック |
+| `pnpm db:generate` | Drizzle マイグレーション生成 |
+| `pnpm db:migrate` | マイグレーション適用 |
+| `pnpm db:studio` | Drizzle Studio |
+| `pnpm env:setup` | `doppler setup --no-interactive` |
+| `pnpm env:open` | Doppler Dashboard を開く |
 
-## Routes
+## デプロイ（Vercel）
 
-**Public:** `/`, `/work`, `/lab`, `/blog`
+1. [Doppler と Vercel の連携](https://docs.doppler.com/docs/vercel)を Dashboard で設定する
+2. `utopi-a-dev` の **stg** を Vercel Preview、**prd** を Production に同期する
+3. 以降、Doppler 上でシークレットを更新すると Vercel に反映される
 
-**App (protected):** `/dashboard`, `/diary`, `/settings`
+## CI（GitHub Actions）
 
-**API:** `/api/auth/*`, `/api/rpc/health`, `/api/webhooks/stripe`
+1. Doppler で Environment **GitHub** を作成する（Options → Create Environment）
+2. [GitHub 連携](https://docs.doppler.com/docs/github-actions)で `utopi-a-dev` の config を Repository secrets に同期する
+3. Workflow 内で `doppler run -- pnpm test:run` などを実行する（`DOPPLER_TOKEN` は連携で注入される）
+
+## ルート一覧
+
+**公開**
+
+- `/` — トップ
+- `/work` — 作品
+- `/lab` — 実験
+- `/blog` — ブログ
+
+**アプリ（要ログイン、`proxy` でガード）**
+
+- `/dashboard` — ダッシュボード
+- `/diary` — 日記
+- `/settings` — 設定
+
+**API**
+
+- `/api/auth/*` — Better Auth
+- `/api/rpc/health` — Hono ヘルスチェック
+- `/api/webhooks/stripe` — Stripe Webhook（スタブ）

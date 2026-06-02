@@ -25,7 +25,11 @@ export function toAuthErrorMessage({ error }: { error: unknown }) {
   }
 
   if (normalized.includes("password") && normalized.includes("short")) {
-    return "パスワードは12文字以上にしてください。";
+    return "パスワードは8文字以上にしてください。";
+  }
+
+  if (normalized.includes("password") && normalized.includes("too long")) {
+    return "パスワードは128文字以内にしてください。";
   }
 
   if (normalized.includes("email not verified") || normalized.includes("email_not_verified")) {

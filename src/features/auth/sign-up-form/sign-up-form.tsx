@@ -1,13 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/features/auth/auth-client";
 import { authEmailCallbackPaths } from "@/features/auth/auth-email-env";
 import { toAuthErrorMessage } from "@/features/auth/auth-error-message/auth-error-message";
+import {
+  evaluatePassword,
+  getPasswordPolicyError,
+} from "@/features/auth/password-policy/evaluate-password";
+import { passwordPolicyLimits } from "@/features/auth/password-policy/password-policy";
+import { PasswordStrengthPanel } from "@/features/auth/password-policy/password-strength-panel";
 import { storePendingVerificationEmail } from "@/features/auth/resend-verification-form/resend-verification-form";
 
 type SignUpFormProps = {
@@ -28,10 +34,20 @@ export function SignUpForm({
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const passwordEvaluation = useMemo(() => evaluatePassword({ password }), [password]);
+  const canSubmit = passwordEvaluation.meetsRequiredPolicy && name.length > 0 && email.length > 0;
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsPending(true);
     setErrorMessage(null);
+
+    const policyError = getPasswordPolicyError({ password });
+    if (policyError) {
+      setErrorMessage(policyError);
+      setIsPending(false);
+      return;
+    }
 
     const result = await authClient.signUp.email({
       name,
@@ -82,16 +98,21 @@ export function SignUpForm({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="sign-up-password">パスワード（12文字以上）</Label>
+        <Label htmlFor="sign-up-password">パスワード</Label>
         <Input
           id="sign-up-password"
           type="password"
           autoComplete="new-password"
           required
-          minLength={12}
+          minLength={passwordPolicyLimits.minLength}
+          maxLength={passwordPolicyLimits.maxLength}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
+          aria-describedby="sign-up-password-strength"
         />
+        <div id="sign-up-password-strength">
+          <PasswordStrengthPanel password={password} idPrefix="sign-up" />
+        </div>
       </div>
       {sendsVerificationEmail ? (
         <p className="text-xs text-muted-foreground">
@@ -100,7 +121,7 @@ export function SignUpForm({
         </p>
       ) : null}
       {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button type="submit" className="w-full" disabled={isPending || !canSubmit}>
         {isPending ? "登録中…" : "アカウントを作成"}
       </Button>
     </form>

@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/features/auth/auth-client";
 import { toAuthErrorMessage } from "@/features/auth/auth-error-message/auth-error-message";
+import {
+  evaluatePassword,
+  getPasswordPolicyError,
+} from "@/features/auth/password-policy/evaluate-password";
+import { passwordPolicyLimits } from "@/features/auth/password-policy/password-policy";
+import { PasswordStrengthPanel } from "@/features/auth/password-policy/password-strength-panel";
 
 type ResetPasswordFormProps = {
   token: string;
@@ -19,10 +25,20 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const passwordEvaluation = useMemo(() => evaluatePassword({ password }), [password]);
+  const canSubmit = passwordEvaluation.meetsRequiredPolicy;
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsPending(true);
     setErrorMessage(null);
+
+    const policyError = getPasswordPolicyError({ password });
+    if (policyError) {
+      setErrorMessage(policyError);
+      setIsPending(false);
+      return;
+    }
 
     const result = await authClient.resetPassword({
       newPassword: password,
@@ -42,19 +58,24 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2">
-        <Label htmlFor="reset-password">新しいパスワード（12文字以上）</Label>
+        <Label htmlFor="reset-password">新しいパスワード</Label>
         <Input
           id="reset-password"
           type="password"
           autoComplete="new-password"
           required
-          minLength={12}
+          minLength={passwordPolicyLimits.minLength}
+          maxLength={passwordPolicyLimits.maxLength}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
+          aria-describedby="reset-password-strength"
         />
+        <div id="reset-password-strength">
+          <PasswordStrengthPanel password={password} idPrefix="reset" />
+        </div>
       </div>
       {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button type="submit" className="w-full" disabled={isPending || !canSubmit}>
         {isPending ? "更新中…" : "パスワードを更新"}
       </Button>
       <Link

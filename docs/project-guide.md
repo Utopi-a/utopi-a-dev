@@ -316,8 +316,9 @@ Doppler プロジェクト `utopi-a-dev`、config は `dev` / `stg` / `prd`。
 
 - `src/lib/cn.test.ts`
 - `src/features/blog/schema.test.ts`
+- `src/features/auth/**/*.test.{ts,tsx}` — パスワードポリシー、env 解釈、エラーメッセージ、Resend 送信、SSO 構成、コールバック URL など
 
-React コンポーネントテストは UI が固まってからでよい、という方針です。
+`pnpm test:run` で一括実行。pre-commit でもステージされたテストが走る。
 
 ---
 

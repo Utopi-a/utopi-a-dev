@@ -9,6 +9,7 @@ import {
 } from "@/features/auth/auth-email-env";
 import { getTrustedOrigins, isSignUpAllowed } from "@/features/auth/auth-env";
 import { buildSocialProviders } from "@/features/auth/build-social-providers/build-social-providers";
+import { passwordPolicyLimits } from "@/features/auth/password-policy/password-policy";
 import { sendPasswordResetEmailContent } from "@/features/auth/send-auth-email/send-password-reset-email";
 import { sendVerificationEmailContent } from "@/features/auth/send-auth-email/send-verification-email";
 
@@ -47,8 +48,8 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     disableSignUp: !isSignUpAllowed(),
-    minPasswordLength: 12,
-    maxPasswordLength: 128,
+    minPasswordLength: passwordPolicyLimits.minLength,
+    maxPasswordLength: passwordPolicyLimits.maxLength,
     autoSignIn: !isEmailVerificationRequired(),
     requireEmailVerification: isEmailVerificationRequired(),
     sendResetPassword: async ({ user, url }) => {

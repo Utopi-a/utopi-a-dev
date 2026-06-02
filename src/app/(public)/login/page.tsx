@@ -7,6 +7,7 @@ import {
 import { isSignUpAllowed } from "@/features/auth/auth-env";
 import { getSession } from "@/features/auth/get-session/get-session";
 import { LoginView } from "@/features/auth/login-view/login-view";
+import { resolveAuthCallbackURL } from "@/features/auth/resolve-auth-callback-url/resolve-auth-callback-url";
 import {
   listEnabledSocialProviderIds,
   listEnabledSocialProviderUi,
@@ -18,17 +19,10 @@ type LoginPageProps = {
   }>;
 };
 
-function resolveCallbackURL({ next }: { next?: string }) {
-  if (next?.startsWith("/") && !next.startsWith("//")) {
-    return next;
-  }
-  return "/lab";
-}
-
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await getSession();
   const { next } = await searchParams;
-  const callbackURL = resolveCallbackURL({ next });
+  const callbackURL = resolveAuthCallbackURL({ next });
   const enabledIds = listEnabledSocialProviderIds();
   const socialProviders = listEnabledSocialProviderUi({ enabledIds });
 

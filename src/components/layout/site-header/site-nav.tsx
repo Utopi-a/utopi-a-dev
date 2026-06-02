@@ -8,6 +8,8 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
+  SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -16,7 +18,17 @@ import { publicNavItems } from "@/features/portfolio/site-config";
 import { SocialLinks } from "@/features/portfolio/social-links/social-links";
 import { cn } from "@/lib/cn";
 
-function NavLink({ href, label, onClick }: { href: string; label: string; onClick?: () => void }) {
+function NavLink({
+  href,
+  label,
+  onClick,
+  stacked = false,
+}: {
+  href: string;
+  label: string;
+  onClick?: () => void;
+  stacked?: boolean;
+}) {
   const pathname = usePathname();
   const isActive = pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
 
@@ -25,7 +37,8 @@ function NavLink({ href, label, onClick }: { href: string; label: string; onClic
       href={href}
       onClick={onClick}
       className={cn(
-        "rounded-lg px-3 py-1.5 text-sm transition-colors",
+        "rounded-lg text-sm transition-colors",
+        stacked ? "block w-full px-4 py-3 text-base" : "px-3 py-1.5",
         isActive
           ? "bg-primary/10 font-medium text-primary"
           : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
@@ -51,20 +64,28 @@ export function SiteNav() {
             <MenuIcon className="size-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-[min(100%,20rem)]">
-          <SheetHeader>
+        <SheetContent
+          side="right"
+          className="flex w-[min(100%,20rem)] flex-col gap-0 p-0 sm:max-w-xs"
+        >
+          <SheetHeader className="shrink-0 space-y-0 border-b border-border/50 px-6 pt-6 pb-5">
             <SheetTitle className="text-left">メニュー</SheetTitle>
+            <SheetDescription className="sr-only">サイト内のページへ移動</SheetDescription>
           </SheetHeader>
-          <nav className="mt-6 flex flex-col gap-1" aria-label="モバイル">
+
+          <nav className="flex flex-1 flex-col gap-1.5 px-6 py-5" aria-label="モバイル">
             {publicNavItems.map((item) => (
               <SheetClose key={item.href} asChild>
-                <NavLink href={item.href} label={item.label} />
+                <NavLink href={item.href} label={item.label} stacked />
               </SheetClose>
             ))}
           </nav>
-          <div className="mt-8 border-t border-border/60 pt-6">
-            <SocialLinks size="sm" />
-          </div>
+
+          <SheetFooter className="mt-auto shrink-0 border-t border-border/50 p-0">
+            <div className="w-full px-6 py-6">
+              <SocialLinks size="sm" />
+            </div>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     </>

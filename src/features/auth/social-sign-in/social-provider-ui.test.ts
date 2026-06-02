@@ -3,6 +3,7 @@ import {
   listEnabledSocialProviderIds,
   listEnabledSocialProviderUi,
 } from "@/features/auth/social-sign-in/social-provider-ui";
+import { authSecretFixtures } from "@/features/auth/test-fixtures/auth-secret-fixtures";
 
 describe("listEnabledSocialProviderIds", () => {
   afterEach(() => {
@@ -14,8 +15,8 @@ describe("listEnabledSocialProviderIds", () => {
   });
 
   it("GitHub のみ", () => {
-    vi.stubEnv("GITHUB_CLIENT_ID", "id");
-    vi.stubEnv("GITHUB_CLIENT_SECRET", "secret");
+    vi.stubEnv("GITHUB_CLIENT_ID", authSecretFixtures.githubClientId);
+    vi.stubEnv("GITHUB_CLIENT_SECRET", authSecretFixtures.oauthClientSecret);
     expect(listEnabledSocialProviderIds()).toEqual(["github"]);
   });
 });

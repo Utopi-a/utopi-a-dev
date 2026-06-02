@@ -5,6 +5,7 @@ import {
   isEmailVerificationRequired,
   shouldSendVerificationOnSignUp,
 } from "@/features/auth/auth-email-env";
+import { authSecretFixtures } from "@/features/auth/test-fixtures/auth-secret-fixtures";
 
 describe("isEmailVerificationRequired", () => {
   afterEach(() => {
@@ -31,13 +32,13 @@ describe("isAuthEmailConfigured", () => {
   });
 
   it("RESEND の両方があると true", () => {
-    vi.stubEnv("RESEND_API_KEY", "re_test");
-    vi.stubEnv("RESEND_FROM_EMAIL", "test <onboarding@resend.dev>");
+    vi.stubEnv("RESEND_API_KEY", authSecretFixtures.resendApiKey);
+    vi.stubEnv("RESEND_FROM_EMAIL", authSecretFixtures.resendFromEmail);
     expect(isAuthEmailConfigured()).toBe(true);
   });
 
   it("片方だけでは false", () => {
-    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("RESEND_API_KEY", authSecretFixtures.resendApiKey);
     expect(isAuthEmailConfigured()).toBe(false);
   });
 });
@@ -48,8 +49,8 @@ describe("shouldSendVerificationOnSignUp", () => {
   });
 
   it("Resend 設定時のみ true", () => {
-    vi.stubEnv("RESEND_API_KEY", "re_test");
-    vi.stubEnv("RESEND_FROM_EMAIL", "test <onboarding@resend.dev>");
+    vi.stubEnv("RESEND_API_KEY", authSecretFixtures.resendApiKey);
+    vi.stubEnv("RESEND_FROM_EMAIL", authSecretFixtures.resendFromEmail);
     expect(shouldSendVerificationOnSignUp()).toBe(true);
   });
 });

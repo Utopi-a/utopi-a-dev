@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sendAuthEmail } from "@/features/auth/send-auth-email/send-auth-email";
+import { authSecretFixtures } from "@/features/auth/test-fixtures/auth-secret-fixtures";
 
 describe("sendAuthEmail", () => {
   const fetchMock = vi.fn();
@@ -31,8 +32,8 @@ describe("sendAuthEmail", () => {
   });
 
   it("Resend 設定時は API を呼ぶ", async () => {
-    vi.stubEnv("RESEND_API_KEY", "re_test");
-    vi.stubEnv("RESEND_FROM_EMAIL", "App <from@example.com>");
+    vi.stubEnv("RESEND_API_KEY", authSecretFixtures.resendApiKey);
+    vi.stubEnv("RESEND_FROM_EMAIL", authSecretFixtures.resendFromEmail);
     fetchMock.mockResolvedValue({
       ok: true,
       text: async () => "",
@@ -50,15 +51,15 @@ describe("sendAuthEmail", () => {
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({
-          Authorization: "Bearer re_test",
+          Authorization: `Bearer ${authSecretFixtures.resendApiKey}`,
         }),
       }),
     );
   });
 
   it("Resend が失敗したら例外", async () => {
-    vi.stubEnv("RESEND_API_KEY", "re_test");
-    vi.stubEnv("RESEND_FROM_EMAIL", "from@example.com");
+    vi.stubEnv("RESEND_API_KEY", authSecretFixtures.resendApiKey);
+    vi.stubEnv("RESEND_FROM_EMAIL", "fixture@example.com");
     fetchMock.mockResolvedValue({
       ok: false,
       status: 422,

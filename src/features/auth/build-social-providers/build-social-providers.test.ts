@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildSocialProviders } from "@/features/auth/build-social-providers/build-social-providers";
+import { authSecretFixtures } from "@/features/auth/test-fixtures/auth-secret-fixtures";
 
 describe("buildSocialProviders", () => {
   afterEach(() => {
@@ -11,20 +12,26 @@ describe("buildSocialProviders", () => {
   });
 
   it("揃ったプロバイダだけ含める", () => {
-    vi.stubEnv("GITHUB_CLIENT_ID", "gh_id");
-    vi.stubEnv("GITHUB_CLIENT_SECRET", "gh_secret");
-    vi.stubEnv("GOOGLE_CLIENT_ID", "go_id");
-    vi.stubEnv("GOOGLE_CLIENT_SECRET", "go_secret");
+    vi.stubEnv("GITHUB_CLIENT_ID", authSecretFixtures.githubClientId);
+    vi.stubEnv("GITHUB_CLIENT_SECRET", authSecretFixtures.githubClientSecret);
+    vi.stubEnv("GOOGLE_CLIENT_ID", authSecretFixtures.googleClientId);
+    vi.stubEnv("GOOGLE_CLIENT_SECRET", authSecretFixtures.googleClientSecret);
 
     const providers = buildSocialProviders();
     expect(providers).toEqual({
-      github: { clientId: "gh_id", clientSecret: "gh_secret" },
-      google: { clientId: "go_id", clientSecret: "go_secret" },
+      github: {
+        clientId: authSecretFixtures.githubClientId,
+        clientSecret: authSecretFixtures.githubClientSecret,
+      },
+      google: {
+        clientId: authSecretFixtures.googleClientId,
+        clientSecret: authSecretFixtures.googleClientSecret,
+      },
     });
   });
 
   it("ID だけでは含めない", () => {
-    vi.stubEnv("DISCORD_CLIENT_ID", "dc_id");
+    vi.stubEnv("DISCORD_CLIENT_ID", authSecretFixtures.discordClientId);
     expect(buildSocialProviders()).toBeUndefined();
   });
 });

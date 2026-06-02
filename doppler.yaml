@@ -1,0 +1,3 @@
+setup:
+  - project: utopi-a-dev
+    config: dev

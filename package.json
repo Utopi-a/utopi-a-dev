@@ -4,9 +4,11 @@
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
+    "dev": "doppler run -- next dev --turbopack",
+    "build": "doppler run -- next build",
+    "start": "doppler run -- next start",
+    "env:setup": "doppler setup --no-interactive",
+    "env:open": "doppler open dashboard",
     "format": "biome format --write .",
     "lint": "biome lint .",
     "check": "biome check .",
@@ -17,9 +19,9 @@
     "test:ui": "vitest --ui",
     "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:generate": "doppler run -- drizzle-kit generate",
+    "db:migrate": "doppler run -- drizzle-kit migrate",
+    "db:studio": "doppler run -- drizzle-kit studio"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

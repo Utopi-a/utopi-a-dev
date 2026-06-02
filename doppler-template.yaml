@@ -1,0 +1,50 @@
+projects:
+  - name: utopi-a-dev
+    description: utopi-a.dev personal full-stack lab
+
+    environments:
+      - name: Development
+        slug: dev
+        configs:
+          - slug: dev
+
+      - name: Staging
+        slug: stg
+        configs:
+          - slug: stg
+
+      - name: Production
+        slug: prd
+        configs:
+          - slug: prd
+
+    secrets:
+      dev:
+        DATABASE_URL: ""
+        BETTER_AUTH_SECRET: ""
+        BETTER_AUTH_URL: "http://localhost:3000"
+        GITHUB_CLIENT_ID: ""
+        GITHUB_CLIENT_SECRET: ""
+        STRIPE_SECRET_KEY: ""
+        STRIPE_WEBHOOK_SECRET: ""
+        NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+
+      stg:
+        DATABASE_URL: ""
+        BETTER_AUTH_SECRET: ""
+        BETTER_AUTH_URL: ""
+        GITHUB_CLIENT_ID: ""
+        GITHUB_CLIENT_SECRET: ""
+        STRIPE_SECRET_KEY: ""
+        STRIPE_WEBHOOK_SECRET: ""
+        NEXT_PUBLIC_APP_URL: ""
+
+      prd:
+        DATABASE_URL: ""
+        BETTER_AUTH_SECRET: ""
+        BETTER_AUTH_URL: "https://utopi-a.dev"
+        GITHUB_CLIENT_ID: ""
+        GITHUB_CLIENT_SECRET: ""
+        STRIPE_SECRET_KEY: ""
+        STRIPE_WEBHOOK_SECRET: ""
+        NEXT_PUBLIC_APP_URL: "https://utopi-a.dev"

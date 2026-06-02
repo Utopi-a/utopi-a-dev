@@ -10,7 +10,8 @@
     "format": "biome format --write .",
     "lint": "biome lint .",
     "check": "biome check .",
-    "check:write": "biome check --write ."
+    "check:write": "biome check --write .",
+    "prepare": "lefthook install"
   },
   "dependencies": {
     "next": "16.2.7",
@@ -23,6 +24,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "lefthook": "^2.1.9",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LabStudioPanel } from "@/features/auth/lab-studio-panel/lab-studio-panel";
 import { labEntries } from "@/features/portfolio/lab-content";
 import { PageHeader } from "@/features/portfolio/page-header/page-header";
 import { cn } from "@/lib/cn";
@@ -12,7 +13,13 @@ const statusLabel = {
 export function LabView() {
   return (
     <div className="flex flex-col gap-10 sm:gap-12">
-      <PageHeader eyebrow="Lab" title="実験" />
+      <PageHeader
+        eyebrow="Lab"
+        title="実験"
+        description="認証・ブログ・課金など、個人サイトの裏側の試作を置くエリアです。"
+      />
+
+      <LabStudioPanel />
 
       <ul className="grid gap-4 sm:grid-cols-2">
         {labEntries.map((entry) => (

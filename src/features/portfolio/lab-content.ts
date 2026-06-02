@@ -13,9 +13,15 @@ export const labEntries: LabEntry[] = [
     status: "active",
   },
   {
+    id: "auth-studio",
+    title: "認証 Studio",
+    description: "Better Auth（メール / SSO）とログイン後エリア。Lab 上部の Studio から入る。",
+    status: "active",
+  },
+  {
     id: "blog-engine",
     title: "ブログ基盤",
-    description: "記事の下書き・公開フローをこのリポジトリ内で整備予定。",
+    description: "記事の下書き・公開は /lab/blog/manage で整備予定。",
     status: "planned",
   },
   {

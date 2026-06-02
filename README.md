@@ -58,10 +58,17 @@ pnpm env:open    # Doppler Dashboard を開く
 CLI から設定する例:
 
 ```bash
-doppler secrets set DATABASE_URL="postgresql://..." --plain
+doppler secrets set DATABASE_URL="postgresql://..."
 ```
 
 `.env.example` は **変数名の一覧** 用です。実際の値は Doppler にのみ保存してください。
+
+認証まわり（`dev` / `stg` / `prd` それぞれに設定）:
+
+| 変数 | dev の目安 | stg / prd の目安 |
+| --- | --- | --- |
+| `AUTH_ALLOW_SIGNUP` | `true`（ローカルで登録試験） | `false`（招待・OAuth のみ等） |
+| `OWNER_EMAILS` | 自分のメール（任意） | 本番オーナーのメール（カンマ区切り） |
 
 | Config | 用途 |
 | --- | --- |
@@ -122,12 +129,26 @@ pnpm exec next dev --turbopack
 - `/work` — 制作物
 - `/blog` — ブログ（公開記事一覧）
 - `/lab` — 実験・試作
+- `/login` — ログイン・新規登録（GitHub SSO 含む）
+- `/forgot-password` — パスワードリセット依頼
+- `/reset-password` — 新パスワード設定（メールのトークン）
 
-**アプリ（要ログイン、`proxy` でガード）**
+**Lab / Studio（ログイン後、`proxy` でガード）**
 
-- `/dashboard` — ダッシュボード
-- `/blog/manage` — ブログ（記事の作成・編集）
-- `/settings` — 設定
+未ログイン時は `/login?next=<元のパス>` へリダイレクトされます。入口は公開の `/lab`（ヘッダーに Studio リンクは出しません）。
+
+- `/lab` — 実験一覧 + Studio パネル（ログイン / ログアウト）
+- `/lab/studio` — ダッシュボード
+- `/lab/blog/manage` — ブログ管理
+- `/lab/settings` — アカウント
+
+**SSO（環境変数が揃ったプロバイダだけボタン表示）**
+
+GitHub / Google / Discord / X (Twitter)。コールバック URL は `{BETTER_AUTH_URL}/api/auth/callback/{provider}`。
+
+**メール（Resend）**
+
+`RESEND_API_KEY` + `RESEND_FROM_EMAIL` でパスワードリセット・メール確認を送信。未設定時は dev でターミナルにリンク出力。
 
 **API**
 

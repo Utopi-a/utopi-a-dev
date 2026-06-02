@@ -8,12 +8,21 @@ export async function proxy(request: NextRequest) {
   });
 
   if (!session) {
-    return NextResponse.redirect(new URL("/", request.url));
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", request.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/blog/manage", "/blog/manage/:path*", "/settings/:path*"],
+  matcher: [
+    "/lab/studio",
+    "/lab/studio/:path*",
+    "/lab/blog/manage",
+    "/lab/blog/manage/:path*",
+    "/lab/settings",
+    "/lab/settings/:path*",
+  ],
 };

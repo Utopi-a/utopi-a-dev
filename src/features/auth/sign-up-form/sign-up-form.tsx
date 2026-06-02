@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/features/auth/auth-client";
 import { authEmailCallbackPaths } from "@/features/auth/auth-email-env";
 import { toAuthErrorMessage } from "@/features/auth/auth-error-message/auth-error-message";
+import { storePendingVerificationEmail } from "@/features/auth/resend-verification-form/resend-verification-form";
 
 type SignUpFormProps = {
   callbackURL: string;
@@ -46,6 +47,7 @@ export function SignUpForm({
     }
 
     if (requiresEmailVerification || sendsVerificationEmail) {
+      storePendingVerificationEmail({ email });
       router.push(authEmailCallbackPaths.afterSignUp);
       router.refresh();
       return;

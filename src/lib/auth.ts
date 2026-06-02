@@ -42,6 +42,7 @@ export const auth = betterAuth({
     },
     sendOnSignUp: shouldSendVerificationOnSignUp(),
     autoSignInAfterVerification: true,
+    expiresIn: 60 * 60 * 24,
   },
   emailAndPassword: {
     enabled: true,

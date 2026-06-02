@@ -1,0 +1,39 @@
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { labEntries } from "@/features/portfolio/lab-content";
+import { PageHeader } from "@/features/portfolio/page-header/page-header";
+import { cn } from "@/lib/cn";
+
+const statusLabel = {
+  active: "稼働中",
+  planned: "予定",
+} as const;
+
+export function LabView() {
+  return (
+    <div className="flex flex-col gap-10 sm:gap-12">
+      <PageHeader eyebrow="Lab" title="実験" />
+
+      <ul className="grid gap-4 sm:grid-cols-2">
+        {labEntries.map((entry) => (
+          <li key={entry.id}>
+            <Card className="h-full gap-4 border-border/70 bg-card/70 py-5 shadow-sm">
+              <CardHeader className="flex-row items-start justify-between gap-3 space-y-0 px-5 pb-0">
+                <CardTitle className="text-base leading-snug">{entry.title}</CardTitle>
+                <Badge
+                  variant={entry.status === "active" ? "default" : "secondary"}
+                  className={cn("shrink-0 rounded-full font-normal")}
+                >
+                  {statusLabel[entry.status]}
+                </Badge>
+              </CardHeader>
+              <CardContent className="px-5">
+                <p className="text-sm leading-relaxed text-muted-foreground">{entry.description}</p>
+              </CardContent>
+            </Card>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}

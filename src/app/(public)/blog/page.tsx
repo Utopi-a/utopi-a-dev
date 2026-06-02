@@ -3,7 +3,7 @@ import { BlogPlaceholder } from "@/features/portfolio/blog-placeholder/blog-plac
 
 export default function BlogPage() {
   return (
-    <PublicPageShell narrow>
+    <PublicPageShell width="content">
       <BlogPlaceholder />
     </PublicPageShell>
   );

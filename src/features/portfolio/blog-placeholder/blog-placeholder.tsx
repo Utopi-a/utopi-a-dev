@@ -1,16 +1,12 @@
-import { PageIntro } from "@/features/portfolio/page-intro/page-intro";
+import { PageHeader } from "@/features/portfolio/page-header/page-header";
 
 export function BlogPlaceholder() {
   return (
-    <div className="mx-auto w-full max-w-2xl">
-      <PageIntro
-        label="Blog"
-        title="ブログ"
-        description="記事の一覧は CMS 連携後にここに表示します。現時点では準備中です。"
-      />
-      <p className="mt-8 rounded-xl border border-dashed border-border/80 bg-card/50 px-6 py-10 text-center text-sm text-muted-foreground">
-        まだ公開記事はありません
-      </p>
+    <div className="flex flex-col gap-10">
+      <PageHeader eyebrow="Blog" title="ブログ" />
+      <div className="rounded-2xl border border-dashed border-border/80 bg-card/40 px-6 py-16 text-center">
+        <p className="text-sm text-muted-foreground">まだ公開記事はありません</p>
+      </div>
     </div>
   );
 }

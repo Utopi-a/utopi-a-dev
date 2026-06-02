@@ -1,6 +1,6 @@
 # utopi-a.dev
 
-個人用の full-stack 実験場です。ポートフォリオ、日記、試作、小さな有料サービスなどを載せる想定です。
+個人用の full-stack 実験場です。ポートフォリオ、ブログ、試作、小さな有料サービスなどを載せる想定です。
 
 **ディレクトリ構造・基盤の詳細** → [docs/project-guide.md](./docs/project-guide.md)
 
@@ -120,12 +120,12 @@ pnpm exec next dev --turbopack
 - `/` — トップ
 - `/work` — 作品
 - `/lab` — 実験
-- `/blog` — ブログ
+- `/blog` — ブログ（公開記事一覧）
 
 **アプリ（要ログイン、`proxy` でガード）**
 
 - `/dashboard` — ダッシュボード
-- `/diary` — 日記
+- `/blog/manage` — ブログ（記事の作成・編集）
 - `/settings` — 設定
 
 **API**

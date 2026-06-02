@@ -7,7 +7,7 @@ export default function HomePage() {
       <div className="space-y-3 text-center">
         <h1 className="text-4xl font-semibold tracking-tight">utopi-a.dev</h1>
         <p className="text-muted-foreground">
-          Personal full-stack lab — portfolio, diary, experiments, and mini services.
+          Personal full-stack lab — portfolio, blog, experiments, and mini services.
         </p>
       </div>
 

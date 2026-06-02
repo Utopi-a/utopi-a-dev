@@ -1,7 +1,7 @@
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
-export const post = pgTable("post", {
+export const blogPost = pgTable("blog_post", {
   id: text("id").primaryKey(),
   userId: text("user_id")
     .notNull()
@@ -9,6 +9,8 @@ export const post = pgTable("post", {
   slug: text("slug").notNull().unique(),
   title: text("title").notNull(),
   excerpt: text("excerpt"),
+  body: text("body"),
+  publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

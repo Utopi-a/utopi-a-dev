@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const appNav = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/diary", label: "Diary" },
+  { href: "/blog/manage", label: "ブログ" },
   { href: "/settings", label: "Settings" },
 ] as const;
 

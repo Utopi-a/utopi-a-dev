@@ -148,7 +148,10 @@ GitHub / Google / Discord / X (Twitter)。コールバック URL は `{BETTER_AU
 
 **メール（Resend）**
 
-`RESEND_API_KEY` + `RESEND_FROM_EMAIL` でパスワードリセット・メール確認を送信。未設定時は dev でターミナルにリンク出力。
+`RESEND_API_KEY` + `RESEND_FROM_EMAIL` でパスワードリセット・メール確認を送信（HTML メール）。設定済みならサインアップ時にも確認メールを送る。未設定時は dev でターミナルにリンク出力。
+
+- `/lab/verify-email` — 確認完了・エラー表示・再送
+- `AUTH_REQUIRE_EMAIL_VERIFICATION=true` で確認必須（本番 `prd` 想定）
 
 **API**
 

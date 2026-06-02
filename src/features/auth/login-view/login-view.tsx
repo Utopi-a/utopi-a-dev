@@ -10,6 +10,8 @@ import { SocialSignInButtons } from "@/features/auth/social-sign-in/social-sign-
 type LoginViewProps = {
   callbackURL: string;
   signUpAllowed: boolean;
+  sendsVerificationEmail: boolean;
+  requiresEmailVerification: boolean;
   socialProviders: Array<{
     id: SocialProviderId;
     label: string;
@@ -17,7 +19,13 @@ type LoginViewProps = {
   }>;
 };
 
-export function LoginView({ callbackURL, signUpAllowed, socialProviders }: LoginViewProps) {
+export function LoginView({
+  callbackURL,
+  signUpAllowed,
+  sendsVerificationEmail,
+  requiresEmailVerification,
+  socialProviders,
+}: LoginViewProps) {
   const canSignUp = signUpAllowed;
   const hasSocial = socialProviders.length > 0;
 
@@ -53,7 +61,11 @@ export function LoginView({ callbackURL, signUpAllowed, socialProviders }: Login
                 <SignInForm callbackURL={callbackURL} />
               </TabsContent>
               <TabsContent value="sign-up" className="mt-4">
-                <SignUpForm callbackURL={callbackURL} />
+                <SignUpForm
+                  callbackURL={callbackURL}
+                  sendsVerificationEmail={sendsVerificationEmail}
+                  requiresEmailVerification={requiresEmailVerification}
+                />
               </TabsContent>
             </Tabs>
           ) : (

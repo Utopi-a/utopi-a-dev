@@ -28,5 +28,13 @@ export function toAuthErrorMessage({ error }: { error: unknown }) {
     return "パスワードは12文字以上にしてください。";
   }
 
+  if (normalized.includes("email not verified") || normalized.includes("email_not_verified")) {
+    return "メールアドレスが未確認です。受信トレイの確認メールを開くか、再送してください。";
+  }
+
+  if (normalized.includes("email already verified")) {
+    return "メールアドレスはすでに確認済みです。";
+  }
+
   return message;
 }

@@ -55,14 +55,16 @@ export function SignInForm({ callbackURL }: SignInFormProps) {
         />
       </div>
       <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <Label htmlFor="sign-in-password">パスワード</Label>
-          <Link
-            href="/forgot-password"
-            className="text-xs text-muted-foreground hover:text-primary"
-          >
-            パスワードを忘れた
-          </Link>
+          <span className="flex gap-2 text-xs">
+            <Link href="/forgot-password" className="text-muted-foreground hover:text-primary">
+              パスワードを忘れた
+            </Link>
+            <Link href="/lab/verify-email" className="text-muted-foreground hover:text-primary">
+              メール未確認
+            </Link>
+          </span>
         </div>
         <Input
           id="sign-in-password"

@@ -3,10 +3,14 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
-import { isEmailVerificationRequired } from "@/features/auth/auth-email-env";
+import {
+  isEmailVerificationRequired,
+  shouldSendVerificationOnSignUp,
+} from "@/features/auth/auth-email-env";
 import { getTrustedOrigins, isSignUpAllowed } from "@/features/auth/auth-env";
 import { buildSocialProviders } from "@/features/auth/build-social-providers/build-social-providers";
-import { sendAuthEmail } from "@/features/auth/send-auth-email/send-auth-email";
+import { sendPasswordResetEmailContent } from "@/features/auth/send-auth-email/send-password-reset-email";
+import { sendVerificationEmailContent } from "@/features/auth/send-auth-email/send-verification-email";
 
 const authSecret = process.env.BETTER_AUTH_SECRET;
 const authBaseUrl = process.env.BETTER_AUTH_URL;
@@ -34,14 +38,10 @@ export const auth = betterAuth({
   trustedOrigins: getTrustedOrigins(),
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
-      await sendAuthEmail({
-        to: user.email,
-        subject: "メールアドレスの確認",
-        text: `以下のリンクからメールアドレスを確認してください。\n\n${url}`,
-        html: `<p>以下のリンクからメールアドレスを確認してください。</p><p><a href="${url}">${url}</a></p>`,
-      });
+      await sendVerificationEmailContent({ email: user.email, url });
     },
-    sendOnSignUp: isEmailVerificationRequired(),
+    sendOnSignUp: shouldSendVerificationOnSignUp(),
+    autoSignInAfterVerification: true,
   },
   emailAndPassword: {
     enabled: true,
@@ -51,12 +51,7 @@ export const auth = betterAuth({
     autoSignIn: !isEmailVerificationRequired(),
     requireEmailVerification: isEmailVerificationRequired(),
     sendResetPassword: async ({ user, url }) => {
-      await sendAuthEmail({
-        to: user.email,
-        subject: "パスワードの再設定",
-        text: `以下のリンクからパスワードを再設定してください。\n\n${url}`,
-        html: `<p>以下のリンクからパスワードを再設定してください。</p><p><a href="${url}">${url}</a></p>`,
-      });
+      await sendPasswordResetEmailContent({ email: user.email, url });
     },
   },
   socialProviders: buildSocialProviders(),

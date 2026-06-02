@@ -8,7 +8,11 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/features/auth/auth-client";
 import { toAuthErrorMessage } from "@/features/auth/auth-error-message/auth-error-message";
 
-export function ForgotPasswordForm() {
+type ForgotPasswordFormProps = {
+  usesResend: boolean;
+};
+
+export function ForgotPasswordForm({ usesResend }: ForgotPasswordFormProps) {
   const [email, setEmail] = useState("");
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -38,7 +42,10 @@ export function ForgotPasswordForm() {
     return (
       <div className="space-y-4 text-sm text-muted-foreground">
         <p>
-          リセット手順を送信しました（登録済みのメールの場合）。開発環境ではサーバーログにリンクが出ます。
+          登録済みのメールアドレスであれば、リセット手順を送信しました。
+          {usesResend
+            ? " 受信トレイ（迷惑メールも）を確認してください。"
+            : " 開発環境ではサーバーログにリンクが出ます。"}
         </p>
         <Link href="/login" className="font-medium text-primary hover:underline">
           ログインに戻る

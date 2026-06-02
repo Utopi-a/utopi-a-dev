@@ -21,3 +21,13 @@ export function isEmailVerificationRequired() {
 export function isAuthEmailConfigured() {
   return Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL);
 }
+
+/** Resend があるときはサインアップ後に確認メールを送る（必須かどうかは別設定） */
+export function shouldSendVerificationOnSignUp() {
+  return isAuthEmailConfigured();
+}
+
+export const authEmailCallbackPaths = {
+  afterVerify: "/lab/verify-email",
+  afterSignUp: "/lab/verify-email?pending=1",
+} as const;

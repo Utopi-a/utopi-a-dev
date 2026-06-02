@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
 import { PublicPageShell } from "@/components/layout/public-page-shell";
+import {
+  isEmailVerificationRequired,
+  shouldSendVerificationOnSignUp,
+} from "@/features/auth/auth-email-env";
 import { isSignUpAllowed } from "@/features/auth/auth-env";
 import { getSession } from "@/features/auth/get-session/get-session";
 import { LoginView } from "@/features/auth/login-view/login-view";
@@ -37,6 +41,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <LoginView
         callbackURL={callbackURL}
         signUpAllowed={isSignUpAllowed()}
+        sendsVerificationEmail={shouldSendVerificationOnSignUp()}
+        requiresEmailVerification={isEmailVerificationRequired()}
         socialProviders={socialProviders}
       />
     </PublicPageShell>

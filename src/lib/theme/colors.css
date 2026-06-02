@@ -1,0 +1,33 @@
+/**
+ * ブラッシュ・ノワール — サイト固定テーマ
+ * 寒色ライラックベース + 暖色グレー本文 + ワイン CTA
+ */
+
+:root {
+  --background: oklch(0.993 0.008 304);
+  --foreground: oklch(0.29 0.022 20);
+  --card: oklch(0.988 0.01 304);
+  --card-foreground: oklch(0.29 0.022 20);
+  --popover: oklch(0.988 0.01 304);
+  --popover-foreground: oklch(0.29 0.022 20);
+  --primary: oklch(0.38 0.11 328);
+  --primary-foreground: oklch(0.99 0.004 328);
+  --secondary: oklch(0.965 0.012 304);
+  --secondary-foreground: oklch(0.36 0.028 300);
+  --muted: oklch(0.972 0.01 304);
+  --muted-foreground: oklch(0.5 0.025 25);
+  --accent: oklch(0.972 0.01 304);
+  --accent-foreground: oklch(0.36 0.028 300);
+  --destructive: oklch(0.55 0.2 25);
+  --border: oklch(0.91 0.012 304);
+  --input: oklch(0.91 0.012 304);
+  --ring: oklch(0.48 0.09 328);
+  --chart-1: oklch(0.38 0.11 328);
+  --chart-2: oklch(0.7 0.05 304);
+  --chart-3: oklch(0.58 0.07 350);
+  --chart-4: oklch(0.4 0.02 20);
+  --chart-5: oklch(0.78 0.06 25);
+  --brand-gradient-from: oklch(0.993 0.009 304);
+  --brand-gradient-to: oklch(0.975 0.015 304);
+  --brand-glow: oklch(0.45 0.09 328 / 14%);
+}

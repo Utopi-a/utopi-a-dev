@@ -1,3 +1,4 @@
+import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -6,6 +7,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     <>
       <SiteHeader />
       <main className="flex flex-1 flex-col">{children}</main>
+      <SiteFooter />
       <Toaster />
     </>
   );

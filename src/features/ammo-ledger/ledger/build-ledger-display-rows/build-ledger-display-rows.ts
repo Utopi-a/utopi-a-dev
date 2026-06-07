@@ -7,6 +7,7 @@ export type LedgerDisplayRow =
       id: string;
       occurredOn: string;
       quantity: number;
+      expiresOn: string | null;
     }
   | {
       kind: "entry";
@@ -25,6 +26,24 @@ function isWithinRange({ date, from, to }: { date: string; from?: string; to?: s
     return false;
   }
   return true;
+}
+
+function resolvePermitEventExpiresOn({
+  permitId,
+  permitEvents,
+}: {
+  permitId: string | null;
+  permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
+}): string | null {
+  if (!permitId) {
+    return null;
+  }
+
+  const expiryEvent = permitEvents.find(
+    (event) => event.permitId === permitId && event.eventKind === "expiry",
+  );
+
+  return expiryEvent?.occurredOn ?? null;
 }
 
 export function buildLedgerDisplayRows({
@@ -53,6 +72,10 @@ export function buildLedgerDisplayRows({
       id: `permit-carryover-${event.id}`,
       occurredOn: event.occurredOn,
       quantity: event.quantity,
+      expiresOn: resolvePermitEventExpiresOn({
+        permitId: event.permitId,
+        permitEvents,
+      }),
     }));
 
   const entryRows: LedgerDisplayRow[] = entries.map((entry) => ({

@@ -23,6 +23,7 @@ import {
 } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
 import { formatPermitBalance } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { buildOpeningBalanceHref } from "@/features/ammo-ledger/opening-balance/build-opening-balance-href/build-opening-balance-href";
+import { formatPermitExpiryLabel } from "@/features/ammo-ledger/permit/compute-permit-expiry/compute-permit-expiry";
 import {
   type LedgerCategory,
   ledgerCategoryLabels,
@@ -63,6 +64,7 @@ export function LedgerEntryActionsSheet({
   }
 
   if (row.kind === "permit_carryover") {
+    const today = new Date().toISOString().slice(0, 10);
     const editHref = buildOpeningBalanceHref({
       occurredOn: row.occurredOn,
       purpose,
@@ -83,6 +85,9 @@ export function LedgerEntryActionsSheet({
                 </div>
                 <p className="text-sm text-foreground">
                   {buildPermitCarryoverLabel()} · {formatPermitBalance({ balance: row.quantity })}
+                  {row.expiresOn
+                    ? ` · ${formatPermitExpiryLabel({ expiresOn: row.expiresOn, today })}`
+                    : ""}
                 </p>
               </div>
             </SheetDescription>

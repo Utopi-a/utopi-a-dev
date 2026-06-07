@@ -2,10 +2,155 @@
 
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { ammoLedgerEntry, ammoPermitEvent, ammoType } from "@/db/schema/ammo-ledger";
+import {
+  ammoAcquisitionPermit,
+  ammoLedgerEntry,
+  ammoPermitEvent,
+  ammoType,
+} from "@/db/schema/ammo-ledger";
 import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { buildYearOpeningDay } from "@/features/ammo-ledger/opening-balance/build-year-day/build-year-day";
+import { mapLedgerPurposeToPermitPurpose } from "@/features/ammo-ledger/opening-balance/map-ledger-purpose-to-permit-purpose/map-ledger-purpose-to-permit-purpose";
+import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { openingBalanceInputSchema } from "@/features/ammo-ledger/schema/opening-balance-schema";
+
+type SaveOpeningBalanceTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function deleteCarryoverPermit({
+  tx,
+  existingPermitEvent,
+}: {
+  tx: SaveOpeningBalanceTx;
+  existingPermitEvent: typeof ammoPermitEvent.$inferSelect;
+}) {
+  if (existingPermitEvent.permitId) {
+    await tx
+      .delete(ammoAcquisitionPermit)
+      .where(eq(ammoAcquisitionPermit.id, existingPermitEvent.permitId));
+    return;
+  }
+
+  await tx.delete(ammoPermitEvent).where(eq(ammoPermitEvent.id, existingPermitEvent.id));
+}
+
+async function upsertCarryoverPermit({
+  tx,
+  userId,
+  year,
+  purpose,
+  openingDay,
+  permitBalance,
+  permitExpiresOn,
+  existingPermitEvent,
+}: {
+  tx: SaveOpeningBalanceTx;
+  userId: string;
+  year: number;
+  purpose: LedgerPurpose;
+  openingDay: string;
+  permitBalance: number;
+  permitExpiresOn: string;
+  existingPermitEvent: typeof ammoPermitEvent.$inferSelect | null;
+}) {
+  const memo = `${year}年の許可残数繰越`;
+  const now = new Date();
+
+  if (existingPermitEvent?.permitId) {
+    const permitId = existingPermitEvent.permitId;
+
+    await tx
+      .update(ammoAcquisitionPermit)
+      .set({
+        quantity: permitBalance,
+        expiresOn: permitExpiresOn,
+        updatedAt: now,
+      })
+      .where(eq(ammoAcquisitionPermit.id, permitId));
+
+    await tx
+      .update(ammoPermitEvent)
+      .set({
+        quantity: permitBalance,
+        updatedAt: now,
+      })
+      .where(eq(ammoPermitEvent.id, existingPermitEvent.id));
+
+    const [existingExpiryEvent] = await tx
+      .select()
+      .from(ammoPermitEvent)
+      .where(and(eq(ammoPermitEvent.permitId, permitId), eq(ammoPermitEvent.eventKind, "expiry")));
+
+    if (existingExpiryEvent) {
+      await tx
+        .update(ammoPermitEvent)
+        .set({
+          occurredOn: permitExpiresOn,
+          updatedAt: now,
+        })
+        .where(eq(ammoPermitEvent.id, existingExpiryEvent.id));
+      return;
+    }
+
+    await tx.insert(ammoPermitEvent).values({
+      id: crypto.randomUUID(),
+      userId,
+      permitId,
+      purpose,
+      eventKind: "expiry",
+      occurredOn: permitExpiresOn,
+      quantity: 0,
+      memo: "許可有効期限",
+    });
+    return;
+  }
+
+  const permitId = crypto.randomUUID();
+
+  await tx.insert(ammoAcquisitionPermit).values({
+    id: permitId,
+    userId,
+    ledgerPurpose: purpose,
+    name: "その他",
+    permitPurpose: mapLedgerPurposeToPermitPurpose({ purpose }),
+    grantedOn: openingDay,
+    expiresOn: permitExpiresOn,
+    quantity: permitBalance,
+    memo,
+  });
+
+  if (existingPermitEvent) {
+    await tx
+      .update(ammoPermitEvent)
+      .set({
+        permitId,
+        quantity: permitBalance,
+        updatedAt: now,
+      })
+      .where(eq(ammoPermitEvent.id, existingPermitEvent.id));
+  } else {
+    await tx.insert(ammoPermitEvent).values({
+      id: crypto.randomUUID(),
+      userId,
+      permitId,
+      purpose,
+      eventKind: "carryover",
+      occurredOn: openingDay,
+      quantity: permitBalance,
+      memo,
+    });
+  }
+
+  await tx.insert(ammoPermitEvent).values({
+    id: crypto.randomUUID(),
+    userId,
+    permitId,
+    purpose,
+    eventKind: "expiry",
+    occurredOn: permitExpiresOn,
+    quantity: 0,
+    memo: "許可有効期限",
+  });
+}
 
 export async function saveOpeningBalanceAction(input: unknown) {
   const userResult = await resolveAmmoUserForMutation();
@@ -19,7 +164,7 @@ export async function saveOpeningBalanceAction(input: unknown) {
     return { ok: false as const, error: "入力内容を確認してください" };
   }
 
-  const { year, purpose, permitBalance, stockByAmmoType } = parsed.data;
+  const { year, purpose, permitBalance, permitExpiresOn, stockByAmmoType } = parsed.data;
   const openingDay = buildYearOpeningDay({ year });
 
   const [ammoTypes, existingPermitEvents, existingStockEntries] = await Promise.all([
@@ -65,25 +210,18 @@ export async function saveOpeningBalanceAction(input: unknown) {
 
   await db.transaction(async (tx) => {
     if (permitBalance && permitBalance > 0) {
-      if (existingPermitEvent) {
-        await tx
-          .update(ammoPermitEvent)
-          .set({ quantity: permitBalance, updatedAt: new Date() })
-          .where(eq(ammoPermitEvent.id, existingPermitEvent.id));
-      } else {
-        await tx.insert(ammoPermitEvent).values({
-          id: crypto.randomUUID(),
-          userId: user.id,
-          permitId: null,
-          purpose,
-          eventKind: "carryover",
-          occurredOn: openingDay,
-          quantity: permitBalance,
-          memo: `${year}年の許可残数繰越`,
-        });
-      }
+      await upsertCarryoverPermit({
+        tx,
+        userId: user.id,
+        year,
+        purpose,
+        openingDay,
+        permitBalance,
+        permitExpiresOn: permitExpiresOn as string,
+        existingPermitEvent,
+      });
     } else if (existingPermitEvent) {
-      await tx.delete(ammoPermitEvent).where(eq(ammoPermitEvent.id, existingPermitEvent.id));
+      await deleteCarryoverPermit({ tx, existingPermitEvent });
     }
 
     const ammoTypeIds = new Set([

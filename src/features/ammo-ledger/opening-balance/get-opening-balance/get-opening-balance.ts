@@ -4,8 +4,27 @@ import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose
 
 export type OpeningBalanceSnapshot = {
   permitBalance: number | null;
+  permitExpiresOn: string | null;
   stockByAmmoType: Record<string, number>;
 };
+
+function resolveCarryoverPermitExpiresOn({
+  permitEvent,
+  permitEvents,
+}: {
+  permitEvent: typeof ammoPermitEvent.$inferSelect | undefined;
+  permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
+}): string | null {
+  if (!permitEvent?.permitId) {
+    return null;
+  }
+
+  const expiryEvent = permitEvents.find(
+    (event) => event.permitId === permitEvent.permitId && event.eventKind === "expiry",
+  );
+
+  return expiryEvent?.occurredOn ?? null;
+}
 
 export function getOpeningBalance({
   year,
@@ -42,6 +61,7 @@ export function getOpeningBalance({
 
   return {
     permitBalance: permitEvent?.quantity ?? null,
+    permitExpiresOn: resolveCarryoverPermitExpiresOn({ permitEvent, permitEvents }),
     stockByAmmoType,
   };
 }

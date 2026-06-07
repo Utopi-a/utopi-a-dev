@@ -46,6 +46,9 @@ describe("buildLedgerDisplayRows", () => {
 
     expect(rows).toHaveLength(2);
     expect(rows[0].kind).toBe("permit_carryover");
+    if (rows[0].kind === "permit_carryover") {
+      expect(rows[0].expiresOn).toBeNull();
+    }
     expect(rows[1].kind).toBe("entry");
   });
 
@@ -57,6 +60,7 @@ describe("buildLedgerDisplayRows", () => {
           id: "permit-carryover-pe1",
           occurredOn: "2026-01-01",
           quantity: 1200,
+          expiresOn: "2026-12-31",
         },
       }),
     ).toBe(true);

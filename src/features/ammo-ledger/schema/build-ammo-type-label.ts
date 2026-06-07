@@ -13,14 +13,20 @@ export function buildAmmoTypeLabel({
   shotType: ShotType;
   gaugeNumber?: string;
 }): string {
+  const displayGauge = formatGaugeNumberForDisplay({ gaugeNumber });
+  const gaugeSuffix = displayGauge ? `${displayGauge}号` : null;
+
   if (name?.trim()) {
-    return name.trim();
+    const base = name.trim();
+    if (gaugeSuffix) {
+      return `${base} ${gaugeSuffix}`;
+    }
+    return base;
   }
 
   const parts = [caliber, shotTypeLabels[shotType]];
-  const displayGauge = formatGaugeNumberForDisplay({ gaugeNumber });
-  if (displayGauge) {
-    parts.push(`${displayGauge}号`);
+  if (gaugeSuffix) {
+    parts.push(gaugeSuffix);
   }
   return parts.join(" ");
 }

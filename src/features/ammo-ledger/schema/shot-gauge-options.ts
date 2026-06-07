@@ -1,7 +1,4 @@
-/** 9号と9.5号をまとめた選択肢・表示用の値 */
-export const shotGaugeCombinedNine = "9・9.5" as const;
-
-/** 狩猟・駆除など（10号を除く標準号数。9・9.5は統合） */
+/** 狩猟・駆除など（10号を除く標準号数） */
 export const shotGaugeOptionsGeneral = [
   "00B",
   "BB",
@@ -14,11 +11,12 @@ export const shotGaugeOptionsGeneral = [
   "7",
   "7.5",
   "8",
-  shotGaugeCombinedNine,
+  "9",
+  "9.5",
 ] as const;
 
 /** 射撃用のみ */
-export const shotGaugeOptionsShooting = ["7.5", shotGaugeCombinedNine] as const;
+export const shotGaugeOptionsShooting = ["7.5", "9", "9.5"] as const;
 
 export type ShotGaugeOptionGeneral = (typeof shotGaugeOptionsGeneral)[number];
 export type ShotGaugeOptionShooting = (typeof shotGaugeOptionsShooting)[number];
@@ -57,8 +55,7 @@ export function normalizeGaugeNumberForSelect({
 }: {
   gaugeNumber?: string | null;
 }): string {
-  const formatted = formatGaugeNumberForDisplay({ gaugeNumber });
-  return formatted ?? "";
+  return formatGaugeNumberForDisplay({ gaugeNumber }) ?? "";
 }
 
 export function formatGaugeNumberForDisplay({
@@ -69,9 +66,5 @@ export function formatGaugeNumberForDisplay({
   if (!gaugeNumber?.trim()) {
     return null;
   }
-  const trimmed = gaugeNumber.trim();
-  if (trimmed === "9" || trimmed === "9.5") {
-    return shotGaugeCombinedNine;
-  }
-  return trimmed;
+  return gaugeNumber.trim();
 }

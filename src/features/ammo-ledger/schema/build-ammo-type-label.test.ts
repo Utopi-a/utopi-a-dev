@@ -21,17 +21,17 @@ describe("buildAmmoTypeLabel", () => {
     ).toBe("12番 単弾");
   });
 
-  it("9号と9.5号は9・9.5号として表示する", () => {
+  it("9.5号はそのまま表示する", () => {
     expect(
       buildAmmoTypeLabel({
         caliber: "12番",
         shotType: "shot",
-        gaugeNumber: "9",
+        gaugeNumber: "9.5",
       }),
-    ).toBe("12番 散弾 9・9.5号");
+    ).toBe("12番 散弾 9.5号");
   });
 
-  it("名称があれば名称を優先する", () => {
+  it("名称があっても号数を後ろに付ける", () => {
     expect(
       buildAmmoTypeLabel({
         name: "ウィンチェスター AA",
@@ -39,6 +39,16 @@ describe("buildAmmoTypeLabel", () => {
         shotType: "shot",
         gaugeNumber: "7.5",
       }),
-    ).toBe("ウィンチェスター AA");
+    ).toBe("ウィンチェスター AA 7.5号");
+  });
+
+  it("名称のみで号数がなければ名称だけ", () => {
+    expect(
+      buildAmmoTypeLabel({
+        name: "スラッグ弾",
+        caliber: "12番",
+        shotType: "slug",
+      }),
+    ).toBe("スラッグ弾");
   });
 });

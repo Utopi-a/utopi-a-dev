@@ -100,11 +100,11 @@ function getDraftRedirectPath({
     case "consume":
       return `/lab/ammo-ledger/consume/new?draft=${transactionId}`;
     case "acquire":
-      return `/lab/ammo-ledger/acquire/new?draft=${transactionId}`;
+      return `/lab/ammo-ledger/inflow/new?tab=acquire&draft=${transactionId}`;
     case "dispose":
-      return `/lab/ammo-ledger/dispose/new?draft=${transactionId}`;
+      return `/lab/ammo-ledger/inflow/new?tab=dispose&draft=${transactionId}`;
     case "transfer":
-      return `/lab/ammo-ledger/transfer/new?draft=${transactionId}`;
+      return `/lab/ammo-ledger/inflow/new?tab=transfer&draft=${transactionId}`;
     case "stock_check":
       return `/lab/ammo-ledger/inventory`;
   }

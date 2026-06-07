@@ -1,7 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav";
+import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
+import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
+import { InventoryOverviewPanel } from "@/features/ammo-ledger/components/inventory-overview/inventory-overview";
 import { StockCheckForm } from "@/features/ammo-ledger/components/stock-check-form/stock-check-form";
+import { buildInventoryOverview } from "@/features/ammo-ledger/inventory/build-inventory-overview/build-inventory-overview";
 import { getInventorySummary } from "@/features/ammo-ledger/ledger/get-inventory-summary/get-inventory-summary";
 
 export default async function InventoryPage() {
@@ -11,8 +13,19 @@ export default async function InventoryPage() {
   const items = summary.map((s) => ({
     ammoTypeId: s.ammoType.id,
     ammoTypeName: s.ammoType.name,
+    gaugeNumber: s.ammoType.gaugeNumber,
+    defaultPurpose: s.ammoType.defaultPurpose,
     roundsPerBox: s.ammoType.roundsPerBox,
     bookStock: s.bookStock,
+  }));
+
+  const overview = buildInventoryOverview({ items });
+
+  const stockCheckItems = items.map((item) => ({
+    ammoTypeId: item.ammoTypeId,
+    ammoTypeName: item.ammoTypeName,
+    roundsPerBox: item.roundsPerBox,
+    bookStock: item.bookStock,
   }));
 
   return (
@@ -20,18 +33,21 @@ export default async function InventoryPage() {
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">残弾確認</h1>
         <p className="text-sm text-muted-foreground">
-          差分は調整行にせず、消費・廃棄・譲渡・譲受の下書きに変換します。
+          まず一覧で帳簿残数を確認し、必要なら実在庫との照合を行います。
         </p>
       </div>
       <AmmoLedgerNav />
-      <Card className="border-border/70">
-        <CardHeader>
-          <CardTitle className="text-base">在庫照合</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <StockCheckForm items={items} />
-        </CardContent>
-      </Card>
+
+      <AmmoLedgerPanel title="帳簿残数" description="弾種・号数・グループごとに一覧表示します">
+        <InventoryOverviewPanel overview={overview} />
+      </AmmoLedgerPanel>
+
+      <AmmoLedgerPanel
+        title="実在庫との照合"
+        description="差分は調整行にせず、記録の下書きに変換します"
+      >
+        <StockCheckForm items={stockCheckItems} />
+      </AmmoLedgerPanel>
     </div>
   );
 }

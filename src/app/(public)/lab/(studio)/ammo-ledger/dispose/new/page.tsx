@@ -1,57 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav";
-import { DisposeForm } from "@/features/ammo-ledger/components/dispose-form/dispose-form";
-import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
-import { getDraftTransaction } from "@/features/ammo-ledger/transactions/get-draft/get-draft";
+import { redirect } from "next/navigation";
 
 type PageProps = {
   searchParams: Promise<{ draft?: string }>;
 };
 
 export default async function DisposeNewPage({ searchParams }: PageProps) {
-  const user = await requireAmmoUser();
-  const { draft: draftId } = await searchParams;
-
-  const [ammoTypes, draft] = await Promise.all([
-    listAmmoTypes({ userId: user.id }),
-    draftId ? getDraftTransaction({ userId: user.id, draftId }) : Promise.resolve(null),
-  ]);
-
-  const initialValues = draft
-    ? {
-        occurredOn: draft.occurredOn,
-        ammoTypeId: draft.ammoTypeId ?? undefined,
-        boxCount: draft.boxCount,
-        looseRounds: draft.looseRounds,
-      }
-    : undefined;
-
-  return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">弾を廃棄した</h1>
-        <p className="text-sm text-muted-foreground">廃棄記録を入力します。</p>
-      </div>
-      <AmmoLedgerNav />
-      <Card className="border-border/70">
-        <CardHeader>
-          <CardTitle className="text-base">廃棄記録</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {ammoTypes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              弾種マスタを
-              <a href="/lab/ammo-ledger/settings/ammo-types" className="underline">
-                登録
-              </a>
-              してください。
-            </p>
-          ) : (
-            <DisposeForm ammoTypes={ammoTypes} initialValues={initialValues} />
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+  const { draft } = await searchParams;
+  const params = new URLSearchParams({ tab: "dispose" });
+  if (draft) {
+    params.set("draft", draft);
+  }
+  redirect(`/lab/ammo-ledger/inflow/new?${params.toString()}`);
 }

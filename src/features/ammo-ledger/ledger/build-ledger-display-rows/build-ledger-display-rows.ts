@@ -49,10 +49,10 @@ function compareDisplayRows({ a, b }: { a: LedgerDisplayRow; b: LedgerDisplayRow
 
   const aIsExpiry = a.kind === "permit_expiry";
   const bIsExpiry = b.kind === "permit_expiry";
-  if (!aIsExpiry && bIsExpiry && b.kind === "entry") {
+  if (a.kind === "entry" && bIsExpiry) {
     return -1;
   }
-  if (aIsExpiry && !bIsExpiry && a.kind === "permit_expiry" && b.kind === "entry") {
+  if (aIsExpiry && b.kind === "entry") {
     return 1;
   }
 

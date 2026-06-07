@@ -16,7 +16,7 @@ export function LedgerPrintCover({
   const printedOn = new Date().toISOString().slice(0, 10);
 
   return (
-    <section className="ledger-print-page flex flex-col items-center justify-center space-y-6 text-center">
+    <section className="ledger-print-page ledger-print-cover-page flex flex-col items-center justify-center space-y-6 text-center">
       <h1 className="text-2xl font-bold">実包管理帳簿</h1>
       <p className="text-sm">{sectionLabels.join("・")}</p>
       <div className="space-y-1 text-sm">

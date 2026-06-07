@@ -92,6 +92,9 @@ export function LedgerPrintStyles() {
           min-height: auto;
           padding-bottom: 0;
         }
+        .ledger-print-cover-page {
+          min-height: calc(100vh - 20mm);
+        }
         .ledger-print-page:last-child {
           page-break-after: auto;
         }

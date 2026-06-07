@@ -2,6 +2,16 @@ import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
+function isAmmoLedgerPwaPublicPath({ pathname }: { pathname: string }) {
+  return (
+    pathname === "/lab/ammo-ledger/manifest.webmanifest" ||
+    pathname.startsWith("/lab/ammo-ledger/pwa-icon/") ||
+    pathname === "/lab/ammo-ledger/~offline" ||
+    pathname === "/lab/ammo-ledger/apple-icon" ||
+    pathname.startsWith("/lab/ammo-ledger/apple-icon/")
+  );
+}
+
 function isProtectedPath({ pathname }: { pathname: string }) {
   return (
     pathname === "/lab/studio" ||
@@ -27,6 +37,10 @@ function withPathnameHeader({ request }: { request: NextRequest }) {
 }
 
 export async function proxy(request: NextRequest) {
+  if (isAmmoLedgerPwaPublicPath({ pathname: request.nextUrl.pathname })) {
+    return withPathnameHeader({ request });
+  }
+
   if (!isProtectedPath({ pathname: request.nextUrl.pathname })) {
     return withPathnameHeader({ request });
   }

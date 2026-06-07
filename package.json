@@ -60,6 +60,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",
     "@playwright/test": "^1.60.0",
+    "@serwist/turbopack": "^9.5.11",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -69,9 +70,11 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.2",
     "drizzle-kit": "^0.31.10",
+    "esbuild": "^0.28.0",
     "jsdom": "^29.1.1",
     "lefthook": "^2.1.9",
     "pdf-parse": "^1.1.1",
+    "serwist": "^9.5.11",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.8"

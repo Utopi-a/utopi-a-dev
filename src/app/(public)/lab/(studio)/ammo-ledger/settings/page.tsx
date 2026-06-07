@@ -22,6 +22,11 @@ const settingsLinks = [
     label: "購入先マスタ",
     description: "銃砲火薬店・譲渡相手の氏名と住所",
   },
+  {
+    href: "/lab/ammo-ledger/settings/permit-events",
+    label: "許可残数イベント",
+    description: "許可取得・失効・繰越の手入力",
+  },
 ] as const;
 
 export default async function AmmoLedgerSettingsPage() {

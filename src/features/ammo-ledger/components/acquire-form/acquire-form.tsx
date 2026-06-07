@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import type { ammoCounterparty, ammoType } from "@/db/schema/ammo-ledger";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
+import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
+import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
+import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
 
@@ -37,11 +40,20 @@ export function AcquireForm({ ammoTypes, counterparties, initialValues }: Acquir
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
   const [counterpartyName, setCounterpartyName] = useState("");
   const [counterpartyAddress, setCounterpartyAddress] = useState("");
+  const [purpose, setPurpose] = useState<LedgerPurpose>("shooting");
   const [memo, setMemo] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
   const selectedAmmoType = ammoTypes.find((t) => t.id === ammoTypeId);
+
+  function handleAmmoTypeChange({ nextAmmoTypeId }: { nextAmmoTypeId: string }) {
+    setAmmoTypeId(nextAmmoTypeId);
+    const nextType = ammoTypes.find((t) => t.id === nextAmmoTypeId);
+    if (nextType) {
+      setPurpose(resolveDefaultPurpose({ defaultPurpose: nextType.defaultPurpose }));
+    }
+  }
   const isManualCounterparty = counterpartyId === manualCounterpartyId;
 
   const computedRounds = useMemo(() => {
@@ -61,6 +73,7 @@ export function AcquireForm({ ammoTypes, counterparties, initialValues }: Acquir
 
     const result = await createTransactionAction({
       inputKind: "acquire",
+      purpose,
       occurredOn,
       ammoTypeId,
       outerBoxCount: Number(outerBoxCount) || 0,
@@ -89,11 +102,13 @@ export function AcquireForm({ ammoTypes, counterparties, initialValues }: Acquir
         />
       </div>
 
+      <PurposeSelect value={purpose} onChange={setPurpose} />
+
       <FieldSelect
         id="ammo-type"
         label="弾"
         value={ammoTypeId}
-        onChange={setAmmoTypeId}
+        onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
         options={ammoTypes.map((t) => ({
           value: t.id,
           label: `${t.name}（小箱${t.roundsPerBox}発）`,

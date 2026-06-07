@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
 type MasterRowActionsProps = {
-  editHref: string;
+  editHref?: string;
   onDelete: () => Promise<{ ok: boolean; error?: string }>;
 };
 
@@ -35,9 +35,11 @@ export function MasterRowActions({ editHref, onDelete }: MasterRowActionsProps) 
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex gap-2">
-        <Link href={editHref} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-          編集
-        </Link>
+        {editHref ? (
+          <Link href={editHref} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            編集
+          </Link>
+        ) : null}
         <Button type="button" variant="ghost" size="sm" disabled={isPending} onClick={handleDelete}>
           削除
         </Button>

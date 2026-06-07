@@ -4,13 +4,19 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { ammoType } from "@/db/schema/ammo-ledger";
+import type { ammoCounterparty, ammoType } from "@/db/schema/ammo-ledger";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
+import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
+import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
 
+const manualCounterpartyId = "__manual__";
+
 type TransferFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
+  counterparties: (typeof ammoCounterparty.$inferSelect)[];
   initialValues?: {
     occurredOn?: string;
     ammoTypeId?: string;
@@ -19,11 +25,15 @@ type TransferFormProps = {
   };
 };
 
-export function TransferForm({ ammoTypes, initialValues }: TransferFormProps) {
+export function TransferForm({ ammoTypes, counterparties, initialValues }: TransferFormProps) {
   const today = new Date().toISOString().slice(0, 10);
 
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
+  const [purpose, setPurpose] = useState<LedgerPurpose>("shooting");
+  const [counterpartyId, setCounterpartyId] = useState(
+    counterparties[0]?.id ?? manualCounterpartyId,
+  );
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
   const [counterpartyName, setCounterpartyName] = useState("");
@@ -33,6 +43,7 @@ export function TransferForm({ ammoTypes, initialValues }: TransferFormProps) {
   const [isPending, setIsPending] = useState(false);
 
   const selectedAmmoType = ammoTypes.find((t) => t.id === ammoTypeId);
+  const isManualCounterparty = counterpartyId === manualCounterpartyId;
 
   const computedRounds = useMemo(() => {
     if (!selectedAmmoType) return 0;
@@ -43,6 +54,14 @@ export function TransferForm({ ammoTypes, initialValues }: TransferFormProps) {
     });
   }, [selectedAmmoType, boxCount, looseRounds]);
 
+  function handleAmmoTypeChange({ nextAmmoTypeId }: { nextAmmoTypeId: string }) {
+    setAmmoTypeId(nextAmmoTypeId);
+    const nextType = ammoTypes.find((t) => t.id === nextAmmoTypeId);
+    if (nextType) {
+      setPurpose(resolveDefaultPurpose({ defaultPurpose: nextType.defaultPurpose }));
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setIsPending(true);
@@ -50,12 +69,12 @@ export function TransferForm({ ammoTypes, initialValues }: TransferFormProps) {
 
     const result = await createTransactionAction({
       inputKind: "transfer",
+      purpose,
       occurredOn,
       ammoTypeId,
       boxCount: Number(boxCount) || 0,
       looseRounds: Number(looseRounds) || 0,
-      counterpartyName,
-      counterpartyAddress,
+      ...(isManualCounterparty ? { counterpartyName, counterpartyAddress } : { counterpartyId }),
       memo: memo || undefined,
     });
 
@@ -78,11 +97,13 @@ export function TransferForm({ ammoTypes, initialValues }: TransferFormProps) {
         />
       </div>
 
+      <PurposeSelect value={purpose} onChange={setPurpose} />
+
       <FieldSelect
         id="ammo-type"
         label="弾"
         value={ammoTypeId}
-        onChange={setAmmoTypeId}
+        onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
         options={ammoTypes.map((t) => ({
           value: t.id,
           label: `${t.name}（1箱${t.roundsPerBox}発）`,
@@ -118,25 +139,41 @@ export function TransferForm({ ammoTypes, initialValues }: TransferFormProps) {
         <p className="text-lg font-semibold">{computedRounds}発</p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="counterparty-name">相手方氏名</Label>
-        <Input
-          id="counterparty-name"
-          required
-          value={counterpartyName}
-          onChange={(e) => setCounterpartyName(e.target.value)}
-        />
-      </div>
+      <FieldSelect
+        id="counterparty"
+        label="譲渡先"
+        value={counterpartyId}
+        onChange={setCounterpartyId}
+        options={[
+          ...counterparties.map((c) => ({ value: c.id, label: c.name })),
+          { value: manualCounterpartyId, label: "手入力" },
+        ]}
+        required
+        placeholder=""
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="counterparty-address">相手方住所</Label>
-        <Input
-          id="counterparty-address"
-          required
-          value={counterpartyAddress}
-          onChange={(e) => setCounterpartyAddress(e.target.value)}
-        />
-      </div>
+      {isManualCounterparty ? (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="counterparty-name">相手方氏名</Label>
+            <Input
+              id="counterparty-name"
+              required
+              value={counterpartyName}
+              onChange={(e) => setCounterpartyName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="counterparty-address">相手方住所</Label>
+            <Input
+              id="counterparty-address"
+              required
+              value={counterpartyAddress}
+              onChange={(e) => setCounterpartyAddress(e.target.value)}
+            />
+          </div>
+        </>
+      ) : null}
 
       <div className="space-y-2">
         <Label htmlFor="memo">メモ（帳簿には出ません）</Label>

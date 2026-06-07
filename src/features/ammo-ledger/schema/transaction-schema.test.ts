@@ -5,6 +5,7 @@ describe("transactionInputSchema", () => {
   it("消費入力を受け付ける", () => {
     const result = transactionInputSchema.safeParse({
       inputKind: "consume",
+      purpose: "shooting",
       occurredOn: "2026-06-07",
       ammoTypeId: "ammo-1",
       gunId: "gun-1",
@@ -18,6 +19,7 @@ describe("transactionInputSchema", () => {
   it("譲受で相手方が未入力なら拒否する", () => {
     const result = transactionInputSchema.safeParse({
       inputKind: "acquire",
+      purpose: "hunting",
       occurredOn: "2026-06-07",
       ammoTypeId: "ammo-1",
       boxCount: 1,
@@ -30,6 +32,7 @@ describe("transactionInputSchema", () => {
   it("譲受で購入先IDがあれば受け付ける", () => {
     const result = transactionInputSchema.safeParse({
       inputKind: "acquire",
+      purpose: "shooting",
       occurredOn: "2026-06-07",
       ammoTypeId: "ammo-1",
       counterpartyId: "shop-1",
@@ -43,6 +46,7 @@ describe("transactionInputSchema", () => {
   it("不正な日付形式を拒否する", () => {
     const result = transactionInputSchema.safeParse({
       inputKind: "dispose",
+      purpose: "shooting",
       occurredOn: "2026/06/07",
       ammoTypeId: "ammo-1",
       boxCount: 1,

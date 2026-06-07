@@ -1,13 +1,25 @@
 import type { ammoLedgerEntry } from "@/db/schema/ammo-ledger";
 import { ledgerCategoryLabels } from "@/features/ammo-ledger/schema/ledger-category";
+import {
+  type LedgerPurpose,
+  ledgerPurposeLabels,
+} from "@/features/ammo-ledger/schema/ledger-purpose";
 
 type LedgerPrintViewProps = {
   entries: (typeof ammoLedgerEntry.$inferSelect)[];
   from: string;
   to: string;
+  purpose: LedgerPurpose;
+  permitBalances?: Map<string, number>;
 };
 
-export function LedgerPrintView({ entries, from, to }: LedgerPrintViewProps) {
+export function LedgerPrintView({
+  entries,
+  from,
+  to,
+  purpose,
+  permitBalances,
+}: LedgerPrintViewProps) {
   return (
     <div className="ledger-print space-y-4">
       <style>{`
@@ -41,7 +53,7 @@ export function LedgerPrintView({ entries, from, to }: LedgerPrintViewProps) {
       </div>
 
       <header className="text-center">
-        <h1 className="text-xl font-bold">実包管理帳簿</h1>
+        <h1 className="text-xl font-bold">実包管理帳簿（{ledgerPurposeLabels[purpose]}）</h1>
         <p className="text-sm">
           期間: {from} 〜 {to}
         </p>
@@ -54,6 +66,7 @@ export function LedgerPrintView({ entries, from, to }: LedgerPrintViewProps) {
             <th className="border border-black px-2 py-1">区分</th>
             <th className="border border-black px-2 py-1">種類</th>
             <th className="border border-black px-2 py-1">数量</th>
+            <th className="border border-black px-2 py-1">許可残数</th>
             <th className="border border-black px-2 py-1">場所</th>
             <th className="border border-black px-2 py-1">相手方</th>
             <th className="border border-black px-2 py-1">使用銃</th>
@@ -71,6 +84,9 @@ export function LedgerPrintView({ entries, from, to }: LedgerPrintViewProps) {
               </td>
               <td className="border border-black px-2 py-1">{entry.ammoTypeName}</td>
               <td className="border border-black px-2 py-1 text-right">{entry.quantity}発</td>
+              <td className="border border-black px-2 py-1 text-right">
+                {permitBalances?.has(entry.id) ? `${permitBalances.get(entry.id)}発` : ""}
+              </td>
               <td className="border border-black px-2 py-1">{entry.location ?? ""}</td>
               <td className="border border-black px-2 py-1">
                 {entry.counterpartyName ?? ""}

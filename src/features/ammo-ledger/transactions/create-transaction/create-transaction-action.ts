@@ -136,6 +136,7 @@ export async function createTransactionAction(input: unknown) {
       userId: user.id,
       status: "confirmed",
       inputKind: data.inputKind,
+      purpose: data.purpose,
       occurredOn: data.occurredOn,
       ammoTypeId: ammoTypeRow.id,
       gunId: gunRow?.id ?? null,
@@ -155,6 +156,7 @@ export async function createTransactionAction(input: unknown) {
       userId: user.id,
       transactionId,
       category: normalized.category,
+      purpose: data.purpose,
       occurredOn: normalized.occurredOn,
       ammoTypeId: normalized.ammoTypeId,
       ammoTypeName: normalized.ammoTypeName,
@@ -168,5 +170,5 @@ export async function createTransactionAction(input: unknown) {
     });
   });
 
-  redirect("/lab/ammo-ledger/ledger");
+  redirect(`/lab/ammo-ledger/ledger?purpose=${data.purpose}`);
 }

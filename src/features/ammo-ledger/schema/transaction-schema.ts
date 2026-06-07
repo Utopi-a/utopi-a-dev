@@ -1,10 +1,12 @@
 import { z } from "zod";
 import type { inputKinds } from "./input-kind";
+import { ledgerPurposes } from "./ledger-purpose";
 
 export const transactionStatuses = ["draft", "confirmed", "voided"] as const;
 export type TransactionStatus = (typeof transactionStatuses)[number];
 
 const baseTransactionSchema = z.object({
+  purpose: z.enum(ledgerPurposes),
   occurredOn: z.string().date(),
   ammoTypeId: z.string().min(1),
   outerBoxCount: z.number().int().min(0).default(0),

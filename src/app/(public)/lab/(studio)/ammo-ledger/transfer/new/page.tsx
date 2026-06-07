@@ -3,6 +3,7 @@ import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav";
 import { TransferForm } from "@/features/ammo-ledger/components/transfer-form/transfer-form";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
+import { listCounterparties } from "@/features/ammo-ledger/master/list-counterparties/list-counterparties";
 import { getDraftTransaction } from "@/features/ammo-ledger/transactions/get-draft/get-draft";
 
 type PageProps = {
@@ -13,8 +14,9 @@ export default async function TransferNewPage({ searchParams }: PageProps) {
   const user = await requireAmmoUser();
   const { draft: draftId } = await searchParams;
 
-  const [ammoTypes, draft] = await Promise.all([
+  const [ammoTypes, counterparties, draft] = await Promise.all([
     listAmmoTypes({ userId: user.id }),
+    listCounterparties({ userId: user.id }),
     draftId ? getDraftTransaction({ userId: user.id, draftId }) : Promise.resolve(null),
   ]);
 
@@ -48,7 +50,11 @@ export default async function TransferNewPage({ searchParams }: PageProps) {
               してください。
             </p>
           ) : (
-            <TransferForm ammoTypes={ammoTypes} initialValues={initialValues} />
+            <TransferForm
+              ammoTypes={ammoTypes}
+              counterparties={counterparties}
+              initialValues={initialValues}
+            />
           )}
         </CardContent>
       </Card>

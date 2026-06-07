@@ -52,11 +52,9 @@ export function resolveSupplementRowMemoFields({
 export function resolveSupplementRowLocationFields({
   isAcquisition,
   locationName,
-  locationAddress,
 }: {
   isAcquisition: boolean;
   locationName: string;
-  locationAddress: string;
 }): {
   locationCounterparty: string;
   locationRangeName: string;
@@ -73,6 +71,6 @@ export function resolveSupplementRowLocationFields({
   return {
     locationCounterparty: "",
     locationRangeName: locationName,
-    locationRangeAddress: locationAddress,
+    locationRangeAddress: "",
   };
 }

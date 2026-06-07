@@ -74,7 +74,6 @@ export function buildApplicationFieldValues({
     const locationFields = resolveSupplementRowLocationFields({
       isAcquisition: row.isAcquisition,
       locationName: row.locationName,
-      locationAddress: row.locationAddress,
     });
     const memoFields = resolveSupplementRowMemoFields({
       purpose: row.purpose,

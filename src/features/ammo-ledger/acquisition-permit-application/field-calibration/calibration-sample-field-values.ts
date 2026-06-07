@@ -34,7 +34,7 @@ export const calibrationSampleFieldValues: Record<string, string> = {
   consumptionQuantity: "1500",
   locationCounterparty: "サンプル商店",
   locationRangeName: "〇〇射撃場",
-  locationRangeAddress: "茨城県つくば市",
+  locationRangeAddress: "",
   memoTargetShooting: "✓",
   memoHunting: "",
   memoOther: "",

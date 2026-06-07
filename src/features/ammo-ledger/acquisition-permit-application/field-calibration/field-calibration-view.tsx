@@ -36,6 +36,14 @@ import {
 } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/calibration-template-registry";
 import { cloneCalibrationFields } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/clone-calibration-fields";
 import {
+  removeCalibrationFields,
+  resolveDeletableCalibrationFieldIds,
+} from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/delete-calibration-fields";
+import {
+  buildEvenYDistributionPatches,
+  computeRowHeightFromFieldAnchors,
+} from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/distribute-calibration-layout/distribute-calibration-layout";
+import {
   duplicateSelectedFields,
   repeatSelectedFieldLayout,
 } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/duplicate-calibration-fields";
@@ -110,6 +118,8 @@ export function FieldCalibrationView() {
   const [backgroundScale, setBackgroundScale] = useState(1);
   const [layoutRepeatCount, setLayoutRepeatCount] = useState(1);
   const [layoutRepeatOffsetY, setLayoutRepeatOffsetY] = useState(19);
+  const [evenDistributionCount, setEvenDistributionCount] = useState(2);
+  const [rowSpacingCount, setRowSpacingCount] = useState(10);
   const [isApplying, setIsApplying] = useState(false);
 
   const {
@@ -189,6 +199,18 @@ export function FieldCalibrationView() {
     }
     saveCalibrationPreviewText({ templateId: template.id, values: previewValues });
   }, [previewValues, template]);
+
+  useEffect(() => {
+    if (selectedFieldIds.length >= 2) {
+      setEvenDistributionCount(selectedFieldIds.length);
+    }
+  }, [selectedFieldIds]);
+
+  useEffect(() => {
+    if (repeatingRows) {
+      setRowSpacingCount(repeatingRows.maxRowsPerPage);
+    }
+  }, [repeatingRows]);
 
   const calibrationPageFields = useMemo(
     () => buildCalibrationPageFields({ fields, repeatingRows, pageIndex }),
@@ -487,6 +509,91 @@ export function FieldCalibrationView() {
     toast.success(`レイアウトを ${layoutRepeatCount} 回繰り返しました`);
   }, [fields, layoutRepeatCount, layoutRepeatOffsetY, replaceFields, selectedFieldIds]);
 
+  const handleDeleteSelected = useCallback(() => {
+    const deletableIds = resolveDeletableCalibrationFieldIds({ selectedIds: selectedFieldIds });
+    if (deletableIds.length === 0) {
+      toast.error("削除できるフィールドが選択されていません（紫枠は削除不可）");
+      return;
+    }
+
+    let nextFields = fields;
+    replaceFields({
+      updater: (current) => {
+        nextFields = removeCalibrationFields({ fields: current, fieldIds: deletableIds });
+        return nextFields;
+      },
+    });
+
+    const nextPageFields = buildCalibrationPageFields({
+      fields: nextFields,
+      repeatingRows,
+      pageIndex,
+    });
+    setSelectedFieldIds(nextPageFields[0] ? [nextPageFields[0].id] : []);
+    toast.success(`${deletableIds.length} 件を削除しました`);
+  }, [fields, pageIndex, repeatingRows, replaceFields, selectedFieldIds]);
+
+  const handleEvenDistribution = useCallback(() => {
+    const patches = buildEvenYDistributionPatches({
+      fields: allCalibrationFields,
+      selectedIds: selectedFieldIds,
+      count: evenDistributionCount,
+    });
+    if (!patches) {
+      toast.error(
+        `${evenDistributionCount} 件選択してください（現在 ${selectedFieldIds.length} 件）`,
+      );
+      return;
+    }
+
+    replaceSnapshot({
+      updater: (current) => {
+        const result = applyCalibrationFieldPatches({
+          fields: current.fields,
+          repeatingRows: current.repeatingRows,
+          patches,
+        });
+        return { fields: result.fields, repeatingRows: result.repeatingRows };
+      },
+    });
+    toast.success(`${evenDistributionCount} 件を均等配置しました`);
+  }, [allCalibrationFields, evenDistributionCount, replaceSnapshot, selectedFieldIds]);
+
+  const handleComputeRowHeightFromAnchors = useCallback(() => {
+    if (!repeatingRows) {
+      return;
+    }
+
+    const result = computeRowHeightFromFieldAnchors({
+      fields: allCalibrationFields,
+      selectedIds: selectedFieldIds,
+      rowCount: rowSpacingCount,
+    });
+    if (!result) {
+      toast.error("上下2点を選択し、行数は2以上にしてください");
+      return;
+    }
+
+    replaceRepeatingRows({
+      updater: (current) =>
+        current
+          ? {
+              ...current,
+              startY: result.startY,
+              rowHeight: result.rowHeight,
+            }
+          : current,
+    });
+    setLayoutRepeatOffsetY(result.rowHeight);
+    toast.success(`startY ${result.startY}mm · rowHeight ${result.rowHeight}mm`);
+  }, [
+    allCalibrationFields,
+    repeatingRows,
+    replaceRepeatingRows,
+    rowSpacingCount,
+    selectedFieldIds,
+  ]);
+
   function handleAlign({ mode }: { mode: AlignMode }) {
     const aligned = alignCalibrationFields({
       fields: allCalibrationFields,
@@ -615,12 +722,21 @@ export function FieldCalibrationView() {
       if ((event.metaKey || event.ctrlKey) && event.key === "d") {
         event.preventDefault();
         handleDuplicate();
+        return;
+      }
+      if (
+        event.key === "Delete" ||
+        event.key === "Backspace" ||
+        ((event.metaKey || event.ctrlKey) && (event.key === "Delete" || event.key === "Backspace"))
+      ) {
+        event.preventDefault();
+        handleDeleteSelected();
       }
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleDuplicate, redo, undo]);
+  }, [handleDeleteSelected, handleDuplicate, redo, undo]);
 
   if (!template || !templateEntry) {
     return <p className="text-sm text-muted-foreground">テンプレートが見つかりません。</p>;
@@ -672,13 +788,25 @@ export function FieldCalibrationView() {
         >
           複製
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={
+            resolveDeletableCalibrationFieldIds({ selectedIds: selectedFieldIds }).length === 0
+          }
+          onClick={handleDeleteSelected}
+        >
+          削除
+        </Button>
       </div>
 
       <CalibrationAlignToolbar selectedCount={selectedFieldIds.length} onAlign={handleAlign} />
 
       <p className="text-xs text-muted-foreground">
         空白をドラッグで範囲選択 · Cmd/Ctrl+クリックで複数選択 · 複数選択中はドラッグで一緒に移動 ·
-        Cmd/Ctrl+Z/Y で Undo/Redo · Cmd/Ctrl+D で複製
+        Cmd/Ctrl+Z/Y で Undo/Redo · Cmd/Ctrl+D で複製 · Delete/Backspace で削除 ·
+        均等配置は最上/最下を基準に個数指定
         {repeatingRows ? " · 紫枠は表行（repeatingRows）の列" : ""}
       </p>
 
@@ -793,6 +921,39 @@ export function FieldCalibrationView() {
             </Button>
           </div>
 
+          <div className="space-y-2 rounded-md border p-2">
+            <p className="text-xs font-medium">均等配置</p>
+            <p className="text-[11px] text-muted-foreground">
+              最上と最下の選択を端に、個数ぶん y を等分します
+            </p>
+            <div className="space-y-1">
+              <Label htmlFor="even-distribution-count">個数</Label>
+              <Input
+                id="even-distribution-count"
+                type="number"
+                min={2}
+                max={30}
+                step={1}
+                value={evenDistributionCount}
+                onChange={(event) =>
+                  setEvenDistributionCount(
+                    Math.max(2, parseNumberInput({ value: event.target.value, fallback: 2 })),
+                  )
+                }
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              disabled={selectedFieldIds.length < 2}
+              onClick={handleEvenDistribution}
+            >
+              選択を均等配置
+            </Button>
+          </div>
+
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">フィールド</p>
             <ul className="max-h-[480px] space-y-0.5 overflow-y-auto text-xs">
@@ -835,7 +996,7 @@ export function FieldCalibrationView() {
                   <Input
                     id={`repeating-${key}`}
                     type="number"
-                    step={key === "maxRowsPerPage" ? 1 : 0.1}
+                    step={key === "maxRowsPerPage" ? 1 : 0.01}
                     value={repeatingRows[key]}
                     onFocus={beginInteraction}
                     onBlur={endInteraction}
@@ -861,6 +1022,36 @@ export function FieldCalibrationView() {
                   />
                 </div>
               ))}
+              <div className="space-y-1 pt-1">
+                <Label htmlFor="row-spacing-count">行数（2点間を等分）</Label>
+                <Input
+                  id="row-spacing-count"
+                  type="number"
+                  min={2}
+                  max={30}
+                  step={1}
+                  value={rowSpacingCount}
+                  onChange={(event) =>
+                    setRowSpacingCount(
+                      Math.max(2, parseNumberInput({ value: event.target.value, fallback: 2 })),
+                    )
+                  }
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled={selectedFieldIds.length !== 2}
+                onClick={handleComputeRowHeightFromAnchors}
+              >
+                2点から rowHeight 算出
+              </Button>
+              <p className="text-[11px] text-muted-foreground">
+                表の横線に合わせて仮フィールドを2点置き、ちょうど2件だけ選択。行数=2
+                なら1〜2行目の間隔、行数=10 なら1〜10行目全体を等分（紫枠は使わない）
+              </p>
             </div>
           ) : null}
         </aside>

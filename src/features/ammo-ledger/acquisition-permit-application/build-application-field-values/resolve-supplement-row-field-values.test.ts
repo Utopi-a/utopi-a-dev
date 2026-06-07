@@ -54,7 +54,6 @@ describe("resolveSupplementRowLocationFields", () => {
       resolveSupplementRowLocationFields({
         isAcquisition: true,
         locationName: "〇〇商店",
-        locationAddress: "茨城県つくば市",
       }),
     ).toEqual({
       locationCounterparty: "〇〇商店",
@@ -63,17 +62,16 @@ describe("resolveSupplementRowLocationFields", () => {
     });
   });
 
-  it("消費行は射撃場名と場所", () => {
+  it("消費行は射撃場名のみ（場所行は未使用）", () => {
     expect(
       resolveSupplementRowLocationFields({
         isAcquisition: false,
         locationName: "A射撃場",
-        locationAddress: "茨城県つくば市",
       }),
     ).toEqual({
       locationCounterparty: "",
       locationRangeName: "A射撃場",
-      locationRangeAddress: "茨城県つくば市",
+      locationRangeAddress: "",
     });
   });
 });

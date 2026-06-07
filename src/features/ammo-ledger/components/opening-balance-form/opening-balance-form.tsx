@@ -12,6 +12,7 @@ import {
 } from "@/features/ammo-ledger/components/opening-balance-form/opening-balance-permit-carryover-list";
 import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/purpose-filter";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
+import { buildLedgerHref } from "@/features/ammo-ledger/ledger/build-ledger-href/build-ledger-href";
 import { buildYearOpeningDay } from "@/features/ammo-ledger/opening-balance/build-year-day/build-year-day";
 import type { OpeningBalanceSnapshot } from "@/features/ammo-ledger/opening-balance/get-opening-balance/get-opening-balance";
 import { saveOpeningBalanceAction } from "@/features/ammo-ledger/opening-balance/save-opening-balance/save-opening-balance-action";
@@ -161,8 +162,7 @@ export function OpeningBalanceForm({
     }
 
     showAmmoLedgerToast({ action: "saved", subject: "年初繰越" });
-    router.refresh();
-    setIsPending(false);
+    router.push(buildLedgerHref({ purpose }));
   }
 
   return (

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
+import { buildLedgerHref } from "@/features/ammo-ledger/ledger/build-ledger-href/build-ledger-href";
 import { createAcquisitionPermitAction } from "@/features/ammo-ledger/permit/create-acquisition-permit/create-acquisition-permit-action";
 import {
   type AcquisitionPermitName,
@@ -70,10 +71,7 @@ export function AcquisitionPermitForm() {
     }
 
     showAmmoLedgerToast({ action: "created", subject: "譲受許可" });
-    router.refresh();
-    setQuantity("5000");
-    setMemo("");
-    setIsPending(false);
+    router.push(buildLedgerHref({ purpose: ledgerPurpose }));
   }
 
   return (

@@ -1,8 +1,10 @@
+import type { SocialBrandIconId } from "@/features/portfolio/social-icons/social-brand-icon";
+
 export const socialProviderUi = [
-  { id: "github", label: "GitHub", iconSrc: "/mark-github.svg" },
+  { id: "github", label: "GitHub", icon: "github" satisfies SocialBrandIconId },
   { id: "google", label: "Google" },
   { id: "discord", label: "Discord" },
-  { id: "twitter", label: "X (Twitter)" },
+  { id: "twitter", label: "X (Twitter)", icon: "x" satisfies SocialBrandIconId },
 ] as const;
 
 export type SocialProviderId = (typeof socialProviderUi)[number]["id"];

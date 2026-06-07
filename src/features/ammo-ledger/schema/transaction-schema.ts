@@ -74,6 +74,8 @@ export const transactionInputSchema = z.discriminatedUnion("inputKind", [
 
 export type TransactionInput = z.infer<typeof transactionInputSchema>;
 
+export type LedgerTransactionInput = Exclude<TransactionInput, { inputKind: "stock_check" }>;
+
 export function isLedgerInputKind(
   inputKind: (typeof inputKinds)[number],
 ): inputKind is "consume" | "acquire" | "dispose" | "transfer" {

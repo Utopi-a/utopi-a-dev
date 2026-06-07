@@ -2,8 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav";
 import { CounterpartyForm } from "@/features/ammo-ledger/components/counterparty-form/counterparty-form";
-import { MasterRowActions } from "@/features/ammo-ledger/components/master-row-actions/master-row-actions";
-import { deleteCounterpartyAction } from "@/features/ammo-ledger/master/delete-counterparty/delete-counterparty-action";
+import { CounterpartyRowActions } from "@/features/ammo-ledger/components/counterparty-row-actions/counterparty-row-actions";
 import { listCounterparties } from "@/features/ammo-ledger/master/list-counterparties/list-counterparties";
 
 export default async function CounterpartiesSettingsPage() {
@@ -28,10 +27,7 @@ export default async function CounterpartiesSettingsPage() {
                   <span>
                     {item.name} — {item.address}
                   </span>
-                  <MasterRowActions
-                    editHref={`/lab/ammo-ledger/settings/counterparties/${item.id}/edit`}
-                    onDelete={() => deleteCounterpartyAction({ id: item.id })}
-                  />
+                  <CounterpartyRowActions counterpartyId={item.id} />
                 </li>
               ))}
             </ul>

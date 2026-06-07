@@ -2,8 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav";
 import { AmmoTypeForm } from "@/features/ammo-ledger/components/ammo-type-form/ammo-type-form";
-import { MasterRowActions } from "@/features/ammo-ledger/components/master-row-actions/master-row-actions";
-import { deleteAmmoTypeAction } from "@/features/ammo-ledger/master/delete-ammo-type/delete-ammo-type-action";
+import { AmmoTypeRowActions } from "@/features/ammo-ledger/components/ammo-type-row-actions/ammo-type-row-actions";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import type { ShotType } from "@/features/ammo-ledger/schema/shot-type";
 import { shotTypeLabels } from "@/features/ammo-ledger/schema/shot-type";
@@ -32,10 +31,7 @@ export default async function AmmoTypesSettingsPage() {
                     {type.gaugeNumber ? `（${type.gaugeNumber}号）` : ""} — {type.caliber}{" "}
                     {shotTypeLabels[type.shotType as ShotType]}（1箱{type.roundsPerBox}発）
                   </span>
-                  <MasterRowActions
-                    editHref={`/lab/ammo-ledger/settings/ammo-types/${type.id}/edit`}
-                    onDelete={() => deleteAmmoTypeAction({ id: type.id })}
-                  />
+                  <AmmoTypeRowActions ammoTypeId={type.id} />
                 </li>
               ))}
             </ul>

@@ -1,9 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav";
-import { MasterRowActions } from "@/features/ammo-ledger/components/master-row-actions/master-row-actions";
 import { RangeForm } from "@/features/ammo-ledger/components/range-form/range-form";
-import { deleteRangeAction } from "@/features/ammo-ledger/master/delete-range/delete-range-action";
+import { RangeRowActions } from "@/features/ammo-ledger/components/range-row-actions/range-row-actions";
 import { listRanges } from "@/features/ammo-ledger/master/list-ranges/list-ranges";
 
 export default async function RangesSettingsPage() {
@@ -28,10 +27,7 @@ export default async function RangesSettingsPage() {
                   <span>
                     {range.name} — {range.address}
                   </span>
-                  <MasterRowActions
-                    editHref={`/lab/ammo-ledger/settings/ranges/${range.id}/edit`}
-                    onDelete={() => deleteRangeAction({ id: range.id })}
-                  />
+                  <RangeRowActions rangeId={range.id} />
                 </li>
               ))}
             </ul>

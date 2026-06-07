@@ -9,6 +9,8 @@ import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 import { listRanges } from "@/features/ammo-ledger/master/list-ranges/list-ranges";
 import { computeRunningPermitBalance } from "@/features/ammo-ledger/permit/compute-running-permit-balance/compute-running-permit-balance";
 import { listPermitEvents } from "@/features/ammo-ledger/permit/list-permit-events/list-permit-events";
+import { getLedgerProfile } from "@/features/ammo-ledger/profile/get-ledger-profile/get-ledger-profile";
+import { resolveOwnerName } from "@/features/ammo-ledger/profile/resolve-owner-name/resolve-owner-name";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import type { PermitEventKind } from "@/features/ammo-ledger/schema/permit-event-kind";
 import { parseLedgerPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
@@ -27,13 +29,19 @@ export default async function LedgerPrintPage({ searchParams }: PageProps) {
   const from = fromParam ?? `${year}-01-01`;
   const to = toParam ?? `${year}-12-31`;
 
-  const [entries, permitEvents, guns, ranges, counterparties] = await Promise.all([
+  const [entries, permitEvents, guns, ranges, counterparties, profile] = await Promise.all([
     listLedgerEntries({ userId: user.id, purpose, from, to }),
     listPermitEvents({ userId: user.id, purpose }),
     listGuns({ userId: user.id }),
     listRanges({ userId: user.id }),
     listCounterparties({ userId: user.id }),
+    getLedgerProfile({ userId: user.id }),
   ]);
+
+  const ownerName = resolveOwnerName({
+    profileOwnerName: profile?.ownerName,
+    accountName: user.name,
+  });
 
   const permitBalances = computeRunningPermitBalance({
     permitEvents: permitEvents.map((event) => ({
@@ -61,7 +69,8 @@ export default async function LedgerPrintPage({ searchParams }: PageProps) {
         <PrintButton />
       </div>
       <LedgerPrintDocument
-        ownerName={user.name}
+        ownerName={ownerName}
+        ownerAddress={profile?.ownerAddress}
         purpose={purpose}
         from={from}
         to={to}

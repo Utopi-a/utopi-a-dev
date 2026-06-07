@@ -5,12 +5,19 @@ import {
 
 type LedgerPrintCoverProps = {
   ownerName: string;
+  ownerAddress?: string | null;
   purpose: LedgerPurpose;
   from: string;
   to: string;
 };
 
-export function LedgerPrintCover({ ownerName, purpose, from, to }: LedgerPrintCoverProps) {
+export function LedgerPrintCover({
+  ownerName,
+  ownerAddress,
+  purpose,
+  from,
+  to,
+}: LedgerPrintCoverProps) {
   const printedOn = new Date().toISOString().slice(0, 10);
 
   return (
@@ -19,6 +26,7 @@ export function LedgerPrintCover({ ownerName, purpose, from, to }: LedgerPrintCo
       <p className="text-lg">{ledgerPurposeLabels[purpose]}</p>
       <div className="space-y-1 text-sm">
         <p>氏名: {ownerName}</p>
+        {ownerAddress ? <p>住所: {ownerAddress}</p> : null}
         <p>
           記録期間: {from} 〜 {to}
         </p>

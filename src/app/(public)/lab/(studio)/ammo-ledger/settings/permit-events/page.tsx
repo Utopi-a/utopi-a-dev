@@ -1,9 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav";
-import { MasterRowActions } from "@/features/ammo-ledger/components/master-row-actions/master-row-actions";
 import { PermitEventForm } from "@/features/ammo-ledger/components/permit-event-form/permit-event-form";
-import { deletePermitEventAction } from "@/features/ammo-ledger/permit/delete-permit-event/delete-permit-event-action";
+import { PermitEventRowActions } from "@/features/ammo-ledger/components/permit-event-row-actions/permit-event-row-actions";
 import { listPermitEvents } from "@/features/ammo-ledger/permit/list-permit-events/list-permit-events";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
@@ -39,7 +38,7 @@ export default async function PermitEventsSettingsPage() {
                     {permitEventKindLabels[event.eventKind as PermitEventKind]} {event.quantity}発
                     {event.memo ? `（${event.memo}）` : ""}
                   </span>
-                  <MasterRowActions onDelete={() => deletePermitEventAction({ id: event.id })} />
+                  <PermitEventRowActions eventId={event.id} />
                 </li>
               ))}
             </ul>

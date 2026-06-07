@@ -6,12 +6,15 @@ import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
+export type MasterDeleteResult = { ok: true } | { ok: false; error?: string };
+
 type MasterRowActionsProps = {
   editHref?: string;
-  onDelete: () => Promise<{ ok: boolean; error?: string }>;
+  recordId: string;
+  deleteAction: (args: { id: string }) => Promise<MasterDeleteResult>;
 };
 
-export function MasterRowActions({ editHref, onDelete }: MasterRowActionsProps) {
+export function MasterRowActions({ editHref, recordId, deleteAction }: MasterRowActionsProps) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +25,7 @@ export function MasterRowActions({ editHref, onDelete }: MasterRowActionsProps) 
     }
     setIsPending(true);
     setError(null);
-    const result = await onDelete();
+    const result = await deleteAction({ id: recordId });
     if (!result.ok) {
       setError(result.error ?? "削除に失敗しました");
       setIsPending(false);

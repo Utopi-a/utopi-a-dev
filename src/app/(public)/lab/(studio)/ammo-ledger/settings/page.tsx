@@ -7,6 +7,11 @@ import { cn } from "@/lib/cn";
 
 const settingsLinks = [
   {
+    href: "/lab/ammo-ledger/settings/profile",
+    label: "帳簿プロフィール",
+    description: "帳簿・印刷に載せる氏名と住所",
+  },
+  {
     href: "/lab/ammo-ledger/settings/ammo-types",
     label: "弾種マスタ",
     description: "番径・散弾/単弾・1箱あたり発数",

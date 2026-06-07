@@ -99,6 +99,15 @@ export const ammoTransaction = pgTable("ammo_transaction", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const ammoLedgerProfile = pgTable("ammo_ledger_profile", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  ownerName: text("owner_name").notNull(),
+  ownerAddress: text("owner_address"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const ammoLedgerEntry = pgTable("ammo_ledger_entry", {
   id: text("id").primaryKey(),
   userId: text("user_id")

@@ -13,6 +13,7 @@ import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose
 
 type LedgerPrintDocumentProps = {
   ownerName: string;
+  ownerAddress?: string | null;
   purpose: LedgerPurpose;
   from: string;
   to: string;
@@ -25,6 +26,7 @@ type LedgerPrintDocumentProps = {
 
 export function LedgerPrintDocument({
   ownerName,
+  ownerAddress,
   purpose,
   from,
   to,
@@ -44,7 +46,13 @@ export function LedgerPrintDocument({
         </p>
       </div>
 
-      <LedgerPrintCover ownerName={ownerName} purpose={purpose} from={from} to={to} />
+      <LedgerPrintCover
+        ownerName={ownerName}
+        ownerAddress={ownerAddress}
+        purpose={purpose}
+        from={from}
+        to={to}
+      />
       <LedgerPrintGunList guns={guns} />
       <LedgerPrintAddressList ranges={ranges} counterparties={counterparties} />
       <LedgerPrintView

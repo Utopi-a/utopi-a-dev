@@ -2,8 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav";
 import { GunForm } from "@/features/ammo-ledger/components/gun-form/gun-form";
-import { MasterRowActions } from "@/features/ammo-ledger/components/master-row-actions/master-row-actions";
-import { deleteGunAction } from "@/features/ammo-ledger/master/delete-gun/delete-gun-action";
+import { GunRowActions } from "@/features/ammo-ledger/components/gun-row-actions/gun-row-actions";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 
 export default async function GunsSettingsPage() {
@@ -28,10 +27,7 @@ export default async function GunsSettingsPage() {
                   <span>
                     {gun.name} — {gun.permitNumber}（{gun.gunType} / {gun.caliber}）
                   </span>
-                  <MasterRowActions
-                    editHref={`/lab/ammo-ledger/settings/guns/${gun.id}/edit`}
-                    onDelete={() => deleteGunAction({ id: gun.id })}
-                  />
+                  <GunRowActions gunId={gun.id} />
                 </li>
               ))}
             </ul>

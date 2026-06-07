@@ -8,6 +8,8 @@ import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/
 import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-entries/list-ledger-entries";
 import { computeCurrentPermitBalance } from "@/features/ammo-ledger/permit/compute-running-permit-balance/compute-running-permit-balance";
 import { listPermitEvents } from "@/features/ammo-ledger/permit/list-permit-events/list-permit-events";
+import { getLedgerProfile } from "@/features/ammo-ledger/profile/get-ledger-profile/get-ledger-profile";
+import { resolveOwnerName } from "@/features/ammo-ledger/profile/resolve-owner-name/resolve-owner-name";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
 import type { PermitEventKind } from "@/features/ammo-ledger/schema/permit-event-kind";
@@ -23,8 +25,16 @@ export default async function LedgerPage({ searchParams }: PageProps) {
   const { purpose: purposeParam } = await searchParams;
   const purpose = parseLedgerPurpose({ value: purposeParam }) ?? "shooting";
 
-  const entries = await listLedgerEntries({ userId: user.id, purpose });
-  const permitEvents = await listPermitEvents({ userId: user.id, purpose });
+  const [entries, permitEvents, profile] = await Promise.all([
+    listLedgerEntries({ userId: user.id, purpose }),
+    listPermitEvents({ userId: user.id, purpose }),
+    getLedgerProfile({ userId: user.id }),
+  ]);
+
+  const ownerName = resolveOwnerName({
+    profileOwnerName: profile?.ownerName,
+    accountName: user.name,
+  });
 
   const permitBalance = computeCurrentPermitBalance({
     permitEvents: permitEvents.map((event) => ({
@@ -51,7 +61,7 @@ export default async function LedgerPage({ searchParams }: PageProps) {
             実包管理帳簿（{ledgerPurposeLabels[purpose]}）
           </h1>
           <p className="text-sm text-muted-foreground">
-            法定区分のみ表示。許可残数: {permitBalance}発
+            {ownerName} — 法定区分のみ表示。許可残数: {permitBalance}発
           </p>
         </div>
         <Link

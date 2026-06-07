@@ -1,3 +1,5 @@
+"use client";
+
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import {
   type LedgerPurpose,

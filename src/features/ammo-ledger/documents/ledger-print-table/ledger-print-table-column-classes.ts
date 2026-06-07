@@ -10,11 +10,11 @@ export const ledgerPrintColClass = {
 } as const;
 
 export const ledgerPrintCellClass = {
-  date: `${ledgerPrintColClass.date} ledger-print-cell-nowrap`,
-  category: `${ledgerPrintColClass.category} ledger-print-cell-nowrap`,
-  permitName: `${ledgerPrintColClass.permitName} ledger-print-cell-nowrap`,
-  quantity: `${ledgerPrintColClass.quantity} ledger-print-cell-nowrap ledger-print-cell-right`,
-  permitBalance: `${ledgerPrintColClass.permitBalance} ledger-print-cell-nowrap ledger-print-cell-right`,
+  date: ledgerPrintColClass.date,
+  category: ledgerPrintColClass.category,
+  permitName: ledgerPrintColClass.permitName,
+  quantity: `${ledgerPrintColClass.quantity} ledger-print-cell-right`,
+  permitBalance: `${ledgerPrintColClass.permitBalance} ledger-print-cell-right`,
   location: ledgerPrintColClass.location,
   counterparty: ledgerPrintColClass.counterparty,
   gun: ledgerPrintColClass.gun,

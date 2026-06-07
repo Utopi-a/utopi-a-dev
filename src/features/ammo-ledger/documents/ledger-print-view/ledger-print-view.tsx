@@ -36,14 +36,6 @@ function LedgerPrintCell({ className, children }: { className: string; children?
   return <td className={cn("ledger-print-cell", className)}>{children}</td>;
 }
 
-function LedgerPrintTextCell({ className, value }: { className: string; value: string }) {
-  return (
-    <LedgerPrintCell className={className}>
-      {value ? <span className="ledger-print-cell-text">{value}</span> : null}
-    </LedgerPrintCell>
-  );
-}
-
 function LedgerPrintEmptyCells() {
   return (
     <>
@@ -182,18 +174,15 @@ export function LedgerPrintView({
                     ? formatPermitBalance({ balance: permitBalance })
                     : ""}
                 </LedgerPrintCell>
-                <LedgerPrintTextCell
-                  className={ledgerPrintCellClass.location}
-                  value={entry.location ?? ""}
-                />
-                <LedgerPrintTextCell
-                  className={ledgerPrintCellClass.counterparty}
-                  value={entry.counterpartyName ?? ""}
-                />
-                <LedgerPrintTextCell
-                  className={ledgerPrintCellClass.gun}
-                  value={entry.gunName ?? ""}
-                />
+                <LedgerPrintCell className={ledgerPrintCellClass.location}>
+                  {entry.location ?? ""}
+                </LedgerPrintCell>
+                <LedgerPrintCell className={ledgerPrintCellClass.counterparty}>
+                  {entry.counterpartyName ?? ""}
+                </LedgerPrintCell>
+                <LedgerPrintCell className={ledgerPrintCellClass.gun}>
+                  {entry.gunName ?? ""}
+                </LedgerPrintCell>
               </tr>
             );
           })}

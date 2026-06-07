@@ -54,23 +54,14 @@ export function LedgerPrintStyles() {
         border: 1px solid #000;
         padding: 2px 4px;
         vertical-align: top;
-      }
-
-      .ledger-print-cell-nowrap {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: normal;
+        overflow: visible;
+        word-break: break-word;
+        overflow-wrap: anywhere;
       }
 
       .ledger-print-cell-right {
         text-align: right;
-      }
-
-      .ledger-print-cell-text {
-        display: block;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
       }
 
       @media print {

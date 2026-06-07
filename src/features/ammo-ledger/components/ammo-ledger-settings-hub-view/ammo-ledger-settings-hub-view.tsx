@@ -1,5 +1,6 @@
 "use client";
 
+import { AmmoLedgerPwaInstallSettingsPanel } from "@/features/ammo-ledger/components/ammo-ledger-pwa-install/ammo-ledger-pwa-install-settings-panel";
 import { SettingsLinkList } from "@/features/ammo-ledger/components/settings-link-list/settings-link-list";
 import { settingsHubGroups } from "@/features/ammo-ledger/settings/settings-hub-groups/settings-hub-groups";
 
@@ -10,6 +11,7 @@ export function AmmoLedgerSettingsHubView() {
         <h1 className="text-2xl font-semibold tracking-tight">設定</h1>
         <p className="text-sm text-muted-foreground">入力を速くするためのマスタと帳簿情報です。</p>
       </div>
+      <AmmoLedgerPwaInstallSettingsPanel />
       <SettingsLinkList groups={settingsHubGroups} />
     </div>
   );

@@ -2,11 +2,15 @@
 
 import { db } from "@/db";
 import { ammoAcquisitionPermit, ammoPermitEvent } from "@/db/schema/ammo-ledger";
-import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { acquisitionPermitInputSchema } from "@/features/ammo-ledger/schema/acquisition-permit-schema";
 
 export async function createAcquisitionPermitAction(input: unknown) {
-  const user = await requireAmmoUser();
+  const userResult = await resolveAmmoUserForMutation();
+  if (!userResult.ok) {
+    return userResult;
+  }
+  const user = userResult.user;
   const parsed = acquisitionPermitInputSchema.safeParse(input);
 
   if (!parsed.success) {

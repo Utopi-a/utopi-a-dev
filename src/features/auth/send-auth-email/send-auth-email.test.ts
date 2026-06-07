@@ -15,9 +15,8 @@ describe("sendAuthEmail", () => {
     vi.unstubAllGlobals();
   });
 
-  it("Resend 未設定かつ development では fetch せずログのみ", async () => {
+  it("Resend 未設定では fetch せず何もしない", async () => {
     vi.stubEnv("NODE_ENV", "development");
-    const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
 
     await sendAuthEmail({
       to: "user@example.com",
@@ -27,8 +26,6 @@ describe("sendAuthEmail", () => {
     });
 
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(infoSpy).toHaveBeenCalled();
-    infoSpy.mockRestore();
   });
 
   it("Resend 設定時は API を呼ぶ", async () => {

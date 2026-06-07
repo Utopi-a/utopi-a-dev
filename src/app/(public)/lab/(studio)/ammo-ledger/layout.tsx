@@ -1,5 +1,7 @@
 import { SerwistProvider } from "@serwist/turbopack/react";
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
+import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { AmmoLedgerShell } from "@/features/ammo-ledger/components/ammo-ledger-shell/ammo-ledger-shell";
 import { ammoLedgerPwaConfig } from "@/features/ammo-ledger/pwa/ammo-ledger-pwa-config";
@@ -25,7 +27,12 @@ export const viewport: Viewport = {
   themeColor: ammoLedgerPwaConfig.themeColor,
 };
 
-export default function AmmoLedgerLayout({ children }: { children: React.ReactNode }) {
+export default async function AmmoLedgerLayout({ children }: { children: React.ReactNode }) {
+  const pathname = (await headers()).get("x-pathname");
+  if (pathname !== ammoLedgerPwaConfig.offlinePath) {
+    await requireAmmoUser();
+  }
+
   return (
     <SerwistProvider swUrl="/serwist/sw.js">
       <AmmoLedgerSwrProvider>

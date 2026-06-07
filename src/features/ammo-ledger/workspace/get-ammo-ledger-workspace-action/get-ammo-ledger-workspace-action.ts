@@ -11,7 +11,7 @@ export type AmmoLedgerWorkspacePayload = {
 };
 
 export async function getAmmoLedgerWorkspaceAction(): Promise<AmmoLedgerWorkspacePayload> {
-  const user = await requireAmmoUser();
+  const user = await requireAmmoUser({ rateLimit: "read" });
   const workspace = await loadAmmoLedgerWorkspace({ userId: user.id });
   const ownerName = resolveOwnerName({
     profileOwnerName: workspace.profile?.ownerName,

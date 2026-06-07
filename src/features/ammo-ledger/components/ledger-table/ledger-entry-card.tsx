@@ -9,6 +9,12 @@ import {
   isDisplayRowSelectable,
   type LedgerDisplayRow,
 } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
+import {
+  formatAmmoQuantity,
+  formatEntryAmmoQuantityLabel,
+  formatPermitBalance,
+} from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
+import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import { cn } from "@/lib/cn";
 
 type LedgerEntryCardProps = {
@@ -47,10 +53,8 @@ export function LedgerEntryCard({
             <span className="text-sm font-medium tabular-nums">{row.occurredOn}</span>
             <PermitCarryoverBadge />
           </div>
-          <p className="font-medium leading-snug">
-            {buildPermitCarryoverLabel({ occurredOn: row.occurredOn })}
-          </p>
-          <DetailLine label="許可残数" value={`${row.quantity}発`} />
+          <p className="font-medium leading-snug">{buildPermitCarryoverLabel()}</p>
+          <DetailLine label="許可残数" value={formatPermitBalance({ balance: row.quantity })} />
         </div>
       </div>
     );
@@ -78,9 +82,14 @@ export function LedgerEntryCard({
         </div>
         <p className="font-medium leading-snug">{entry.ammoTypeName}</p>
         <div className="space-y-1">
-          <DetailLine label="数量" value={`${entry.quantity}発`} />
+          <DetailLine
+            label={formatEntryAmmoQuantityLabel({
+              category: entry.category as LedgerCategory,
+            })}
+            value={formatAmmoQuantity({ quantity: entry.quantity })}
+          />
           {permitBalance !== undefined ? (
-            <DetailLine label="許可残数" value={`${permitBalance}発`} />
+            <DetailLine label="許可残数" value={formatPermitBalance({ balance: permitBalance })} />
           ) : null}
           {entry.location ? <DetailLine label="場所" value={entry.location} /> : null}
           {entry.counterpartyName ? (

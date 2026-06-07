@@ -15,6 +15,11 @@ import {
   resolveDisplayRowId,
   resolveDisplayRowPermitBalance,
 } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
+import {
+  formatAmmoQuantity,
+  formatPermitBalance,
+  showsAmmoQuantity,
+} from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { cn } from "@/lib/cn";
 
 type LedgerTableProps = {
@@ -124,20 +129,16 @@ export function LedgerTable({
                         <PermitCarryoverBadge />
                       </td>
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.ammoType)}>
-                        <span className="font-medium">
-                          {buildPermitCarryoverLabel({ occurredOn: row.occurredOn })}
-                        </span>
+                        <span className="font-medium">{buildPermitCarryoverLabel()}</span>
                       </td>
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.quantity)}>
-                        <span className="block font-medium whitespace-nowrap tabular-nums">
-                          {row.quantity}発
-                        </span>
+                        <span className="block text-muted-foreground">—</span>
                       </td>
                       <td
                         className={cn("px-3 py-3 align-top", ledgerTableColumnClass.permitBalance)}
                       >
-                        <span className="block whitespace-nowrap text-muted-foreground tabular-nums">
-                          {row.quantity}発
+                        <span className="block font-medium whitespace-nowrap tabular-nums">
+                          {formatPermitBalance({ balance: row.quantity })}
                         </span>
                       </td>
                       <td
@@ -204,12 +205,16 @@ export function LedgerTable({
                     </td>
                     <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.quantity)}>
                       <span className="block font-medium whitespace-nowrap tabular-nums">
-                        {entry.quantity}発
+                        {showsAmmoQuantity({ row })
+                          ? formatAmmoQuantity({ quantity: entry.quantity })
+                          : "—"}
                       </span>
                     </td>
                     <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.permitBalance)}>
                       <span className="block whitespace-nowrap text-muted-foreground tabular-nums">
-                        {permitBalance !== undefined ? `${permitBalance}発` : "—"}
+                        {permitBalance !== undefined
+                          ? formatPermitBalance({ balance: permitBalance })
+                          : "—"}
                       </span>
                     </td>
                     <td

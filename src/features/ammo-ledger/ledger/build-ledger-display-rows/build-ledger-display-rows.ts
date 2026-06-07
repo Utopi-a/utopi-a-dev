@@ -93,9 +93,8 @@ export function resolveDisplayRowId({ row }: { row: LedgerDisplayRow }): string 
   return row.kind === "entry" ? row.entry.id : row.id;
 }
 
-export function buildPermitCarryoverLabel({ occurredOn }: { occurredOn: string }): string {
-  const year = occurredOn.slice(0, 4);
-  return `${year}年 許可残数繰越`;
+export function buildPermitCarryoverLabel(): string {
+  return "譲受許可";
 }
 
 export function isYearOpeningDay({ date }: { date: string }): boolean {

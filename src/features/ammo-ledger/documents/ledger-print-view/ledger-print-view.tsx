@@ -4,6 +4,11 @@ import {
   buildPermitCarryoverLabel,
   resolveDisplayRowPermitBalance,
 } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
+import {
+  formatAmmoQuantity,
+  formatPermitBalance,
+  showsAmmoQuantity,
+} from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { ledgerCategoryLabels } from "@/features/ammo-ledger/schema/ledger-category";
 import {
   type LedgerPurpose,
@@ -70,11 +75,11 @@ export function LedgerPrintView({
                     {row.occurredOn}
                   </td>
                   <td className="border border-black px-2 py-1 whitespace-nowrap">繰越</td>
-                  <td className="border border-black px-2 py-1">
-                    {buildPermitCarryoverLabel({ occurredOn: row.occurredOn })}
+                  <td className="border border-black px-2 py-1">{buildPermitCarryoverLabel()}</td>
+                  <td className="border border-black px-2 py-1 text-right" />
+                  <td className="border border-black px-2 py-1 text-right">
+                    {formatPermitBalance({ balance: row.quantity })}
                   </td>
-                  <td className="border border-black px-2 py-1 text-right">{row.quantity}発</td>
-                  <td className="border border-black px-2 py-1 text-right">{row.quantity}発</td>
                   <td className="border border-black px-2 py-1" />
                   <td className="border border-black px-2 py-1" />
                   <td className="border border-black px-2 py-1" />
@@ -94,9 +99,15 @@ export function LedgerPrintView({
                     entry.category}
                 </td>
                 <td className="border border-black px-2 py-1">{entry.ammoTypeName}</td>
-                <td className="border border-black px-2 py-1 text-right">{entry.quantity}発</td>
                 <td className="border border-black px-2 py-1 text-right">
-                  {permitBalance !== undefined ? `${permitBalance}発` : ""}
+                  {showsAmmoQuantity({ row })
+                    ? formatAmmoQuantity({ quantity: entry.quantity })
+                    : ""}
+                </td>
+                <td className="border border-black px-2 py-1 text-right">
+                  {permitBalance !== undefined
+                    ? formatPermitBalance({ balance: permitBalance })
+                    : ""}
                 </td>
                 <td className="border border-black px-2 py-1">{entry.location ?? ""}</td>
                 <td className="border border-black px-2 py-1">

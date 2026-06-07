@@ -71,13 +71,13 @@ export function computeBufferNeedByAcquisition({
       a: {
         scheduledPeriod: a.period,
         slotSequence: a.slotSequence,
-        eventSequence: a.eventSequence,
+        eventSequence: "eventSequence" in a ? a.eventSequence : undefined,
         kind: a.kind === "acquisition" ? "acquisition" : "consumption",
       },
       b: {
         scheduledPeriod: b.period,
         slotSequence: b.slotSequence,
-        eventSequence: b.eventSequence,
+        eventSequence: "eventSequence" in b ? b.eventSequence : undefined,
         kind: b.kind === "acquisition" ? "acquisition" : "consumption",
       },
     }),

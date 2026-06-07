@@ -16,23 +16,31 @@ import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-count
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
+import { updateTransactionAction } from "@/features/ammo-ledger/transactions/update-transaction/update-transaction-action";
 import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type AcquireFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
   counterpartyPickerData: MasterPickerData;
+  ledgerEntryId?: string;
   initialValues?: {
     occurredOn?: string;
+    purpose?: LedgerPurpose;
     ammoTypeId?: string;
+    counterpartyId?: string;
+    counterpartyName?: string;
+    counterpartyAddress?: string;
     outerBoxCount?: number;
     boxCount?: number;
     looseRounds?: number;
+    memo?: string;
   };
 };
 
 export function AcquireForm({
   ammoTypes,
   counterpartyPickerData,
+  ledgerEntryId,
   initialValues,
 }: AcquireFormProps) {
   const router = useRouter();
@@ -42,17 +50,20 @@ export function AcquireForm({
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
   const [counterpartyId, setCounterpartyId] = useState(
-    counterpartyPickerData.recent[0]?.id ??
+    initialValues?.counterpartyId ??
+      counterpartyPickerData.recent[0]?.id ??
       counterpartyPickerData.registered[0]?.id ??
       manualCounterpartyId,
   );
   const [outerBoxCount, setOuterBoxCount] = useState(String(initialValues?.outerBoxCount ?? 0));
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
-  const [counterpartyName, setCounterpartyName] = useState("");
-  const [counterpartyAddress, setCounterpartyAddress] = useState("");
-  const [purpose, setPurpose] = useState<LedgerPurpose>("shooting");
-  const [memo, setMemo] = useState("");
+  const [counterpartyName, setCounterpartyName] = useState(initialValues?.counterpartyName ?? "");
+  const [counterpartyAddress, setCounterpartyAddress] = useState(
+    initialValues?.counterpartyAddress ?? "",
+  );
+  const [purpose, setPurpose] = useState<LedgerPurpose>(initialValues?.purpose ?? "shooting");
+  const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -82,8 +93,8 @@ export function AcquireForm({
     setIsPending(true);
     setError(null);
 
-    const result = await createTransactionAction({
-      inputKind: "acquire",
+    const payload = {
+      inputKind: "acquire" as const,
       purpose,
       occurredOn,
       ammoTypeId,
@@ -92,7 +103,11 @@ export function AcquireForm({
       looseRounds: Number(looseRounds) || 0,
       ...(isManualCounterparty ? { counterpartyName, counterpartyAddress } : { counterpartyId }),
       memo: memo || undefined,
-    });
+    };
+
+    const result = ledgerEntryId
+      ? await updateTransactionAction({ ledgerEntryId, ...payload })
+      : await createTransactionAction(payload);
 
     if (result.ok) {
       await invalidateWorkspace();
@@ -188,7 +203,7 @@ export function AcquireForm({
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       <Button type="submit" disabled={isPending || computedRounds <= 0}>
-        {isPending ? "保存中…" : "保存"}
+        {isPending ? "保存中…" : ledgerEntryId ? "更新" : "保存"}
       </Button>
     </form>
   );

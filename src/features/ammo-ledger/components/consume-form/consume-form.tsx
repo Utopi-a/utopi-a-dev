@@ -15,23 +15,34 @@ import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
+import { updateTransactionAction } from "@/features/ammo-ledger/transactions/update-transaction/update-transaction-action";
 import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type ConsumeFormProps = {
   guns: (typeof ammoGun.$inferSelect)[];
   ammoTypes: (typeof ammoType.$inferSelect)[];
   rangePickerData: MasterPickerData;
+  ledgerEntryId?: string;
   initialValues?: {
     occurredOn?: string;
+    purpose?: LedgerPurpose;
     ammoTypeId?: string;
     gunId?: string;
     rangeId?: string;
+    outerBoxCount?: number;
     boxCount?: number;
     looseRounds?: number;
+    memo?: string;
   };
 };
 
-export function ConsumeForm({ guns, ammoTypes, rangePickerData, initialValues }: ConsumeFormProps) {
+export function ConsumeForm({
+  guns,
+  ammoTypes,
+  rangePickerData,
+  ledgerEntryId,
+  initialValues,
+}: ConsumeFormProps) {
   const router = useRouter();
   const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
   const today = new Date().toISOString().slice(0, 10);
@@ -40,11 +51,11 @@ export function ConsumeForm({ guns, ammoTypes, rangePickerData, initialValues }:
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
   const [gunId, setGunId] = useState(initialValues?.gunId ?? "");
   const [rangeId, setRangeId] = useState(initialValues?.rangeId ?? "");
-  const [outerBoxCount, setOuterBoxCount] = useState("0");
+  const [outerBoxCount, setOuterBoxCount] = useState(String(initialValues?.outerBoxCount ?? 0));
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
-  const [purpose, setPurpose] = useState<LedgerPurpose>("shooting");
-  const [memo, setMemo] = useState("");
+  const [purpose, setPurpose] = useState<LedgerPurpose>(initialValues?.purpose ?? "shooting");
+  const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -73,8 +84,8 @@ export function ConsumeForm({ guns, ammoTypes, rangePickerData, initialValues }:
     setIsPending(true);
     setError(null);
 
-    const result = await createTransactionAction({
-      inputKind: "consume",
+    const payload = {
+      inputKind: "consume" as const,
       purpose,
       occurredOn,
       ammoTypeId,
@@ -84,7 +95,11 @@ export function ConsumeForm({ guns, ammoTypes, rangePickerData, initialValues }:
       boxCount: Number(boxCount) || 0,
       looseRounds: Number(looseRounds) || 0,
       memo: memo || undefined,
-    });
+    };
+
+    const result = ledgerEntryId
+      ? await updateTransactionAction({ ledgerEntryId, ...payload })
+      : await createTransactionAction(payload);
 
     if (result.ok) {
       await invalidateWorkspace();
@@ -166,7 +181,7 @@ export function ConsumeForm({ guns, ammoTypes, rangePickerData, initialValues }:
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       <Button type="submit" disabled={isPending || computedRounds <= 0}>
-        {isPending ? "保存中…" : "保存"}
+        {isPending ? "保存中…" : ledgerEntryId ? "更新" : "保存"}
       </Button>
     </form>
   );

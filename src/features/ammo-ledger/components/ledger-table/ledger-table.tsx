@@ -1,5 +1,5 @@
 import type { ammoLedgerEntry } from "@/db/schema/ammo-ledger";
-import { VoidLedgerEntryButton } from "@/features/ammo-ledger/components/ledger-table/void-ledger-entry-button";
+import { LedgerEntryRowActions } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-row-actions";
 import {
   type LedgerCategory,
   ledgerCategoryLabels,
@@ -31,7 +31,7 @@ const ledgerTableColumnClass = {
   location: "min-w-32",
   counterparty: "min-w-36",
   gun: "min-w-28",
-  actions: "min-w-16 whitespace-nowrap",
+  actions: "min-w-28 whitespace-nowrap",
 } as const;
 
 function LedgerCategoryBadge({ category }: { category: string }) {
@@ -154,8 +154,9 @@ export function LedgerTable({
                 )}
               </td>
               <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.actions)}>
-                <VoidLedgerEntryButton
+                <LedgerEntryRowActions
                   ledgerEntryId={entry.id}
+                  editHref={`/lab/ammo-ledger/entries/${entry.id}/edit`}
                   onVoided={onVoided}
                   onVoidFailed={onVoidFailed}
                 />

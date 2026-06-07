@@ -13,30 +13,35 @@ import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
+import { updateTransactionAction } from "@/features/ammo-ledger/transactions/update-transaction/update-transaction-action";
 import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type DisposeFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
+  ledgerEntryId?: string;
   initialValues?: {
     occurredOn?: string;
+    purpose?: LedgerPurpose;
     ammoTypeId?: string;
+    outerBoxCount?: number;
     boxCount?: number;
     looseRounds?: number;
+    memo?: string;
   };
 };
 
-export function DisposeForm({ ammoTypes, initialValues }: DisposeFormProps) {
+export function DisposeForm({ ammoTypes, ledgerEntryId, initialValues }: DisposeFormProps) {
   const router = useRouter();
   const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
   const today = new Date().toISOString().slice(0, 10);
 
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
-  const [outerBoxCount, setOuterBoxCount] = useState("0");
+  const [outerBoxCount, setOuterBoxCount] = useState(String(initialValues?.outerBoxCount ?? 0));
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
-  const [purpose, setPurpose] = useState<LedgerPurpose>("shooting");
-  const [memo, setMemo] = useState("");
+  const [purpose, setPurpose] = useState<LedgerPurpose>(initialValues?.purpose ?? "shooting");
+  const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -65,8 +70,8 @@ export function DisposeForm({ ammoTypes, initialValues }: DisposeFormProps) {
     setIsPending(true);
     setError(null);
 
-    const result = await createTransactionAction({
-      inputKind: "dispose",
+    const payload = {
+      inputKind: "dispose" as const,
       purpose,
       occurredOn,
       ammoTypeId,
@@ -74,7 +79,11 @@ export function DisposeForm({ ammoTypes, initialValues }: DisposeFormProps) {
       boxCount: Number(boxCount) || 0,
       looseRounds: Number(looseRounds) || 0,
       memo: memo || undefined,
-    });
+    };
+
+    const result = ledgerEntryId
+      ? await updateTransactionAction({ ledgerEntryId, ...payload })
+      : await createTransactionAction(payload);
 
     if (result.ok) {
       await invalidateWorkspace();
@@ -135,7 +144,7 @@ export function DisposeForm({ ammoTypes, initialValues }: DisposeFormProps) {
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       <Button type="submit" disabled={isPending || computedRounds <= 0}>
-        {isPending ? "保存中…" : "保存"}
+        {isPending ? "保存中…" : ledgerEntryId ? "更新" : "保存"}
       </Button>
     </form>
   );

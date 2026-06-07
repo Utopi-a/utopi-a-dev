@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
+import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type DisposeFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
@@ -24,6 +26,8 @@ type DisposeFormProps = {
 };
 
 export function DisposeForm({ ammoTypes, initialValues }: DisposeFormProps) {
+  const router = useRouter();
+  const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
   const today = new Date().toISOString().slice(0, 10);
 
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
@@ -72,10 +76,14 @@ export function DisposeForm({ ammoTypes, initialValues }: DisposeFormProps) {
       memo: memo || undefined,
     });
 
-    if (result) {
-      setError(result.error);
-      setIsPending(false);
+    if (result.ok) {
+      await invalidateWorkspace();
+      router.push(result.redirectPath);
+      return;
     }
+
+    setError(result.error);
+    setIsPending(false);
   }
 
   return (

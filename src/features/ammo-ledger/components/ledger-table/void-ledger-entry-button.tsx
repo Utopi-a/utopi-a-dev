@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { voidLedgerEntryAction } from "@/features/ammo-ledger/transactions/void-ledger-entry/void-ledger-entry-action";
+import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type VoidLedgerEntryButtonProps = {
   ledgerEntryId: string;
@@ -16,7 +16,7 @@ export function VoidLedgerEntryButton({
   onVoided,
   onVoidFailed,
 }: VoidLedgerEntryButtonProps) {
-  const router = useRouter();
+  const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +38,7 @@ export function VoidLedgerEntryButton({
       return;
     }
 
-    router.refresh();
+    await invalidateWorkspace();
     setIsPending(false);
   }
 

@@ -1,7 +1,6 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import { db } from "@/db";
 import {
   ammoCounterparty,
@@ -170,5 +169,8 @@ export async function createTransactionAction(input: unknown) {
     });
   });
 
-  redirect(`/lab/ammo-ledger/ledger?purpose=${data.purpose}`);
+  return {
+    ok: true as const,
+    redirectPath: `/lab/ammo-ledger/ledger?purpose=${data.purpose}`,
+  };
 }

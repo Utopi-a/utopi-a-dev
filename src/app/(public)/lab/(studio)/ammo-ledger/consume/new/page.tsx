@@ -52,6 +52,7 @@ export default async function ConsumeNewPage({ searchParams }: PageProps) {
           </p>
         ) : (
           <ConsumeForm
+            key={draftId ?? "new"}
             guns={guns}
             ammoTypes={ammoTypes}
             rangePickerData={rangePickerData}

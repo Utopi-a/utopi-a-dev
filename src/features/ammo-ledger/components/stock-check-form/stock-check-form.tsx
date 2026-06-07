@@ -58,7 +58,6 @@ export function StockCheckForm({ items }: StockCheckFormProps) {
     }
 
     router.push(result.redirectPath);
-    router.refresh();
   }
 
   if (items.length === 0) {

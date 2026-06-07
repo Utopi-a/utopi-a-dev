@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-count
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
+import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type TransferFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
@@ -31,6 +33,8 @@ export function TransferForm({
   counterpartyPickerData,
   initialValues,
 }: TransferFormProps) {
+  const router = useRouter();
+  const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
   const today = new Date().toISOString().slice(0, 10);
 
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
@@ -85,10 +89,14 @@ export function TransferForm({
       memo: memo || undefined,
     });
 
-    if (result) {
-      setError(result.error);
-      setIsPending(false);
+    if (result.ok) {
+      await invalidateWorkspace();
+      router.push(result.redirectPath);
+      return;
     }
+
+    setError(result.error);
+    setIsPending(false);
   }
 
   return (

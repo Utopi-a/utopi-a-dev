@@ -70,9 +70,11 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
         ) : (
           <Suspense fallback={<p className="text-sm text-muted-foreground">読み込み中…</p>}>
             <InflowRecordTabs
+              key={`${tab}-${draftId ?? "new"}`}
               defaultTab={tab}
               acquireContent={
                 <AcquireForm
+                  key={tab === "acquire" ? (draftId ?? "new") : "acquire"}
                   ammoTypes={ammoTypes}
                   counterpartyPickerData={counterpartyPickerData}
                   initialValues={tab === "acquire" ? initialValues : undefined}
@@ -80,12 +82,14 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
               }
               disposeContent={
                 <DisposeForm
+                  key={tab === "dispose" ? (draftId ?? "new") : "dispose"}
                   ammoTypes={ammoTypes}
                   initialValues={tab === "dispose" ? initialValues : undefined}
                 />
               }
               transferContent={
                 <TransferForm
+                  key={tab === "transfer" ? (draftId ?? "new") : "transfer"}
                   ammoTypes={ammoTypes}
                   counterpartyPickerData={counterpartyPickerData}
                   initialValues={tab === "transfer" ? initialValues : undefined}

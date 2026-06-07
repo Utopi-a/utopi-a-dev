@@ -1,3 +1,5 @@
+"use client";
+
 import { SettingsLinkList } from "@/features/ammo-ledger/components/settings-link-list/settings-link-list";
 import { settingsHubGroups } from "@/features/ammo-ledger/settings/settings-hub-groups/settings-hub-groups";
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { AmmoLedgerActionTile } from "@/features/ammo-ledger/components/ammo-ledger-action-tile/ammo-ledger-action-tile";
 
 export function AmmoLedgerHomeView() {

@@ -268,7 +268,7 @@ export function LedgerTable({
           </table>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          記録行をクリックすると編集・取消ができます。繰越行は年初繰越画面から変更できます。
+          記録行をクリックすると編集・取消ができます。琥珀色の行はその時点で自宅保管の目安（800発）を超えています。薄赤の行は許可残数の繰越です。
         </p>
       </div>
 

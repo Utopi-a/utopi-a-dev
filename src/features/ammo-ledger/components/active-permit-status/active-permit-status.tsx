@@ -49,13 +49,14 @@ export function ActivePermitStatus({
           <span className="text-muted-foreground">許可残数 </span>
           <span className="text-lg font-semibold tabular-nums">{permitBalance}発</span>
         </span>
-        {activePermits.length > 0 ? (
-          <span className="text-muted-foreground">
-            有効な許可 {activePermits.length}件（{ledgerPurposeLabels[ledgerPurpose]}）
-          </span>
-        ) : (
-          <span className="text-amber-700 dark:text-amber-300">有効な許可はありません</span>
-        )}
+        <span className="text-muted-foreground">
+          {activePermits.length > 0 ? (
+            <>
+              有効な許可 {activePermits.length}件（{ledgerPurposeLabels[ledgerPurpose]}） ·{" "}
+            </>
+          ) : null}
+          残り {permitBalance.toLocaleString("ja-JP")}発
+        </span>
       </div>
 
       <ul className="flex flex-wrap gap-2">

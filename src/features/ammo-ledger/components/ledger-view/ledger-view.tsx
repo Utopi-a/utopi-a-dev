@@ -10,6 +10,7 @@ import { LedgerYearSelect } from "@/features/ammo-ledger/components/ledger-year-
 import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/purpose-filter";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { evaluateHomeStorageLimit } from "@/features/ammo-ledger/ledger/compute-running-home-stock/compute-running-home-stock";
+import { formatStockQuantity } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { buildAvailableYears } from "@/features/ammo-ledger/opening-balance/build-available-years/build-available-years";
 import {
   computeCurrentPermitBalance,
@@ -101,8 +102,9 @@ function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewCon
       computeCurrentPermitBalance({
         permitEvents: permitEventRows,
         ledgerEntries: ledgerEntryRows,
+        today,
       }),
-    [permitEventRows, ledgerEntryRows],
+    [permitEventRows, ledgerEntryRows, today],
   );
 
   const permitBalances = useMemo(
@@ -110,8 +112,9 @@ function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewCon
       computeRunningPermitBalance({
         permitEvents: permitEventRows,
         ledgerEntries: ledgerEntryRows,
+        today,
       }),
-    [permitEventRows, ledgerEntryRows],
+    [permitEventRows, ledgerEntryRows, today],
   );
 
   const homeStorage = useMemo(
@@ -180,7 +183,7 @@ function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewCon
           <div className="min-w-0">
             <dt className="text-muted-foreground">帳簿残数（全用途）</dt>
             <dd className="font-medium tabular-nums">
-              {homeStorage.currentStock.toLocaleString("ja-JP")}発
+              {formatStockQuantity({ quantity: homeStorage.currentStock })}
             </dd>
           </div>
         </dl>
@@ -209,6 +212,7 @@ function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewCon
         permitEvents={purposePermitEvents}
         permits={permits}
         purpose={purpose}
+        today={today}
         permitBalances={permitBalances}
         homeStorageExceededEntryIds={homeStorage.exceededEntryIds}
       />

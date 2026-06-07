@@ -6,6 +6,7 @@ import {
   inventoryGaugeGroups,
   matchesGaugeGroup,
 } from "@/features/ammo-ledger/inventory/inventory-gauge-groups/inventory-gauge-groups";
+import { formatStockQuantity } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import {
   type LedgerPurpose,
   ledgerPurposeLabels,
@@ -18,8 +19,8 @@ type InventoryOverviewProps = {
   overview: InventoryOverview;
 };
 
-function formatRounds({ count }: { count: number }): string {
-  return `${count.toLocaleString("ja-JP")}発`;
+function formatStockCount({ count }: { count: number }): string {
+  return formatStockQuantity({ quantity: count });
 }
 
 export function InventoryOverviewPanel({ overview }: InventoryOverviewProps) {
@@ -53,12 +54,12 @@ export function InventoryOverviewPanel({ overview }: InventoryOverviewProps) {
   return (
     <div className="space-y-4">
       <div className="grid gap-2 sm:grid-cols-3">
-        <SummaryChip label="全体" value={formatRounds({ count: overview.totalStock })} active />
+        <SummaryChip label="全体" value={formatStockCount({ count: overview.totalStock })} active />
         {overview.byGaugeGroup.map((group) => (
           <SummaryChip
             key={group.groupId}
             label={group.label}
-            value={formatRounds({ count: group.bookStock })}
+            value={formatStockCount({ count: group.bookStock })}
           />
         ))}
       </div>
@@ -122,7 +123,7 @@ export function InventoryOverviewPanel({ overview }: InventoryOverviewProps) {
       <p className="text-sm text-muted-foreground">
         表示中の合計:{" "}
         <span className="font-medium text-foreground">
-          {formatRounds({ count: filteredTotal })}
+          {formatStockCount({ count: filteredTotal })}
         </span>
       </p>
 
@@ -140,7 +141,7 @@ export function InventoryOverviewPanel({ overview }: InventoryOverviewProps) {
                 <tr key={row.gaugeKey} className="border-b border-border/40 last:border-0">
                   <td className="px-3 py-2">{row.label}</td>
                   <td className="px-3 py-2 text-right tabular-nums">
-                    {formatRounds({ count: row.bookStock })}
+                    {formatStockCount({ count: row.bookStock })}
                   </td>
                 </tr>
               ))}
@@ -173,7 +174,7 @@ export function InventoryOverviewPanel({ overview }: InventoryOverviewProps) {
                     {item.gaugeNumber ? `${item.gaugeNumber}号` : "—"}
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums">
-                    {formatRounds({ count: item.bookStock })}
+                    {formatStockCount({ count: item.bookStock })}
                   </td>
                 </tr>
               ))

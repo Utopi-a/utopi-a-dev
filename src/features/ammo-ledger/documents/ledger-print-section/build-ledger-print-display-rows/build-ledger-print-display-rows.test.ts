@@ -21,6 +21,7 @@ describe("buildLedgerPrintDisplayRows", () => {
       permitName: "12番",
       permitPurpose: "標的射撃",
       ledgerPurpose: "shooting",
+      today: "2026-06-01",
       from: "2026-01-01",
       to: "2026-12-31",
       permits: [permit],
@@ -91,5 +92,34 @@ describe("buildLedgerPrintDisplayRows", () => {
       expect(rows[1].permitName).toBe("12番");
       expect(rows[1].entry.ammoTypeName).toBe("クレー 7.5号");
     }
+  });
+
+  it("未来の許可残数失効行は印刷帳簿に含めない", () => {
+    const rows = buildLedgerPrintDisplayRows({
+      permitName: "12番",
+      permitPurpose: "標的射撃",
+      ledgerPurpose: "shooting",
+      today: "2026-03-01",
+      from: "2026-01-01",
+      to: "2026-12-31",
+      permits: [permit],
+      permitEvents: [
+        {
+          id: "pe-expiry",
+          userId: "u1",
+          permitId: "permit-1",
+          purpose: "shooting",
+          eventKind: "expiry",
+          occurredOn: "2026-06-01",
+          quantity: 0,
+          memo: "許可有効期限",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      entries: [],
+    });
+
+    expect(rows).toHaveLength(0);
   });
 });

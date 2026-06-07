@@ -30,6 +30,7 @@ type LedgerPrintViewProps = {
   from: string;
   to: string;
   year: number;
+  today: string;
 };
 
 function LedgerPrintCell({ className, children }: { className: string; children?: ReactNode }) {
@@ -54,6 +55,7 @@ export function LedgerPrintView({
   from,
   to,
   year,
+  today,
 }: LedgerPrintViewProps) {
   const rows = buildLedgerPrintDisplayRows({
     entries,
@@ -62,6 +64,7 @@ export function LedgerPrintView({
     permitName: section.permitName,
     permitPurpose: section.permitPurpose,
     ledgerPurpose: section.ledgerPurpose,
+    today,
     from,
     to,
   });

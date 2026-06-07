@@ -16,9 +16,12 @@ const permit = {
 };
 
 describe("buildLedgerDisplayRows", () => {
+  const today = "2026-06-07";
+
   it("許可繰越行を記録より前に並べる", () => {
     const rows = buildLedgerDisplayRows({
       purpose: "shooting",
+      today,
       permits: [permit],
       permitEvents: [
         {
@@ -72,6 +75,7 @@ describe("buildLedgerDisplayRows", () => {
   it("同日の記録は許可残数失効より前に並べる", () => {
     const rows = buildLedgerDisplayRows({
       purpose: "shooting",
+      today: "2026-12-31",
       permits: [permit],
       permitEvents: [
         {
@@ -121,6 +125,7 @@ describe("buildLedgerDisplayRows", () => {
   it("許可残数失効行を帳簿に含める", () => {
     const rows = buildLedgerDisplayRows({
       purpose: "shooting",
+      today: "2026-12-31",
       permits: [permit],
       permitEvents: [
         {
@@ -162,6 +167,7 @@ describe("buildLedgerDisplayRows", () => {
   it("印刷期間外の許可繰越は含めない", () => {
     const rows = buildLedgerDisplayRows({
       purpose: "shooting",
+      today,
       permits: [permit],
       from: "2026-01-01",
       to: "2026-12-31",
@@ -175,6 +181,31 @@ describe("buildLedgerDisplayRows", () => {
           occurredOn: "2025-01-01",
           quantity: 800,
           memo: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      entries: [],
+    });
+
+    expect(rows).toHaveLength(0);
+  });
+
+  it("未来の許可残数失効行は帳簿に含めない", () => {
+    const rows = buildLedgerDisplayRows({
+      purpose: "shooting",
+      today,
+      permits: [permit],
+      permitEvents: [
+        {
+          id: "pe-expiry",
+          userId: "u1",
+          permitId: "permit-1",
+          purpose: "shooting",
+          eventKind: "expiry",
+          occurredOn: "2026-12-31",
+          quantity: 0,
+          memo: "許可有効期限",
           createdAt: new Date(),
           updatedAt: new Date(),
         },

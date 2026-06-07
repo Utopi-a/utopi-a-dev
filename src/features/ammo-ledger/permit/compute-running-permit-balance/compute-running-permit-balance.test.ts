@@ -5,6 +5,8 @@ import {
 } from "./compute-running-permit-balance";
 
 describe("computeRunningPermitBalance", () => {
+  const today = "2026-06-07";
+
   it("許可取得後の譲受で残数が減る", () => {
     const permitEvents = [{ occurredOn: "2026-01-01", eventKind: "grant" as const, quantity: 100 }];
     const ledgerEntries = [
@@ -12,11 +14,11 @@ describe("computeRunningPermitBalance", () => {
       { id: "e2", occurredOn: "2026-01-10", category: "acquire" as const, quantity: 20 },
     ];
 
-    const balances = computeRunningPermitBalance({ permitEvents, ledgerEntries });
+    const balances = computeRunningPermitBalance({ permitEvents, ledgerEntries, today });
 
     expect(balances.get("e1")).toBe(70);
     expect(balances.get("e2")).toBe(50);
-    expect(computeCurrentPermitBalance({ permitEvents, ledgerEntries })).toBe(50);
+    expect(computeCurrentPermitBalance({ permitEvents, ledgerEntries, today })).toBe(50);
   });
 
   it("許可失効で残数がリセットされる", () => {
@@ -30,7 +32,11 @@ describe("computeRunningPermitBalance", () => {
       { id: "e2", occurredOn: "2026-07-01", category: "acquire" as const, quantity: 10 },
     ];
 
-    const balances = computeRunningPermitBalance({ permitEvents, ledgerEntries });
+    const balances = computeRunningPermitBalance({
+      permitEvents,
+      ledgerEntries,
+      today: "2026-12-31",
+    });
 
     expect(balances.get("e1")).toBe(40);
     expect(balances.get("e2")).toBe(70);
@@ -43,9 +49,21 @@ describe("computeRunningPermitBalance", () => {
       { id: "e2", occurredOn: "2026-01-03", category: "consume" as const, quantity: 10 },
     ];
 
-    const balances = computeRunningPermitBalance({ permitEvents, ledgerEntries });
+    const balances = computeRunningPermitBalance({ permitEvents, ledgerEntries, today });
 
     expect(balances.get("e1")).toBe(25);
     expect(balances.get("e2")).toBe(25);
+  });
+
+  it("未来の許可失効は現在残数に反映しない", () => {
+    const permitEvents = [
+      { occurredOn: "2026-01-01", eventKind: "grant" as const, quantity: 100 },
+      { occurredOn: "2026-12-31", eventKind: "expiry" as const, quantity: 0 },
+    ];
+    const ledgerEntries = [
+      { id: "e1", occurredOn: "2026-03-01", category: "acquire" as const, quantity: 30 },
+    ];
+
+    expect(computeCurrentPermitBalance({ permitEvents, ledgerEntries, today })).toBe(70);
   });
 });

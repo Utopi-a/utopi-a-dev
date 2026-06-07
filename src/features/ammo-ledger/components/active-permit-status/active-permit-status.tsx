@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ammoAcquisitionPermit } from "@/db/schema/ammo-ledger";
+import { formatStockQuantity } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import {
   computeDaysUntilExpiry,
   formatPermitExpiryLabel,
@@ -48,7 +49,7 @@ export function ActivePermitStatus({
         <span>
           <span className="text-muted-foreground">残り </span>
           <span className="text-lg font-semibold tabular-nums">
-            {permitBalance.toLocaleString("ja-JP")}発
+            {formatStockQuantity({ quantity: permitBalance })}
           </span>
         </span>
         <span className="text-muted-foreground">
@@ -83,7 +84,7 @@ export function ActivePermitStatus({
                 {permit.name} / {permit.permitPurpose}
               </span>
               <span className="mt-0.5 block tabular-nums">
-                {permit.quantity.toLocaleString("ja-JP")}発 · {expiryLabel}
+                {formatStockQuantity({ quantity: permit.quantity })} · {expiryLabel}
               </span>
             </li>
           );

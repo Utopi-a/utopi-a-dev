@@ -208,7 +208,7 @@ export function OpeningBalanceForm({
                 <tr className="border-b border-border/50 text-left text-xs text-muted-foreground">
                   <th className="px-1 py-2 font-medium">弾種</th>
                   <th className="px-1 py-2 font-medium">号数</th>
-                  <th className="px-1 py-2 text-right font-medium">繰越残数（発）</th>
+                  <th className="px-1 py-2 text-right font-medium">繰越残数（個）</th>
                 </tr>
               </thead>
               <tbody>

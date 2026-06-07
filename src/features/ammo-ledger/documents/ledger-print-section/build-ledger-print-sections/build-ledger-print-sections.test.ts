@@ -6,6 +6,7 @@ describe("buildLedgerPrintSections", () => {
     const sections = buildLedgerPrintSections({
       from: "2026-01-01",
       to: "2026-12-31",
+      today: "2026-06-07",
       permits: [
         {
           id: "permit-12",

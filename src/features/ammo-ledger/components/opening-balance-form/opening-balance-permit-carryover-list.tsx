@@ -143,7 +143,7 @@ export function OpeningBalancePermitCarryoverList({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor={`permit-quantity-${row.clientKey}`}>許可残数（発）</Label>
+                <Label htmlFor={`permit-quantity-${row.clientKey}`}>許可残数（個）</Label>
                 <Input
                   id={`permit-quantity-${row.clientKey}`}
                   type="number"

@@ -1,4 +1,5 @@
 import { compareLedgerEntries } from "@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries";
+import { isPermitEventOnOrBeforeToday } from "@/features/ammo-ledger/permit/is-permit-event-on-or-before-today/is-permit-event-on-or-before-today";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import type { PermitEventKind } from "@/features/ammo-ledger/schema/permit-event-kind";
@@ -24,14 +25,19 @@ function compareDate({ a, b }: { a: string; b: string }): number {
 export function computeRunningPermitBalance({
   permitEvents,
   ledgerEntries,
+  today,
 }: {
   permitEvents: PermitEventRow[];
   ledgerEntries: LedgerRow[];
+  today: string;
 }): Map<string, number> {
+  const effectivePermitEvents = permitEvents.filter((event) =>
+    isPermitEventOnOrBeforeToday({ occurredOn: event.occurredOn, today }),
+  );
   const balanceByEntryId = new Map<string, number>();
   let balance = 0;
 
-  const sortedEvents = [...permitEvents].sort((a, b) =>
+  const sortedEvents = [...effectivePermitEvents].sort((a, b) =>
     compareDate({ a: a.occurredOn, b: b.occurredOn }),
   );
   const sortedEntries = [...ledgerEntries].sort((a, b) => compareLedgerEntries({ a, b }));
@@ -64,13 +70,18 @@ export function computeRunningPermitBalance({
 export function computeCurrentPermitBalance({
   permitEvents,
   ledgerEntries,
+  today,
 }: {
   permitEvents: PermitEventRow[];
   ledgerEntries: LedgerRow[];
+  today: string;
 }): number {
+  const effectivePermitEvents = permitEvents.filter((event) =>
+    isPermitEventOnOrBeforeToday({ occurredOn: event.occurredOn, today }),
+  );
   let balance = 0;
 
-  const sortedEvents = [...permitEvents].sort((a, b) =>
+  const sortedEvents = [...effectivePermitEvents].sort((a, b) =>
     compareDate({ a: a.occurredOn, b: b.occurredOn }),
   );
   const sortedEntries = [...ledgerEntries].sort((a, b) => compareLedgerEntries({ a, b }));

@@ -21,6 +21,16 @@ describe("buildAmmoTypeLabel", () => {
     ).toBe("12番 単弾");
   });
 
+  it("9号と9.5号は9・9.5号として表示する", () => {
+    expect(
+      buildAmmoTypeLabel({
+        caliber: "12番",
+        shotType: "shot",
+        gaugeNumber: "9",
+      }),
+    ).toBe("12番 散弾 9・9.5号");
+  });
+
   it("名称があれば名称を優先する", () => {
     expect(
       buildAmmoTypeLabel({

@@ -4,6 +4,7 @@ import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav
 import { AmmoTypeForm } from "@/features/ammo-ledger/components/ammo-type-form/ammo-type-form";
 import { AmmoTypeRowActions } from "@/features/ammo-ledger/components/ammo-type-row-actions/ammo-type-row-actions";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
+import { formatGaugeNumberForDisplay } from "@/features/ammo-ledger/schema/shot-gauge-options";
 import type { ShotType } from "@/features/ammo-ledger/schema/shot-type";
 import { shotTypeLabels } from "@/features/ammo-ledger/schema/shot-type";
 
@@ -24,16 +25,19 @@ export default async function AmmoTypesSettingsPage() {
             <p className="text-sm text-muted-foreground">まだ登録がありません。</p>
           ) : (
             <ul className="space-y-3 text-sm">
-              {ammoTypes.map((type) => (
-                <li key={type.id} className="flex items-start justify-between gap-4">
-                  <span>
-                    {type.name}
-                    {type.gaugeNumber ? `（${type.gaugeNumber}号）` : ""} — {type.caliber}{" "}
-                    {shotTypeLabels[type.shotType as ShotType]}（1箱{type.roundsPerBox}発）
-                  </span>
-                  <AmmoTypeRowActions ammoTypeId={type.id} />
-                </li>
-              ))}
+              {ammoTypes.map((type) => {
+                const displayGauge = formatGaugeNumberForDisplay({ gaugeNumber: type.gaugeNumber });
+                return (
+                  <li key={type.id} className="flex items-start justify-between gap-4">
+                    <span>
+                      {type.name}
+                      {displayGauge ? `（${displayGauge}号）` : ""} — {type.caliber}{" "}
+                      {shotTypeLabels[type.shotType as ShotType]}（1箱{type.roundsPerBox}発）
+                    </span>
+                    <AmmoTypeRowActions ammoTypeId={type.id} />
+                  </li>
+                );
+              })}
             </ul>
           )}
         </CardContent>

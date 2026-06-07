@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,12 @@ import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { createAmmoTypeAction } from "@/features/ammo-ledger/master/create-ammo-type/create-ammo-type-action";
 import { updateAmmoTypeAction } from "@/features/ammo-ledger/master/update-ammo-type/update-ammo-type-action";
 import { buildAmmoTypeLabel } from "@/features/ammo-ledger/schema/build-ammo-type-label";
-import { shotGaugeOptions } from "@/features/ammo-ledger/schema/shot-gauge-options";
+import { ledgerPurposeLabels, ledgerPurposes } from "@/features/ammo-ledger/schema/ledger-purpose";
+import {
+  isShotGaugeAllowed,
+  listShotGaugeSelectOptions,
+  normalizeGaugeNumberForSelect,
+} from "@/features/ammo-ledger/schema/shot-gauge-options";
 import type { ShotType } from "@/features/ammo-ledger/schema/shot-type";
 import { shotTypeLabels, shotTypes } from "@/features/ammo-ledger/schema/shot-type";
 
@@ -32,12 +37,26 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
   const [name, setName] = useState(initialValues?.name ?? "");
   const [caliber, setCaliber] = useState(initialValues?.caliber ?? "12番");
   const [shotType, setShotType] = useState<string>(initialValues?.shotType ?? shotTypes[1]);
-  const [gaugeNumber, setGaugeNumber] = useState(initialValues?.gaugeNumber ?? "");
+  const [gaugeNumber, setGaugeNumber] = useState(
+    normalizeGaugeNumberForSelect({ gaugeNumber: initialValues?.gaugeNumber }),
+  );
   const [roundsPerBox, setRoundsPerBox] = useState(initialValues?.roundsPerBox?.toString() ?? "25");
   const [defaultPurpose, setDefaultPurpose] = useState(initialValues?.defaultPurpose ?? "");
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+
+  const gaugeSelectOptions = useMemo(
+    () => listShotGaugeSelectOptions({ defaultPurpose: defaultPurpose || null }),
+    [defaultPurpose],
+  );
+
+  function handleDefaultPurposeChange({ nextPurpose }: { nextPurpose: string }) {
+    setDefaultPurpose(nextPurpose);
+    if (gaugeNumber && !isShotGaugeAllowed({ gaugeNumber, defaultPurpose: nextPurpose || null })) {
+      setGaugeNumber("");
+    }
+  }
 
   const previewLabel = buildAmmoTypeLabel({
     name: name || undefined,
@@ -126,10 +145,9 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
           label="号数（散弾のみ）"
           value={gaugeNumber}
           onChange={setGaugeNumber}
-          options={shotGaugeOptions.map((g) => ({ value: g, label: `${g}号` }))}
+          options={gaugeSelectOptions}
           placeholder="未選択"
         />
-        <p className="text-xs text-muted-foreground">帳簿出力には使いません。管理用の詳細です。</p>
         <div className="space-y-2">
           <Label htmlFor="ammo-name">名称</Label>
           <Input
@@ -139,14 +157,17 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
             onChange={(e) => setName(e.target.value)}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="default-purpose">標準用途</Label>
-          <Input
-            id="default-purpose"
-            value={defaultPurpose}
-            onChange={(e) => setDefaultPurpose(e.target.value)}
-          />
-        </div>
+        <FieldSelect
+          id="default-purpose"
+          label="標準用途"
+          value={defaultPurpose}
+          onChange={(value) => handleDefaultPurposeChange({ nextPurpose: value })}
+          options={ledgerPurposes.map((purpose) => ({
+            value: purpose,
+            label: ledgerPurposeLabels[purpose],
+          }))}
+          placeholder="未選択"
+        />
         <div className="space-y-2">
           <Label htmlFor="memo">メモ</Label>
           <Input id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} />

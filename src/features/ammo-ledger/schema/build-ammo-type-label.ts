@@ -1,3 +1,4 @@
+import { formatGaugeNumberForDisplay } from "./shot-gauge-options";
 import type { ShotType } from "./shot-type";
 import { shotTypeLabels } from "./shot-type";
 
@@ -17,8 +18,9 @@ export function buildAmmoTypeLabel({
   }
 
   const parts = [caliber, shotTypeLabels[shotType]];
-  if (gaugeNumber?.trim()) {
-    parts.push(`${gaugeNumber.trim()}号`);
+  const displayGauge = formatGaugeNumberForDisplay({ gaugeNumber });
+  if (displayGauge) {
+    parts.push(`${displayGauge}号`);
   }
   return parts.join(" ");
 }

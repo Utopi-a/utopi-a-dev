@@ -11,15 +11,11 @@ const categoryTone: Record<LedgerCategory, string> = {
   transfer: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
   dispose: "bg-muted text-muted-foreground",
   manufacture: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
-  carryover: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
+  carryover: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
 };
 
 export function PermitCarryoverBadge() {
-  return (
-    <span className="inline-flex min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-md bg-rose-500/10 px-2.5 py-1 text-xs font-medium text-rose-700 dark:text-rose-300">
-      繰越
-    </span>
-  );
+  return <LedgerCategoryBadge category="carryover" />;
 }
 
 export function LedgerCategoryBadge({ category }: { category: string }) {

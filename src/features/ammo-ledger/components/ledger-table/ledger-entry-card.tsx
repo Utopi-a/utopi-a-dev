@@ -47,7 +47,7 @@ export function LedgerEntryCard({
 }: LedgerEntryCardProps) {
   if (row.kind === "permit_carryover") {
     return (
-      <div className="flex w-full items-start gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-3.5">
+      <div className="flex w-full items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3.5">
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium tabular-nums">{row.occurredOn}</span>

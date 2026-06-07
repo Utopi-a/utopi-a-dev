@@ -120,7 +120,7 @@ export function LedgerTable({
                   return (
                     <tr
                       key={row.id}
-                      className="border-b border-border/25 bg-rose-500/5 last:border-0"
+                      className="border-b border-border/25 bg-emerald-500/5 last:border-0"
                     >
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
                         <span className="whitespace-nowrap tabular-nums">{row.occurredOn}</span>
@@ -268,7 +268,7 @@ export function LedgerTable({
           </table>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          記録行をクリックすると編集・取消ができます。琥珀色の行はその時点で自宅保管の目安（800発）を超えています。薄赤の行は許可残数の繰越です。
+          記録行をクリックすると編集・取消ができます。琥珀色の行はその時点で自宅保管の目安（800発）を超えています。薄緑の行は許可残数の繰越です。
         </p>
       </div>
 

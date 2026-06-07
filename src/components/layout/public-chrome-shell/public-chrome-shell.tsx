@@ -2,9 +2,14 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/cn";
 
 function isAmmoLedgerPath({ pathname }: { pathname: string }) {
   return pathname.startsWith("/lab/ammo-ledger");
+}
+
+function isCatalogPath({ pathname }: { pathname: string }) {
+  return pathname.includes("/catalog");
 }
 
 type PublicChromeShellProps = {
@@ -16,12 +21,16 @@ type PublicChromeShellProps = {
 export function PublicChromeShell({ header, footer, children }: PublicChromeShellProps) {
   const pathname = usePathname();
   const isAmmoLedger = isAmmoLedgerPath({ pathname });
+  const isCatalog = isCatalogPath({ pathname });
 
   return (
     <>
       {isAmmoLedger ? null : header}
       <main
-        className={isAmmoLedger ? "flex h-dvh min-h-0 flex-col" : "flex min-h-0 flex-1 flex-col"}
+        className={cn(
+          isAmmoLedger && !isCatalog && "flex h-dvh min-h-0 flex-col",
+          !isAmmoLedger && "flex min-h-0 flex-1 flex-col",
+        )}
       >
         {children}
       </main>

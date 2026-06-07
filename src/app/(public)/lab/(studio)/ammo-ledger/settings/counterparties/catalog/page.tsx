@@ -10,7 +10,7 @@ export default async function CounterpartyCatalogPage() {
 
   return (
     <>
-      <div className="space-y-2 pb-2">
+      <div className="space-y-2 pb-2" data-catalog-page-header>
         <p className="text-sm">
           <Link
             href="/lab/ammo-ledger/settings/counterparties"
@@ -32,7 +32,6 @@ export default async function CounterpartyCatalogPage() {
         catalogByPrefecture={pickerData.catalogByPrefecture}
         favoriteCatalogIds={pickerData.favoriteCatalogIds}
         registeredCatalogIds={pickerData.registeredCatalogIds}
-        expandToViewport
       />
     </>
   );

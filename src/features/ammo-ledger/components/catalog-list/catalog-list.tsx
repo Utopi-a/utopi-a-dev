@@ -19,7 +19,6 @@ type CatalogListProps = {
   catalogByPrefecture: CatalogPrefectureGroup[];
   favoriteCatalogIds: string[];
   registeredCatalogIds: string[];
-  expandToViewport?: boolean;
   className?: string;
 };
 
@@ -28,7 +27,6 @@ export function CatalogList({
   catalogByPrefecture,
   favoriteCatalogIds,
   registeredCatalogIds,
-  expandToViewport = false,
   className,
 }: CatalogListProps) {
   const [query, setQuery] = useState("");
@@ -94,12 +92,7 @@ export function CatalogList({
   }
 
   return (
-    <div
-      className={cn(
-        expandToViewport ? "flex flex-col" : "flex min-h-0 flex-1 flex-col overflow-hidden",
-        className,
-      )}
-    >
+    <div data-catalog-list className={cn("flex h-dvh flex-col overflow-hidden py-3", className)}>
       <div className="shrink-0 space-y-3 border-b border-border/50 bg-background pb-3">
         <div className="relative">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -154,8 +147,7 @@ export function CatalogList({
         showPrefectureRail={showPrefectureRail}
         prefectures={catalogByPrefecture.map((group) => group.prefecture)}
         onJumpPrefecture={scrollToPrefecture}
-        expandToViewport={expandToViewport}
-        className={expandToViewport ? undefined : "min-h-0 flex-1"}
+        className="min-h-0 flex-1"
       >
         {filteredGroups.length === 0 ? (
           <p className="py-12 text-center text-sm text-muted-foreground">

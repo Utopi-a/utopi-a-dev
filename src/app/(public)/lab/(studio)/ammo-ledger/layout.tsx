@@ -1,3 +1,5 @@
+import { AmmoLedgerScrollRoot } from "@/features/ammo-ledger/components/ammo-ledger-scroll-root/ammo-ledger-scroll-root";
+
 export default function AmmoLedgerLayout({ children }: { children: React.ReactNode }) {
-  return <div className="flex min-h-0 flex-1 flex-col">{children}</div>;
+  return <AmmoLedgerScrollRoot>{children}</AmmoLedgerScrollRoot>;
 }

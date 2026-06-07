@@ -10,7 +10,7 @@ export default async function RangeCatalogPage() {
 
   return (
     <>
-      <div className="space-y-2 pb-2">
+      <div className="space-y-2 pb-2" data-catalog-page-header>
         <p className="text-sm">
           <Link href="/lab/ammo-ledger/settings/ranges" className="text-muted-foreground underline">
             射撃場
@@ -29,7 +29,6 @@ export default async function RangeCatalogPage() {
         catalogByPrefecture={pickerData.catalogByPrefecture}
         favoriteCatalogIds={pickerData.favoriteCatalogIds}
         registeredCatalogIds={pickerData.registeredCatalogIds}
-        expandToViewport
       />
     </>
   );

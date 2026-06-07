@@ -25,6 +25,7 @@
 /build
 
 # misc
+src/features/portfolio/brand-icons/.scratch/
 .DS_Store
 /tmp/
 *.pem

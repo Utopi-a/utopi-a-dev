@@ -4,11 +4,7 @@ import { auth } from "@/lib/auth";
 
 function isAmmoLedgerPwaPublicPath({ pathname }: { pathname: string }) {
   return (
-    pathname === "/lab/ammo-ledger/manifest.webmanifest" ||
-    pathname.startsWith("/lab/ammo-ledger/pwa-icon/") ||
-    pathname === "/lab/ammo-ledger/~offline" ||
-    pathname === "/lab/ammo-ledger/apple-icon" ||
-    pathname.startsWith("/lab/ammo-ledger/apple-icon/")
+    pathname === "/lab/ammo-ledger/manifest.webmanifest" || pathname === "/lab/ammo-ledger/~offline"
   );
 }
 

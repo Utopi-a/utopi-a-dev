@@ -2,36 +2,29 @@ import { describe, expect, it } from "vitest";
 import { openingBalanceInputSchema } from "./opening-balance-schema";
 
 describe("openingBalanceInputSchema", () => {
-  it("許可残数がある場合は有効期限が必須", () => {
+  it("許可繰越がある場合は繰越日以降の有効期限が必要", () => {
     const result = openingBalanceInputSchema.safeParse({
       year: 2026,
       purpose: "shooting",
-      permitBalance: 1200,
-      permitExpiresOn: null,
+      permitCarryovers: [
+        {
+          name: "12番",
+          permitPurpose: "標的射撃",
+          quantity: 1200,
+          expiresOn: "2025-12-31",
+        },
+      ],
       stockByAmmoType: {},
     });
 
     expect(result.success).toBe(false);
   });
 
-  it("許可残数がある場合は繰越日以降の有効期限が必要", () => {
+  it("許可繰越が空でも保存できる", () => {
     const result = openingBalanceInputSchema.safeParse({
       year: 2026,
       purpose: "shooting",
-      permitBalance: 1200,
-      permitExpiresOn: "2025-12-31",
-      stockByAmmoType: {},
-    });
-
-    expect(result.success).toBe(false);
-  });
-
-  it("許可残数がなければ有効期限なしでも保存できる", () => {
-    const result = openingBalanceInputSchema.safeParse({
-      year: 2026,
-      purpose: "shooting",
-      permitBalance: null,
-      permitExpiresOn: null,
+      permitCarryovers: [],
       stockByAmmoType: { "ammo-1": 100 },
     });
 

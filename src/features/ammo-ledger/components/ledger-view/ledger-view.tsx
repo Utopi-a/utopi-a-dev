@@ -207,6 +207,7 @@ function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewCon
       <LedgerTableShell
         entries={purposeEntries}
         permitEvents={purposePermitEvents}
+        permits={permits}
         purpose={purpose}
         permitBalances={permitBalances}
         homeStorageExceededEntryIds={homeStorage.exceededEntryIds}

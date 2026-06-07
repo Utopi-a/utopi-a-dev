@@ -15,6 +15,7 @@ import {
   isLedgerEntryEditable,
   LedgerCategoryBadge,
   PermitCarryoverBadge,
+  PermitExpiryBadge,
 } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
 import { LedgerEntryReorderButtons } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-reorder-buttons";
 import { VoidLedgerEntryButton } from "@/features/ammo-ledger/components/ledger-table/void-ledger-entry-button";
@@ -88,7 +89,8 @@ export function LedgerEntryActionsSheet({
                   <PermitCarryoverBadge />
                 </div>
                 <p className="text-sm text-foreground">
-                  {buildPermitCarryoverLabel()} · {formatPermitBalance({ balance: row.quantity })}
+                  {buildPermitCarryoverLabel({ permitName: row.permitName })} ·{" "}
+                  {formatPermitBalance({ balance: row.quantity })}
                   {row.expiresOn
                     ? ` · ${formatPermitExpiryLabel({ expiresOn: row.expiresOn, today })}`
                     : ""}
@@ -105,6 +107,41 @@ export function LedgerEntryActionsSheet({
             >
               編集
             </Link>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-11"
+              onClick={() => onOpenChange({ open: false })}
+            >
+              閉じる
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  if (row.kind === "permit_expiry") {
+    return (
+      <Sheet open={open} onOpenChange={(nextOpen) => onOpenChange({ open: nextOpen })}>
+        <SheetContent side="bottom" className="rounded-t-2xl pb-8">
+          <SheetHeader className="text-left">
+            <SheetTitle>許可残数失効</SheetTitle>
+            <SheetDescription asChild>
+              <div className="space-y-2 pt-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-foreground tabular-nums">
+                    {row.occurredOn}
+                  </span>
+                  <PermitExpiryBadge />
+                </div>
+                <p className="text-sm text-foreground">
+                  {row.permitName} · {formatPermitBalance({ balance: 0 })}
+                </p>
+              </div>
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col gap-2 px-4">
             <Button
               type="button"
               variant="ghost"

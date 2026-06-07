@@ -1,4 +1,8 @@
-import type { ammoLedgerEntry, ammoPermitEvent } from "@/db/schema/ammo-ledger";
+import type {
+  ammoAcquisitionPermit,
+  ammoLedgerEntry,
+  ammoPermitEvent,
+} from "@/db/schema/ammo-ledger";
 import { compareLedgerEntries } from "@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 
@@ -9,6 +13,15 @@ export type LedgerDisplayRow =
       occurredOn: string;
       quantity: number;
       expiresOn: string | null;
+      permitName: string;
+      permitPurpose: string;
+    }
+  | {
+      kind: "permit_expiry";
+      id: string;
+      occurredOn: string;
+      permitName: string;
+      permitPurpose: string;
     }
   | {
       kind: "entry";
@@ -33,6 +46,16 @@ function compareDisplayRows({ a, b }: { a: LedgerDisplayRow; b: LedgerDisplayRow
   if (a.kind !== "permit_carryover" && b.kind === "permit_carryover") {
     return 1;
   }
+
+  const aIsExpiry = a.kind === "permit_expiry";
+  const bIsExpiry = b.kind === "permit_expiry";
+  if (!aIsExpiry && bIsExpiry && b.kind === "entry") {
+    return -1;
+  }
+  if (aIsExpiry && !bIsExpiry && a.kind === "permit_expiry" && b.kind === "entry") {
+    return 1;
+  }
+
   if (a.kind === "entry" && b.kind === "entry") {
     return compareLedgerEntries({ a: a.entry, b: b.entry });
   }
@@ -50,33 +73,31 @@ function isWithinRange({ date, from, to }: { date: string; from?: string; to?: s
   return true;
 }
 
-function resolvePermitEventExpiresOn({
+function resolvePermitById({
   permitId,
-  permitEvents,
+  permits,
 }: {
   permitId: string | null;
-  permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
-}): string | null {
+  permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
+}): typeof ammoAcquisitionPermit.$inferSelect | null {
   if (!permitId) {
     return null;
   }
 
-  const expiryEvent = permitEvents.find(
-    (event) => event.permitId === permitId && event.eventKind === "expiry",
-  );
-
-  return expiryEvent?.occurredOn ?? null;
+  return permits.find((permit) => permit.id === permitId) ?? null;
 }
 
 export function buildLedgerDisplayRows({
   entries,
   permitEvents,
+  permits,
   purpose,
   from,
   to,
 }: {
   entries: (typeof ammoLedgerEntry.$inferSelect)[];
   permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
+  permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
   purpose: LedgerPurpose;
   from?: string;
   to?: string;
@@ -89,25 +110,48 @@ export function buildLedgerDisplayRows({
         event.occurredOn.endsWith("-01-01") &&
         isWithinRange({ date: event.occurredOn, from, to }),
     )
-    .map((event) => ({
-      kind: "permit_carryover" as const,
-      id: `permit-carryover-${event.id}`,
-      occurredOn: event.occurredOn,
-      quantity: event.quantity,
-      expiresOn: resolvePermitEventExpiresOn({
-        permitId: event.permitId,
-        permitEvents,
-      }),
-    }));
+    .map((event) => {
+      const permit = resolvePermitById({ permitId: event.permitId, permits });
+
+      return {
+        kind: "permit_carryover" as const,
+        id: `permit-carryover-${event.id}`,
+        occurredOn: event.occurredOn,
+        quantity: event.quantity,
+        expiresOn: permit?.expiresOn ?? null,
+        permitName: permit?.name ?? "その他",
+        permitPurpose: permit?.permitPurpose ?? "",
+      };
+    });
+
+  const permitExpiries = permitEvents
+    .filter(
+      (event) =>
+        event.purpose === purpose &&
+        event.eventKind === "expiry" &&
+        event.permitId !== null &&
+        isWithinRange({ date: event.occurredOn, from, to }),
+    )
+    .map((event) => {
+      const permit = resolvePermitById({ permitId: event.permitId, permits });
+
+      return {
+        kind: "permit_expiry" as const,
+        id: `permit-expiry-${event.id}`,
+        occurredOn: event.occurredOn,
+        permitName: permit?.name ?? "その他",
+        permitPurpose: permit?.permitPurpose ?? "",
+      };
+    });
 
   const entryRows: LedgerDisplayRow[] = entries.map((entry) => ({
     kind: "entry",
     entry,
   }));
 
-  const merged = [...permitCarryovers, ...entryRows].sort((a, b) => compareDisplayRows({ a, b }));
-
-  return merged;
+  return [...permitCarryovers, ...permitExpiries, ...entryRows].sort((a, b) =>
+    compareDisplayRows({ a, b }),
+  );
 }
 
 export function resolveDisplayRowPermitBalance({
@@ -121,6 +165,10 @@ export function resolveDisplayRowPermitBalance({
     return row.quantity;
   }
 
+  if (row.kind === "permit_expiry") {
+    return 0;
+  }
+
   return permitBalances?.get(row.entry.id);
 }
 
@@ -132,6 +180,6 @@ export function resolveDisplayRowId({ row }: { row: LedgerDisplayRow }): string 
   return row.kind === "entry" ? row.entry.id : row.id;
 }
 
-export function buildPermitCarryoverLabel(): string {
-  return "譲受許可";
+export function buildPermitCarryoverLabel({ permitName }: { permitName: string }): string {
+  return permitName;
 }

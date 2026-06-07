@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getOpeningBalance } from "./get-opening-balance";
 
 describe("getOpeningBalance", () => {
-  it("指定年の繰越残数と有効期限を取得する", () => {
+  it("指定年の許可繰越と残弾数を取得する", () => {
     const snapshot = getOpeningBalance({
       year: 2026,
       purpose: "shooting",
@@ -28,6 +28,21 @@ describe("getOpeningBalance", () => {
           occurredOn: "2026-12-31",
           quantity: 0,
           memo: "許可有効期限",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      permits: [
+        {
+          id: "permit-1",
+          userId: "u1",
+          ledgerPurpose: "shooting",
+          name: "12番",
+          permitPurpose: "標的射撃",
+          grantedOn: "2026-01-01",
+          expiresOn: "2026-12-31",
+          quantity: 1500,
+          memo: null,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -58,8 +73,10 @@ describe("getOpeningBalance", () => {
       ],
     });
 
-    expect(snapshot.permitBalance).toBe(1500);
-    expect(snapshot.permitExpiresOn).toBe("2026-12-31");
+    expect(snapshot.permitCarryovers).toHaveLength(1);
+    expect(snapshot.permitCarryovers[0]?.name).toBe("12番");
+    expect(snapshot.permitCarryovers[0]?.quantity).toBe(1500);
+    expect(snapshot.permitCarryovers[0]?.expiresOn).toBe("2026-12-31");
     expect(snapshot.stockByAmmoType["ammo-1"]).toBe(120);
   });
 });

@@ -1,7 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ammoLedgerEntry, ammoPermitEvent } from "@/db/schema/ammo-ledger";
+import type {
+  ammoAcquisitionPermit,
+  ammoLedgerEntry,
+  ammoPermitEvent,
+} from "@/db/schema/ammo-ledger";
 import { LedgerTable } from "@/features/ammo-ledger/components/ledger-table/ledger-table";
 import { buildLedgerDisplayRows } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
@@ -9,6 +13,7 @@ import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose
 type LedgerTableShellProps = {
   entries: (typeof ammoLedgerEntry.$inferSelect)[];
   permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
+  permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
   purpose: LedgerPurpose;
   permitBalances?: Map<string, number>;
   homeStorageExceededEntryIds?: string[];
@@ -17,6 +22,7 @@ type LedgerTableShellProps = {
 export function LedgerTableShell({
   entries,
   permitEvents,
+  permits,
   purpose,
   permitBalances,
   homeStorageExceededEntryIds = [],
@@ -34,9 +40,10 @@ export function LedgerTableShell({
       buildLedgerDisplayRows({
         entries: visibleEntries,
         permitEvents,
+        permits,
         purpose,
       }),
-    [visibleEntries, permitEvents, purpose],
+    [visibleEntries, permitEvents, permits, purpose],
   );
 
   function handleVoided({ ledgerEntryId }: { ledgerEntryId: string }) {

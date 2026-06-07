@@ -2,6 +2,7 @@ import { ChevronRightIcon } from "lucide-react";
 import {
   LedgerCategoryBadge,
   PermitCarryoverBadge,
+  PermitExpiryBadge,
 } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
 import {
   buildPermitCarryoverLabel,
@@ -55,7 +56,9 @@ export function LedgerEntryCard({
             <span className="text-sm font-medium tabular-nums">{row.occurredOn}</span>
             <PermitCarryoverBadge />
           </div>
-          <p className="font-medium leading-snug">{buildPermitCarryoverLabel()}</p>
+          <p className="font-medium leading-snug">
+            {buildPermitCarryoverLabel({ permitName: row.permitName })}
+          </p>
           <DetailLine label="許可残数" value={formatPermitBalance({ balance: row.quantity })} />
           {row.expiresOn ? (
             <DetailLine
@@ -66,6 +69,21 @@ export function LedgerEntryCard({
         </div>
         <ChevronRightIcon className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden />
       </button>
+    );
+  }
+
+  if (row.kind === "permit_expiry") {
+    return (
+      <div className="flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5">
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium tabular-nums">{row.occurredOn}</span>
+            <PermitExpiryBadge />
+          </div>
+          <p className="font-medium leading-snug">{row.permitName}</p>
+          <DetailLine label="許可残数" value={formatPermitBalance({ balance: 0 })} />
+        </div>
+      </div>
     );
   }
 

@@ -135,8 +135,9 @@ Vercel 上では Doppler CLI を使わない。連携により Doppler のシー
 初回セットアップ:
 
 1. GitHub で **production** Environment を作成する（Settings → Environments）
-2. Doppler の GitHub 連携を追加し、**prd** config を **production** Environment secrets に同期する（`DOPPLER_TOKEN` と `DATABASE_URL` などが入る）
-3. Actions タブから **Database migrate** を `workflow_dispatch` で手動実行し、初回マイグレーションを適用する
+2. Doppler に **`ci`** config を作り、`DATABASE_URL` だけ入れる（`prd` 参照可。`GITHUB_*` など OAuth 秘密は入れない）
+3. Doppler の GitHub 連携で **`ci`** config を **production** Environment secrets に同期する（`DATABASE_URL` が入る）
+4. Actions タブから **Database migrate** を `workflow_dispatch` で手動実行し、初回マイグレーションを適用する
 
 以降は `main` にスキーマ変更がマージされると自動で `drizzle-kit migrate` が実行されます。
 

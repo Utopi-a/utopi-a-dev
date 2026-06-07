@@ -8,6 +8,8 @@ describe("buildConsumptionPlan", () => {
       periodFrom: "2026-04-01",
       periodTo: "2027-03-31",
       currentHomeStock: 300,
+      counterpartyName: "テスト銃砲店",
+      counterpartyAddress: "茨城県",
       rangeAllocations: [
         {
           rangeId: "range-a",

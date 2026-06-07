@@ -16,7 +16,7 @@ import { validateConsumptionPlan } from "../validate-consumption-plan/validate-c
 
 const defaultPurchaseUnit = 250;
 const defaultConsumptionUnit = 25;
-const defaultMaxRowsPerPage = 12;
+const defaultMaxRowsPerPage = 10;
 
 export function buildConsumptionPlan({
   requestedQuantity,
@@ -24,6 +24,8 @@ export function buildConsumptionPlan({
   periodTo,
   currentHomeStock,
   rangeAllocations,
+  counterpartyName,
+  counterpartyAddress,
   purchaseUnit = defaultPurchaseUnit,
   consumptionUnit = defaultConsumptionUnit,
   homeStorageLimit = homeStorageRoundLimit,
@@ -73,6 +75,8 @@ export function buildConsumptionPlan({
   const rows = mergeEventsIntoRows({
     acquisitions,
     consumptions: rebalancedConsumptions,
+    counterpartyName,
+    counterpartyAddress,
   });
 
   const simulation = simulateHomeStock({
@@ -106,40 +110,31 @@ export function buildConsumptionPlan({
 function mergeEventsIntoRows({
   acquisitions,
   consumptions,
+  counterpartyName,
+  counterpartyAddress,
 }: {
   acquisitions: AcquisitionEvent[];
   consumptions: ConsumptionEvent[];
+  counterpartyName: string;
+  counterpartyAddress: string;
 }): ConsumptionPlanRow[] {
-  const rowMap = new Map<string, ConsumptionPlanRow>();
+  const rows: ConsumptionPlanRow[] = [];
 
   for (const acquisition of acquisitions) {
-    const key = `${acquisition.date}::acquisition`;
-    const existing = rowMap.get(key);
-    if (existing) {
-      existing.acquisitionQuantity += acquisition.quantity;
-      continue;
-    }
-
-    rowMap.set(key, {
+    rows.push({
       rowIndex: 0,
       date: acquisition.date,
-      locationName: "",
-      locationAddress: "",
+      locationName: counterpartyName,
+      locationAddress: counterpartyAddress,
       purpose: consumptions[0]?.purpose ?? "標的射撃",
       consumptionQuantity: 0,
       acquisitionQuantity: acquisition.quantity,
+      isAcquisition: true,
     });
   }
 
   for (const consumption of consumptions) {
-    const key = `${consumption.date}::${consumption.rangeId}`;
-    const existing = rowMap.get(key);
-    if (existing) {
-      existing.consumptionQuantity += consumption.quantity;
-      continue;
-    }
-
-    rowMap.set(key, {
+    rows.push({
       rowIndex: 0,
       date: consumption.date,
       locationName: consumption.rangeName,
@@ -147,19 +142,20 @@ function mergeEventsIntoRows({
       purpose: consumption.purpose,
       consumptionQuantity: consumption.quantity,
       acquisitionQuantity: 0,
+      isAcquisition: false,
     });
   }
 
-  return [...rowMap.values()]
+  return rows
     .sort((a, b) => {
       const byDate = a.date.localeCompare(b.date);
       if (byDate !== 0) {
         return byDate;
       }
-      if (a.acquisitionQuantity > 0 && b.consumptionQuantity > 0) {
+      if (a.isAcquisition && !b.isAcquisition) {
         return -1;
       }
-      if (a.consumptionQuantity > 0 && b.acquisitionQuantity > 0) {
+      if (!a.isAcquisition && b.isAcquisition) {
         return 1;
       }
       return a.locationName.localeCompare(b.locationName);

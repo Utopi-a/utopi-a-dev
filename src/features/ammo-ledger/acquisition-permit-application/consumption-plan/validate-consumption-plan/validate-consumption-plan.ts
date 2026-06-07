@@ -1,4 +1,4 @@
-import type { ConsumptionPlan, ConsumptionPlanRow } from "../consumption-plan-types";
+import type { ConsumptionPlanRow } from "../consumption-plan-types";
 
 export type ValidateConsumptionPlanInput = {
   rows: ConsumptionPlanRow[];

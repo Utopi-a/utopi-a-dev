@@ -30,6 +30,8 @@ export type ConsumptionPlanRow = {
   purpose: AcquisitionPermitPurpose;
   consumptionQuantity: number;
   acquisitionQuantity: number;
+  /** 購入行なら true（譲受店）、消費行なら false（射撃場） */
+  isAcquisition: boolean;
 };
 
 export type ConsumptionPlan = {
@@ -46,6 +48,8 @@ export type BuildConsumptionPlanInput = {
   periodTo: string;
   currentHomeStock: number;
   rangeAllocations: RangeAllocation[];
+  counterpartyName: string;
+  counterpartyAddress: string;
   purchaseUnit?: number;
   consumptionUnit?: number;
   homeStorageLimit?: number;

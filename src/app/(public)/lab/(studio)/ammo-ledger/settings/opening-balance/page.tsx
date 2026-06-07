@@ -55,7 +55,7 @@ export default async function OpeningBalanceSettingsPage({ searchParams }: PageP
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">年初繰越</h1>
         <p className="text-sm text-muted-foreground">
-          紙の帳簿から移行するとき、各年の1月1日時点の残弾数と譲り受け許可残数を登録できます。
+          紙の帳簿から移行するとき、各年の1月1日時点の残弾数と譲り受け許可残数（有効期限付き）を登録できます。
         </p>
       </div>
       <AmmoLedgerNav />

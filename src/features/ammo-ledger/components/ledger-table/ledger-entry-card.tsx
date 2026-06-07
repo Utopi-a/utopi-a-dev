@@ -14,6 +14,7 @@ import {
   formatEntryAmmoQuantityLabel,
   formatPermitBalance,
 } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
+import { formatPermitExpiryLabel } from "@/features/ammo-ledger/permit/compute-permit-expiry/compute-permit-expiry";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import { cn } from "@/lib/cn";
 
@@ -42,6 +43,8 @@ export function LedgerEntryCard({
   const selectable = isDisplayRowSelectable({ row });
 
   if (row.kind === "permit_carryover") {
+    const today = new Date().toISOString().slice(0, 10);
+
     return (
       <button
         type="button"
@@ -55,6 +58,12 @@ export function LedgerEntryCard({
           </div>
           <p className="font-medium leading-snug">{buildPermitCarryoverLabel()}</p>
           <DetailLine label="許可残数" value={formatPermitBalance({ balance: row.quantity })} />
+          {row.expiresOn ? (
+            <DetailLine
+              label="有効期限"
+              value={formatPermitExpiryLabel({ expiresOn: row.expiresOn, today })}
+            />
+          ) : null}
         </div>
         <ChevronRightIcon className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden />
       </button>

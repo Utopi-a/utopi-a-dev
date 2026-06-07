@@ -9,6 +9,8 @@ import { LedgerYearSelect } from "@/features/ammo-ledger/components/ledger-year-
 import { OpeningBalanceAmmoTypeAdd } from "@/features/ammo-ledger/components/opening-balance-form/opening-balance-ammo-type-add";
 import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/purpose-filter";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
+import { buildYearOpeningDay } from "@/features/ammo-ledger/opening-balance/build-year-day/build-year-day";
+import { defaultCarryoverExpiresOn } from "@/features/ammo-ledger/opening-balance/default-carryover-expires-on/default-carryover-expires-on";
 import type { OpeningBalanceSnapshot } from "@/features/ammo-ledger/opening-balance/get-opening-balance/get-opening-balance";
 import { saveOpeningBalanceAction } from "@/features/ammo-ledger/opening-balance/save-opening-balance/save-opening-balance-action";
 import {
@@ -64,6 +66,7 @@ export function OpeningBalanceForm({
     setPurpose(initialPurpose);
   }, [initialPurpose]);
   const [permitBalance, setPermitBalance] = useState("");
+  const [permitExpiresOn, setPermitExpiresOn] = useState("");
   const [stockByAmmoType, setStockByAmmoType] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -71,6 +74,7 @@ export function OpeningBalanceForm({
   useEffect(() => {
     const snapshot = snapshotsByPurpose[purpose];
     setPermitBalance(snapshot.permitBalance !== null ? String(snapshot.permitBalance) : "");
+    setPermitExpiresOn(snapshot.permitExpiresOn ?? "");
     setStockByAmmoType(
       Object.fromEntries(
         ammoTypes.map((type) => [
@@ -84,6 +88,8 @@ export function OpeningBalanceForm({
   }, [purpose, ammoTypes, snapshotsByPurpose]);
 
   const purposeLabel = ledgerPurposeTabLabels[purpose];
+  const openingDay = buildYearOpeningDay({ year });
+  const requiresPermitExpiry = permitBalance.trim() !== "" && Number(permitBalance) > 0;
 
   const stockInputs = useMemo(
     () =>
@@ -96,6 +102,14 @@ export function OpeningBalanceForm({
 
   function handleYearChange({ year: nextYear }: { year: number }) {
     router.push(`/lab/ammo-ledger/settings/opening-balance?year=${nextYear}`);
+  }
+
+  function handlePermitBalanceChange({ value }: { value: string }) {
+    setPermitBalance(value);
+    const parsed = Number(value) || 0;
+    if (parsed > 0 && permitExpiresOn.trim() === "") {
+      setPermitExpiresOn(defaultCarryoverExpiresOn({ year }));
+    }
   }
 
   function handleStockChange({ ammoTypeId, value }: { ammoTypeId: string; value: string }) {
@@ -114,11 +128,20 @@ export function OpeningBalanceForm({
       ammoTypes.map((type) => [type.id, Number(stockByAmmoType[type.id]) || 0]),
     );
     const parsedPermit = permitBalance.trim() === "" ? null : Number(permitBalance) || 0;
+    const parsedPermitExpiresOn =
+      requiresPermitExpiry && permitExpiresOn.trim() !== "" ? permitExpiresOn : null;
+
+    if (parsedPermit !== null && parsedPermit > 0 && !parsedPermitExpiresOn) {
+      setError("許可残数を入力する場合は有効期限を設定してください");
+      setIsPending(false);
+      return;
+    }
 
     const result = await saveOpeningBalanceAction({
       year,
       purpose,
       permitBalance: parsedPermit,
+      permitExpiresOn: parsedPermitExpiresOn,
       stockByAmmoType: parsedStock,
     });
 
@@ -148,23 +171,37 @@ export function OpeningBalanceForm({
       <section className="space-y-3">
         <SectionHeading
           title={`${year}年 ${purposeLabel} — 許可残数`}
-          description="その年の最初に残っている譲り受け許可の残数です。"
+          description="その年の最初に残っている譲り受け許可の残数と有効期限です。"
         />
-        <div className="max-w-xs space-y-2">
-          <Label htmlFor="permit-balance">許可残数（発）</Label>
-          <Input
-            id="permit-balance"
-            type="number"
-            min={0}
-            inputMode="numeric"
-            placeholder="例: 3200"
-            value={permitBalance}
-            onChange={(event) => setPermitBalance(event.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            空欄または0にすると、{year}年の許可残数繰越を削除します。
-          </p>
+        <div className="grid max-w-md gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="permit-balance">許可残数（発）</Label>
+            <Input
+              id="permit-balance"
+              type="number"
+              min={0}
+              inputMode="numeric"
+              placeholder="例: 3200"
+              value={permitBalance}
+              onChange={(event) => handlePermitBalanceChange({ value: event.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="permit-expires-on">有効期限</Label>
+            <Input
+              id="permit-expires-on"
+              type="date"
+              required={requiresPermitExpiry}
+              min={openingDay}
+              value={permitExpiresOn}
+              onChange={(event) => setPermitExpiresOn(event.target.value)}
+            />
+          </div>
         </div>
+        <p className="text-xs text-muted-foreground">
+          許可残数を入力する場合は有効期限が必須です。空欄または0にすると、{year}
+          年の許可残数繰越を削除します。
+        </p>
       </section>
 
       <section className="space-y-3">

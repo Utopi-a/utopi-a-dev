@@ -26,6 +26,6 @@ describe("listEnabledSocialProviderUi", () => {
     const items = listEnabledSocialProviderUi({ enabledIds: ["github", "unknown"] });
     expect(items).toHaveLength(1);
     expect(items[0]?.id).toBe("github");
-    expect(items[0]?.iconSrc).toBe("/mark-github.svg");
+    expect(items[0]?.icon).toBe("github");
   });
 });

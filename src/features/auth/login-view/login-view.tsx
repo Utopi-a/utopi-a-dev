@@ -6,6 +6,7 @@ import { SignInForm } from "@/features/auth/sign-in-form/sign-in-form";
 import { SignUpForm } from "@/features/auth/sign-up-form/sign-up-form";
 import type { SocialProviderId } from "@/features/auth/social-sign-in/social-provider-ui";
 import { SocialSignInButtons } from "@/features/auth/social-sign-in/social-sign-in-buttons";
+import type { SocialBrandIconId } from "@/features/portfolio/social-icons/social-brand-icon";
 
 type LoginViewProps = {
   callbackURL: string;
@@ -15,7 +16,7 @@ type LoginViewProps = {
   socialProviders: Array<{
     id: SocialProviderId;
     label: string;
-    iconSrc?: string;
+    icon?: SocialBrandIconId;
   }>;
 };
 

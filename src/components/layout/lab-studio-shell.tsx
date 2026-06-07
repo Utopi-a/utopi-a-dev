@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSession } from "@/features/auth/get-session/get-session";
 import { SignOutButton } from "@/features/auth/sign-out-button/sign-out-button";
+import { ThemeToggle } from "@/lib/theme/theme-toggle";
 
 export async function LabStudioShell({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -17,6 +18,7 @@ export async function LabStudioShell({ children }: { children: React.ReactNode }
               {session.user.email}
             </span>
           ) : null}
+          <ThemeToggle />
           <SignOutButton variant="outline" className="h-8" />
         </div>
       </div>

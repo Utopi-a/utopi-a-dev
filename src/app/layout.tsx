@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { fontVariableClassName } from "@/lib/theme/fonts";
+import { ThemeProvider } from "@/lib/theme/theme-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -41,9 +42,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className={`${fontVariableClassName} h-full antialiased`}>
-      <body suppressHydrationWarning className="min-h-full flex flex-col bg-background">
-        {children}
+    <html
+      lang="ja"
+      className={`${fontVariableClassName} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="flex min-h-dvh flex-col bg-background">
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

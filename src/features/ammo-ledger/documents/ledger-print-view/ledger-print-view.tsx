@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type {
   ammoAcquisitionPermit,
   ammoLedgerEntry,
@@ -9,12 +10,14 @@ import {
 } from "@/features/ammo-ledger/documents/ledger-print-section/build-ledger-print-display-rows/build-ledger-print-display-rows";
 import type { LedgerPrintSection } from "@/features/ammo-ledger/documents/ledger-print-section/build-ledger-print-sections/build-ledger-print-sections";
 import { formatLedgerPrintSectionLabel } from "@/features/ammo-ledger/documents/ledger-print-section/build-ledger-print-sections/build-ledger-print-sections";
+import { ledgerPrintTableColumnClass } from "@/features/ammo-ledger/documents/ledger-print-table/ledger-print-table-column-classes";
 import {
   formatAmmoQuantity,
   formatPermitBalance,
 } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { ledgerCategoryLabels } from "@/features/ammo-ledger/schema/ledger-category";
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
+import { cn } from "@/lib/cn";
 
 type LedgerPrintViewProps = {
   section: LedgerPrintSection;
@@ -25,6 +28,20 @@ type LedgerPrintViewProps = {
   to: string;
   year: number;
 };
+
+function LedgerPrintCell({ className, children }: { className: string; children?: ReactNode }) {
+  return <td className={cn("ledger-print-cell", className)}>{children}</td>;
+}
+
+function LedgerPrintEmptyCells() {
+  return (
+    <>
+      <LedgerPrintCell className={ledgerPrintTableColumnClass.location} />
+      <LedgerPrintCell className={ledgerPrintTableColumnClass.counterparty} />
+      <LedgerPrintCell className={ledgerPrintTableColumnClass.gun} />
+    </>
+  );
+}
 
 export function LedgerPrintView({
   section,
@@ -60,17 +77,33 @@ export function LedgerPrintView({
         </p>
       </header>
 
-      <table className="w-full border-collapse text-xs">
+      <table className="ledger-print-table">
+        <colgroup>
+          <col className={ledgerPrintTableColumnClass.date} />
+          <col className={ledgerPrintTableColumnClass.category} />
+          <col className={ledgerPrintTableColumnClass.permitName} />
+          <col className={ledgerPrintTableColumnClass.quantity} />
+          <col className={ledgerPrintTableColumnClass.permitBalance} />
+          <col className={ledgerPrintTableColumnClass.location} />
+          <col className={ledgerPrintTableColumnClass.counterparty} />
+          <col className={ledgerPrintTableColumnClass.gun} />
+        </colgroup>
         <thead>
           <tr>
-            <th className="border border-black px-2 py-1">日付</th>
-            <th className="border border-black px-2 py-1">区分</th>
-            <th className="border border-black px-2 py-1">種別</th>
-            <th className="border border-black px-2 py-1">数量</th>
-            <th className="border border-black px-2 py-1">許可残数</th>
-            <th className="border border-black px-2 py-1">場所</th>
-            <th className="border border-black px-2 py-1">相手方</th>
-            <th className="border border-black px-2 py-1">使用銃</th>
+            <th className={cn("ledger-print-cell", ledgerPrintTableColumnClass.date)}>日付</th>
+            <th className={cn("ledger-print-cell", ledgerPrintTableColumnClass.category)}>区分</th>
+            <th className={cn("ledger-print-cell", ledgerPrintTableColumnClass.permitName)}>
+              種別
+            </th>
+            <th className={cn("ledger-print-cell", ledgerPrintTableColumnClass.quantity)}>数量</th>
+            <th className={cn("ledger-print-cell", ledgerPrintTableColumnClass.permitBalance)}>
+              許可残数
+            </th>
+            <th className={cn("ledger-print-cell", ledgerPrintTableColumnClass.location)}>場所</th>
+            <th className={cn("ledger-print-cell", ledgerPrintTableColumnClass.counterparty)}>
+              相手方
+            </th>
+            <th className={cn("ledger-print-cell", ledgerPrintTableColumnClass.gun)}>使用銃</th>
           </tr>
         </thead>
         <tbody>
@@ -83,18 +116,20 @@ export function LedgerPrintView({
             if (row.kind === "permit_carryover") {
               return (
                 <tr key={row.id}>
-                  <td className="border border-black px-2 py-1 whitespace-nowrap">
+                  <LedgerPrintCell className={ledgerPrintTableColumnClass.date}>
                     {row.occurredOn}
-                  </td>
-                  <td className="border border-black px-2 py-1 whitespace-nowrap">繰越</td>
-                  <td className="border border-black px-2 py-1">{row.permitName}</td>
-                  <td className="border border-black px-2 py-1 text-right" />
-                  <td className="border border-black px-2 py-1 text-right">
+                  </LedgerPrintCell>
+                  <LedgerPrintCell className={ledgerPrintTableColumnClass.category}>
+                    繰越
+                  </LedgerPrintCell>
+                  <LedgerPrintCell className={ledgerPrintTableColumnClass.permitName}>
+                    {row.permitName}
+                  </LedgerPrintCell>
+                  <LedgerPrintCell className={ledgerPrintTableColumnClass.quantity} />
+                  <LedgerPrintCell className={ledgerPrintTableColumnClass.permitBalance}>
                     {formatPermitBalance({ balance: row.quantity })}
-                  </td>
-                  <td className="border border-black px-2 py-1" />
-                  <td className="border border-black px-2 py-1" />
-                  <td className="border border-black px-2 py-1" />
+                  </LedgerPrintCell>
+                  <LedgerPrintEmptyCells />
                 </tr>
               );
             }
@@ -102,18 +137,20 @@ export function LedgerPrintView({
             if (row.kind === "permit_expiry") {
               return (
                 <tr key={row.id}>
-                  <td className="border border-black px-2 py-1 whitespace-nowrap">
+                  <LedgerPrintCell className={ledgerPrintTableColumnClass.date}>
                     {row.occurredOn}
-                  </td>
-                  <td className="border border-black px-2 py-1 whitespace-nowrap">許可残数失効</td>
-                  <td className="border border-black px-2 py-1">{row.permitName}</td>
-                  <td className="border border-black px-2 py-1 text-right" />
-                  <td className="border border-black px-2 py-1 text-right">
+                  </LedgerPrintCell>
+                  <LedgerPrintCell className={ledgerPrintTableColumnClass.category}>
+                    許可残数失効
+                  </LedgerPrintCell>
+                  <LedgerPrintCell className={ledgerPrintTableColumnClass.permitName}>
+                    {row.permitName}
+                  </LedgerPrintCell>
+                  <LedgerPrintCell className={ledgerPrintTableColumnClass.quantity} />
+                  <LedgerPrintCell className={ledgerPrintTableColumnClass.permitBalance}>
                     {formatPermitBalance({ balance: 0 })}
-                  </td>
-                  <td className="border border-black px-2 py-1" />
-                  <td className="border border-black px-2 py-1" />
-                  <td className="border border-black px-2 py-1" />
+                  </LedgerPrintCell>
+                  <LedgerPrintEmptyCells />
                 </tr>
               );
             }
@@ -122,33 +159,33 @@ export function LedgerPrintView({
 
             return (
               <tr key={entry.id}>
-                <td className="border border-black px-2 py-1 whitespace-nowrap">
+                <LedgerPrintCell className={ledgerPrintTableColumnClass.date}>
                   {entry.occurredOn}
-                </td>
-                <td className="border border-black px-2 py-1 whitespace-nowrap">
+                </LedgerPrintCell>
+                <LedgerPrintCell className={ledgerPrintTableColumnClass.category}>
                   {ledgerCategoryLabels[entry.category as keyof typeof ledgerCategoryLabels] ??
                     entry.category}
-                </td>
-                <td className="border border-black px-2 py-1">{row.permitName}</td>
-                <td className="border border-black px-2 py-1 text-right">
+                </LedgerPrintCell>
+                <LedgerPrintCell className={ledgerPrintTableColumnClass.permitName}>
+                  {row.permitName}
+                </LedgerPrintCell>
+                <LedgerPrintCell className={ledgerPrintTableColumnClass.quantity}>
                   {formatAmmoQuantity({ quantity: entry.quantity })}
-                </td>
-                <td className="border border-black px-2 py-1 text-right">
+                </LedgerPrintCell>
+                <LedgerPrintCell className={ledgerPrintTableColumnClass.permitBalance}>
                   {permitBalance !== undefined
                     ? formatPermitBalance({ balance: permitBalance })
                     : ""}
-                </td>
-                <td className="border border-black px-2 py-1">{entry.location ?? ""}</td>
-                <td className="border border-black px-2 py-1">
+                </LedgerPrintCell>
+                <LedgerPrintCell className={ledgerPrintTableColumnClass.location}>
+                  {entry.location ?? ""}
+                </LedgerPrintCell>
+                <LedgerPrintCell className={ledgerPrintTableColumnClass.counterparty}>
                   {entry.counterpartyName ?? ""}
-                  {entry.counterpartyAddress ? ` ${entry.counterpartyAddress}` : ""}
-                </td>
-                <td className="border border-black px-2 py-1">
+                </LedgerPrintCell>
+                <LedgerPrintCell className={ledgerPrintTableColumnClass.gun}>
                   {entry.gunName ?? ""}
-                  {[entry.gunNumber, entry.gunPermitNumber].filter(Boolean).length > 0
-                    ? ` ${[entry.gunNumber, entry.gunPermitNumber].filter(Boolean).join(" / ")}`
-                    : ""}
-                </td>
+                </LedgerPrintCell>
               </tr>
             );
           })}

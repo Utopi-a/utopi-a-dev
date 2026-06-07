@@ -31,7 +31,7 @@ export function AmmoLedgerNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="inline-flex w-full rounded-lg border border-border/60 bg-muted/30 p-1">
+    <nav className="grid w-full grid-cols-4 gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
       {navItems.map((item) => {
         const isActive = item.match(pathname);
 
@@ -40,7 +40,7 @@ export function AmmoLedgerNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex-1 rounded-md px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm",
+              "flex items-center justify-center rounded-md px-1 py-1.5 text-center text-xs font-medium transition-colors sm:py-2 sm:text-sm",
               isActive
                 ? "bg-background text-foreground shadow-none"
                 : "text-muted-foreground hover:text-foreground",

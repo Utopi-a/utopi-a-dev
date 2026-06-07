@@ -1,8 +1,8 @@
 import Link from "next/link";
 import {
   type LedgerPurpose,
-  ledgerPurposeLabels,
   ledgerPurposes,
+  ledgerPurposeTabLabels,
 } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
 
@@ -14,7 +14,7 @@ type PurposeFilterProps = {
 
 export function PurposeFilter({ current, basePath, query = {} }: PurposeFilterProps) {
   return (
-    <nav className="inline-flex w-full rounded-lg border border-border/60 bg-muted/30 p-1">
+    <nav className="grid w-full grid-cols-3 gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
       {ledgerPurposes.map((purpose) => {
         const params = new URLSearchParams();
         params.set("purpose", purpose);
@@ -31,13 +31,20 @@ export function PurposeFilter({ current, basePath, query = {} }: PurposeFilterPr
             key={purpose}
             href={`${basePath}?${params.toString()}`}
             className={cn(
-              "flex-1 rounded-md px-3 py-2 text-center text-sm font-medium transition-colors",
+              "flex items-center justify-center rounded-md px-0.5 py-1.5 text-center text-[11px] leading-tight font-medium transition-colors sm:px-2 sm:py-2 sm:text-sm sm:leading-snug",
               isActive
-                ? "bg-background text-foreground"
+                ? "bg-background text-foreground shadow-none"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {ledgerPurposeLabels[purpose]}
+            {purpose === "pest_control" ? (
+              <>
+                <span className="sm:hidden">有害駆除</span>
+                <span className="hidden sm:inline">{ledgerPurposeTabLabels[purpose]}</span>
+              </>
+            ) : (
+              ledgerPurposeTabLabels[purpose]
+            )}
           </Link>
         );
       })}

@@ -16,7 +16,7 @@ import { listPermitEvents } from "@/features/ammo-ledger/permit/list-permit-even
 import { getLedgerProfile } from "@/features/ammo-ledger/profile/get-ledger-profile/get-ledger-profile";
 import { resolveOwnerName } from "@/features/ammo-ledger/profile/resolve-owner-name/resolve-owner-name";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
-import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
+import { ledgerPurposeTabLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
 import type { PermitEventKind } from "@/features/ammo-ledger/schema/permit-event-kind";
 import { parseLedgerPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 
@@ -75,14 +75,15 @@ export default async function LedgerPage({ searchParams }: PageProps) {
     })),
   });
 
-  const from = entries[0]?.occurredOn ?? today;
-  const to = entries[entries.length - 1]?.occurredOn ?? from;
+  const year = new Date().getFullYear();
+  const printFrom = allEntries[0]?.occurredOn ?? `${year}-01-01`;
+  const printTo = allEntries.at(-1)?.occurredOn ?? `${year}-12-31`;
 
   return (
     <div className="space-y-5">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">帳簿</h1>
-        <p className="text-sm text-muted-foreground">{ledgerPurposeLabels[purpose]}の法定記録</p>
+        <p className="text-sm text-muted-foreground">{ledgerPurposeTabLabels[purpose]}の法定記録</p>
       </div>
 
       <AmmoLedgerNav />
@@ -100,28 +101,28 @@ export default async function LedgerPage({ searchParams }: PageProps) {
         peakStock={homeStorage.peakStock}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/40 pb-4 text-sm">
-        <dl className="flex flex-wrap gap-x-5 gap-y-1">
-          <div>
-            <dt className="inline text-muted-foreground">氏名 </dt>
-            <dd className="inline font-medium">{ownerName}</dd>
+      <div className="flex flex-col gap-3 border-b border-border/40 pb-4 sm:flex-row sm:items-end sm:justify-between">
+        <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3 sm:gap-x-6">
+          <div className="min-w-0">
+            <dt className="text-muted-foreground">氏名</dt>
+            <dd className="font-medium">{ownerName}</dd>
           </div>
-          <div>
-            <dt className="inline text-muted-foreground">件数 </dt>
-            <dd className="inline font-medium tabular-nums">{entries.length}件</dd>
+          <div className="min-w-0">
+            <dt className="text-muted-foreground">件数</dt>
+            <dd className="font-medium tabular-nums">{entries.length}件</dd>
           </div>
-          <div>
-            <dt className="inline text-muted-foreground">帳簿残数（全用途） </dt>
-            <dd className="inline font-medium tabular-nums">
+          <div className="min-w-0">
+            <dt className="text-muted-foreground">帳簿残数（全用途）</dt>
+            <dd className="font-medium tabular-nums">
               {homeStorage.currentStock.toLocaleString("ja-JP")}発
             </dd>
           </div>
         </dl>
         <Link
-          href={`/lab/ammo-ledger/ledger/print?purpose=${purpose}&from=${from}&to=${to}`}
-          className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          href={`/lab/ammo-ledger/ledger/print?from=${printFrom}&to=${printTo}`}
+          className="shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          印刷する →
+          すべて印刷する →
         </Link>
       </div>
 

@@ -8,3 +8,10 @@ export const ledgerPurposeLabels: Record<LedgerPurpose, string> = {
   hunting: "狩猟用",
   pest_control: "有害鳥獣駆除用",
 };
+
+/** 画面内タブなど、短い表示向け（「用」なし） */
+export const ledgerPurposeTabLabels: Record<LedgerPurpose, string> = {
+  shooting: "射撃",
+  hunting: "狩猟",
+  pest_control: "有害鳥獣駆除",
+};

@@ -6,7 +6,7 @@ import {
 type LedgerPrintCoverProps = {
   ownerName: string;
   ownerAddress?: string | null;
-  purpose: LedgerPurpose;
+  purposes: LedgerPurpose[];
   from: string;
   to: string;
 };
@@ -14,7 +14,7 @@ type LedgerPrintCoverProps = {
 export function LedgerPrintCover({
   ownerName,
   ownerAddress,
-  purpose,
+  purposes,
   from,
   to,
 }: LedgerPrintCoverProps) {
@@ -23,7 +23,9 @@ export function LedgerPrintCover({
   return (
     <section className="ledger-print-page flex flex-col items-center justify-center space-y-6 text-center">
       <h1 className="text-2xl font-bold">実包管理帳簿</h1>
-      <p className="text-lg">{ledgerPurposeLabels[purpose]}</p>
+      <p className="text-sm">
+        {purposes.map((purpose) => ledgerPurposeLabels[purpose]).join("・")}
+      </p>
       <div className="space-y-1 text-sm">
         <p>氏名: {ownerName}</p>
         {ownerAddress ? <p>住所: {ownerAddress}</p> : null}

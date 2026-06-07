@@ -1,3 +1,4 @@
+import { compareLedgerEntries } from "@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import type { PermitEventKind } from "@/features/ammo-ledger/schema/permit-event-kind";
@@ -10,10 +11,9 @@ type PermitEventRow = {
 
 type LedgerRow = {
   id: string;
-  occurredOn: string;
   category: LedgerCategory;
   quantity: number;
-};
+} & import("@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries").LedgerEntrySortKey;
 
 const permitConsumingCategories: LedgerCategory[] = ["acquire"];
 
@@ -34,9 +34,7 @@ export function computeRunningPermitBalance({
   const sortedEvents = [...permitEvents].sort((a, b) =>
     compareDate({ a: a.occurredOn, b: b.occurredOn }),
   );
-  const sortedEntries = [...ledgerEntries].sort((a, b) =>
-    compareDate({ a: a.occurredOn, b: b.occurredOn }),
-  );
+  const sortedEntries = [...ledgerEntries].sort((a, b) => compareLedgerEntries({ a, b }));
 
   let eventIndex = 0;
 
@@ -75,9 +73,7 @@ export function computeCurrentPermitBalance({
   const sortedEvents = [...permitEvents].sort((a, b) =>
     compareDate({ a: a.occurredOn, b: b.occurredOn }),
   );
-  const sortedEntries = [...ledgerEntries].sort((a, b) =>
-    compareDate({ a: a.occurredOn, b: b.occurredOn }),
-  );
+  const sortedEntries = [...ledgerEntries].sort((a, b) => compareLedgerEntries({ a, b }));
 
   let eventIndex = 0;
 

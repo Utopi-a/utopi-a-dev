@@ -88,6 +88,8 @@ function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewCon
       purposeEntries.map((entry) => ({
         id: entry.id,
         occurredOn: entry.occurredOn,
+        dayOrder: entry.dayOrder,
+        createdAt: entry.createdAt,
         category: entry.category as LedgerCategory,
         quantity: entry.quantity,
       })),
@@ -118,6 +120,8 @@ function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewCon
         entries: entries.map((entry) => ({
           id: entry.id,
           occurredOn: entry.occurredOn,
+          dayOrder: entry.dayOrder,
+          createdAt: entry.createdAt,
           category: entry.category as LedgerCategory,
           quantity: entry.quantity,
         })),

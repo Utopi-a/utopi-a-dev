@@ -1,4 +1,5 @@
 import type { ammoLedgerEntry, ammoPermitEvent } from "@/db/schema/ammo-ledger";
+import { compareLedgerEntries } from "@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 
 export type LedgerDisplayRow =
@@ -14,8 +15,29 @@ export type LedgerDisplayRow =
       entry: typeof ammoLedgerEntry.$inferSelect;
     };
 
-function compareDate({ a, b }: { a: string; b: string }): number {
-  return a.localeCompare(b);
+function resolveDisplayRowIdLocal({ row }: { row: LedgerDisplayRow }): string {
+  return row.kind === "entry" ? row.entry.id : row.id;
+}
+
+function compareDisplayRows({ a, b }: { a: LedgerDisplayRow; b: LedgerDisplayRow }): number {
+  const aDate = a.kind === "entry" ? a.entry.occurredOn : a.occurredOn;
+  const bDate = b.kind === "entry" ? b.entry.occurredOn : b.occurredOn;
+  const dateCompare = aDate.localeCompare(bDate);
+  if (dateCompare !== 0) {
+    return dateCompare;
+  }
+
+  if (a.kind === "permit_carryover" && b.kind !== "permit_carryover") {
+    return -1;
+  }
+  if (a.kind !== "permit_carryover" && b.kind === "permit_carryover") {
+    return 1;
+  }
+  if (a.kind === "entry" && b.kind === "entry") {
+    return compareLedgerEntries({ a: a.entry, b: b.entry });
+  }
+
+  return resolveDisplayRowIdLocal({ row: a }).localeCompare(resolveDisplayRowIdLocal({ row: b }));
 }
 
 function isWithinRange({ date, from, to }: { date: string; from?: string; to?: string }): boolean {
@@ -83,12 +105,7 @@ export function buildLedgerDisplayRows({
     entry,
   }));
 
-  const merged = [...permitCarryovers, ...entryRows].sort((a, b) =>
-    compareDate({
-      a: a.kind === "entry" ? a.entry.occurredOn : a.occurredOn,
-      b: b.kind === "entry" ? b.entry.occurredOn : b.occurredOn,
-    }),
-  );
+  const merged = [...permitCarryovers, ...entryRows].sort((a, b) => compareDisplayRows({ a, b }));
 
   return merged;
 }

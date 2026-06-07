@@ -3,6 +3,7 @@
 import { db } from "@/db";
 import { ammoLedgerEntry, ammoTransaction } from "@/db/schema/ammo-ledger";
 import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { resolveNextDayOrder } from "@/features/ammo-ledger/ledger/resolve-day-orders-for-new-entries/resolve-day-orders-for-new-entries";
 import { transactionInputSchema } from "@/features/ammo-ledger/schema/transaction-schema";
 import { prepareConfirmedTransaction } from "@/features/ammo-ledger/transactions/prepare-confirmed-transaction/prepare-confirmed-transaction";
 
@@ -44,6 +45,12 @@ export async function createTransactionAction(input: unknown) {
   const ledgerEntryId = crypto.randomUUID();
 
   await db.transaction(async (tx) => {
+    const dayOrder = await resolveNextDayOrder({
+      tx,
+      userId: user.id,
+      occurredOn: normalized.occurredOn,
+    });
+
     await tx.insert(ammoTransaction).values({
       id: transactionId,
       userId: user.id,
@@ -71,6 +78,7 @@ export async function createTransactionAction(input: unknown) {
       category: normalized.category,
       purpose: data.purpose,
       occurredOn: normalized.occurredOn,
+      dayOrder,
       ammoTypeId: normalized.ammoTypeId,
       ammoTypeName: normalized.ammoTypeName,
       quantity: normalized.quantity,

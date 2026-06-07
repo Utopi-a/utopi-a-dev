@@ -50,4 +50,30 @@ describe("assertServerActionRateLimit", () => {
       assertServerActionRateLimit({ userId: "user-isolated-b", kind: "mutation" }),
     ).not.toThrow();
   });
+
+  it("read は 120 回まで許可する", () => {
+    for (let index = 0; index < 120; index += 1) {
+      expect(() =>
+        assertServerActionRateLimit({ userId: "user-read-max", kind: "read" }),
+      ).not.toThrow();
+    }
+  });
+
+  it("read は 121 回目で拒否する", () => {
+    for (let index = 0; index < 120; index += 1) {
+      assertServerActionRateLimit({ userId: "user-read-over", kind: "read" });
+    }
+
+    expect(() => assertServerActionRateLimit({ userId: "user-read-over", kind: "read" })).toThrow(
+      ServerActionRateLimitError,
+    );
+  });
+
+  it("read と mutation は別バケットでカウントする", () => {
+    for (let index = 0; index < 30; index += 1) {
+      assertServerActionRateLimit({ userId: "user-mixed", kind: "mutation" });
+    }
+
+    expect(() => assertServerActionRateLimit({ userId: "user-mixed", kind: "read" })).not.toThrow();
+  });
 });

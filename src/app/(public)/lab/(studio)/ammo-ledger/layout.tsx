@@ -2,6 +2,7 @@ import { SerwistProvider } from "@serwist/turbopack/react";
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { shouldGuardAmmoLedgerLayout } from "@/features/ammo-ledger/auth/should-guard-ammo-ledger-layout/should-guard-ammo-ledger-layout";
 import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { AmmoLedgerShell } from "@/features/ammo-ledger/components/ammo-ledger-shell/ammo-ledger-shell";
 import { ammoLedgerPwaConfig } from "@/features/ammo-ledger/pwa/ammo-ledger-pwa-config";
@@ -29,7 +30,7 @@ export const viewport: Viewport = {
 
 export default async function AmmoLedgerLayout({ children }: { children: React.ReactNode }) {
   const pathname = (await headers()).get("x-pathname");
-  if (pathname !== ammoLedgerPwaConfig.offlinePath) {
+  if (shouldGuardAmmoLedgerLayout({ pathname })) {
     await requireAmmoUser();
   }
 

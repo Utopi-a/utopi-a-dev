@@ -1,4 +1,5 @@
-import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 export const ammoGun = pgTable("ammo_gun", {
@@ -32,31 +33,65 @@ export const ammoType = pgTable("ammo_type", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const ammoCounterparty = pgTable("ammo_counterparty", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  address: text("address").notNull(),
-  kind: text("kind").notNull().default("shop"),
-  memo: text("memo"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const ammoCounterparty = pgTable(
+  "ammo_counterparty",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    catalogId: text("catalog_id"),
+    name: text("name").notNull(),
+    address: text("address").notNull(),
+    kind: text("kind").notNull().default("shop"),
+    memo: text("memo"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("ammo_counterparty_user_catalog_uidx")
+      .on(table.userId, table.catalogId)
+      .where(sql`${table.catalogId} is not null`),
+  ],
+);
 
-export const ammoRange = pgTable("ammo_range", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  address: text("address").notNull(),
-  defaultPurpose: text("default_purpose"),
-  memo: text("memo"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const ammoRange = pgTable(
+  "ammo_range",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    catalogId: text("catalog_id"),
+    name: text("name").notNull(),
+    address: text("address").notNull(),
+    defaultPurpose: text("default_purpose"),
+    memo: text("memo"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("ammo_range_user_catalog_uidx")
+      .on(table.userId, table.catalogId)
+      .where(sql`${table.catalogId} is not null`),
+  ],
+);
+
+export const ammoCatalogFavorite = pgTable(
+  "ammo_catalog_favorite",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    catalogKind: text("catalog_kind").notNull(),
+    catalogId: text("catalog_id").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("ammo_catalog_favorite_uidx").on(table.userId, table.catalogKind, table.catalogId),
+  ],
+);
 
 export const ammoAcquisitionPermit = pgTable("ammo_acquisition_permit", {
   id: text("id").primaryKey(),

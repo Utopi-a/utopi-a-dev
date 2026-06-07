@@ -50,6 +50,13 @@
       "when": 1780812000000,
       "tag": "0006_acquisition_permit",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1780812183538,
+      "tag": "0007_redundant_vertigo",
+      "breakpoints": true
     }
   ]
 }

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { buildRangePickerData } from "@/features/ammo-ledger/catalog/build-range-picker-data/build-range-picker-data";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { ConsumeForm } from "@/features/ammo-ledger/components/consume-form/consume-form";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
-import { listRanges } from "@/features/ammo-ledger/master/list-ranges/list-ranges";
 import { getDraftTransaction } from "@/features/ammo-ledger/transactions/get-draft/get-draft";
 
 type PageProps = {
@@ -16,10 +16,10 @@ export default async function ConsumeNewPage({ searchParams }: PageProps) {
   const user = await requireAmmoUser();
   const { draft: draftId } = await searchParams;
 
-  const [guns, ammoTypes, ranges, draft] = await Promise.all([
+  const [guns, ammoTypes, rangePickerData, draft] = await Promise.all([
     listGuns({ userId: user.id }),
     listAmmoTypes({ userId: user.id }),
-    listRanges({ userId: user.id }),
+    buildRangePickerData({ userId: user.id }),
     draftId ? getDraftTransaction({ userId: user.id, draftId }) : Promise.resolve(null),
   ]);
 
@@ -42,19 +42,19 @@ export default async function ConsumeNewPage({ searchParams }: PageProps) {
       </div>
       <AmmoLedgerNav />
       <AmmoLedgerPanel>
-        {guns.length === 0 || ammoTypes.length === 0 || ranges.length === 0 ? (
+        {guns.length === 0 || ammoTypes.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            銃・弾種・射撃場のマスタを
+            銃・弾種のマスタを
             <Link href="/lab/ammo-ledger/settings" className="underline">
               設定
             </Link>
-            から登録してください。
+            から登録してください。射撃場は入力時に全国一覧から選べます。
           </p>
         ) : (
           <ConsumeForm
             guns={guns}
             ammoTypes={ammoTypes}
-            ranges={ranges}
+            rangePickerData={rangePickerData}
             initialValues={initialValues}
           />
         )}

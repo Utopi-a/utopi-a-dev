@@ -4,8 +4,10 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { ammoGun, ammoRange, ammoType } from "@/db/schema/ammo-ledger";
+import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
+import type { MasterPickerData } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
@@ -16,7 +18,7 @@ import { createTransactionAction } from "@/features/ammo-ledger/transactions/cre
 type ConsumeFormProps = {
   guns: (typeof ammoGun.$inferSelect)[];
   ammoTypes: (typeof ammoType.$inferSelect)[];
-  ranges: (typeof ammoRange.$inferSelect)[];
+  rangePickerData: MasterPickerData;
   initialValues?: {
     occurredOn?: string;
     ammoTypeId?: string;
@@ -27,7 +29,7 @@ type ConsumeFormProps = {
   };
 };
 
-export function ConsumeForm({ guns, ammoTypes, ranges, initialValues }: ConsumeFormProps) {
+export function ConsumeForm({ guns, ammoTypes, rangePickerData, initialValues }: ConsumeFormProps) {
   const today = new Date().toISOString().slice(0, 10);
 
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
@@ -99,12 +101,14 @@ export function ConsumeForm({ guns, ammoTypes, ranges, initialValues }: ConsumeF
         />
       </div>
 
-      <FieldSelect
+      <MasterPicker
         id="range"
         label="場所"
         value={rangeId}
         onChange={setRangeId}
-        options={ranges.map((r) => ({ value: r.id, label: r.name }))}
+        catalogKind="range"
+        pickerData={rangePickerData}
+        sheetTitle="射撃場を選ぶ"
         required
       />
 

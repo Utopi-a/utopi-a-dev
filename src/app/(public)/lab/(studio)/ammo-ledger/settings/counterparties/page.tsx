@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
@@ -11,9 +12,17 @@ export default async function CounterpartiesSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">購入先・譲渡先</h1>
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-tight">購入先・譲渡先</h1>
+        <p className="text-sm text-muted-foreground">
+          よく使う購入先・譲渡先のマイリストです。
+          <Link href="/lab/ammo-ledger/settings/counterparties/catalog" className="ml-1 underline">
+            全国一覧から探す
+          </Link>
+        </p>
+      </div>
       <AmmoLedgerNav />
-      <AmmoLedgerPanel title="登録済み">
+      <AmmoLedgerPanel title="マイリスト">
         {counterparties.length === 0 ? (
           <p className="text-sm text-muted-foreground">まだ登録がありません。</p>
         ) : (
@@ -25,6 +34,11 @@ export default async function CounterpartiesSettingsPage() {
               >
                 <span>
                   {item.name} — {item.address}
+                  {item.catalogId ? (
+                    <span className="ml-2 text-xs text-muted-foreground">（全国一覧）</span>
+                  ) : (
+                    <span className="ml-2 text-xs text-muted-foreground">（手入力）</span>
+                  )}
                 </span>
                 <CounterpartyRowActions counterpartyId={item.id} />
               </li>
@@ -32,7 +46,7 @@ export default async function CounterpartiesSettingsPage() {
           </ul>
         )}
       </AmmoLedgerPanel>
-      <AmmoLedgerPanel title="追加">
+      <AmmoLedgerPanel title="手入力で追加">
         <CounterpartyForm />
       </AmmoLedgerPanel>
     </div>

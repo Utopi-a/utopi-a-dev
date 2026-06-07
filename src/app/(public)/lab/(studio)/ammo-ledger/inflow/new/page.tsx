@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { buildCounterpartyPickerData } from "@/features/ammo-ledger/catalog/build-counterparty-picker-data/build-counterparty-picker-data";
 import { AcquireForm } from "@/features/ammo-ledger/components/acquire-form/acquire-form";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
@@ -11,7 +12,6 @@ import {
 } from "@/features/ammo-ledger/components/inflow-record-tabs/inflow-record-tabs";
 import { TransferForm } from "@/features/ammo-ledger/components/transfer-form/transfer-form";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
-import { listCounterparties } from "@/features/ammo-ledger/master/list-counterparties/list-counterparties";
 import { getDraftTransaction } from "@/features/ammo-ledger/transactions/get-draft/get-draft";
 
 type PageProps = {
@@ -30,9 +30,9 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
   const { tab: tabParam, draft: draftId } = await searchParams;
   const tab = parseTab(tabParam);
 
-  const [ammoTypes, counterparties, draft] = await Promise.all([
+  const [ammoTypes, counterpartyPickerData, draft] = await Promise.all([
     listAmmoTypes({ userId: user.id }),
-    listCounterparties({ userId: user.id }),
+    buildCounterpartyPickerData({ userId: user.id }),
     draftId ? getDraftTransaction({ userId: user.id, draftId }) : Promise.resolve(null),
   ]);
 
@@ -74,7 +74,7 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
               acquireContent={
                 <AcquireForm
                   ammoTypes={ammoTypes}
-                  counterparties={counterparties}
+                  counterpartyPickerData={counterpartyPickerData}
                   initialValues={tab === "acquire" ? initialValues : undefined}
                 />
               }
@@ -87,7 +87,7 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
               transferContent={
                 <TransferForm
                   ammoTypes={ammoTypes}
-                  counterparties={counterparties}
+                  counterpartyPickerData={counterpartyPickerData}
                   initialValues={tab === "transfer" ? initialValues : undefined}
                 />
               }

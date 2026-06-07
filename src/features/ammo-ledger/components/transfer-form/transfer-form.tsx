@@ -4,19 +4,20 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { ammoCounterparty, ammoType } from "@/db/schema/ammo-ledger";
+import type { ammoType } from "@/db/schema/ammo-ledger";
+import type { MasterPickerData } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
+import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
 
-const manualCounterpartyId = "__manual__";
-
 type TransferFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
-  counterparties: (typeof ammoCounterparty.$inferSelect)[];
+  counterpartyPickerData: MasterPickerData;
   initialValues?: {
     occurredOn?: string;
     ammoTypeId?: string;
@@ -25,14 +26,20 @@ type TransferFormProps = {
   };
 };
 
-export function TransferForm({ ammoTypes, counterparties, initialValues }: TransferFormProps) {
+export function TransferForm({
+  ammoTypes,
+  counterpartyPickerData,
+  initialValues,
+}: TransferFormProps) {
   const today = new Date().toISOString().slice(0, 10);
 
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
   const [purpose, setPurpose] = useState<LedgerPurpose>("shooting");
   const [counterpartyId, setCounterpartyId] = useState(
-    counterparties[0]?.id ?? manualCounterpartyId,
+    counterpartyPickerData.recent[0]?.id ??
+      counterpartyPickerData.registered[0]?.id ??
+      manualCounterpartyId,
   );
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
@@ -139,17 +146,16 @@ export function TransferForm({ ammoTypes, counterparties, initialValues }: Trans
         <p className="text-lg font-semibold">{computedRounds}発</p>
       </div>
 
-      <FieldSelect
+      <MasterPicker
         id="counterparty"
         label="譲渡先"
         value={counterpartyId}
         onChange={setCounterpartyId}
-        options={[
-          ...counterparties.map((c) => ({ value: c.id, label: c.name })),
-          { value: manualCounterpartyId, label: "手入力" },
-        ]}
+        catalogKind="gun_shop"
+        pickerData={counterpartyPickerData}
+        sheetTitle="譲渡先を選ぶ"
+        manualOption={{ value: manualCounterpartyId, label: "手入力" }}
         required
-        placeholder=""
       />
 
       {isManualCounterparty ? (

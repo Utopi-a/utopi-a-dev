@@ -1,6 +1,5 @@
 import { ChevronRightIcon } from "lucide-react";
 import {
-  isAmmoCarryoverEntry,
   LedgerCategoryBadge,
   PermitCarryoverBadge,
 } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
@@ -81,8 +80,6 @@ export function LedgerEntryCard({
         "flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5 text-left transition-colors",
         selectable && "hover:border-border hover:bg-muted/30 active:bg-muted/40",
         !selectable && "cursor-default",
-        isAmmoCarryoverEntry({ category: entry.category }) &&
-          "border-emerald-500/20 bg-emerald-500/5",
         isHomeStorageExceeded && "border-amber-500/30 bg-amber-500/5",
       )}
     >

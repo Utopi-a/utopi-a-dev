@@ -11,7 +11,7 @@ const categoryTone: Record<LedgerCategory, string> = {
   transfer: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
   dispose: "bg-muted text-muted-foreground",
   manufacture: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
-  carryover: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  carryover: "bg-muted text-muted-foreground",
 };
 
 export function PermitCarryoverBadge() {

@@ -27,8 +27,10 @@
     "db:migrate": "doppler run -- drizzle-kit migrate",
     "db:studio": "doppler run -- drizzle-kit studio",
     "scrape:shooting-ranges": "pnpm dlx tsx src/features/ammo-ledger/range-seed/scrape-shajoukyo-ranges/scrape-shajoukyo-ranges.ts",
+    "scrape:sportsgun-ranges": "pnpm dlx tsx src/features/ammo-ledger/range-seed/scrape-sportsgun-ranges/scrape-sportsgun-ranges.ts",
     "scrape:gun-shops": "pnpm dlx tsx src/features/ammo-ledger/counterparty-seed/scrape-nikkaren-traders/scrape-nikkaren-traders.ts",
-    "resolve:shooting-range-addresses": "pnpm dlx tsx src/features/ammo-ledger/range-seed/resolve-range-addresses/resolve-range-addresses.ts"
+    "resolve:shooting-range-addresses": "pnpm dlx tsx src/features/ammo-ledger/range-seed/resolve-range-addresses/resolve-range-addresses.ts",
+    "fill:shooting-range-partial-addresses": "pnpm dlx tsx src/features/ammo-ledger/range-seed/resolve-range-addresses/fill-partial-addresses.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

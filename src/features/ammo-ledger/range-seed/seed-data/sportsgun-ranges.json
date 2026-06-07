@@ -1,0 +1,1687 @@
+{
+  "scrapedAt": "2026-06-07T05:51:07.385Z",
+  "sourceUrl": "https://sportsgun.net/firing_range",
+  "count": 210,
+  "ranges": [
+    {
+      "name": "仙台綜合射撃場",
+      "postalCode": "989-3212",
+      "address": "宮城県仙台市青葉区芋沢権現森山47",
+      "phone": "022-394-2392",
+      "detailUrl": "https://sportsgun.net/firing_range/%e4%bb%99%e5%8f%b0%e7%b6%9c%e5%90%88%e5%b0%84%e6%92%83%e5%a0%b4",
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "羽黒射撃場",
+      "postalCode": "997-0211",
+      "address": "山形県鶴岡市羽黒町手向水呑沢91-2",
+      "phone": "0235-62-4355",
+      "detailUrl": "https://sportsgun.net/firing_range/%e7%be%bd%e9%bb%92%e5%b0%84%e6%92%83%e5%a0%b4",
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "男鹿市クレー射撃場",
+      "postalCode": "010-0343",
+      "address": "秋田県男鹿市脇本田谷沢立木沢1-1",
+      "phone": "0185-25-4143",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "湯沢市クレー射撃場",
+      "postalCode": "012-0821",
+      "address": "秋田県湯沢市山谷蛇野12-9",
+      "phone": "0183-73-9904",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "本荘射撃場",
+      "postalCode": "015-0067",
+      "address": "秋田県由利本荘市三条清水尻25",
+      "phone": "0184-24-3706",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "大平クレー射撃場",
+      "postalCode": "015-0241",
+      "address": "秋田県由利本荘市東由利宿湯ノ沢80",
+      "phone": "0184-69-2931",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "由利本荘市鳥海射撃場",
+      "postalCode": "015-0504",
+      "address": "秋田県由利本荘市鳥海町上川内堤鍋沢30-1",
+      "phone": "0184-57-2881",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "北部シーサイドライフル射撃場",
+      "postalCode": "016-0179",
+      "address": "秋田県能代市浅内上西山37-1",
+      "phone": "0185-52-7259",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "秋田県立総合射撃場",
+      "postalCode": "018-1304",
+      "address": "秋田県由利本荘市岩城道川新田沢43",
+      "phone": "0184-73-3900",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "大館大子内射撃場",
+      "postalCode": "018-5754",
+      "address": "秋田県大館市大子内堂の沢49､50",
+      "phone": "0186-42-8877",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "鶯宿温泉射撃場",
+      "postalCode": "020-0574",
+      "address": "岩手県岩手郡雫石町鴬宿男助山1",
+      "phone": "019-692-2334",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "北上総合射撃場",
+      "postalCode": "024-0211",
+      "address": "岩手県北上市口内町森131",
+      "phone": "0197-69-2916",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "花巻市クレー射撃場",
+      "postalCode": "025-0244",
+      "address": "岩手県花巻市湯口松沢70",
+      "phone": "0198-28-2266",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "釜石綜合射撃場",
+      "postalCode": "026-0121",
+      "address": "岩手県釜石市唐丹町川目88-1",
+      "phone": "0193-55-2170",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "宮古指定射撃場",
+      "postalCode": "027-0203",
+      "address": "岩手県宮古市津軽石第13地割大路364",
+      "phone": "0193-86-3458",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "久慈常設射撃場",
+      "postalCode": "028-0091",
+      "address": "岩手県久慈市大川目町第10地割8",
+      "phone": "0194-55-2524",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "遠野総合射撃場",
+      "postalCode": "028-0514",
+      "address": "岩手県遠野市遠野町32-105-17",
+      "phone": "0198-62-2394",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "矢巾総合射撃場",
+      "postalCode": "028-3627",
+      "address": "岩手県紫波郡矢巾町和味第2地割106",
+      "phone": "019-697-4200",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "岩手一戸総合射撃場",
+      "postalCode": "028-5303",
+      "address": "岩手県二戸郡一戸町小友山井127-2",
+      "phone": "0195-31-9722",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "大東町摺沢射撃場",
+      "postalCode": "029-0523",
+      "address": "岩手県一関市大東町摺沢綱木124-34",
+      "phone": "0191-75-4354",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "青森散弾銃射撃場",
+      "postalCode": "030-0152",
+      "address": "青森県青森市野沢川部76-1",
+      "phone": "017-739-8299",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "青森射撃場",
+      "postalCode": "030-0915",
+      "address": "青森県青森市小柳3-8-11",
+      "phone": "017-741-7711",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "下北猟友会入口射撃場",
+      "postalCode": "035-0103",
+      "address": "青森県下北郡東通村野牛稲崎平5-5",
+      "phone": "0175-27-3022",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "弘前クレー射撃場",
+      "postalCode": "036-8127",
+      "address": "青森県弘前市小栗山鷹ノ巣1-657",
+      "phone": "0172-87-3946",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "八戸射撃場",
+      "postalCode": "039-0801",
+      "address": "青森県三戸郡南部町片岸八木田65-37",
+      "phone": "0178-84-4446",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "函館七飯総合射撃場",
+      "postalCode": "041-1122",
+      "address": "北海道亀田郡七飯町大川781",
+      "phone": "01372-7-3617",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "江差支部射撃場",
+      "postalCode": "043-0011",
+      "address": "北海道檜山郡江差町五厘沢町384",
+      "phone": "0139-53-6539",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "小樽ライフル射撃場",
+      "postalCode": "047-0013",
+      "address": "北海道小樽市奥沢5-152",
+      "phone": "0134-26-0931",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "ユーラップ射撃場",
+      "postalCode": "049-3122",
+      "address": "北海道二海郡八雲町花浦333",
+      "phone": "0137-62-2111",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "浦臼国際ライフル銃射撃場",
+      "postalCode": "061-0612",
+      "address": "北海道樺戸郡浦臼町浦臼内589-1",
+      "phone": "01256-7-3833",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "浦臼国際散弾銃射撃場",
+      "postalCode": "061-0612",
+      "address": "北海道樺戸郡浦臼町浦臼内589-1",
+      "phone": "0125-67-3833",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "豊滝クレー射撃場",
+      "postalCode": "061-2273",
+      "address": "北海道札幌市南区豊滝517",
+      "phone": "011-596-2281",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "北海道栗山国際クレー射撃場",
+      "postalCode": "068-0353",
+      "address": "北海道夕張郡栗山町継立158-22",
+      "phone": "0123-76-3840",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "美瑛白金クレー射撃場",
+      "postalCode": "071-0235",
+      "address": "北海道上川郡美瑛町白金",
+      "phone": "090-1525-7585",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "当麻ライフル射撃場",
+      "postalCode": "078-1335",
+      "address": "北海道上川郡当麻町緑郷4区",
+      "phone": "090-6447-7094",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "帯広総合射撃場",
+      "postalCode": "082-0001",
+      "address": "北海道河西郡芽室町平和西14線22",
+      "phone": "0155-62-2451",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "帯広国際クレー射撃場",
+      "postalCode": "082-0078",
+      "address": "北海道河西郡芽室町上芽室3号59-1",
+      "phone": "0155-65-2111",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "HAP&#8217;1釧路総合射撃場",
+      "postalCode": "084-0925",
+      "address": "北海道釧路市新野29-1",
+      "phone": "0154-57-5555",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "北見国際クレー射撃場",
+      "postalCode": "090-0005",
+      "address": "北海道北見市大和293",
+      "phone": "0157-23-1440",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "網走射撃協会射場",
+      "postalCode": "093-0241",
+      "address": "北海道網走市能取179-5",
+      "phone": "0152-44-7239",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "道北射撃場",
+      "postalCode": "096-0066",
+      "address": "北海道名寄市日進698",
+      "phone": "090-8706-8961",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "稚内射撃場",
+      "postalCode": "098-6642",
+      "address": "北海道稚内市声問村声問",
+      "phone": "0162-34-5515",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "梁川射撃場",
+      "postalCode": "960-0722",
+      "address": "福島県伊達市梁川町八幡取揚",
+      "phone": "0245-77-0119",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "福島市クレー射撃場",
+      "postalCode": "960-1104",
+      "address": "福島県福島市小田滝ノ入2-1",
+      "phone": "024-546-5590",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "福島県中央国際射撃場",
+      "postalCode": "962-0712",
+      "address": "福島県須賀川市小倉埋平417",
+      "phone": "0248-79-2020",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "小野常設射撃場",
+      "postalCode": "963-3312",
+      "address": "福島県田村郡小野町夏井川除 8-1",
+      "phone": "0247-85-3155",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "矢祭射撃場",
+      "postalCode": "963-5117",
+      "address": "福島県東白川郡矢祭町山下東ケ谷地43",
+      "phone": "0247-47-2216",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "石川常設射撃場",
+      "postalCode": "963-7838",
+      "address": "福島県石川郡石川町曲木東土神35",
+      "phone": "0247-26-3637",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "二本松市総合射撃場",
+      "postalCode": "964-0016",
+      "address": "福島県二本松市大森沢100",
+      "phone": "0243-23-4388",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "田島町川島射撃場",
+      "postalCode": "967-0012",
+      "address": "福島県南会津郡南会津町川島向林1242-2",
+      "phone": "0241-62-1311",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "磐梯国際クレー射撃場",
+      "postalCode": "969-3451",
+      "address": "福島県会津若松市河東町八田大野原甲4394",
+      "phone": "0242-94-2248",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "喜多方猟友会研修センター",
+      "postalCode": "969-4167",
+      "address": "福島県喜多方市山都町大林5916-31",
+      "phone": "0241-22-3251",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "いわき総合射撃場",
+      "postalCode": "970-1145",
+      "address": "福島県いわき市好間町北好間下ケ屋敷1-9",
+      "phone": "0246-36-5151",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "相馬市初野射撃場",
+      "postalCode": "976-0051",
+      "address": "福島県相馬市初野栗原287",
+      "phone": "080-6049-1636",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "宮城県ライフル射撃場",
+      "postalCode": "986-2102",
+      "address": "宮城県石巻市沢田金山51-1",
+      "phone": "0225-97-5429",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "志たかぢや綜合射撃場",
+      "postalCode": "987-0901",
+      "address": "宮城県登米市東和町米川松坂142-7",
+      "phone": "0220-45-1890",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "宮城県クレー射撃場",
+      "postalCode": "989-1311",
+      "address": "宮城県柴田郡村田町足立大平山1-24",
+      "phone": "0224-84-6551",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "鳴子クレー射撃場",
+      "postalCode": "989-6823",
+      "address": "宮城県大崎市鳴子温泉湯元67-3",
+      "phone": "0229-83-4358",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "白川射撃場",
+      "postalCode": "999-1112",
+      "address": "山形県西置賜郡飯豊町高峰",
+      "phone": null,
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "小国町猟友会射撃場",
+      "postalCode": "999-1342",
+      "address": "山形県西置賜郡小国町大宮松ヶ沢363-1",
+      "phone": "0238-62-2050",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "南陽市赤湯クレー射撃場",
+      "postalCode": "999-2205",
+      "address": "山形県南陽市新田5-2",
+      "phone": "0238-49-2750",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "東根クレー射撃場",
+      "postalCode": "999-3701",
+      "address": "山形県東根市東根甲9637",
+      "phone": "0237-43-5341",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "山形県猟友会射撃センター",
+      "postalCode": "999-4605",
+      "address": "山形県最上郡舟形町長沢黒森4016",
+      "phone": "0233-22-2111",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "遊佐町射撃場",
+      "postalCode": "999-8313",
+      "address": "山形県飽海郡遊佐町杉沢中山7-1",
+      "phone": "0234-72-2579",
+      "detailUrl": null,
+      "area": "hokkaido_tohoku"
+    },
+    {
+      "name": "ぐんまジャイアント総合クレー・ライフル射撃場",
+      "postalCode": "370-2301",
+      "address": "群馬県富岡市桑原604",
+      "phone": "0274-63-3073",
+      "detailUrl": "https://sportsgun.net/firing_range/%e3%81%90%e3%82%93%e3%81%be%e3%82%b8%e3%83%a3%e3%82%a4%e3%82%a2%e3%83%b3%e3%83%88%e7%b7%8f%e5%90%88%e3%82%af%e3%83%ac%e3%83%bc%e3%83%bb%e3%83%a9%e3%82%a4%e3%83%95%e3%83%ab%e5%b0%84%e6%92%83%e5%a0%b4",
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "那須国際射撃場",
+      "postalCode": "325-0001",
+      "address": "栃木県那須郡那須町高久甲3900",
+      "phone": "0287-62-1471",
+      "detailUrl": "https://sportsgun.net/firing_range/%e9%82%a3%e9%a0%88%e5%9b%bd%e9%9a%9b%e5%b0%84%e6%92%83%e5%a0%b4",
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "神奈川大井射撃場",
+      "postalCode": "258-0014",
+      "address": "神奈川県足柄上郡大井町赤田902",
+      "phone": "0465-83-5523",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "神奈川県立伊勢原射撃場",
+      "postalCode": "259-1141",
+      "address": "神奈川県伊勢原市上粕屋2380",
+      "phone": "0463-92-7882",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "千葉県総合スポーツセンター射撃場",
+      "postalCode": "265-0046",
+      "address": "千葉県千葉市若葉区小間子町4-3",
+      "phone": "043-239-0164",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "成田射撃場",
+      "postalCode": "270-1604",
+      "address": "千葉県印西市山田166",
+      "phone": "0476-98-1221",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "銚子射撃場",
+      "postalCode": "288-0872",
+      "address": "千葉県銚子市森戸町1594",
+      "phone": "0479-33-0608",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "京葉射撃倶楽部",
+      "postalCode": "290-0166",
+      "address": "千葉県市原市犬成961",
+      "phone": "0436-75-5507",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "千葉県射撃場",
+      "postalCode": "290-0528",
+      "address": "千葉県市原市古敷谷2620",
+      "phone": "0436-98-0314",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "筑波射撃場",
+      "postalCode": "300-4221",
+      "address": "茨城県つくば市大形2247",
+      "phone": "029-867-1151",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "茨城県営ライフル射撃場",
+      "postalCode": "300-4405",
+      "address": "茨城県桜川市真壁町桜井1074-2",
+      "phone": "0296-55-5126",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "茨城県狩猟者研修センター射撃場",
+      "postalCode": "309-1607",
+      "address": "茨城県笠間市石寺680",
+      "phone": "0296-72-3817",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "友部射撃場",
+      "postalCode": "309-1722",
+      "address": "茨城県笠間市平町1416-1",
+      "phone": "0296-77-0601",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "栃木県ライフル射撃場",
+      "postalCode": "321-2118",
+      "address": "栃木県宇都宮市新里町乙1067",
+      "phone": "028-689-9715",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "古峰ヶ原射撃場",
+      "postalCode": "322-0101",
+      "address": "栃木県鹿沼市草久3027",
+      "phone": "0289-74-2111",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "塩那総合射撃場",
+      "postalCode": "325-0107",
+      "address": "栃木県那須塩原市高林307-16",
+      "phone": "0287-68-0925",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "足利アップル射撃場",
+      "postalCode": "326-0101",
+      "address": "栃木県足利市松田町3003",
+      "phone": "0284-61-1246",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "ニッコー栃木綜合射撃場",
+      "postalCode": "328-0203",
+      "address": "栃木県栃木市尻内町1856",
+      "phone": "0282-31-1125",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "塩谷射撃場",
+      "postalCode": "329-2221",
+      "address": "栃木県塩谷郡塩谷町玉生1928",
+      "phone": "0287-45-0085",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "朝霞ライフル射撃場",
+      "postalCode": "352-0013",
+      "address": "埼玉県新座市新塚1-3-1",
+      "phone": "048-478-5974",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "百穴射撃場",
+      "postalCode": "355-0155",
+      "address": "埼玉県比企郡吉見町北吉見35",
+      "phone": "0493-54-1909",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "埼玉県長瀞総合射撃場",
+      "postalCode": "369-1302",
+      "address": "埼玉県秩父郡長瀞町野上下郷2395-1",
+      "phone": "0494-66-1111",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "鬼石国際射撃場",
+      "postalCode": "370-1402",
+      "address": "群馬県藤岡市譲原甲1871",
+      "phone": "0274-52-3393",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "群馬県安中総合射撃場",
+      "postalCode": "379-0115",
+      "address": "群馬県安中市中宿2003",
+      "phone": "027-381-0900",
+      "detailUrl": null,
+      "area": "kanto_koushinetsu"
+    },
+    {
+      "name": "富士国際岩本山総合射撃場",
+      "postalCode": "416-0901",
+      "address": "静岡県富士市岩本1601-2",
+      "phone": "0545-61-6808",
+      "detailUrl": "https://sportsgun.net/firing_range/%e5%af%8c%e5%a3%ab%e5%9b%bd%e9%9a%9b%e5%b2%a9%e6%9c%ac%e5%b1%b1%e7%b7%8f%e5%90%88%e5%b0%84%e6%92%83%e5%a0%b4",
+      "area": "tokai"
+    },
+    {
+      "name": "静岡クレー射撃場",
+      "postalCode": "422-8002",
+      "address": "静岡県静岡市駿河区谷田1184",
+      "phone": "054-262-5753",
+      "detailUrl": "https://sportsgun.net/firing_range/%e9%9d%99%e5%b2%a1%e3%82%af%e3%83%ac%e3%83%bc%e5%b0%84%e6%92%83%e5%a0%b4",
+      "area": "tokai"
+    },
+    {
+      "name": "長野射撃場",
+      "postalCode": "380-0886",
+      "address": "長野県長野市広瀬小名田沖3237-外24",
+      "phone": "026-239-2895",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "佐久平国際射撃場",
+      "postalCode": "385-0031",
+      "address": "長野県佐久市内山水上6240",
+      "phone": "0267-63-1674",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "菅平射撃場",
+      "postalCode": "386-2204",
+      "address": "長野県上田市菅平高原菅平1223-620",
+      "phone": "0268-74-2576",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "飯田国際射撃場",
+      "postalCode": "395-0157",
+      "address": "長野県飯田市大瀬木2554-104",
+      "phone": "0265-25-3700",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "大町総合射撃場",
+      "postalCode": "398-0002",
+      "address": "長野県大町市大町8293",
+      "phone": "0261-23-1658",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "長野県営総合射撃場",
+      "postalCode": "399-0423",
+      "address": "長野県上伊那郡辰野町澤底",
+      "phone": "0266-43-3322",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "木曽国際射撃場",
+      "postalCode": "399-5607",
+      "address": "長野県木曽郡上松町高山355イ-16",
+      "phone": "080-2395-4086",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "中信国際射撃場",
+      "postalCode": "399-8204",
+      "address": "長野県安曇野市豊科高家熊倉2300",
+      "phone": "0263-72-2526",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "富士五湖射撃場",
+      "postalCode": "401-0511",
+      "address": "山梨県南都留郡忍野村忍草2761",
+      "phone": "0555-23-8666",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "鹿留射撃場",
+      "postalCode": "402-0032",
+      "address": "山梨県都留市鹿留3101",
+      "phone": "0554-43-1816",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "山梨県立八代射撃場",
+      "postalCode": "406-0832",
+      "address": "山梨県笛吹市八代町竹居5737",
+      "phone": "055-265-3051",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "大月クレー射撃場",
+      "postalCode": "409-0614",
+      "address": "山梨県大月市猿橋町猿橋1022",
+      "phone": "0554-22-5023",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "下部射撃場",
+      "postalCode": "409-3116",
+      "address": "山梨県南巨摩郡身延町車田490",
+      "phone": "0556-37-0626",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "須山クレー射撃場",
+      "postalCode": "410-1231",
+      "address": "静岡県裾野市須山2311-124",
+      "phone": "055-998-1267",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "西富士ライフル射撃場",
+      "postalCode": "418-0108",
+      "address": "静岡県富士宮市猪之頭978-1",
+      "phone": "0544-52-1040",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "観音山射撃場",
+      "postalCode": "431-3534",
+      "address": "静岡県浜松市天竜区懐山",
+      "phone": "053-928-0726",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "水窪射撃技術訓練センター",
+      "postalCode": "431-4101",
+      "address": "静岡県浜松市天竜区水窪町奥領家4181",
+      "phone": "053-987-0987",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "袋井クレー射撃場",
+      "postalCode": "437-0065",
+      "address": "静岡県袋井市堀越1604",
+      "phone": "0538-42-1934",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "愛知県総合射撃場",
+      "postalCode": "444-3203",
+      "address": "愛知県豊田市連野町ウネ畑12-95",
+      "phone": "0565-90-3971",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "藤川射撃場",
+      "postalCode": "444-3523",
+      "address": "愛知県岡崎市藤川町堤ケ入38-8",
+      "phone": "0564-48-6556",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "刈谷市体育館エアーライフル射撃場",
+      "postalCode": "448-0838",
+      "address": "愛知県刈谷市逢妻町4-32",
+      "phone": "0566-21-7711",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "岐阜エアーライフル射撃場",
+      "postalCode": "500-8011",
+      "address": "岐阜県岐阜市木挽町27",
+      "phone": "058-262-2575",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "揖斐教習射撃場",
+      "postalCode": "501-0902",
+      "address": "岐阜県揖斐郡揖斐川町坂内広瀬川尻",
+      "phone": "0585-53-2148",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "関国際射撃場",
+      "postalCode": "501-3264",
+      "address": "岐阜県関市池尻1123-1",
+      "phone": "0575-28-2051",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "郡上総合射撃場",
+      "postalCode": "501-4603",
+      "address": "岐阜県郡上市大和町栗巣黒手1410-1",
+      "phone": "0575-67-1835",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "白川射撃場",
+      "postalCode": "509-1113",
+      "address": "岐阜県加茂郡白川町三川2623",
+      "phone": "0574-72-2188",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "美女高原射撃場（飛騨猟友会教習射撃場）",
+      "postalCode": "509-3306",
+      "address": "岐阜県高山市朝日町見座1353-26",
+      "phone": "090-1099-5086",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "土岐市総合射撃場",
+      "postalCode": "509-5301",
+      "address": "岐阜県土岐市妻木町3020-35",
+      "phone": "0572-55-0708",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "恵那市射撃場",
+      "postalCode": "509-7201",
+      "address": "岐阜県恵那市大井町2696-11",
+      "phone": "0573-25-7416",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "福井県立クレー射撃場",
+      "postalCode": "911-0011",
+      "address": "福井県勝山市野向町牛ヶ谷107-3",
+      "phone": "0779-88-0703",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "福井県立ライフル射撃場",
+      "postalCode": "918-8155",
+      "address": "福井県福井市杉谷町49-40-3",
+      "phone": "0776-38-6354",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "医王山ライフル射撃場",
+      "postalCode": "920-1103",
+      "address": "石川県金沢市田島町よ27甲",
+      "phone": "076-229-1591",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "加賀散弾銃射撃場",
+      "postalCode": "922-0304",
+      "address": "石川県加賀市分校町ム12-67",
+      "phone": "0761-74-1476",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "富山県福光射撃場",
+      "postalCode": "939-1681",
+      "address": "富山県南砺市才川七34",
+      "phone": "0763-55-1938",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "南砺市クレー射撃場",
+      "postalCode": "939-1681",
+      "address": "富山県南砺市才川七風吹山27-1",
+      "phone": "0763-55-8456",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "長岡国際射撃場",
+      "postalCode": "940-2146",
+      "address": "新潟県長岡市大積町1-389",
+      "phone": "0258-46-5711",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "まつだい射撃場",
+      "postalCode": "942-1526",
+      "address": "新潟県十日町市松代",
+      "phone": "025-597-3412",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "柏崎クレー射撃場",
+      "postalCode": "945-0855",
+      "address": "新潟県柏崎市鯨波353",
+      "phone": "0257-32-2364",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "佐渡射撃場",
+      "postalCode": "952-1208",
+      "address": "新潟県佐渡市金井新保丙2-167",
+      "phone": "0259-57-8122",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "巻射撃場",
+      "postalCode": "953-0076",
+      "address": "新潟県新潟市西蒲区福井4192",
+      "phone": "0256-73-3871",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "新津クレー射撃場",
+      "postalCode": "956-0113",
+      "address": "新潟県新潟市秋葉区矢代田6140",
+      "phone": "0250-38-4585",
+      "detailUrl": null,
+      "area": "tokai"
+    },
+    {
+      "name": "京北綜合射撃場",
+      "postalCode": "601-0324",
+      "address": "京都府京都市右京区京北下町山作り1-2",
+      "phone": "075-853-0341",
+      "detailUrl": "https://sportsgun.net/firing_range/%e4%ba%ac%e5%8c%97%e7%b6%9c%e5%90%88%e5%b0%84%e6%92%83%e5%a0%b4",
+      "area": "kinki"
+    },
+    {
+      "name": "三重県営ライフル射撃場",
+      "postalCode": "514-1256",
+      "address": "三重県津市中村町国主谷",
+      "phone": "059-252-0429",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "三重県上野射撃場",
+      "postalCode": "518-0813",
+      "address": "三重県伊賀市蓮池987",
+      "phone": "0595-36-9191",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "滋賀県立ライフル射撃場",
+      "postalCode": "520-2264",
+      "address": "滋賀県大津市大石東町鉞峠",
+      "phone": "077-546-0983",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "高槻国際射撃場",
+      "postalCode": "569-1051",
+      "address": "大阪府高槻市原桃山1358-8",
+      "phone": "072-687-1548",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "大阪総合射撃場",
+      "postalCode": "590-0503",
+      "address": "大阪府泉南市新家4955",
+      "phone": "072-483-5600",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "岸和田国際射撃場",
+      "postalCode": "596-0114",
+      "address": "大阪府岸和田市大沢町1802-1",
+      "phone": "072-479-1662",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "京都府射撃場",
+      "postalCode": "601-0262",
+      "address": "京都府京都市右京区京北細野町打谷1",
+      "phone": "075-852-1025",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "京都八瀬射撃場",
+      "postalCode": "601-1255",
+      "address": "京都府京都市左京区上高野東山72",
+      "phone": "075-721-4809",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "京都笠取国際射撃場",
+      "postalCode": "601-1392",
+      "address": "京都府宇治市西笠取引坂1",
+      "phone": "075-571-6550",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "岩屋射撃場",
+      "postalCode": "629-2314",
+      "address": "京都府与謝郡与謝野町岩屋尼ヶ原61",
+      "phone": "0772-22-2227",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "和歌山県ライフル射撃場",
+      "postalCode": "640-0451",
+      "address": "和歌山県海南市高津大北原1181",
+      "phone": "073-488-6201",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "田辺射撃場",
+      "postalCode": "646-0051",
+      "address": "和歌山県田辺市稲成町1634",
+      "phone": "0739-25-1570",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "須磨綜合射撃場",
+      "postalCode": "651-2101",
+      "address": "兵庫県神戸市西区伊川谷町布施畑991",
+      "phone": "078-974-1057",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "兵庫県立総合射撃場",
+      "postalCode": "673-1113",
+      "address": "兵庫県三木市吉川町福井523-6",
+      "phone": "0794-72-0255",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "上郡クレー射撃場",
+      "postalCode": "678-1232",
+      "address": "兵庫県赤穂郡上郡町竹万1039-16",
+      "phone": "0791-52-5027",
+      "detailUrl": null,
+      "area": "kinki"
+    },
+    {
+      "name": "鳥取クレー射撃場",
+      "postalCode": "680-0003",
+      "address": "鳥取県鳥取市覚寺768-1",
+      "phone": "0857-26-4050",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "倉吉市営射撃場",
+      "postalCode": "682-0822",
+      "address": "鳥取県倉吉市葵町690-1",
+      "phone": "0858-22-2311",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "米子国際射撃場",
+      "postalCode": "683-0341",
+      "address": "鳥取県西伯郡南部町鴨部933",
+      "phone": "0859-66-2630",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "鳥取県営ライフル射撃場",
+      "postalCode": "683-0367",
+      "address": "鳥取県西伯郡南部町猪小路806",
+      "phone": "0859-66-4531",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "飯ノ山射撃場",
+      "postalCode": "685-0021",
+      "address": "島根県隠岐郡隠岐の島町岬町飯の山1-2",
+      "phone": "0851-22-6345",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "島根県立ライフル射撃場",
+      "postalCode": "690-2104",
+      "address": "島根県松江市八雲町熊野351",
+      "phone": "0852-21-5388",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "出雲エアライフル射撃場",
+      "postalCode": "693-0033",
+      "address": "島根県出雲市知井宮町214",
+      "phone": "0853-21-0731",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "浜田射撃場",
+      "postalCode": "697-0011",
+      "address": "島根県浜田市後野町739-1",
+      "phone": "0855-42-2151",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "島根大東クレー射撃場",
+      "postalCode": "699-1241",
+      "address": "島根県雲南市大東町山王寺1695",
+      "phone": "0854-43-4077",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "岡山県クレー射撃場",
+      "postalCode": "709-2134",
+      "address": "岡山県岡山市北区御津下田629",
+      "phone": "086-724-5590",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "倉敷国際射撃場",
+      "postalCode": "712-8031",
+      "address": "岡山県倉敷市福田町浦田740-1",
+      "phone": "086-456-3252",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "湯原国際クレー射撃場",
+      "postalCode": "717-0416",
+      "address": "岡山県真庭市仲間1810",
+      "phone": "0867-62-3000",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "甲山国際射撃場",
+      "postalCode": "729-3302",
+      "address": "広島県世羅郡世羅町川尻454-14",
+      "phone": "0847-22-2905",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "東城国際射撃場",
+      "postalCode": "729-5121",
+      "address": "広島県庄原市東城町川東恵谷山70-4",
+      "phone": "08477-2-3628",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "広島国際射撃場",
+      "postalCode": "731-0306",
+      "address": "広島県安芸高田市八千代町向山60-12",
+      "phone": "0826-52-3038",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "つつがライフル射撃場",
+      "postalCode": "731-3701",
+      "address": "広島県山県郡安芸太田町上筒賀猪服山919",
+      "phone": "0826-32-2249",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "鹿野射撃場",
+      "postalCode": "745-0304",
+      "address": "山口県周南市鹿野下合ノ川121",
+      "phone": "0834-68-3715",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "熊毛総合射撃場",
+      "postalCode": "745-0651",
+      "address": "山口県周南市大河内石ヶ谷2055-2",
+      "phone": "0833-91-0116",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "萩クレー射撃場",
+      "postalCode": "758-0063",
+      "address": "山口県萩市山田2972",
+      "phone": "0838-25-3322",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "宇部教習射撃場",
+      "postalCode": "759-0134",
+      "address": "山口県宇部市善和",
+      "phone": "0836-62-1415",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "下関国際総合射撃場",
+      "postalCode": "759-6603",
+      "address": "山口県下関市蒲生野河内10015-1",
+      "phone": "083-258-0385",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "大神子射撃場",
+      "postalCode": "770-8012",
+      "address": "徳島県徳島市大原町於庄谷12",
+      "phone": "088-662-6805",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "鷲敷射撃場",
+      "postalCode": "771-5208",
+      "address": "徳島県那賀郡那賀町仁宇学原110-1",
+      "phone": "0884-62-0646",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "一宮射撃場",
+      "postalCode": "779-3132",
+      "address": "徳島県徳島市一宮町西丁869-5",
+      "phone": "088-644-0077",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "徳島市ライフル射撃場",
+      "postalCode": "779-3133",
+      "address": "徳島県徳島市入田町内ノ御田348-1",
+      "phone": "088-644-3955",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "高知県立春野総合運動公園",
+      "postalCode": "781-0311",
+      "address": "高知県高知市春野町芳原2485",
+      "phone": "088-841-3105",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "ミロク高知射撃場",
+      "postalCode": "781-5701",
+      "address": "高知県安芸郡芸西村和食4688",
+      "phone": "0887-33-2952",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "高知クレー射撃場",
+      "postalCode": "782-0058",
+      "address": "高知県香美市土佐山田町新改100",
+      "phone": "0887-53-3332",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "ジャイアントクラブ射撃場",
+      "postalCode": "783-0040",
+      "address": "高知県南国市岡豊町滝本858",
+      "phone": "0888-45-2806",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "竹村クレー射撃場",
+      "postalCode": "787-0157",
+      "address": "高知県四万十市山路中和田",
+      "phone": "0880-36-2750",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "佐川射撃場",
+      "postalCode": "789-1202",
+      "address": "高知県高岡郡佐川町乙4203",
+      "phone": "0889-22-0040",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "松山総合クレー射撃場",
+      "postalCode": "791-2144",
+      "address": "愛媛県伊予郡砥部町万年877",
+      "phone": "089-962-5055",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "高松国際射撃場",
+      "postalCode": "796-0104",
+      "address": "香川県高松市国分寺町新名2215-5",
+      "phone": "087-874-2382",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "鬼北クレー射撃場",
+      "postalCode": "798-1356",
+      "address": "愛媛県北宇和郡鬼北町中野川乙15-7",
+      "phone": "0895-45-0040",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "四国中央射撃場",
+      "postalCode": "799-0112",
+      "address": "愛媛県四国中央市金生町山田井537-18",
+      "phone": "0896-58-4185",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "東予クレー射撃場",
+      "postalCode": "799-1107",
+      "address": "愛媛県西条市小松町明穂丙231-5",
+      "phone": "0898-72-5518",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "犬寄国際クレー射撃場",
+      "postalCode": "799-3202",
+      "address": "愛媛県伊予市双海町上灘99-7",
+      "phone": "089-986-0392",
+      "detailUrl": null,
+      "area": "shikoku_chugoku"
+    },
+    {
+      "name": "大分射撃場",
+      "postalCode": "879-7307",
+      "address": "大分県豊後大野市犬飼町西寒田",
+      "phone": "097-578-1193",
+      "detailUrl": "https://sportsgun.net/firing_range/%e5%a4%a7%e5%88%86%e5%b0%84%e6%92%83%e5%a0%b4",
+      "area": "kyushu"
+    },
+    {
+      "name": "鹿児島射撃場",
+      "postalCode": "891-1205",
+      "address": "鹿児島県鹿児島市犬迫町1219",
+      "phone": "099-238-2361",
+      "detailUrl": "https://sportsgun.net/firing_range/%e9%b9%bf%e5%85%90%e5%b3%b6%e5%b0%84%e6%92%83%e5%a0%b4",
+      "area": "kyushu"
+    },
+    {
+      "name": "福岡県立総合射撃場",
+      "postalCode": "818-0001",
+      "address": "福岡県筑紫野市柚須原223-25",
+      "phone": "092-924-6996",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "佐賀県射撃研修センター",
+      "postalCode": "840-0202",
+      "address": "佐賀県佐賀市大和町久池井3669",
+      "phone": "0952-62-8119",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "佐賀県総合運動場エアーライフル射撃場",
+      "postalCode": "849-0923",
+      "address": "佐賀県佐賀市日の出2-1-10",
+      "phone": "0952-30-5311",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "長崎クレー射撃場",
+      "postalCode": "851-3213",
+      "address": "長崎県長崎市琴海形上町795",
+      "phone": "095-885-2573",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "熊本県総合射撃場",
+      "postalCode": "861-2222",
+      "address": "熊本県上益城郡益城町砥川3586",
+      "phone": "096-288-8805",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "熊本クレー射撃場",
+      "postalCode": "861-4154",
+      "address": "熊本県熊本市南区富合町平原1597",
+      "phone": "096-357-4965",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "玉名クレー射撃場",
+      "postalCode": "865-0008",
+      "address": "熊本県玉名市石貫667-1",
+      "phone": "0968-74-9927",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "人吉市射撃場",
+      "postalCode": "868-0081",
+      "address": "熊本県人吉市上林町596-1",
+      "phone": "0966-22-1688",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "上球磨射撃場",
+      "postalCode": "868-0502",
+      "address": "熊本県球磨郡多良木町黒肥地千里地9754",
+      "phone": "0966-42-2748",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "八代日奈久射撃場",
+      "postalCode": "869-5145",
+      "address": "熊本県八代市日奈久新田町2022",
+      "phone": "0965-38-2485",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "湯浦温泉射撃場",
+      "postalCode": "869-5563",
+      "address": "熊本県葦北郡芦北町湯浦2-1",
+      "phone": "0966-82-2511",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "別府市クレー射撃場",
+      "postalCode": "874-0016",
+      "address": "大分県別府市野田1203-1",
+      "phone": "0977-21-8088",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "日出町営エアライフル射撃場",
+      "postalCode": "879-1506",
+      "address": "大分県速見郡日出町3683",
+      "phone": null,
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "玖珠クレー射撃場",
+      "postalCode": "879-4521",
+      "address": "大分県玖珠郡玖珠町太田2577",
+      "phone": "0973-72-2020",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "大分県立庄内屋内競技場",
+      "postalCode": "879-5413",
+      "address": "大分県由布市庄内町大龍1314",
+      "phone": "097-582-1217",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "遠山クレー射撃場",
+      "postalCode": "880-0125",
+      "address": "宮崎県宮崎市広原2201",
+      "phone": "0985-39-0228",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "延岡射撃場",
+      "postalCode": "882-0871",
+      "address": "宮崎県延岡市愛宕山横谷180",
+      "phone": "0982-32-5876",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "日向石川クレー射撃場",
+      "postalCode": "883-0034",
+      "address": "宮崎県日向市富高西川内打折木2963-2",
+      "phone": "0982-52-2437",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "宮崎県ライフル射撃競技場",
+      "postalCode": "889-1702",
+      "address": "宮崎県宮崎市田野乙4765-1",
+      "phone": "0985-86-1628",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "上村クレー射撃場",
+      "postalCode": "889-2401",
+      "address": "宮崎県日南市北郷町大藤",
+      "phone": "0987-55-2952",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "鹿児島県ライフル射撃場",
+      "postalCode": "891-1205",
+      "address": "鹿児島県鹿児島市犬迫町6313",
+      "phone": "099-229-6466",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "南日本総合クレー射撃場",
+      "postalCode": "893-0000",
+      "address": "鹿児島県鹿屋市串良町柴差5755-1",
+      "phone": "099-463-3737",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "加治木クレー射撃場",
+      "postalCode": "899-5203",
+      "address": "鹿児島県姶良市加治木町小山田1027-2",
+      "phone": "0995-62-1068",
+      "detailUrl": null,
+      "area": "kyushu"
+    },
+    {
+      "name": "沖縄県ライフル射撃場",
+      "postalCode": "901-1202",
+      "address": "沖縄県南城市大里1329",
+      "phone": "098-945-9911",
+      "detailUrl": null,
+      "area": "kyushu"
+    }
+  ]
+}

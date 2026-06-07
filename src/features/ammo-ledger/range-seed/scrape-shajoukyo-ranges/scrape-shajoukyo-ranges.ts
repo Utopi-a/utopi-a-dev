@@ -1,12 +1,12 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { RANGE_SEED_DATA_DIR, SHAJOUKYO_RANGES_FILE } from "../seed-data-paths";
 import { parseShajoukyoHtml } from "./parse-shajoukyo-html";
 import type { ScrapedRangeDataset } from "./scraped-range";
 
 const SOURCE_URL = "https://shajoukyo.ciao.jp/index.php?%E5%85%A8%E5%9B%BD";
-const OUTPUT_DIR = path.join(process.cwd(), "tmp", "shooting-ranges");
-const OUTPUT_FILE = path.join(OUTPUT_DIR, "shajoukyo-ranges.json");
+const OUTPUT_FILE = SHAJOUKYO_RANGES_FILE;
 
 async function fetchHtml({ url }: { url: string }): Promise<string> {
   const response = await fetch(url, {
@@ -37,7 +37,7 @@ export async function scrapeShajoukyoRanges(): Promise<ScrapedRangeDataset> {
 async function main() {
   const dataset = await scrapeShajoukyoRanges();
 
-  await mkdir(OUTPUT_DIR, { recursive: true });
+  await mkdir(RANGE_SEED_DATA_DIR, { recursive: true });
   await writeFile(OUTPUT_FILE, `${JSON.stringify(dataset, null, 2)}\n`, "utf8");
 
   console.log(`取得件数: ${dataset.count}`);

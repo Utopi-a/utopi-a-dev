@@ -1,0 +1,3005 @@
+{
+  "scrapedAt": "2026-06-07T05:36:42.250Z",
+  "sourceUrl": "https://www.nikkaren.jp/pdf/trader_list.pdf",
+  "sourcePublishedOn": "2024-12-03",
+  "count": 333,
+  "shops": [
+    {
+      "listNumber": 1,
+      "name": "(株)東火薬銃砲店",
+      "prefecture": "北海道",
+      "location": "富良野市本町３番１号",
+      "address": "北海道富良野市本町３番１号",
+      "kind": "shop",
+      "phone": "0167-22-2713"
+    },
+    {
+      "listNumber": 2,
+      "name": "(有)沖商店",
+      "prefecture": "北海道",
+      "location": "帯広市大通南九丁目12番地",
+      "address": "北海道帯広市大通南九丁目12番地",
+      "kind": "shop",
+      "phone": "0155-24-3822"
+    },
+    {
+      "listNumber": 3,
+      "name": "(株)火薬開発工業",
+      "prefecture": "北海道",
+      "location": "旭川市緑町十五丁目2890番地5",
+      "address": "北海道旭川市緑町十五丁目2890番地5",
+      "kind": "shop",
+      "phone": "0166-53-0364"
+    },
+    {
+      "listNumber": 4,
+      "name": "多田銃砲火薬店",
+      "prefecture": "北海道",
+      "location": "根室市梅ヶ枝町二丁目31番地",
+      "address": "北海道根室市梅ヶ枝町二丁目31番地",
+      "kind": "shop",
+      "phone": "0153-23-5281"
+    },
+    {
+      "listNumber": 5,
+      "name": "後藤銃砲火薬店",
+      "prefecture": "北海道",
+      "location": "名寄市西四条南二丁目12番地",
+      "address": "北海道名寄市西四条南二丁目12番地",
+      "kind": "shop",
+      "phone": "01654-3-9893"
+    },
+    {
+      "listNumber": 6,
+      "name": "(株)小宮銃砲火薬店",
+      "prefecture": "北海道",
+      "location": "札幌市北区北十八条西四丁目１番22号",
+      "address": "北海道札幌市北区北十八条西四丁目１番22号",
+      "kind": "shop",
+      "phone": "011-726-4245"
+    },
+    {
+      "listNumber": 7,
+      "name": "(有)佐々木銃砲釣具店",
+      "prefecture": "北海道",
+      "location": "標津郡中標津町東一条北２丁目10番地",
+      "address": "北海道標津郡中標津町東一条北２丁目10番地",
+      "kind": "shop",
+      "phone": "0153-72-2347"
+    },
+    {
+      "listNumber": 8,
+      "name": "(有)シューティングサプライ",
+      "prefecture": "北海道",
+      "location": "旭川市忠和四条六丁目３番５号",
+      "address": "北海道旭川市忠和四条六丁目３番５号",
+      "kind": "shop",
+      "phone": "0166-63-5210"
+    },
+    {
+      "listNumber": 9,
+      "name": "ダイナテック(株)",
+      "prefecture": "北海道",
+      "location": "北見市本町二丁目３番２号",
+      "address": "北海道北見市本町二丁目３番２号",
+      "kind": "shop",
+      "phone": "0157-24-4531"
+    },
+    {
+      "listNumber": 10,
+      "name": "ダイナテック(株)釧路支店",
+      "prefecture": "北海道",
+      "location": "釧路市光陽町21番６号",
+      "address": "北海道釧路市光陽町21番６号",
+      "kind": "shop",
+      "phone": "0154-64-6111"
+    },
+    {
+      "listNumber": 11,
+      "name": "南部土地(株)滝川営業所",
+      "prefecture": "北海道",
+      "location": "滝川市東町三丁目117番地３号",
+      "address": "北海道滝川市東町三丁目117番地３号",
+      "kind": "shop",
+      "phone": "0125-22-3465"
+    },
+    {
+      "listNumber": 12,
+      "name": "(株)山﨑火薬銃砲店",
+      "prefecture": "北海道",
+      "location": "札幌市中央区南一条西十二丁目",
+      "address": "北海道札幌市中央区南一条西十二丁目",
+      "kind": "shop",
+      "phone": "011-231-5761"
+    },
+    {
+      "listNumber": 13,
+      "name": "(株）山崎火薬銃砲店",
+      "prefecture": "北海道",
+      "location": "紋別郡遠軽町大通南二丁目１番地19",
+      "address": "北海道紋別郡遠軽町大通南二丁目１番地19",
+      "kind": "shop",
+      "phone": "0158-42-2574"
+    },
+    {
+      "listNumber": 14,
+      "name": "(株)山﨑火薬銃砲店旭川支店",
+      "prefecture": "北海道",
+      "location": "旭川市ニ条通六丁目右１号",
+      "address": "北海道旭川市ニ条通六丁目右１号",
+      "kind": "shop",
+      "phone": "0166-22-7171"
+    },
+    {
+      "listNumber": 15,
+      "name": "佐藤銃砲火薬店",
+      "prefecture": "北海道",
+      "location": "稚内市萩見四丁目4番5号",
+      "address": "北海道稚内市萩見四丁目4番5号",
+      "kind": "shop",
+      "phone": "0162-34-5515"
+    },
+    {
+      "listNumber": 246,
+      "name": "(有)小宮銃砲火薬店",
+      "prefecture": "北海道",
+      "location": "帯広市東一条南八丁目20番地",
+      "address": "北海道帯広市東一条南八丁目20番地",
+      "kind": "shop",
+      "phone": "0155-23-4964"
+    },
+    {
+      "listNumber": 257,
+      "name": "(有)登別銃砲火薬店",
+      "prefecture": "北海道",
+      "location": "登別市富岸町191番地１",
+      "address": "北海道登別市富岸町191番地１",
+      "kind": "shop",
+      "phone": "0143-86-7912"
+    },
+    {
+      "listNumber": 270,
+      "name": "(株) ハンティングネット",
+      "prefecture": "北海道",
+      "location": "石狩市樽川三条一丁目27番地２",
+      "address": "北海道石狩市樽川三条一丁目27番地２",
+      "kind": "shop",
+      "phone": "0133-77-6355"
+    },
+    {
+      "listNumber": 280,
+      "name": "ホップ’ワン銃砲火薬店",
+      "prefecture": "北海道",
+      "location": "釧路市新野29番1",
+      "address": "北海道釧路市新野29番1",
+      "kind": "shop",
+      "phone": "0154-57-5555"
+    },
+    {
+      "listNumber": 282,
+      "name": "小林火薬商事（株）北斗営業所",
+      "prefecture": "北海道",
+      "location": "北斗市飯生一丁目１番10号",
+      "address": "北海道北斗市飯生一丁目１番10号",
+      "kind": "shop",
+      "phone": "0138-73-0855"
+    },
+    {
+      "listNumber": 289,
+      "name": "フィールドウォーカーズ",
+      "prefecture": "北海道",
+      "location": "北見市ひかり野六丁目２番８号",
+      "address": "北海道北見市ひかり野六丁目２番８号",
+      "kind": "shop",
+      "phone": "0157-33-3136"
+    },
+    {
+      "listNumber": 301,
+      "name": "寺門商事(株)岩内支店",
+      "prefecture": "北海道",
+      "location": "岩内郡岩内町字東山１番地の１",
+      "address": "北海道岩内郡岩内町字東山１番地の１",
+      "kind": "shop",
+      "phone": "0135-62-0284"
+    },
+    {
+      "listNumber": 302,
+      "name": "(株)ケーゼスト",
+      "prefecture": "北海道",
+      "location": "名寄市東六条南５丁目95番地６",
+      "address": "北海道名寄市東六条南５丁目95番地６",
+      "kind": "shop",
+      "phone": "01654-8-8001"
+    },
+    {
+      "listNumber": 303,
+      "name": "(株)湯浅火薬銃砲店",
+      "prefecture": "北海道",
+      "location": "岩見沢市一条西２丁目８番地１",
+      "address": "北海道岩見沢市一条西２丁目８番地１",
+      "kind": "shop",
+      "phone": "0126-22-0023"
+    },
+    {
+      "listNumber": 304,
+      "name": "(株)石狩産業",
+      "prefecture": "北海道",
+      "location": "札幌市東区北十九条東４丁目２番40号",
+      "address": "北海道札幌市東区北十九条東４丁目２番40号",
+      "kind": "shop",
+      "phone": "011-741-6211"
+    },
+    {
+      "listNumber": 291,
+      "name": "佐々木銃砲火薬店",
+      "prefecture": "青森県",
+      "location": "十和田市洞内長根一番の七",
+      "address": "青森県十和田市洞内長根一番の七",
+      "kind": "shop",
+      "phone": "0176-20-7880"
+    },
+    {
+      "listNumber": 293,
+      "name": "ヌマガンショップ",
+      "prefecture": "青森県",
+      "location": "上北郡東北町字塔ノ沢山78番地１",
+      "address": "青森県上北郡東北町字塔ノ沢山78番地１",
+      "kind": "shop",
+      "phone": "0175-63-4216"
+    },
+    {
+      "listNumber": 16,
+      "name": "(有)大竹銃砲火薬店",
+      "prefecture": "岩手県",
+      "location": "花巻市坂本町３番１号",
+      "address": "岩手県花巻市坂本町３番１号",
+      "kind": "shop",
+      "phone": "0198-23-5547"
+    },
+    {
+      "listNumber": 17,
+      "name": "(株)小野寺商店",
+      "prefecture": "岩手県",
+      "location": "奥州市水沢区字吉小路５番地の３",
+      "address": "岩手県奥州市水沢区字吉小路５番地の３",
+      "kind": "shop",
+      "phone": "0197-24-4155"
+    },
+    {
+      "listNumber": 18,
+      "name": "(株)小野寺商店 盛岡支店",
+      "prefecture": "岩手県",
+      "location": "盛岡市大沢川原三丁目８番45号",
+      "address": "岩手県盛岡市大沢川原三丁目８番45号",
+      "kind": "shop",
+      "phone": "019-651-7600"
+    },
+    {
+      "listNumber": 19,
+      "name": "小野久銃砲火薬店",
+      "prefecture": "岩手県",
+      "location": "一関市千厩町千厩字町136番地",
+      "address": "岩手県一関市千厩町千厩字町136番地",
+      "kind": "shop",
+      "phone": "0191-52-2024"
+    },
+    {
+      "listNumber": 20,
+      "name": "気仙郡建設業協同組合",
+      "prefecture": "岩手県",
+      "location": "大船渡市大船渡町字砂森１番地38",
+      "address": "岩手県大船渡市大船渡町字砂森１番地38",
+      "kind": "shop",
+      "phone": "0192-27-0700"
+    },
+    {
+      "listNumber": 21,
+      "name": "菅銃砲火薬店",
+      "prefecture": "岩手県",
+      "location": "二戸市福岡字城ノ外７番地２",
+      "address": "岩手県二戸市福岡字城ノ外７番地２",
+      "kind": "shop",
+      "phone": "0195-23-2341"
+    },
+    {
+      "listNumber": 22,
+      "name": "(有)武田銃砲火薬店",
+      "prefecture": "岩手県",
+      "location": "盛岡市肴町13番20号",
+      "address": "岩手県盛岡市肴町13番20号",
+      "kind": "shop",
+      "phone": "019-622-3779"
+    },
+    {
+      "listNumber": 23,
+      "name": "(有)萬商店",
+      "prefecture": "岩手県",
+      "location": "遠野市中央通６番19号",
+      "address": "岩手県遠野市中央通６番19号",
+      "kind": "shop",
+      "phone": "0198-62-2138"
+    },
+    {
+      "listNumber": 24,
+      "name": "中川銃砲火薬店",
+      "prefecture": "岩手県",
+      "location": "下閉伊郡岩泉町岩泉字太田15番地",
+      "address": "岩手県下閉伊郡岩泉町岩泉字太田15番地",
+      "kind": "shop",
+      "phone": "0194-22-2633"
+    },
+    {
+      "listNumber": 25,
+      "name": "(株)三田商店",
+      "prefecture": "岩手県",
+      "location": "盛岡市中央通一丁目１番23号",
+      "address": "岩手県盛岡市中央通一丁目１番23号",
+      "kind": "shop",
+      "phone": "019-624-2112"
+    },
+    {
+      "listNumber": 272,
+      "name": "(株)豊和商事",
+      "prefecture": "岩手県",
+      "location": "盛岡市みたけ三丁目21番17号",
+      "address": "岩手県盛岡市みたけ三丁目21番17号",
+      "kind": "shop",
+      "phone": "019-643-3344"
+    },
+    {
+      "listNumber": 273,
+      "name": "家子銃砲火薬店",
+      "prefecture": "岩手県",
+      "location": "上閉伊郡大槌町小槌第２地割４番地５",
+      "address": "岩手県上閉伊郡大槌町小槌第２地割４番地５",
+      "kind": "shop",
+      "phone": "0193-42-4444"
+    },
+    {
+      "listNumber": 305,
+      "name": "アウトドアショップトラップ",
+      "prefecture": "岩手県",
+      "location": "岩手郡雫石町板橋30番５号",
+      "address": "岩手県岩手郡雫石町板橋30番５号",
+      "kind": "shop",
+      "phone": "019-681-4110"
+    },
+    {
+      "listNumber": 247,
+      "name": "（株）綜合スポーツ店",
+      "prefecture": "秋田県",
+      "location": "能代市河戸川字下大須賀43番地３",
+      "address": "秋田県能代市河戸川字下大須賀43番地３",
+      "kind": "shop",
+      "phone": "0185-52-2847"
+    },
+    {
+      "listNumber": 26,
+      "name": "(有)池田銃砲火薬店",
+      "prefecture": "宮城県",
+      "location": "伊具郡丸森町字除９番３号",
+      "address": "宮城県伊具郡丸森町字除９番３号",
+      "kind": "shop",
+      "phone": "0224-72-1692"
+    },
+    {
+      "listNumber": 27,
+      "name": "(株)ＩＳＣ砂金銃砲火薬店",
+      "prefecture": "宮城県",
+      "location": "遠田郡涌谷町字本町111番地",
+      "address": "宮城県遠田郡涌谷町字本町111番地",
+      "kind": "shop",
+      "phone": "0229-43-2214"
+    },
+    {
+      "listNumber": 28,
+      "name": "(株)志たかぢや",
+      "prefecture": "宮城県",
+      "location": "登米市追町佐沼字錦３番地",
+      "address": "宮城県登米市追町佐沼字錦３番地",
+      "kind": "shop",
+      "phone": "0220-45-2033"
+    },
+    {
+      "listNumber": 29,
+      "name": "新建産業(株)",
+      "prefecture": "宮城県",
+      "location": "仙台市若林区卸町東5丁目6番40号",
+      "address": "宮城県仙台市若林区卸町東5丁目6番40号",
+      "kind": "shop",
+      "phone": "022-390-5551"
+    },
+    {
+      "listNumber": 30,
+      "name": "(有)十二村銃砲火薬店",
+      "prefecture": "宮城県",
+      "location": "白石市沢端町１番54号",
+      "address": "宮城県白石市沢端町１番54号",
+      "kind": "shop",
+      "phone": "0224-26-2069"
+    },
+    {
+      "listNumber": 31,
+      "name": "(株)芳賀銃砲火薬店",
+      "prefecture": "宮城県",
+      "location": "仙台市青葉区二日町18番12号",
+      "address": "宮城県仙台市青葉区二日町18番12号",
+      "kind": "shop",
+      "phone": "022-262-1151"
+    },
+    {
+      "listNumber": 306,
+      "name": "鳴子銃砲",
+      "prefecture": "宮城県",
+      "location": "大崎市鳴子温泉字川袋9番地１",
+      "address": "宮城県大崎市鳴子温泉字川袋9番地１",
+      "kind": "shop",
+      "phone": "0229-84-7503"
+    },
+    {
+      "listNumber": 32,
+      "name": "(有)大川火薬銃砲店",
+      "prefecture": "山形県",
+      "location": "鶴岡市本町二丁目２番30号",
+      "address": "山形県鶴岡市本町二丁目２番30号",
+      "kind": "shop",
+      "phone": "0235-22-0607"
+    },
+    {
+      "listNumber": 33,
+      "name": "(株)森岡銃砲火薬店",
+      "prefecture": "山形県",
+      "location": "寒河江市栄町９番２5号",
+      "address": "山形県寒河江市栄町９番２5号",
+      "kind": "shop",
+      "phone": "0237-86-6178"
+    },
+    {
+      "listNumber": 286,
+      "name": "(株)小野銃砲火薬店",
+      "prefecture": "山形県",
+      "location": "新庄市万場町5番9号",
+      "address": "山形県新庄市万場町5番9号",
+      "kind": "shop",
+      "phone": "0233-22-2107"
+    },
+    {
+      "listNumber": 34,
+      "name": "(有)会津銃砲火薬店",
+      "prefecture": "福島県",
+      "location": "会津若松市大町二丁目７番地５号",
+      "address": "福島県会津若松市大町二丁目７番地５号",
+      "kind": "shop",
+      "phone": "0242-22-0581"
+    },
+    {
+      "listNumber": 35,
+      "name": "(有)梅津商会",
+      "prefecture": "福島県",
+      "location": "須賀川市旭町６番地の３",
+      "address": "福島県須賀川市旭町６番地の３",
+      "kind": "shop",
+      "phone": "0248-75-3300"
+    },
+    {
+      "listNumber": 36,
+      "name": "(有)大竹銃砲店",
+      "prefecture": "福島県",
+      "location": "郡山市本町二丁目22番12号",
+      "address": "福島県郡山市本町二丁目22番12号",
+      "kind": "shop",
+      "phone": "024-932-4239"
+    },
+    {
+      "listNumber": 37,
+      "name": "(有)冠木薬店",
+      "prefecture": "福島県",
+      "location": "喜多方市３丁目4800番地",
+      "address": "福島県喜多方市３丁目4800番地",
+      "kind": "shop",
+      "phone": "0241-22-0053"
+    },
+    {
+      "listNumber": 38,
+      "name": "(有)木幡銃砲火薬店",
+      "prefecture": "福島県",
+      "location": "南相馬市原町区本町二丁目104番地",
+      "address": "福島県南相馬市原町区本町二丁目104番地",
+      "kind": "shop",
+      "phone": "0244-23-3035"
+    },
+    {
+      "listNumber": 39,
+      "name": "(株)蔵場",
+      "prefecture": "福島県",
+      "location": "郡山市方八町二丁目15番11号",
+      "address": "福島県郡山市方八町二丁目15番11号",
+      "kind": "shop",
+      "phone": "024-944-1331"
+    },
+    {
+      "listNumber": 40,
+      "name": "(有)斎藤銃砲火薬店",
+      "prefecture": "福島県",
+      "location": "白河市道場町26番地",
+      "address": "福島県白河市道場町26番地",
+      "kind": "shop",
+      "phone": "0248-23-2332"
+    },
+    {
+      "listNumber": 41,
+      "name": "(有)鈴木銃砲火薬店",
+      "prefecture": "福島県",
+      "location": "東白川郡棚倉町関口字豊郷125番地",
+      "address": "福島県東白川郡棚倉町関口字豊郷125番地",
+      "kind": "shop",
+      "phone": "0247-33-2604"
+    },
+    {
+      "listNumber": 42,
+      "name": "(株)大丸商店",
+      "prefecture": "福島県",
+      "location": "南会津郡南会津町田島字谷地甲９番地２",
+      "address": "福島県南会津郡南会津町田島字谷地甲９番地２",
+      "kind": "shop",
+      "phone": "0241-62-1311"
+    },
+    {
+      "listNumber": 43,
+      "name": "(資)平銃砲火薬店",
+      "prefecture": "福島県",
+      "location": "いわき市平字一町目８番地",
+      "address": "福島県いわき市平字一町目８番地",
+      "kind": "shop",
+      "phone": "0246-23-9231"
+    },
+    {
+      "listNumber": 44,
+      "name": "(有)勿来銃砲火薬店",
+      "prefecture": "福島県",
+      "location": "いわき市勿来町窪田町通四丁目91番地",
+      "address": "福島県いわき市勿来町窪田町通四丁目91番地",
+      "kind": "shop",
+      "phone": "0246-65-7029"
+    },
+    {
+      "listNumber": 45,
+      "name": "橋本銃砲火薬店",
+      "prefecture": "福島県",
+      "location": "福島市松川町字石合町75番地２",
+      "address": "福島県福島市松川町字石合町75番地２",
+      "kind": "shop",
+      "phone": "024-567-2089"
+    },
+    {
+      "listNumber": 46,
+      "name": "藤澤銃砲火薬店",
+      "prefecture": "福島県",
+      "location": "石川郡石川町字高田150番地の２",
+      "address": "福島県石川郡石川町字高田150番地の２",
+      "kind": "shop",
+      "phone": "0247-26-2230"
+    },
+    {
+      "listNumber": 47,
+      "name": "古山銃砲火薬店",
+      "prefecture": "福島県",
+      "location": "二本松市本町一丁目209番地",
+      "address": "福島県二本松市本町一丁目209番地",
+      "kind": "shop",
+      "phone": "0243-22-0537"
+    },
+    {
+      "listNumber": 48,
+      "name": "(有)あさかはや本店",
+      "prefecture": "福島県",
+      "location": "石川郡石川町下泉27番地",
+      "address": "福島県石川郡石川町下泉27番地",
+      "kind": "shop",
+      "phone": "0247-26-2135"
+    },
+    {
+      "listNumber": 49,
+      "name": "(有)毛利銃砲火薬店",
+      "prefecture": "福島県",
+      "location": "伊達市梁川町字大町一丁目１番地",
+      "address": "福島県伊達市梁川町字大町一丁目１番地",
+      "kind": "shop",
+      "phone": "024-577-0119"
+    },
+    {
+      "listNumber": 62,
+      "name": "(株)アイテック",
+      "prefecture": "茨城県",
+      "location": "高萩市春日町二丁目40番地",
+      "address": "茨城県高萩市春日町二丁目40番地",
+      "kind": "shop",
+      "phone": "0293-22-2780"
+    },
+    {
+      "listNumber": 63,
+      "name": "大内銃砲火薬店",
+      "prefecture": "茨城県",
+      "location": "ひたちなか市高場二丁目18番地21",
+      "address": "茨城県ひたちなか市高場二丁目18番地21",
+      "kind": "shop",
+      "phone": "029-285-5688"
+    },
+    {
+      "listNumber": 64,
+      "name": "(有)大木銃砲店",
+      "prefecture": "茨城県",
+      "location": "龍ヶ崎市下町4914番地",
+      "address": "茨城県龍ヶ崎市下町4914番地",
+      "kind": "shop",
+      "phone": "0297-62-1220"
+    },
+    {
+      "listNumber": 65,
+      "name": "(有)大槻銃砲火薬店",
+      "prefecture": "茨城県",
+      "location": "稲敷市江戸崎甲2757番地",
+      "address": "茨城県稲敷市江戸崎甲2757番地",
+      "kind": "shop",
+      "phone": "0298-92-0802"
+    },
+    {
+      "listNumber": 66,
+      "name": "(有)倉持商店",
+      "prefecture": "茨城県",
+      "location": "笠間市笠間1525番地",
+      "address": "茨城県笠間市笠間1525番地",
+      "kind": "shop",
+      "phone": "0296-72-1162"
+    },
+    {
+      "listNumber": 67,
+      "name": "(有)柴田商店",
+      "prefecture": "茨城県",
+      "location": "久慈郡大子町大子854番地の２",
+      "address": "茨城県久慈郡大子町大子854番地の２",
+      "kind": "shop",
+      "phone": "0295-72-0178"
+    },
+    {
+      "listNumber": 68,
+      "name": "(株)外山長兵衛商店",
+      "prefecture": "茨城県",
+      "location": "下妻市下妻丁101番地",
+      "address": "茨城県下妻市下妻丁101番地",
+      "kind": "shop",
+      "phone": "0296-43-6680"
+    },
+    {
+      "listNumber": 69,
+      "name": "(株)信田銃砲火薬店",
+      "prefecture": "茨城県",
+      "location": "水戸市酒門町178番地の１",
+      "address": "茨城県水戸市酒門町178番地の１",
+      "kind": "shop",
+      "phone": "029-247-5106"
+    },
+    {
+      "listNumber": 70,
+      "name": "(株)仲屋",
+      "prefecture": "茨城県",
+      "location": "高萩市本町二丁目13番地",
+      "address": "茨城県高萩市本町二丁目13番地",
+      "kind": "shop",
+      "phone": "0293-22-2008"
+    },
+    {
+      "listNumber": 71,
+      "name": "(株)長谷清",
+      "prefecture": "茨城県",
+      "location": "石岡市国府二丁目１番25号",
+      "address": "茨城県石岡市国府二丁目１番25号",
+      "kind": "shop",
+      "phone": "0299-24-2210"
+    },
+    {
+      "listNumber": 72,
+      "name": "(株)山内銃砲火薬店",
+      "prefecture": "茨城県",
+      "location": "日立市宮田町二丁目６番13号",
+      "address": "茨城県日立市宮田町二丁目６番13号",
+      "kind": "shop",
+      "phone": "0294-24-4181"
+    },
+    {
+      "listNumber": 310,
+      "name": "坂上銃砲火薬店",
+      "prefecture": "茨城県",
+      "location": "笠間市大田町843番地",
+      "address": "茨城県笠間市大田町843番地",
+      "kind": "shop",
+      "phone": "0296-77-0361"
+    },
+    {
+      "listNumber": 60,
+      "name": "(株)オオイデ",
+      "prefecture": "栃木県",
+      "location": "日光市瀬川137番地１",
+      "address": "栃木県日光市瀬川137番地１",
+      "kind": "shop",
+      "phone": "0288-22-1088"
+    },
+    {
+      "listNumber": 61,
+      "name": "(有)大串銃砲火薬店",
+      "prefecture": "栃木県",
+      "location": "佐野市栃本町2388番地１",
+      "address": "栃木県佐野市栃本町2388番地１",
+      "kind": "shop",
+      "phone": "0283-62-0007"
+    },
+    {
+      "listNumber": 258,
+      "name": "(有)江連銃砲火薬店",
+      "prefecture": "栃木県",
+      "location": "那須塩原市関谷1175番地の23",
+      "address": "栃木県那須塩原市関谷1175番地の23",
+      "kind": "shop",
+      "phone": "0287-35-2015"
+    },
+    {
+      "listNumber": 259,
+      "name": "栄興産業(株)",
+      "prefecture": "栃木県",
+      "location": "宇都宮市野沢町601番地７",
+      "address": "栃木県宇都宮市野沢町601番地７",
+      "kind": "shop",
+      "phone": "028-665-7887"
+    },
+    {
+      "listNumber": 260,
+      "name": "(有)ミツボシ",
+      "prefecture": "栃木県",
+      "location": "宇都宮市伝馬町４番４号",
+      "address": "栃木県宇都宮市伝馬町４番４号",
+      "kind": "shop",
+      "phone": "028-636-3482"
+    },
+    {
+      "listNumber": 308,
+      "name": "(株)ガンルームシモン",
+      "prefecture": "栃木県",
+      "location": "芳賀郡芳賀町祖母井南一丁目16番地８",
+      "address": "栃木県芳賀郡芳賀町祖母井南一丁目16番地８",
+      "kind": "shop",
+      "phone": "028-678-2103"
+    },
+    {
+      "listNumber": 309,
+      "name": "(株)那須国際射撃場",
+      "prefecture": "栃木県",
+      "location": "那須郡那須町大字高久甲3900番地",
+      "address": "栃木県那須郡那須町大字高久甲3900番地",
+      "kind": "shop",
+      "phone": "0287-62-1471"
+    },
+    {
+      "listNumber": 50,
+      "name": "(有)吾妻銃砲火薬店 藤屋",
+      "prefecture": "群馬県",
+      "location": "吾妻郡中之条町伊勢町763番地の４",
+      "address": "群馬県吾妻郡中之条町伊勢町763番地の４",
+      "kind": "shop",
+      "phone": "0279-75-5575"
+    },
+    {
+      "listNumber": 51,
+      "name": "(有)蟻川銃砲火薬店",
+      "prefecture": "群馬県",
+      "location": "前橋市千代田町三丁目３番４号",
+      "address": "群馬県前橋市千代田町三丁目３番４号",
+      "kind": "shop",
+      "phone": "027-231-3366"
+    },
+    {
+      "listNumber": 52,
+      "name": "川崎銃砲店",
+      "prefecture": "群馬県",
+      "location": "安中市原市1736番地３号",
+      "address": "群馬県安中市原市1736番地３号",
+      "kind": "shop",
+      "phone": "027-385-6976"
+    },
+    {
+      "listNumber": 53,
+      "name": "ぐんまｼﾞｬｲｱﾝﾄ総合ｸﾚー･ﾗｲﾌﾙ射撃場",
+      "prefecture": "群馬県",
+      "location": "富岡市桑原604番地",
+      "address": "群馬県富岡市桑原604番地",
+      "kind": "shop",
+      "phone": "0274-63-3073"
+    },
+    {
+      "listNumber": 54,
+      "name": "黒澤銃砲火薬店",
+      "prefecture": "群馬県",
+      "location": "富岡市富岡1230番地",
+      "address": "群馬県富岡市富岡1230番地",
+      "kind": "shop",
+      "phone": "0274-62-0614"
+    },
+    {
+      "listNumber": 55,
+      "name": "(有)鈴木銃砲火薬店",
+      "prefecture": "群馬県",
+      "location": "甘楽郡下仁田町下仁田173番地",
+      "address": "群馬県甘楽郡下仁田町下仁田173番地",
+      "kind": "shop",
+      "phone": "0274-82-3223"
+    },
+    {
+      "listNumber": 56,
+      "name": "(有)湊屋商店",
+      "prefecture": "群馬県",
+      "location": "沼田市下之町877番地",
+      "address": "群馬県沼田市下之町877番地",
+      "kind": "shop",
+      "phone": "0278-22-2253"
+    },
+    {
+      "listNumber": 57,
+      "name": "山鹿銃砲火薬店",
+      "prefecture": "群馬県",
+      "location": "桐生市永楽町１番33号",
+      "address": "群馬県桐生市永楽町１番33号",
+      "kind": "shop",
+      "phone": "0277-22-3374"
+    },
+    {
+      "listNumber": 58,
+      "name": "ラジエ工業(株)",
+      "prefecture": "群馬県",
+      "location": "高崎市大八木町168番地",
+      "address": "群馬県高崎市大八木町168番地",
+      "kind": "shop",
+      "phone": "027-361-6101"
+    },
+    {
+      "listNumber": 59,
+      "name": "サイトロンパイロテク二クス(株)",
+      "prefecture": "群馬県",
+      "location": "富岡市桑原604番地",
+      "address": "群馬県富岡市桑原604番地",
+      "kind": "shop",
+      "phone": "0274-67-1077"
+    },
+    {
+      "listNumber": 288,
+      "name": "(株)新宇商店",
+      "prefecture": "群馬県",
+      "location": "みどり市大間々町桐原472-２",
+      "address": "群馬県みどり市大間々町桐原472-２",
+      "kind": "shop",
+      "phone": "0277-73-3366"
+    },
+    {
+      "listNumber": 300,
+      "name": "(株)Ｇｕｎ Ｓｈｏｐ ＳＡＴＯ",
+      "prefecture": "群馬県",
+      "location": "高崎市鼻高町177番地２",
+      "address": "群馬県高崎市鼻高町177番地２",
+      "kind": "shop",
+      "phone": "027-384-4091"
+    },
+    {
+      "listNumber": 307,
+      "name": "黒澤銃砲火薬店",
+      "prefecture": "群馬県",
+      "location": "多野郡神流町魚尾770番地",
+      "address": "群馬県多野郡神流町魚尾770番地",
+      "kind": "shop",
+      "phone": "0274-58-2304"
+    },
+    {
+      "listNumber": 73,
+      "name": "平沼銃砲火薬店",
+      "prefecture": "埼玉県",
+      "location": "比企郡小川町大字小川100番地",
+      "address": "埼玉県比企郡小川町大字小川100番地",
+      "kind": "shop",
+      "phone": "0493-72-0218"
+    },
+    {
+      "listNumber": 74,
+      "name": "(有)野口スポーツ商会",
+      "prefecture": "埼玉県",
+      "location": "東松山市材木町19番29号",
+      "address": "埼玉県東松山市材木町19番29号",
+      "kind": "shop",
+      "phone": "0493-23-7111"
+    },
+    {
+      "listNumber": 75,
+      "name": "(株)浦和銃抱火薬店",
+      "prefecture": "埼玉県",
+      "location": "さいたま市浦和区岸町六丁目１番８号",
+      "address": "埼玉県さいたま市浦和区岸町六丁目１番８号",
+      "kind": "shop",
+      "phone": "048-822-6245"
+    },
+    {
+      "listNumber": 76,
+      "name": "(株)大宮銃砲火薬店",
+      "prefecture": "埼玉県",
+      "location": "さいたま市大宮区上小町591番地",
+      "address": "埼玉県さいたま市大宮区上小町591番地",
+      "kind": "shop",
+      "phone": "048-641-8683"
+    },
+    {
+      "listNumber": 77,
+      "name": "(有)小原銃砲火薬店",
+      "prefecture": "埼玉県",
+      "location": "川越市通町10番地１",
+      "address": "埼玉県川越市通町10番地１",
+      "kind": "shop",
+      "phone": "049-222-2322"
+    },
+    {
+      "listNumber": 78,
+      "name": "清水銃砲火薬店",
+      "prefecture": "埼玉県",
+      "location": "春日部市西金野井757番２",
+      "address": "埼玉県春日部市西金野井757番２",
+      "kind": "shop",
+      "phone": "048-746-2683"
+    },
+    {
+      "listNumber": 261,
+      "name": "相原銃砲火薬店",
+      "prefecture": "埼玉県",
+      "location": "行田市向町18番23号",
+      "address": "埼玉県行田市向町18番23号",
+      "kind": "shop",
+      "phone": "048-556-8535"
+    },
+    {
+      "listNumber": 262,
+      "name": "(有)加藤スポーツ店",
+      "prefecture": "埼玉県",
+      "location": "秩父郡小鹿野町下小鹿野1509番地",
+      "address": "埼玉県秩父郡小鹿野町下小鹿野1509番地",
+      "kind": "shop",
+      "phone": "0494-75-0421"
+    },
+    {
+      "listNumber": 263,
+      "name": "(有)佐々木製銃火薬店",
+      "prefecture": "埼玉県",
+      "location": "上尾市上野241番地５",
+      "address": "埼玉県上尾市上野241番地５",
+      "kind": "shop",
+      "phone": "048-726-6206"
+    },
+    {
+      "listNumber": 264,
+      "name": "(有)横川商事",
+      "prefecture": "埼玉県",
+      "location": "秩父市下宮地町12番２号",
+      "address": "埼玉県秩父市下宮地町12番２号",
+      "kind": "shop",
+      "phone": "0494-24-7086"
+    },
+    {
+      "listNumber": 311,
+      "name": "(株)秩父開発機構 埼玉県長瀞射撃場",
+      "prefecture": "埼玉県",
+      "location": "秩父郡長瀞町大字野上下郷2395-1",
+      "address": "埼玉県秩父郡長瀞町大字野上下郷2395-1",
+      "kind": "shop",
+      "phone": "0494-66-1111"
+    },
+    {
+      "listNumber": 103,
+      "name": "(有)小佐井",
+      "prefecture": "千葉県",
+      "location": "千葉市緑区平山町469番地119",
+      "address": "千葉県千葉市緑区平山町469番地119",
+      "kind": "shop",
+      "phone": "043-266-0861"
+    },
+    {
+      "listNumber": 104,
+      "name": "(有)小幡銃砲火薬店",
+      "prefecture": "千葉県",
+      "location": "東金市田間2316番地",
+      "address": "千葉県東金市田間2316番地",
+      "kind": "shop",
+      "phone": "0475-54-1030"
+    },
+    {
+      "listNumber": 105,
+      "name": "宮崎銃砲店",
+      "prefecture": "千葉県",
+      "location": "市原市辰巳台東二丁目11番地６号",
+      "address": "千葉県市原市辰巳台東二丁目11番地６号",
+      "kind": "shop",
+      "phone": "0436-74-1110"
+    },
+    {
+      "listNumber": 106,
+      "name": "(有)渡邊銃砲火薬店",
+      "prefecture": "千葉県",
+      "location": "館山市北条1060番地の１",
+      "address": "千葉県館山市北条1060番地の１",
+      "kind": "shop",
+      "phone": "0470-22-0383"
+    },
+    {
+      "listNumber": 274,
+      "name": "(有)丸英商事",
+      "prefecture": "千葉県",
+      "location": "東金市田間107番地",
+      "address": "千葉県東金市田間107番地",
+      "kind": "shop",
+      "phone": "0475-52-3406"
+    },
+    {
+      "listNumber": 283,
+      "name": "(有)ガンショップ・サイ",
+      "prefecture": "千葉県",
+      "location": "印西市山田107番地の１",
+      "address": "千葉県印西市山田107番地の１",
+      "kind": "shop",
+      "phone": "0476-98-0461"
+    },
+    {
+      "listNumber": 79,
+      "name": "(有)金子銃砲火薬店",
+      "prefecture": "東京都",
+      "location": "板橋区上板橋二丁目41番３号",
+      "address": "東京都板橋区上板橋二丁目41番３号",
+      "kind": "shop",
+      "phone": "03-3934-2213"
+    },
+    {
+      "listNumber": 80,
+      "name": "(株)銀座銃砲店",
+      "prefecture": "東京都",
+      "location": "中央区銀座六丁目13番7号",
+      "address": "東京都中央区銀座六丁目13番7号",
+      "kind": "shop",
+      "phone": "03-6226-6133"
+    },
+    {
+      "listNumber": 81,
+      "name": "(株)三進小銃器製作所",
+      "prefecture": "東京都",
+      "location": "荒川区東日暮里六丁目57番10号",
+      "address": "東京都荒川区東日暮里六丁目57番10号",
+      "kind": "shop",
+      "phone": "03-3806-6234"
+    },
+    {
+      "listNumber": 82,
+      "name": "(株)三進小銃器製作所立川店",
+      "prefecture": "東京都",
+      "location": "立川市柴崎町三丁目12番20号",
+      "address": "東京都立川市柴崎町三丁目12番20号",
+      "kind": "shop",
+      "phone": "0425-22-3457"
+    },
+    {
+      "listNumber": 83,
+      "name": "(同)サカイ",
+      "prefecture": "東京都",
+      "location": "台東区三筋一丁目11番７号",
+      "address": "東京都台東区三筋一丁目11番７号",
+      "kind": "shop",
+      "phone": "03-3861-1041"
+    },
+    {
+      "listNumber": 84,
+      "name": "（株）渋谷銃砲火薬店",
+      "prefecture": "東京都",
+      "location": "渋谷区神南一丁目20番15号",
+      "address": "東京都渋谷区神南一丁目20番15号",
+      "kind": "shop",
+      "phone": "03-3461-5576"
+    },
+    {
+      "listNumber": 85,
+      "name": "(有)中央商事",
+      "prefecture": "東京都",
+      "location": "渋谷区恵比寿西二丁目６番１号",
+      "address": "東京都渋谷区恵比寿西二丁目６番１号",
+      "kind": "shop",
+      "phone": "03-3461-8640"
+    },
+    {
+      "listNumber": 86,
+      "name": "(有)拝島銃砲火薬店",
+      "prefecture": "東京都",
+      "location": "昭島市松原町五丁目２番20号",
+      "address": "東京都昭島市松原町五丁目２番20号",
+      "kind": "shop",
+      "phone": "042-541-1315"
+    },
+    {
+      "listNumber": 87,
+      "name": "(有)浜田銃砲店",
+      "prefecture": "東京都",
+      "location": "千代田区外神田五丁目２番２号",
+      "address": "東京都千代田区外神田五丁目２番２号",
+      "kind": "shop",
+      "phone": "03-3831-5304"
+    },
+    {
+      "listNumber": 88,
+      "name": "(株)MIトレード 明治銃砲店",
+      "prefecture": "東京都",
+      "location": "新宿区新宿二丁目８番15号",
+      "address": "東京都新宿区新宿二丁目８番15号",
+      "kind": "shop",
+      "phone": "03-3354-0531"
+    },
+    {
+      "listNumber": 89,
+      "name": "森下銃砲火薬店",
+      "prefecture": "東京都",
+      "location": "杉並区今川一丁目11番１号",
+      "address": "東京都杉並区今川一丁目11番１号",
+      "kind": "shop",
+      "phone": "03-3395-3303"
+    },
+    {
+      "listNumber": 90,
+      "name": "(有)吉田銃器",
+      "prefecture": "東京都",
+      "location": "大田区田園調布五丁目52番16号",
+      "address": "東京都大田区田園調布五丁目52番16号",
+      "kind": "shop",
+      "phone": "03-3721-5250"
+    },
+    {
+      "listNumber": 312,
+      "name": "(株)ＦＲＣ",
+      "prefecture": "東京都",
+      "location": "渋谷区神宮前三丁目11番13号",
+      "address": "東京都渋谷区神宮前三丁目11番13号",
+      "kind": "shop",
+      "phone": "03-6677-6215"
+    },
+    {
+      "listNumber": 91,
+      "name": "(資)今村銃砲店",
+      "prefecture": "神奈川県",
+      "location": "横浜市西区藤棚町一丁目43番地",
+      "address": "神奈川県横浜市西区藤棚町一丁目43番地",
+      "kind": "shop",
+      "phone": "045-231-2561"
+    },
+    {
+      "listNumber": 92,
+      "name": "(株)神奈川大井射撃場",
+      "prefecture": "神奈川県",
+      "location": "足柄上郡大井町赤田902番地",
+      "address": "神奈川県足柄上郡大井町赤田902番地",
+      "kind": "shop",
+      "phone": "0465-83-5523"
+    },
+    {
+      "listNumber": 93,
+      "name": "(株)コサカ",
+      "prefecture": "神奈川県",
+      "location": "相模原市緑区向原四丁目3番地5",
+      "address": "神奈川県相模原市緑区向原四丁目3番地5",
+      "kind": "shop",
+      "phone": "042-782-2211"
+    },
+    {
+      "listNumber": 94,
+      "name": "相模原銃砲火薬店",
+      "prefecture": "神奈川県",
+      "location": "相模原市南区上鶴間二丁目１番11号",
+      "address": "神奈川県相模原市南区上鶴間二丁目１番11号",
+      "kind": "shop",
+      "phone": "042-742-9605"
+    },
+    {
+      "listNumber": 95,
+      "name": "(有)佐藤火薬店",
+      "prefecture": "神奈川県",
+      "location": "足柄上郡山北町山北1378番地",
+      "address": "神奈川県足柄上郡山北町山北1378番地",
+      "kind": "shop",
+      "phone": "0465-76-3452"
+    },
+    {
+      "listNumber": 96,
+      "name": "(株)サンロク商事",
+      "prefecture": "神奈川県",
+      "location": "横須賀市汐入町二丁目２番地",
+      "address": "神奈川県横須賀市汐入町二丁目２番地",
+      "kind": "shop",
+      "phone": "046-823-0617"
+    },
+    {
+      "listNumber": 97,
+      "name": "(有)橘商会",
+      "prefecture": "神奈川県",
+      "location": "鎌倉市大船二丁目７番12号",
+      "address": "神奈川県鎌倉市大船二丁目７番12号",
+      "kind": "shop",
+      "phone": "0467-46-2472"
+    },
+    {
+      "listNumber": 98,
+      "name": "東神興産(株)",
+      "prefecture": "神奈川県",
+      "location": "厚木市岡田四丁目１番８号",
+      "address": "神奈川県厚木市岡田四丁目１番８号",
+      "kind": "shop",
+      "phone": "046-228-3173"
+    },
+    {
+      "listNumber": 99,
+      "name": "(有)直井銃砲火薬店",
+      "prefecture": "神奈川県",
+      "location": "川崎市中原区上平間1221番地",
+      "address": "神奈川県川崎市中原区上平間1221番地",
+      "kind": "shop",
+      "phone": "044-541-2200"
+    },
+    {
+      "listNumber": 100,
+      "name": "日本ヒルティ(株)",
+      "prefecture": "神奈川県",
+      "location": "横浜市都筑区茅ヶ崎南二丁目６番20号",
+      "address": "神奈川県横浜市都筑区茅ヶ崎南二丁目６番20号",
+      "kind": "shop",
+      "phone": "0120-66-1159"
+    },
+    {
+      "listNumber": 101,
+      "name": "(株)平塚銃砲火薬店",
+      "prefecture": "神奈川県",
+      "location": "平塚市八重咲町７番25号",
+      "address": "神奈川県平塚市八重咲町７番25号",
+      "kind": "shop",
+      "phone": "0463-21-1236"
+    },
+    {
+      "listNumber": 102,
+      "name": "吉田銃砲店",
+      "prefecture": "神奈川県",
+      "location": "川崎市川崎区大師町12番６号",
+      "address": "神奈川県川崎市川崎区大師町12番６号",
+      "kind": "shop",
+      "phone": "044-277-0437"
+    },
+    {
+      "listNumber": 122,
+      "name": "ＳＡＷＡエンタープライズ",
+      "prefecture": "山梨県",
+      "location": "甲斐市下今井2587番地1",
+      "address": "山梨県甲斐市下今井2587番地1",
+      "kind": "shop",
+      "phone": "0551-45-8899"
+    },
+    {
+      "listNumber": 123,
+      "name": "土橋火薬銃砲店",
+      "prefecture": "山梨県",
+      "location": "西八代郡市川三郷町市川大門1301番地",
+      "address": "山梨県西八代郡市川三郷町市川大門1301番地",
+      "kind": "shop",
+      "phone": "055-272-0057"
+    },
+    {
+      "listNumber": 124,
+      "name": "横山銃砲火薬店",
+      "prefecture": "山梨県",
+      "location": "南巨摩郡南部町南部8255番地",
+      "address": "山梨県南巨摩郡南部町南部8255番地",
+      "kind": "shop",
+      "phone": "0556-64-3211"
+    },
+    {
+      "listNumber": 125,
+      "name": "渡辺銃砲火薬店",
+      "prefecture": "山梨県",
+      "location": "富士吉田市富士見三丁目２番７号",
+      "address": "山梨県富士吉田市富士見三丁目２番７号",
+      "kind": "shop",
+      "phone": "0555-22-0127"
+    },
+    {
+      "listNumber": 248,
+      "name": "中西火薬店",
+      "prefecture": "山梨県",
+      "location": "大月市猿橋町705番地",
+      "address": "山梨県大月市猿橋町705番地",
+      "kind": "shop",
+      "phone": "0554-22-0544"
+    },
+    {
+      "listNumber": 285,
+      "name": "(有)天野書店",
+      "prefecture": "山梨県",
+      "location": "山梨市小原西722番地",
+      "address": "山梨県山梨市小原西722番地",
+      "kind": "shop",
+      "phone": "0553-22-1441"
+    },
+    {
+      "listNumber": 315,
+      "name": "井上銃砲火薬店",
+      "prefecture": "山梨県",
+      "location": "南巨摩郡富士川町鰍沢1594番地",
+      "address": "山梨県南巨摩郡富士川町鰍沢1594番地",
+      "kind": "shop",
+      "phone": "0556-22-0006"
+    },
+    {
+      "listNumber": 316,
+      "name": "富士五湖装弾店",
+      "prefecture": "山梨県",
+      "location": "富士吉田市緑ヶ丘1丁目1番17号",
+      "address": "山梨県富士吉田市緑ヶ丘1丁目1番17号",
+      "kind": "shop",
+      "phone": "0555-22-3346"
+    },
+    {
+      "listNumber": 114,
+      "name": "伊東銃砲火薬店",
+      "prefecture": "長野県",
+      "location": "木曽郡木曽町福島5900-3",
+      "address": "長野県木曽郡木曽町福島5900-3",
+      "kind": "shop",
+      "phone": "0264-22-2283"
+    },
+    {
+      "listNumber": 115,
+      "name": "南信火薬販売(株)",
+      "prefecture": "長野県",
+      "location": "飯田市通り町二丁目８番地",
+      "address": "長野県飯田市通り町二丁目８番地",
+      "kind": "shop",
+      "phone": "0265-52-1200"
+    },
+    {
+      "listNumber": 116,
+      "name": "(有)佐藤砲火薬店",
+      "prefecture": "長野県",
+      "location": "佐久市塩名田268番地１",
+      "address": "長野県佐久市塩名田268番地１",
+      "kind": "shop",
+      "phone": "0267-58-2503"
+    },
+    {
+      "listNumber": 117,
+      "name": "西澤銃砲火薬店",
+      "prefecture": "長野県",
+      "location": "長野市上千歳町1336番地",
+      "address": "長野県長野市上千歳町1336番地",
+      "kind": "shop",
+      "phone": "026-235-1213"
+    },
+    {
+      "listNumber": 118,
+      "name": "松井商事(株)",
+      "prefecture": "長野県",
+      "location": "松本市筑摩三丁目30番13号",
+      "address": "長野県松本市筑摩三丁目30番13号",
+      "kind": "shop",
+      "phone": "0263-27-0500"
+    },
+    {
+      "listNumber": 119,
+      "name": "(株)松澤商店",
+      "prefecture": "長野県",
+      "location": "長野市桜枝町813番地",
+      "address": "長野県長野市桜枝町813番地",
+      "kind": "shop",
+      "phone": "026-232-2622"
+    },
+    {
+      "listNumber": 120,
+      "name": "(有)丸岩商会",
+      "prefecture": "長野県",
+      "location": "大町市社6411番地",
+      "address": "長野県大町市社6411番地",
+      "kind": "shop",
+      "phone": "0261-23-0180"
+    },
+    {
+      "listNumber": 121,
+      "name": "(有)森川商店",
+      "prefecture": "長野県",
+      "location": "須坂市北横町364番地",
+      "address": "長野県須坂市北横町364番地",
+      "kind": "shop",
+      "phone": "026-245-2306"
+    },
+    {
+      "listNumber": 313,
+      "name": "(株)長野工機販売",
+      "prefecture": "長野県",
+      "location": "長野市平林1丁目25番６号",
+      "address": "長野県長野市平林1丁目25番６号",
+      "kind": "shop",
+      "phone": "026-221-9712"
+    },
+    {
+      "listNumber": 314,
+      "name": "(株)ひよの家",
+      "prefecture": "長野県",
+      "location": "松本市征矢野二丁目10番4号",
+      "address": "長野県松本市征矢野二丁目10番4号",
+      "kind": "shop",
+      "phone": "0263-30-8244"
+    },
+    {
+      "listNumber": 107,
+      "name": "(株)イシザカ",
+      "prefecture": "新潟県",
+      "location": "柏崎市長峰町７番６号",
+      "address": "新潟県柏崎市長峰町７番６号",
+      "kind": "shop",
+      "phone": "0257-23-2151"
+    },
+    {
+      "listNumber": 108,
+      "name": "(株)新天地",
+      "prefecture": "新潟県",
+      "location": "新潟市西蒲区福井4192番地",
+      "address": "新潟県新潟市西蒲区福井4192番地",
+      "kind": "shop",
+      "phone": "0256-73-3871"
+    },
+    {
+      "listNumber": 109,
+      "name": "(株)鈴木商店",
+      "prefecture": "新潟県",
+      "location": "新潟市秋葉区新津本町２丁目8番18号",
+      "address": "新潟県新潟市秋葉区新津本町２丁目8番18号",
+      "kind": "shop",
+      "phone": "0250-24-8284"
+    },
+    {
+      "listNumber": 110,
+      "name": "(有)鈴木銃砲火薬店",
+      "prefecture": "新潟県",
+      "location": "長岡市旭町二丁目２番地11号",
+      "address": "新潟県長岡市旭町二丁目２番地11号",
+      "kind": "shop",
+      "phone": "0258-33-4573"
+    },
+    {
+      "listNumber": 111,
+      "name": "(有)長岡銃砲火薬店",
+      "prefecture": "新潟県",
+      "location": "長岡市表町一丁目２番地５号",
+      "address": "新潟県長岡市表町一丁目２番地５号",
+      "kind": "shop",
+      "phone": "0258-33-3636"
+    },
+    {
+      "listNumber": 112,
+      "name": "(株)八川屋商店",
+      "prefecture": "新潟県",
+      "location": "糸魚川市本町９番７号",
+      "address": "新潟県糸魚川市本町９番７号",
+      "kind": "shop",
+      "phone": "0255-52-1881"
+    },
+    {
+      "listNumber": 113,
+      "name": "松田銃砲火薬店",
+      "prefecture": "新潟県",
+      "location": "村上市飯野三丁目２番８号",
+      "address": "新潟県村上市飯野三丁目２番８号",
+      "kind": "shop",
+      "phone": "0254-52-4471"
+    },
+    {
+      "listNumber": 147,
+      "name": "(株)米道銃砲火薬店",
+      "prefecture": "富山県",
+      "location": "砺波市庄川町金屋3102番地",
+      "address": "富山県砺波市庄川町金屋3102番地",
+      "kind": "shop",
+      "phone": "0763-82-0560"
+    },
+    {
+      "listNumber": 249,
+      "name": "(有)立山商会",
+      "prefecture": "富山県",
+      "location": "魚津市末広町9番24号",
+      "address": "富山県魚津市末広町9番24号",
+      "kind": "shop",
+      "phone": "0765-24-0245"
+    },
+    {
+      "listNumber": 250,
+      "name": "(有)マツダ",
+      "prefecture": "富山県",
+      "location": "富山市磯部町二丁目１番18号",
+      "address": "富山県富山市磯部町二丁目１番18号",
+      "kind": "shop",
+      "phone": "076-422-4428"
+    },
+    {
+      "listNumber": 251,
+      "name": "前田銃砲火薬店",
+      "prefecture": "富山県",
+      "location": "高岡市泉町３番地28号",
+      "address": "富山県高岡市泉町３番地28号",
+      "kind": "shop",
+      "phone": "0766-22-3911"
+    },
+    {
+      "listNumber": 148,
+      "name": "(有)伊関銃砲火薬店",
+      "prefecture": "石川県",
+      "location": "小松市小馬出町22番地",
+      "address": "石川県小松市小馬出町22番地",
+      "kind": "shop",
+      "phone": "0761-24-0079"
+    },
+    {
+      "listNumber": 149,
+      "name": "(株)林銃砲火薬店",
+      "prefecture": "石川県",
+      "location": "金沢市北安江三丁目14番13号",
+      "address": "石川県金沢市北安江三丁目14番13号",
+      "kind": "shop",
+      "phone": "0762-221-3055"
+    },
+    {
+      "listNumber": 150,
+      "name": "(有)上木銃砲火薬店",
+      "prefecture": "福井県",
+      "location": "越前市高木町第52号42番地",
+      "address": "福井県越前市高木町第52号42番地",
+      "kind": "shop",
+      "phone": "0778-22-0452"
+    },
+    {
+      "listNumber": 151,
+      "name": "(有)小川銃砲火薬店",
+      "prefecture": "福井県",
+      "location": "越前市深草一丁目15番28号",
+      "address": "福井県越前市深草一丁目15番28号",
+      "kind": "shop",
+      "phone": "0778-22-1438"
+    },
+    {
+      "listNumber": 152,
+      "name": "(株)桑野火薬店",
+      "prefecture": "福井県",
+      "location": "大野市大和町１番16号",
+      "address": "福井県大野市大和町１番16号",
+      "kind": "shop",
+      "phone": "0779-66-2309"
+    },
+    {
+      "listNumber": 153,
+      "name": "沢頭銃砲火薬店",
+      "prefecture": "福井県",
+      "location": "小浜市生玉27番地",
+      "address": "福井県小浜市生玉27番地",
+      "kind": "shop",
+      "phone": "0770-52-0121"
+    },
+    {
+      "listNumber": 139,
+      "name": "(株)奥田銃砲火薬店",
+      "prefecture": "岐阜県",
+      "location": "岐阜市東材木町９番地",
+      "address": "岐阜県岐阜市東材木町９番地",
+      "kind": "shop",
+      "phone": "058-262-2001"
+    },
+    {
+      "listNumber": 140,
+      "name": "合名会社田中屋商店",
+      "prefecture": "岐阜県",
+      "location": "飛騨市古川町末広町６番14号",
+      "address": "岐阜県飛騨市古川町末広町６番14号",
+      "kind": "shop",
+      "phone": "0577-73-2251"
+    },
+    {
+      "listNumber": 141,
+      "name": "(株)なべしま",
+      "prefecture": "岐阜県",
+      "location": "高山市赤保木町233番地",
+      "address": "岐阜県高山市赤保木町233番地",
+      "kind": "shop",
+      "phone": "0577-34-3200"
+    },
+    {
+      "listNumber": 142,
+      "name": "(株)穂積トレイド",
+      "prefecture": "岐阜県",
+      "location": "郡上市八幡町五町三丁目14番地の２",
+      "address": "岐阜県郡上市八幡町五町三丁目14番地の２",
+      "kind": "shop",
+      "phone": "0575-65-3316"
+    },
+    {
+      "listNumber": 275,
+      "name": "(株)アクシス",
+      "prefecture": "岐阜県",
+      "location": "大垣市菅野三丁目29番地",
+      "address": "岐阜県大垣市菅野三丁目29番地",
+      "kind": "shop",
+      "phone": "0584-72-0207"
+    },
+    {
+      "listNumber": 276,
+      "name": "(株)アクシス 揖斐営業所",
+      "prefecture": "岐阜県",
+      "location": "揖斐郡揖斐川町三輪742番地",
+      "address": "岐阜県揖斐郡揖斐川町三輪742番地",
+      "kind": "shop",
+      "phone": "0585-23-1011"
+    },
+    {
+      "listNumber": 281,
+      "name": "(有)浅井銃砲火薬店",
+      "prefecture": "岐阜県",
+      "location": "飛騨市神岡町船津1196番地",
+      "address": "岐阜県飛騨市神岡町船津1196番地",
+      "kind": "shop",
+      "phone": "0578-82-0107"
+    },
+    {
+      "listNumber": 322,
+      "name": "赤塚火薬店",
+      "prefecture": "岐阜県",
+      "location": "加茂郡八百津町八百津3125番地の１",
+      "address": "岐阜県加茂郡八百津町八百津3125番地の１",
+      "kind": "shop",
+      "phone": "0574-43-0019"
+    },
+    {
+      "listNumber": 323,
+      "name": "西川銃砲火薬店",
+      "prefecture": "岐阜県",
+      "location": "可児郡御嵩町古屋敷356番地",
+      "address": "岐阜県可児郡御嵩町古屋敷356番地",
+      "kind": "shop",
+      "phone": "0574-67-0224"
+    },
+    {
+      "listNumber": 324,
+      "name": "早川銃砲火薬店",
+      "prefecture": "岐阜県",
+      "location": "瑞浪市寺河戸町1194番４号",
+      "address": "岐阜県瑞浪市寺河戸町1194番４号",
+      "kind": "shop",
+      "phone": "0572-68-2348"
+    },
+    {
+      "listNumber": 126,
+      "name": "(有)伊藤銃砲店",
+      "prefecture": "静岡県",
+      "location": "袋井市下山梨2042番地",
+      "address": "静岡県袋井市下山梨2042番地",
+      "kind": "shop",
+      "phone": "0538-49-0010"
+    },
+    {
+      "listNumber": 127,
+      "name": "(株)大石銃砲火薬店",
+      "prefecture": "静岡県",
+      "location": "静岡市葵区三番町11番地の６",
+      "address": "静岡県静岡市葵区三番町11番地の６",
+      "kind": "shop",
+      "phone": "054-255-5135"
+    },
+    {
+      "listNumber": 128,
+      "name": "紅林銃砲火薬店",
+      "prefecture": "静岡県",
+      "location": "藤枝市駅前三丁目９番16号",
+      "address": "静岡県藤枝市駅前三丁目９番16号",
+      "kind": "shop",
+      "phone": "054-641-1888"
+    },
+    {
+      "listNumber": 129,
+      "name": "駿河観光(株) 岩本山射撃場",
+      "prefecture": "静岡県",
+      "location": "富士市岩本1601番地の２",
+      "address": "静岡県富士市岩本1601番地の２",
+      "kind": "shop",
+      "phone": "0545-61-6808"
+    },
+    {
+      "listNumber": 130,
+      "name": "野毛銃砲火薬店",
+      "prefecture": "静岡県",
+      "location": "富士宮市西町５番12号",
+      "address": "静岡県富士宮市西町５番12号",
+      "kind": "shop",
+      "phone": "0544-26-3652"
+    },
+    {
+      "listNumber": 131,
+      "name": "(株)渡辺銃砲火薬店",
+      "prefecture": "静岡県",
+      "location": "静岡市清水区追分一丁目２番10号",
+      "address": "静岡県静岡市清水区追分一丁目２番10号",
+      "kind": "shop",
+      "phone": "054-365-5510"
+    },
+    {
+      "listNumber": 252,
+      "name": "日邦工業(株)",
+      "prefecture": "静岡県",
+      "location": "裾野市茶畑1838番地",
+      "address": "静岡県裾野市茶畑1838番地",
+      "kind": "shop",
+      "phone": "055-992-0476"
+    },
+    {
+      "listNumber": 298,
+      "name": "Ｉ＆ＴＰ(株) 須山クレー射撃場",
+      "prefecture": "静岡県",
+      "location": "裾野市須山2311番地の１の124",
+      "address": "静岡県裾野市須山2311番地の１の124",
+      "kind": "shop",
+      "phone": "055-998-1267"
+    },
+    {
+      "listNumber": 317,
+      "name": "井上銃砲火薬店",
+      "prefecture": "静岡県",
+      "location": "掛川市仁藤町94番地",
+      "address": "静岡県掛川市仁藤町94番地",
+      "kind": "shop",
+      "phone": "0537-22-2502"
+    },
+    {
+      "listNumber": 318,
+      "name": "(株)江南 菊池火薬店",
+      "prefecture": "静岡県",
+      "location": "賀茂郡松崎町松崎185番地の３",
+      "address": "静岡県賀茂郡松崎町松崎185番地の３",
+      "kind": "shop",
+      "phone": "0558-42-0074"
+    },
+    {
+      "listNumber": 319,
+      "name": "(株)七福",
+      "prefecture": "静岡県",
+      "location": "伊豆の国市南條698",
+      "address": "静岡県伊豆の国市南條698",
+      "kind": "shop",
+      "phone": "055-949-0783"
+    },
+    {
+      "listNumber": 320,
+      "name": "(株)深谷 Smile（スミレ）",
+      "prefecture": "静岡県",
+      "location": "駿東郡長泉町納米里458番地の3",
+      "address": "静岡県駿東郡長泉町納米里458番地の3",
+      "kind": "shop",
+      "phone": "055-988-3199"
+    },
+    {
+      "listNumber": 132,
+      "name": "(有)坂巻銃砲火薬店",
+      "prefecture": "愛知県",
+      "location": "新城市西新町20番21番合併地",
+      "address": "愛知県新城市西新町20番21番合併地",
+      "kind": "shop",
+      "phone": "0536-22-0331"
+    },
+    {
+      "listNumber": 133,
+      "name": "(株)大黒屋",
+      "prefecture": "愛知県",
+      "location": "岡崎市伝馬通二丁目26番地",
+      "address": "愛知県岡崎市伝馬通二丁目26番地",
+      "kind": "shop",
+      "phone": "0564-24-0728"
+    },
+    {
+      "listNumber": 134,
+      "name": "(株)内田火薬店",
+      "prefecture": "愛知県",
+      "location": "設楽郡設楽町田口字辻前６番地１",
+      "address": "愛知県設楽郡設楽町田口字辻前６番地１",
+      "kind": "shop",
+      "phone": "0536-62-0010"
+    },
+    {
+      "listNumber": 135,
+      "name": "大塚銃砲火薬店",
+      "prefecture": "愛知県",
+      "location": "一宮市桜一丁目９番12号",
+      "address": "愛知県一宮市桜一丁目９番12号",
+      "kind": "shop",
+      "phone": "0586-72-6886"
+    },
+    {
+      "listNumber": 136,
+      "name": "(株)川合銃砲火薬店",
+      "prefecture": "愛知県",
+      "location": "豊橋市上伝馬町86番地",
+      "address": "愛知県豊橋市上伝馬町86番地",
+      "kind": "shop",
+      "phone": "0532-54-1910"
+    },
+    {
+      "listNumber": 137,
+      "name": "(資)中京銃砲火薬店",
+      "prefecture": "愛知県",
+      "location": "名古屋市中区千代田三丁目５番４号",
+      "address": "愛知県名古屋市中区千代田三丁目５番４号",
+      "kind": "shop",
+      "phone": "052-321-5130"
+    },
+    {
+      "listNumber": 138,
+      "name": "(株)東海火薬銃砲店",
+      "prefecture": "愛知県",
+      "location": "豊橋市南牛川一丁目23番地の13",
+      "address": "愛知県豊橋市南牛川一丁目23番地の13",
+      "kind": "shop",
+      "phone": "0532-62-3314"
+    },
+    {
+      "listNumber": 321,
+      "name": "蟹江銃砲火薬店",
+      "prefecture": "愛知県",
+      "location": "豊田市日の出町二丁目２番地５",
+      "address": "愛知県豊田市日の出町二丁目２番地５",
+      "kind": "shop",
+      "phone": "0565-32-0901"
+    },
+    {
+      "listNumber": 143,
+      "name": "岡宗商店",
+      "prefecture": "三重県",
+      "location": "桑名市中山町16番地",
+      "address": "三重県桑名市中山町16番地",
+      "kind": "shop",
+      "phone": "0594-31-1929"
+    },
+    {
+      "listNumber": 144,
+      "name": "(株)小野火薬",
+      "prefecture": "三重県",
+      "location": "度会郡大紀町阿曽2229番地",
+      "address": "三重県度会郡大紀町阿曽2229番地",
+      "kind": "shop",
+      "phone": "0598-86-2908"
+    },
+    {
+      "listNumber": 145,
+      "name": "（株）慶谷銃砲火薬店",
+      "prefecture": "三重県",
+      "location": "伊勢市八日市場町２番地15号",
+      "address": "三重県伊勢市八日市場町２番地15号",
+      "kind": "shop",
+      "phone": "0596-23-5151"
+    },
+    {
+      "listNumber": 146,
+      "name": "(株)西尾銃砲火薬店",
+      "prefecture": "三重県",
+      "location": "津市白山町岡290番地",
+      "address": "三重県津市白山町岡290番地",
+      "kind": "shop",
+      "phone": "059-261-8985"
+    },
+    {
+      "listNumber": 154,
+      "name": "(有)國友久太郎商店",
+      "prefecture": "滋賀県",
+      "location": "長浜市国友町572番地",
+      "address": "滋賀県長浜市国友町572番地",
+      "kind": "shop",
+      "phone": "0749-62-1110"
+    },
+    {
+      "listNumber": 155,
+      "name": "(株)濵﨑銃砲火薬店",
+      "prefecture": "滋賀県",
+      "location": "大津市長等三丁目２番24号",
+      "address": "滋賀県大津市長等三丁目２番24号",
+      "kind": "shop",
+      "phone": "077-524-2751"
+    },
+    {
+      "listNumber": 156,
+      "name": "(有)金村火薬店",
+      "prefecture": "京都府",
+      "location": "宮津市字蛭子1071番地",
+      "address": "京都府宮津市字蛭子1071番地",
+      "kind": "shop",
+      "phone": "0772-22-3330"
+    },
+    {
+      "listNumber": 157,
+      "name": "京北産業(有)本店",
+      "prefecture": "京都府",
+      "location": "京都市右京区京北下町岩ノ元16番地",
+      "address": "京都府京都市右京区京北下町岩ノ元16番地",
+      "kind": "shop",
+      "phone": "075-853-0341"
+    },
+    {
+      "listNumber": 158,
+      "name": "(株)國友銃砲火薬店",
+      "prefecture": "京都府",
+      "location": "京都市下京区寺町通仏光寺上る中之町580・ 581番合地",
+      "address": "京都府京都市下京区寺町通仏光寺上る中之町580・ 581番合地",
+      "kind": "shop",
+      "phone": "075-351-3037"
+    },
+    {
+      "listNumber": 159,
+      "name": "(有)小林銃砲火薬店",
+      "prefecture": "京都府",
+      "location": "京都市上京区下立売通千本西入稲葉町466番地",
+      "address": "京都府京都市上京区下立売通千本西入稲葉町466番地",
+      "kind": "shop",
+      "phone": "075-841-8866"
+    },
+    {
+      "listNumber": 160,
+      "name": "(有)白波瀬銃砲火薬店",
+      "prefecture": "京都府",
+      "location": "福知山市字堀森垣500番地の２",
+      "address": "京都府福知山市字堀森垣500番地の２",
+      "kind": "shop",
+      "phone": "0773-25-5508"
+    },
+    {
+      "listNumber": 161,
+      "name": "(有)仲川火薬店",
+      "prefecture": "京都府",
+      "location": "舞鶴市字地頭1368番地の１",
+      "address": "京都府舞鶴市字地頭1368番地の１",
+      "kind": "shop",
+      "phone": "0773-83-9800"
+    },
+    {
+      "listNumber": 162,
+      "name": "(有)原田商会",
+      "prefecture": "京都府",
+      "location": "舞鶴市平野屋152番地",
+      "address": "京都府舞鶴市平野屋152番地",
+      "kind": "shop",
+      "phone": "0773-75-0230"
+    },
+    {
+      "listNumber": 163,
+      "name": "(有)福知山火薬",
+      "prefecture": "京都府",
+      "location": "福知山市字天田152番地",
+      "address": "京都府福知山市字天田152番地",
+      "kind": "shop",
+      "phone": "0773-23-6288"
+    },
+    {
+      "listNumber": 165,
+      "name": "(有)山﨑煙火",
+      "prefecture": "京都府",
+      "location": "京丹後市峰山町荒山566番地３",
+      "address": "京都府京丹後市峰山町荒山566番地３",
+      "kind": "shop",
+      "phone": "0772-62-0013"
+    },
+    {
+      "listNumber": 164,
+      "name": "堀尾銃砲火薬店",
+      "prefecture": "大阪府",
+      "location": "守口市大宮通三丁目６番14号",
+      "address": "大阪府守口市大宮通三丁目６番14号",
+      "kind": "shop",
+      "phone": "06-6996-9413"
+    },
+    {
+      "listNumber": 166,
+      "name": "岸和田国際射撃場",
+      "prefecture": "大阪府",
+      "location": "岸和田市大沢町1802番地の１",
+      "address": "大阪府岸和田市大沢町1802番地の１",
+      "kind": "shop",
+      "phone": "0724-79-1662"
+    },
+    {
+      "listNumber": 167,
+      "name": "(有)中山商店",
+      "prefecture": "大阪府",
+      "location": "豊中市曽根東町二丁目７番29号",
+      "address": "大阪府豊中市曽根東町二丁目７番29号",
+      "kind": "shop",
+      "phone": "06-6863-5500"
+    },
+    {
+      "listNumber": 168,
+      "name": "東大阪剥製銃砲(株)",
+      "prefecture": "大阪府",
+      "location": "東大阪市藤戸新田二丁目９番９号",
+      "address": "大阪府東大阪市藤戸新田二丁目９番９号",
+      "kind": "shop",
+      "phone": "06-6788-7552"
+    },
+    {
+      "listNumber": 325,
+      "name": "高槻国際射撃場",
+      "prefecture": "大阪府",
+      "location": "高槻市原桃山1358番地の８",
+      "address": "大阪府高槻市原桃山1358番地の８",
+      "kind": "shop",
+      "phone": "072-687-1548"
+    },
+    {
+      "listNumber": 170,
+      "name": "(株)ツボサカ",
+      "prefecture": "兵庫県",
+      "location": "姫路市手柄195番地",
+      "address": "兵庫県姫路市手柄195番地",
+      "kind": "shop",
+      "phone": "079-282-0010"
+    },
+    {
+      "listNumber": 171,
+      "name": "(有)西島",
+      "prefecture": "兵庫県",
+      "location": "養父市八鹿町八鹿1639番地の３",
+      "address": "兵庫県養父市八鹿町八鹿1639番地の３",
+      "kind": "shop",
+      "phone": "079-662-2775"
+    },
+    {
+      "listNumber": 253,
+      "name": "(株)ツカザキ",
+      "prefecture": "兵庫県",
+      "location": "佐用郡佐用町三日月1252番地",
+      "address": "兵庫県佐用郡佐用町三日月1252番地",
+      "kind": "shop",
+      "phone": "0790-79-2043"
+    },
+    {
+      "listNumber": 265,
+      "name": "(有)ニシムラ",
+      "prefecture": "兵庫県",
+      "location": "加東市木梨1158番地４",
+      "address": "兵庫県加東市木梨1158番地４",
+      "kind": "shop",
+      "phone": "0795-42-3900"
+    },
+    {
+      "listNumber": 271,
+      "name": "須磨綜合射撃場",
+      "prefecture": "兵庫県",
+      "location": "神戸市西区伊川谷町布施畑下谷山991番10",
+      "address": "兵庫県神戸市西区伊川谷町布施畑下谷山991番10",
+      "kind": "shop",
+      "phone": "078-974-1057"
+    },
+    {
+      "listNumber": 287,
+      "name": "(株)神戸興産",
+      "prefecture": "兵庫県",
+      "location": "神戸市長田区久保町三丁目１番２号",
+      "address": "兵庫県神戸市長田区久保町三丁目１番２号",
+      "kind": "shop",
+      "phone": "078-977-7117"
+    },
+    {
+      "listNumber": 294,
+      "name": "(有)太田垣銃砲火薬店",
+      "prefecture": "兵庫県",
+      "location": "朝来市新井640番地",
+      "address": "兵庫県朝来市新井640番地",
+      "kind": "shop",
+      "phone": "079-677-0122"
+    },
+    {
+      "listNumber": 295,
+      "name": "Ｄ－ＪＫ(株)",
+      "prefecture": "兵庫県",
+      "location": "宍粟市山崎町鹿沢72番地８",
+      "address": "兵庫県宍粟市山崎町鹿沢72番地８",
+      "kind": "shop",
+      "phone": "0790-62-0433"
+    },
+    {
+      "listNumber": 296,
+      "name": "(株)堀尾商店",
+      "prefecture": "兵庫県",
+      "location": "神戸市中央区北長狭通七丁目１番７号",
+      "address": "兵庫県神戸市中央区北長狭通七丁目１番７号",
+      "kind": "shop",
+      "phone": "078-341-1380"
+    },
+    {
+      "listNumber": 169,
+      "name": "脇坂火薬(株)",
+      "prefecture": "奈良県",
+      "location": "山辺郡山添村片平1281番地",
+      "address": "奈良県山辺郡山添村片平1281番地",
+      "kind": "shop",
+      "phone": "0743-85-0303"
+    },
+    {
+      "listNumber": 266,
+      "name": "(株)シバテック",
+      "prefecture": "奈良県",
+      "location": "五條市丹原町212番地の２",
+      "address": "奈良県五條市丹原町212番地の２",
+      "kind": "shop",
+      "phone": "0747-23-1585"
+    },
+    {
+      "listNumber": 326,
+      "name": "(株)ササイヤマト",
+      "prefecture": "奈良県",
+      "location": "天理市庵治町360番地２",
+      "address": "奈良県天理市庵治町360番地２",
+      "kind": "shop",
+      "phone": "0744-32-6088"
+    },
+    {
+      "listNumber": 327,
+      "name": "中山火薬店",
+      "prefecture": "和歌山県",
+      "location": "新宮市野田8番50号",
+      "address": "和歌山県新宮市野田8番50号",
+      "kind": "shop",
+      "phone": "0735-28-3141"
+    },
+    {
+      "listNumber": 254,
+      "name": "(株)池上銃砲火薬店",
+      "prefecture": "島根県",
+      "location": "松江市東津田町2325番地",
+      "address": "島根県松江市東津田町2325番地",
+      "kind": "shop",
+      "phone": "0852-21-9438"
+    },
+    {
+      "listNumber": 277,
+      "name": "(株)ＭＳＴＣ",
+      "prefecture": "島根県",
+      "location": "松江市東出雲町意宇東三丁目２番地４",
+      "address": "島根県松江市東出雲町意宇東三丁目２番地４",
+      "kind": "shop",
+      "phone": "0852-52-5703"
+    },
+    {
+      "listNumber": 172,
+      "name": "(有)應武銃砲火薬店",
+      "prefecture": "岡山県",
+      "location": "高梁市成羽町下原587番地",
+      "address": "岡山県高梁市成羽町下原587番地",
+      "kind": "shop",
+      "phone": "0866-42-2051"
+    },
+    {
+      "listNumber": 173,
+      "name": "菊池産業(株)",
+      "prefecture": "岡山県",
+      "location": "美作市林野252番地の１",
+      "address": "岡山県美作市林野252番地の１",
+      "kind": "shop",
+      "phone": "0868-72-0062"
+    },
+    {
+      "listNumber": 174,
+      "name": "井藤カヤク(株)",
+      "prefecture": "広島県",
+      "location": "三原市貝野町10番17号",
+      "address": "広島県三原市貝野町10番17号",
+      "kind": "shop",
+      "phone": "0848-67-0034"
+    },
+    {
+      "listNumber": 175,
+      "name": "(株)伊藤商店",
+      "prefecture": "広島県",
+      "location": "府中市上下町上下964番地の２",
+      "address": "広島県府中市上下町上下964番地の２",
+      "kind": "shop",
+      "phone": "0847-62-3239"
+    },
+    {
+      "listNumber": 176,
+      "name": "(株)猪原商店",
+      "prefecture": "広島県",
+      "location": "山県郡安芸太田町大字加計3472番地",
+      "address": "広島県山県郡安芸太田町大字加計3472番地",
+      "kind": "shop",
+      "phone": "0826-22-0001"
+    },
+    {
+      "listNumber": 177,
+      "name": "(有)ウシオ",
+      "prefecture": "広島県",
+      "location": "広島市南区皆実町六丁目16番７号",
+      "address": "広島県広島市南区皆実町六丁目16番７号",
+      "kind": "shop",
+      "phone": "082-255-1627"
+    },
+    {
+      "listNumber": 178,
+      "name": "(有)鎌田火薬店",
+      "prefecture": "広島県",
+      "location": "呉市蒲刈町向甲2864番地",
+      "address": "広島県呉市蒲刈町向甲2864番地",
+      "kind": "shop",
+      "phone": "0823-68-0001"
+    },
+    {
+      "listNumber": 179,
+      "name": "(有)竹腰商店",
+      "prefecture": "広島県",
+      "location": "福山市松永町五丁目37番25号",
+      "address": "広島県福山市松永町五丁目37番25号",
+      "kind": "shop",
+      "phone": "084-933-3688"
+    },
+    {
+      "listNumber": 180,
+      "name": "(株)野田商事",
+      "prefecture": "広島県",
+      "location": "廿日市市住吉一丁目３番35号",
+      "address": "広島県廿日市市住吉一丁目３番35号",
+      "kind": "shop",
+      "phone": "0829-31-0431"
+    },
+    {
+      "listNumber": 181,
+      "name": "(有)平山商店",
+      "prefecture": "広島県",
+      "location": "府中市府中町743番地の11",
+      "address": "広島県府中市府中町743番地の11",
+      "kind": "shop",
+      "phone": "0847-41-2312"
+    },
+    {
+      "listNumber": 182,
+      "name": "(有)三原火薬店",
+      "prefecture": "広島県",
+      "location": "庄原市中本町二丁目１番15号",
+      "address": "広島県庄原市中本町二丁目１番15号",
+      "kind": "shop",
+      "phone": "0824-72-4087"
+    },
+    {
+      "listNumber": 183,
+      "name": "(資)森岡銃砲火薬店",
+      "prefecture": "広島県",
+      "location": "呉市本通三丁目６番４号",
+      "address": "広島県呉市本通三丁目６番４号",
+      "kind": "shop",
+      "phone": "0823-21-3315"
+    },
+    {
+      "listNumber": 184,
+      "name": "(有)森近銃砲火薬店",
+      "prefecture": "広島県",
+      "location": "福山市北吉津町五丁目８番35号",
+      "address": "広島県福山市北吉津町五丁目８番35号",
+      "kind": "shop",
+      "phone": "084-922-3443"
+    },
+    {
+      "listNumber": 255,
+      "name": "(株)住吉銃砲火薬店",
+      "prefecture": "広島県",
+      "location": "広島市西区横川町一丁目７番32号",
+      "address": "広島県広島市西区横川町一丁目７番32号",
+      "kind": "shop",
+      "phone": "082-294-6122"
+    },
+    {
+      "listNumber": 185,
+      "name": "上田銃砲火薬(有)",
+      "prefecture": "山口県",
+      "location": "萩市大字熊谷町115番地",
+      "address": "山口県萩市大字熊谷町115番地",
+      "kind": "shop",
+      "phone": "0838-25-3322"
+    },
+    {
+      "listNumber": 186,
+      "name": "宇部火薬(株)",
+      "prefecture": "山口県",
+      "location": "宇部市東琴芝二丁目２番21号",
+      "address": "山口県宇部市東琴芝二丁目２番21号",
+      "kind": "shop",
+      "phone": "0836-21-0902"
+    },
+    {
+      "listNumber": 187,
+      "name": "(有)カイシマエンタープライズ",
+      "prefecture": "山口県",
+      "location": "岩国市錦見一丁目3番66号",
+      "address": "山口県岩国市錦見一丁目3番66号",
+      "kind": "shop",
+      "phone": "0827-41-0268"
+    },
+    {
+      "listNumber": 188,
+      "name": "紺箭銃砲火薬(株)",
+      "prefecture": "山口県",
+      "location": "下関市上田中町一丁目18番12号",
+      "address": "山口県下関市上田中町一丁目18番12号",
+      "kind": "shop",
+      "phone": "0832-31-0700"
+    },
+    {
+      "listNumber": 189,
+      "name": "西村火薬店",
+      "prefecture": "山口県",
+      "location": "山口市阿東生雲中185番地１",
+      "address": "山口県山口市阿東生雲中185番地１",
+      "kind": "shop",
+      "phone": "083-954-0224"
+    },
+    {
+      "listNumber": 190,
+      "name": "原田銃砲火薬店",
+      "prefecture": "山口県",
+      "location": "周南市大字鹿野上3249番地",
+      "address": "山口県周南市大字鹿野上3249番地",
+      "kind": "shop",
+      "phone": "0834-68-2026"
+    },
+    {
+      "listNumber": 191,
+      "name": "(有)平佐銃砲火薬店",
+      "prefecture": "山口県",
+      "location": "山口市桜畠二丁目８番３号",
+      "address": "山口県山口市桜畠二丁目８番３号",
+      "kind": "shop",
+      "phone": "083-928-0725"
+    },
+    {
+      "listNumber": 192,
+      "name": "藤本火薬銃砲(株)",
+      "prefecture": "山口県",
+      "location": "美祢市大嶺町東分308番地３",
+      "address": "山口県美祢市大嶺町東分308番地３",
+      "kind": "shop",
+      "phone": "0837-52-0607"
+    },
+    {
+      "listNumber": 193,
+      "name": "(株)藤屋",
+      "prefecture": "山口県",
+      "location": "大島郡周防大島町大字久賀4165番地",
+      "address": "山口県大島郡周防大島町大字久賀4165番地",
+      "kind": "shop",
+      "phone": "0820-72-0150"
+    },
+    {
+      "listNumber": 194,
+      "name": "(有)山根銃砲火薬店",
+      "prefecture": "山口県",
+      "location": "防府市戎町二丁目３番１号",
+      "address": "山口県防府市戎町二丁目３番１号",
+      "kind": "shop",
+      "phone": "0835-22-0499"
+    },
+    {
+      "listNumber": 195,
+      "name": "(有)吉富商会",
+      "prefecture": "山口県",
+      "location": "岩国市錦町広瀬7877番地19",
+      "address": "山口県岩国市錦町広瀬7877番地19",
+      "kind": "shop",
+      "phone": "0827-72-2724"
+    },
+    {
+      "listNumber": 328,
+      "name": "(同)西岡火薬店",
+      "prefecture": "山口県",
+      "location": "周南市大字須々万本郷592番地の2",
+      "address": "山口県周南市大字須々万本郷592番地の2",
+      "kind": "shop",
+      "phone": "0834-88-3086"
+    },
+    {
+      "listNumber": 329,
+      "name": "(一社)山口県クレー射撃協会 熊毛総合射撃場",
+      "prefecture": "山口県",
+      "location": "周南市大河内字石ケ谷2055番地2",
+      "address": "山口県周南市大河内字石ケ谷2055番地2",
+      "kind": "shop",
+      "phone": "0833-91-0116"
+    },
+    {
+      "listNumber": 299,
+      "name": "(有)高橋銃砲火薬店",
+      "prefecture": "香川県",
+      "location": "観音寺市柞田町甲32番地",
+      "address": "香川県観音寺市柞田町甲32番地",
+      "kind": "shop",
+      "phone": "0875-25-4298"
+    },
+    {
+      "listNumber": 267,
+      "name": "坂上火薬銃砲販売(株)",
+      "prefecture": "愛媛県",
+      "location": "新居浜市西原町一丁目１番51号",
+      "address": "愛媛県新居浜市西原町一丁目１番51号",
+      "kind": "shop",
+      "phone": "0897-37-2098"
+    },
+    {
+      "listNumber": 290,
+      "name": "(有)山根火薬銃砲店",
+      "prefecture": "愛媛県",
+      "location": "喜多郡内子町五十崎甲1220番地",
+      "address": "愛媛県喜多郡内子町五十崎甲1220番地",
+      "kind": "shop",
+      "phone": "0893-44-2358"
+    },
+    {
+      "listNumber": 284,
+      "name": "(有)髙村火薬店",
+      "prefecture": "高知県",
+      "location": "高知市大津甲216番地１",
+      "address": "高知県高知市大津甲216番地１",
+      "kind": "shop",
+      "phone": "088-866-2305"
+    },
+    {
+      "listNumber": 196,
+      "name": "(株)中島火薬店",
+      "prefecture": "福岡県",
+      "location": "京都郡苅田町大字谷646番地",
+      "address": "福岡県京都郡苅田町大字谷646番地",
+      "kind": "shop",
+      "phone": "0930-22-1900"
+    },
+    {
+      "listNumber": 197,
+      "name": "飯塚銃砲火薬店",
+      "prefecture": "福岡県",
+      "location": "飯塚市宮町２番11号",
+      "address": "福岡県飯塚市宮町２番11号",
+      "kind": "shop",
+      "phone": "0948-22-0354"
+    },
+    {
+      "listNumber": 198,
+      "name": "(有)北九州銃砲店",
+      "prefecture": "福岡県",
+      "location": "北九州市八幡西区別当町25番22号",
+      "address": "福岡県北九州市八幡西区別当町25番22号",
+      "kind": "shop",
+      "phone": "093-642-5558"
+    },
+    {
+      "listNumber": 199,
+      "name": "(有)博多銃砲店",
+      "prefecture": "福岡県",
+      "location": "福岡市博多区上川端町11番１号",
+      "address": "福岡県福岡市博多区上川端町11番１号",
+      "kind": "shop",
+      "phone": "092-291-0322"
+    },
+    {
+      "listNumber": 200,
+      "name": "日興技化(株)",
+      "prefecture": "福岡県",
+      "location": "北九州市門司区田野浦1089番地",
+      "address": "福岡県北九州市門司区田野浦1089番地",
+      "kind": "shop",
+      "phone": "093-321-5337"
+    },
+    {
+      "listNumber": 201,
+      "name": "(有)柳川銃砲火薬店",
+      "prefecture": "福岡県",
+      "location": "柳川市三橋町高畑327番地の第16",
+      "address": "福岡県柳川市三橋町高畑327番地の第16",
+      "kind": "shop",
+      "phone": "0944-72-2743"
+    },
+    {
+      "listNumber": 256,
+      "name": "(資)大牟田銃砲火薬店",
+      "prefecture": "福岡県",
+      "location": "大牟田市白金町26番地",
+      "address": "福岡県大牟田市白金町26番地",
+      "kind": "shop",
+      "phone": "0944-52-2988"
+    },
+    {
+      "listNumber": 279,
+      "name": "平田銃砲店",
+      "prefecture": "福岡県",
+      "location": "久留米市国分町672番地２",
+      "address": "福岡県久留米市国分町672番地２",
+      "kind": "shop",
+      "phone": "0942-80-1005"
+    },
+    {
+      "listNumber": 202,
+      "name": "相賀火薬店",
+      "prefecture": "佐賀県",
+      "location": "武雄市武雄町大字武雄7272番地",
+      "address": "佐賀県武雄市武雄町大字武雄7272番地",
+      "kind": "shop",
+      "phone": "0954-22-2955"
+    },
+    {
+      "listNumber": 203,
+      "name": "伊万里火薬商事(有)",
+      "prefecture": "佐賀県",
+      "location": "伊万里市蓮池町22番地１",
+      "address": "佐賀県伊万里市蓮池町22番地１",
+      "kind": "shop",
+      "phone": "0955-22-4275"
+    },
+    {
+      "listNumber": 204,
+      "name": "(資)杉江火薬店",
+      "prefecture": "佐賀県",
+      "location": "唐津市東町44番地６",
+      "address": "佐賀県唐津市東町44番地６",
+      "kind": "shop",
+      "phone": "0955-72-2618"
+    },
+    {
+      "listNumber": 205,
+      "name": "宮島商事(株)",
+      "prefecture": "佐賀県",
+      "location": "唐津市船宮町2302番地ノ26",
+      "address": "佐賀県唐津市船宮町2302番地ノ26",
+      "kind": "shop",
+      "phone": "0955-73-2158"
+    },
+    {
+      "listNumber": 206,
+      "name": "(有)タクマ",
+      "prefecture": "佐賀県",
+      "location": "佐賀市兵庫町渕1935番地５",
+      "address": "佐賀県佐賀市兵庫町渕1935番地５",
+      "kind": "shop",
+      "phone": "0952-36-9727"
+    },
+    {
+      "listNumber": 207,
+      "name": "宮地商事(株)",
+      "prefecture": "佐賀県",
+      "location": "佐賀市高木瀬西三丁目８番5号",
+      "address": "佐賀県佐賀市高木瀬西三丁目８番5号",
+      "kind": "shop",
+      "phone": "0952-37-1830"
+    },
+    {
+      "listNumber": 208,
+      "name": "宮地商事(株)伊万里営業所",
+      "prefecture": "佐賀県",
+      "location": "伊万里市大坪町字三本杉丙1155番地６",
+      "address": "佐賀県伊万里市大坪町字三本杉丙1155番地６",
+      "kind": "shop",
+      "phone": "0955-22-2540"
+    },
+    {
+      "listNumber": 268,
+      "name": "(株)あくあぐりーん",
+      "prefecture": "佐賀県",
+      "location": "伊万里市立花町3269番地２",
+      "address": "佐賀県伊万里市立花町3269番地２",
+      "kind": "shop",
+      "phone": "0955-22-4738"
+    },
+    {
+      "listNumber": 269,
+      "name": "宮島商事(株)佐世保営業所",
+      "prefecture": "長崎県",
+      "location": "佐世保市下本町1386番地1",
+      "address": "長崎県佐世保市下本町1386番地1",
+      "kind": "shop",
+      "phone": "0956-48-5460"
+    },
+    {
+      "listNumber": 292,
+      "name": "(同)長崎クレー射撃場",
+      "prefecture": "長崎県",
+      "location": "長崎市琴海形上町303番地",
+      "address": "長崎県長崎市琴海形上町303番地",
+      "kind": "shop",
+      "phone": "095-860-7760"
+    },
+    {
+      "listNumber": 209,
+      "name": "(資)阿蘇銃砲火薬運動具店",
+      "prefecture": "熊本県",
+      "location": "阿蘇市一の宮町宮地2297番地の８",
+      "address": "熊本県阿蘇市一の宮町宮地2297番地の８",
+      "kind": "shop",
+      "phone": "0967-22-0733"
+    },
+    {
+      "listNumber": 210,
+      "name": "金澤銃砲火薬店",
+      "prefecture": "熊本県",
+      "location": "上益城郡山都町城原159番地３",
+      "address": "熊本県上益城郡山都町城原159番地３",
+      "kind": "shop",
+      "phone": "0967-72-1373"
+    },
+    {
+      "listNumber": 211,
+      "name": "熊本銃砲火薬(株)",
+      "prefecture": "熊本県",
+      "location": "熊本市北区植木町岩野897番地１",
+      "address": "熊本県熊本市北区植木町岩野897番地１",
+      "kind": "shop",
+      "phone": "096-275-1155"
+    },
+    {
+      "listNumber": 212,
+      "name": "(株)八代化薬",
+      "prefecture": "熊本県",
+      "location": "八代郡氷川町宮原709番地",
+      "address": "熊本県八代郡氷川町宮原709番地",
+      "kind": "shop",
+      "phone": "0965-62-4208"
+    },
+    {
+      "listNumber": 213,
+      "name": "玉名銃砲火薬店",
+      "prefecture": "熊本県",
+      "location": "玉名市岩崎687番地の３",
+      "address": "熊本県玉名市岩崎687番地の３",
+      "kind": "shop",
+      "phone": "0968-73-3628"
+    },
+    {
+      "listNumber": 214,
+      "name": "宗銃砲火薬店",
+      "prefecture": "熊本県",
+      "location": "菊池市隈府84番地",
+      "address": "熊本県菊池市隈府84番地",
+      "kind": "shop",
+      "phone": "0968-25-2745"
+    },
+    {
+      "listNumber": 215,
+      "name": "原銃砲火薬店",
+      "prefecture": "熊本県",
+      "location": "八代市迎町２丁目15号２番地",
+      "address": "熊本県八代市迎町２丁目15号２番地",
+      "kind": "shop",
+      "phone": "0965-32-6640"
+    },
+    {
+      "listNumber": 216,
+      "name": "トモエ銃砲火薬店",
+      "prefecture": "熊本県",
+      "location": "熊本市中央区北千反畑町６番11号",
+      "address": "熊本県熊本市中央区北千反畑町６番11号",
+      "kind": "shop",
+      "phone": "096-343-3428"
+    },
+    {
+      "listNumber": 217,
+      "name": "(株)野田市兵衞商店",
+      "prefecture": "熊本県",
+      "location": "熊本市南区流通団地１丁目55番地",
+      "address": "熊本県熊本市南区流通団地１丁目55番地",
+      "kind": "shop",
+      "phone": "096-377-2080"
+    },
+    {
+      "listNumber": 218,
+      "name": "(有)野中銃砲火薬店",
+      "prefecture": "熊本県",
+      "location": "熊本市中央区神水一丁目２番７号",
+      "address": "熊本県熊本市中央区神水一丁目２番７号",
+      "kind": "shop",
+      "phone": "096-383-3636"
+    },
+    {
+      "listNumber": 219,
+      "name": "(株)隆勢",
+      "prefecture": "熊本県",
+      "location": "上天草市松島町合津7915番地12",
+      "address": "熊本県上天草市松島町合津7915番地12",
+      "kind": "shop",
+      "phone": "0969-56-1890"
+    },
+    {
+      "listNumber": 220,
+      "name": "熊本銃砲火薬(株)三角支店",
+      "prefecture": "熊本県",
+      "location": "宇城市三角町波多816番地",
+      "address": "熊本県宇城市三角町波多816番地",
+      "kind": "shop",
+      "phone": "0964-53-1500"
+    },
+    {
+      "listNumber": 278,
+      "name": "(株)宮田宝三郎商店",
+      "prefecture": "熊本県",
+      "location": "人吉市宝来町1287番地の１",
+      "address": "熊本県人吉市宝来町1287番地の１",
+      "kind": "shop",
+      "phone": "0966-22-3526"
+    },
+    {
+      "listNumber": 297,
+      "name": "光永銃砲火薬(資)",
+      "prefecture": "熊本県",
+      "location": "葦北郡芦北町大字佐敷413番地",
+      "address": "熊本県葦北郡芦北町大字佐敷413番地",
+      "kind": "shop",
+      "phone": "0966-82-2545"
+    },
+    {
+      "listNumber": 221,
+      "name": "(株)臼杵銃砲火薬店",
+      "prefecture": "大分県",
+      "location": "臼杵市大字臼杵２の107番の472地",
+      "address": "大分県臼杵市大字臼杵２の107番の472地",
+      "kind": "shop",
+      "phone": "0972-62-2576"
+    },
+    {
+      "listNumber": 222,
+      "name": "(有)梅原火薬店",
+      "prefecture": "大分県",
+      "location": "日田市大部町大字日高2502番地３",
+      "address": "大分県日田市大部町大字日高2502番地３",
+      "kind": "shop",
+      "phone": "0973-22-3612"
+    },
+    {
+      "listNumber": 223,
+      "name": "小幡銃砲火薬店",
+      "prefecture": "大分県",
+      "location": "玖珠郡玖珠町字森37番地の７",
+      "address": "大分県玖珠郡玖珠町字森37番地の７",
+      "kind": "shop",
+      "phone": "0973-72-0009"
+    },
+    {
+      "listNumber": 224,
+      "name": "第一火薬(株)",
+      "prefecture": "大分県",
+      "location": "大分市西春日町１番21号",
+      "address": "大分県大分市西春日町１番21号",
+      "kind": "shop",
+      "phone": "097-532-2554"
+    },
+    {
+      "listNumber": 225,
+      "name": "(有)冨永銃砲火薬店",
+      "prefecture": "大分県",
+      "location": "中津市船町1623番地",
+      "address": "大分県中津市船町1623番地",
+      "kind": "shop",
+      "phone": "0979-22-0239"
+    },
+    {
+      "listNumber": 226,
+      "name": "益田銃砲火薬店",
+      "prefecture": "大分県",
+      "location": "豊後高田市大字玉津366番地",
+      "address": "大分県豊後高田市大字玉津366番地",
+      "kind": "shop",
+      "phone": "0978-22-2026"
+    },
+    {
+      "listNumber": 227,
+      "name": "(資)ワ キ タ",
+      "prefecture": "大分県",
+      "location": "佐伯市船頭町３番21号",
+      "address": "大分県佐伯市船頭町３番21号",
+      "kind": "shop",
+      "phone": "0972-22-3431"
+    },
+    {
+      "listNumber": 330,
+      "name": "多田銃砲火薬店",
+      "prefecture": "大分県",
+      "location": "豊後大野市三重町市場1308番地",
+      "address": "大分県豊後大野市三重町市場1308番地",
+      "kind": "shop",
+      "phone": "0974-22-0030"
+    },
+    {
+      "listNumber": 228,
+      "name": "井内銃砲火薬店",
+      "prefecture": "宮崎県",
+      "location": "宮崎市中村西一丁目２番2号",
+      "address": "宮崎県宮崎市中村西一丁目２番2号",
+      "kind": "shop",
+      "phone": "0985-51-4437"
+    },
+    {
+      "listNumber": 229,
+      "name": "上村銃砲火薬店",
+      "prefecture": "宮崎県",
+      "location": "日南市飫肥二丁目11番14号",
+      "address": "宮崎県日南市飫肥二丁目11番14号",
+      "kind": "shop",
+      "phone": "0987-25-1760"
+    },
+    {
+      "listNumber": 230,
+      "name": "(有)小泉銃砲火薬店",
+      "prefecture": "宮崎県",
+      "location": "延岡市大瀬町一丁目７番地の２",
+      "address": "宮崎県延岡市大瀬町一丁目７番地の２",
+      "kind": "shop",
+      "phone": "0982-32-3666"
+    },
+    {
+      "listNumber": 231,
+      "name": "(有)佐藤銃砲火薬店",
+      "prefecture": "宮崎県",
+      "location": "西臼杵郡高千穂町大字三田井779番地１",
+      "address": "宮崎県西臼杵郡高千穂町大字三田井779番地１",
+      "kind": "shop",
+      "phone": "0982-72-2505"
+    },
+    {
+      "listNumber": 232,
+      "name": "(有)遠山和伸商会",
+      "prefecture": "宮崎県",
+      "location": "宮崎市船塚一丁目26番地",
+      "address": "宮崎県宮崎市船塚一丁目26番地",
+      "kind": "shop",
+      "phone": "0985-22-2840"
+    },
+    {
+      "listNumber": 233,
+      "name": "(有)仁岸銃砲火薬店",
+      "prefecture": "宮崎県",
+      "location": "小林市大字細野2148番地２",
+      "address": "宮崎県小林市大字細野2148番地２",
+      "kind": "shop",
+      "phone": "0984-22-2572"
+    },
+    {
+      "listNumber": 234,
+      "name": "秋本銃砲火薬店",
+      "prefecture": "宮崎県",
+      "location": "えびの市大字向江965番地",
+      "address": "宮崎県えびの市大字向江965番地",
+      "kind": "shop",
+      "phone": "0984-37-1134"
+    },
+    {
+      "listNumber": 235,
+      "name": "(有)石川銃砲火薬店",
+      "prefecture": "宮崎県",
+      "location": "日向市中町10番地",
+      "address": "宮崎県日向市中町10番地",
+      "kind": "shop",
+      "phone": "0982-52-2437"
+    },
+    {
+      "listNumber": 236,
+      "name": "(株)井上煙火",
+      "prefecture": "宮崎県",
+      "location": "都城市松元町７街区６号",
+      "address": "宮崎県都城市松元町７街区６号",
+      "kind": "shop",
+      "phone": "0986-22-2568"
+    },
+    {
+      "listNumber": 237,
+      "name": "水間銃砲火薬店",
+      "prefecture": "宮崎県",
+      "location": "宮崎市高岡町五町198番地",
+      "address": "宮崎県宮崎市高岡町五町198番地",
+      "kind": "shop",
+      "phone": "0985-82-0210"
+    },
+    {
+      "listNumber": 331,
+      "name": "(有)柿薗花火",
+      "prefecture": "宮崎県",
+      "location": "都城市蔵原町5街区11号",
+      "address": "宮崎県都城市蔵原町5街区11号",
+      "kind": "shop",
+      "phone": "0986-22-0001"
+    },
+    {
+      "listNumber": 332,
+      "name": "村上銃砲火薬店",
+      "prefecture": "宮崎県",
+      "location": "延岡市高千穂通3799番地",
+      "address": "宮崎県延岡市高千穂通3799番地",
+      "kind": "shop",
+      "phone": "0982-32-5163"
+    },
+    {
+      "listNumber": 238,
+      "name": "(有)池増銃砲火薬",
+      "prefecture": "鹿児島県",
+      "location": "鹿児島市喜入中名町867番地７",
+      "address": "鹿児島県鹿児島市喜入中名町867番地７",
+      "kind": "shop",
+      "phone": "0993-45-0430"
+    },
+    {
+      "listNumber": 239,
+      "name": "王子産業(株)大隅銃砲火薬店",
+      "prefecture": "鹿児島県",
+      "location": "鹿屋市白崎町１番23号",
+      "address": "鹿児島県鹿屋市白崎町１番23号",
+      "kind": "shop",
+      "phone": "0994-43-2709"
+    },
+    {
+      "listNumber": 240,
+      "name": "(有)サツマ火薬銃砲販売所",
+      "prefecture": "鹿児島県",
+      "location": "鹿児島市新屋敷町21番６号",
+      "address": "鹿児島県鹿児島市新屋敷町21番６号",
+      "kind": "shop",
+      "phone": "099-222-3398"
+    },
+    {
+      "listNumber": 241,
+      "name": "杉谷火薬店",
+      "prefecture": "鹿児島県",
+      "location": "出水市西出水町1664番地",
+      "address": "鹿児島県出水市西出水町1664番地",
+      "kind": "shop",
+      "phone": "0996-62-0732"
+    },
+    {
+      "listNumber": 242,
+      "name": "(有)川内火薬店",
+      "prefecture": "鹿児島県",
+      "location": "薩摩川内市西開聞町７番22号",
+      "address": "鹿児島県薩摩川内市西開聞町７番22号",
+      "kind": "shop",
+      "phone": "0996-23-4667"
+    },
+    {
+      "listNumber": 243,
+      "name": "（株）松浦",
+      "prefecture": "鹿児島県",
+      "location": "西之表市西町64番地",
+      "address": "鹿児島県西之表市西町64番地",
+      "kind": "shop",
+      "phone": "0997-22-0025"
+    },
+    {
+      "listNumber": 244,
+      "name": "ザ・テラスホテルズ(株)コクワ流通サービ スカンパニー コクワ火薬 火薬販売課",
+      "prefecture": "沖縄県",
+      "location": "名護市字喜瀬1808番地",
+      "address": "沖縄県名護市字喜瀬1808番地",
+      "kind": "shop",
+      "phone": "098-898-1363"
+    },
+    {
+      "listNumber": 245,
+      "name": "(株)南興",
+      "prefecture": "沖縄県",
+      "location": "那覇市首里石嶺町二丁目239番地",
+      "address": "沖縄県那覇市首里石嶺町二丁目239番地",
+      "kind": "shop",
+      "phone": "098-884-2574"
+    },
+    {
+      "listNumber": 333,
+      "name": "(株)八重山銃砲",
+      "prefecture": "沖縄県",
+      "location": "石垣市美崎町８番地１２",
+      "address": "沖縄県石垣市美崎町８番地１２",
+      "kind": "shop",
+      "phone": "0980-82-0655"
+    }
+  ]
+}

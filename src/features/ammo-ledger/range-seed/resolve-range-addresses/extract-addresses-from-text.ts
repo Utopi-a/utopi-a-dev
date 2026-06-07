@@ -28,7 +28,7 @@ function decodeHtmlEntities({ value }: { value: string }): string {
 function cleanAddress({ value }: { value: string }): string {
   return decodeHtmlEntities({ value })
     .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
+    .replace(/\s+/g, "")
     .replace(/[;；].*$/, "")
     .replace(/TEL.*$/i, "")
     .replace(/電話.*$/, "")
@@ -131,6 +131,10 @@ function collectMatches({
   return matches;
 }
 
+function stripHtmlTags({ value }: { value: string }): string {
+  return value.replace(/<[^>]+>/g, " ");
+}
+
 export function extractAddressesFromText({
   text,
   location,
@@ -142,7 +146,9 @@ export function extractAddressesFromText({
   name: string;
   phone: string | null;
 }): ExtractedAddress[] {
-  const decoded = decodeHtmlEntities({ value: text });
+  const decoded = stripHtmlTags({
+    value: decodeHtmlEntities({ value: text }),
+  });
   const candidates = [
     ...collectMatches({
       pattern: ADDRESS_WITH_POSTAL_PATTERN,

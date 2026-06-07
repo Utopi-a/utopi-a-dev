@@ -1,13 +1,13 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { COUNTERPARTY_SEED_DATA_DIR, NIKKAREN_TRADERS_FILE } from "../seed-data-paths";
 import { extractPdfText } from "./extract-pdf-text";
 import { extractPublishedOn, parseTraderListText } from "./parse-trader-list-text";
 import type { ScrapedGunShopDataset } from "./scraped-gun-shop";
 
 const SOURCE_URL = "https://www.nikkaren.jp/pdf/trader_list.pdf";
-const OUTPUT_DIR = path.join(process.cwd(), "tmp", "gun-shops");
-const OUTPUT_FILE = path.join(OUTPUT_DIR, "nikkaren-traders.json");
+const OUTPUT_FILE = NIKKAREN_TRADERS_FILE;
 
 async function fetchPdf({ url }: { url: string }): Promise<Buffer> {
   const response = await fetch(url, {
@@ -41,7 +41,7 @@ export async function scrapeNikkarenTraders(): Promise<ScrapedGunShopDataset> {
 async function main() {
   const dataset = await scrapeNikkarenTraders();
 
-  await mkdir(OUTPUT_DIR, { recursive: true });
+  await mkdir(COUNTERPARTY_SEED_DATA_DIR, { recursive: true });
   await writeFile(OUTPUT_FILE, `${JSON.stringify(dataset, null, 2)}\n`, "utf8");
 
   console.log(`取得件数: ${dataset.count}`);

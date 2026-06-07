@@ -1,6 +1,8 @@
 import { pickBestAddress } from "./extract-addresses-from-text";
 import { normalizePrefecture } from "./normalize-prefecture";
 
+const BLOCKED_PAGE_PATTERN = /ご覧になろうとしているページは現在表示できません/;
+
 function buildSearchQuery({
   name,
   prefecture,
@@ -30,8 +32,7 @@ export async function searchYahooAddress({
 
   const response = await fetch(url, {
     headers: {
-      "User-Agent":
-        "Mozilla/5.0 (compatible; utopi-a-dev-range-seed/1.0; +https://example.com/bot)",
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
     },
     signal: AbortSignal.timeout(15_000),
   });
@@ -41,6 +42,10 @@ export async function searchYahooAddress({
   }
 
   const html = await response.text();
+  if (BLOCKED_PAGE_PATTERN.test(html)) {
+    return null;
+  }
+
   const best = pickBestAddress({
     text: html,
     location,

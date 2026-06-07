@@ -35,4 +35,15 @@ describe("pickBestAddress", () => {
 
     expect(result?.address).toBe("北海道札幌市南区豊滝517");
   });
+
+  it("HTMLタグで分割されたYahoo検索結果から住所を抽出する", () => {
+    const result = pickBestAddress({
+      text: "〒989-3212 <b>宮城県仙台市青葉区</b>芋沢字権現森山47. TEL, 022-394-2392",
+      location: "仙台市青葉区",
+      name: "仙台綜合",
+      phone: "022-394-2392",
+    });
+
+    expect(result?.address).toBe("宮城県仙台市青葉区芋沢字権現森山47");
+  });
 });

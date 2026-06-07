@@ -23,7 +23,7 @@ export type ScrapedRange = {
   /** 公式サイト URL（あれば） */
   websiteUrl: string | null;
   /** 住所の取得元。未解決時は null */
-  addressSource?: "website" | "yahoo_search" | null;
+  addressSource?: "sportsgun" | "nikkaren" | "website" | "yahoo_search" | "partial_location" | null;
 };
 
 export type ScrapedRangeDataset = {

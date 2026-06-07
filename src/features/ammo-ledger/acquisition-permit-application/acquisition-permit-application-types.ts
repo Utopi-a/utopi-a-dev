@@ -32,23 +32,3 @@ export function formatJapaneseDate({ value }: { value: string }): string {
   const [year, month, day] = value.split("-");
   return `${year}年${Number(month)}月${Number(day)}日`;
 }
-
-export function formatDatePeriodParts({ value }: { value: string }): {
-  year: string;
-  month: string;
-  period: string;
-} {
-  const [year, month, day] = value.split("-").map(Number);
-  let period = "下旬";
-  if (day <= 10) {
-    period = "上旬";
-  } else if (day <= 20) {
-    period = "中旬";
-  }
-
-  return {
-    year: String(year),
-    month: String(month),
-    period,
-  };
-}

@@ -31,7 +31,7 @@ describe("buildConsumptionPlan", () => {
     expect(plan.totalAcquisition).toBe(5000);
     expect(plan.totalConsumption).toBe(5000);
     expect(plan.peakHomeStock).toBeLessThanOrEqual(800);
-    expect(plan.rows.length).toBeGreaterThan(0);
+    expect(plan.rows.length).toBeLessThan(30);
     expect(plan.rows.every((row) => row.acquisitionQuantity % 250 === 0)).toBe(true);
     expect(
       plan.rows.every((row) => row.consumptionQuantity === 0 || row.consumptionQuantity % 25 === 0),

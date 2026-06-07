@@ -50,7 +50,9 @@ export function AcquisitionPermitApplicationPage({
               }
 
               const y = repeatingRows.startY + rowNumber * repeatingRows.rowHeight;
-              const rowKey = row.rowIndex ?? `${rowNumber}-${row.values.date ?? index}`;
+              const rowKey =
+                row.rowIndex ??
+                `${rowNumber}-${row.values.year ?? ""}-${row.values.month ?? ""}-${row.values.period ?? index}`;
 
               return (
                 <Fragment key={rowKey}>

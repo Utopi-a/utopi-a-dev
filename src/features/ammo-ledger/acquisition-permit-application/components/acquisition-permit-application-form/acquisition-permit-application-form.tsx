@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,9 +10,18 @@ import type { ammoGun } from "@/db/schema/ammo-ledger";
 import type { AcquisitionPermitApplicationPayload } from "@/features/ammo-ledger/acquisition-permit-application/acquisition-permit-application-types";
 import { saveAcquisitionPermitApplicationPayload } from "@/features/ammo-ledger/acquisition-permit-application/application-session/application-session";
 import { ConsumptionPlanPreview } from "@/features/ammo-ledger/acquisition-permit-application/components/consumption-plan-preview/consumption-plan-preview";
+import {
+  buildRangeAllocationsFromRows,
+  ConsumptionPlanRangeAllocationList,
+  createInitialRangeAllocationRows,
+  type RangeAllocationRowState,
+} from "@/features/ammo-ledger/acquisition-permit-application/components/consumption-plan-range-allocation-list/consumption-plan-range-allocation-list";
 import { buildConsumptionPlan } from "@/features/ammo-ledger/acquisition-permit-application/consumption-plan/build-consumption-plan/build-consumption-plan";
 import type { ConsumptionPlan } from "@/features/ammo-ledger/acquisition-permit-application/consumption-plan/consumption-plan-types";
-import type { MasterPickerData } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
+import type {
+  MasterPickerData,
+  PickerMasterEntry,
+} from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
@@ -31,18 +40,12 @@ import {
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
 
-type RangeOption = {
-  id: string;
-  name: string;
-  address: string;
-};
-
 type AcquisitionPermitApplicationFormProps = {
   ownerName: string;
   ownerAddress: string;
   currentHomeStock: number;
   guns: (typeof ammoGun.$inferSelect)[];
-  ranges: RangeOption[];
+  rangePickerData: MasterPickerData;
   counterpartyPickerData: MasterPickerData;
 };
 
@@ -62,7 +65,7 @@ export function AcquisitionPermitApplicationForm({
   ownerAddress,
   currentHomeStock,
   guns,
-  ranges,
+  rangePickerData,
   counterpartyPickerData,
 }: AcquisitionPermitApplicationFormProps) {
   const router = useRouter();
@@ -86,26 +89,24 @@ export function AcquisitionPermitApplicationForm({
   const [selectedGunIds, setSelectedGunIds] = useState<string[]>(
     guns.length > 0 ? [guns[0].id] : [],
   );
-  const [counterpartyId, setCounterpartyId] = useState(
-    counterpartyPickerData.recent[0]?.id ?? counterpartyPickerData.registered[0]?.id ?? "",
+  const initialCounterpartyId =
+    counterpartyPickerData.recent[0]?.id ?? counterpartyPickerData.registered[0]?.id ?? "";
+
+  const [counterpartyId, setCounterpartyId] = useState(initialCounterpartyId);
+  const [selectedCounterparty, setSelectedCounterparty] = useState<PickerMasterEntry | null>(() =>
+    findPickerMaster({
+      masterId: initialCounterpartyId,
+      pickerData: counterpartyPickerData,
+    }),
   );
-  const [primaryRangeId, setPrimaryRangeId] = useState(ranges[0]?.id ?? "");
-  const [secondaryRangeId, setSecondaryRangeId] = useState(ranges[1]?.id ?? "");
-  const [primaryRangeWeight, setPrimaryRangeWeight] = useState("2");
-  const [secondaryRangeWeight, setSecondaryRangeWeight] = useState("1");
+  const [rangeAllocationRows, setRangeAllocationRows] = useState<RangeAllocationRowState[]>(() =>
+    createInitialRangeAllocationRows({ rangePickerData }),
+  );
   const [consumptionPlan, setConsumptionPlan] = useState<ConsumptionPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const selectedGuns = guns.filter((gun) => selectedGunIds.includes(gun.id));
   const gunTypeAndCaliber = selectedGuns.map((gun) => `${gun.gunType} ${gun.caliber}`).join("、");
-
-  const counterparty = useMemo(() => {
-    const registered = counterpartyPickerData.registered.find((item) => item.id === counterpartyId);
-    if (registered) {
-      return registered;
-    }
-    return counterpartyPickerData.recent.find((item) => item.id === counterpartyId) ?? null;
-  }, [counterpartyId, counterpartyPickerData]);
 
   function handleValidFromChange(value: string) {
     setValidFrom(value);
@@ -118,15 +119,22 @@ export function AcquisitionPermitApplicationForm({
     );
   }
 
+  function handleCounterpartyChange({ nextCounterpartyId }: { nextCounterpartyId: string }) {
+    setCounterpartyId(nextCounterpartyId);
+    const found = findPickerMaster({
+      masterId: nextCounterpartyId,
+      pickerData: counterpartyPickerData,
+    });
+    if (found) {
+      setSelectedCounterparty(found);
+    }
+  }
+
   function handleGeneratePlan() {
     setError(null);
     const quantity = Number(requestedQuantity) || 0;
-    const rangeAllocations = buildRangeAllocations({
-      ranges,
-      primaryRangeId,
-      secondaryRangeId,
-      primaryRangeWeight: Number(primaryRangeWeight) || 1,
-      secondaryRangeWeight: Number(secondaryRangeWeight) || 0,
+    const rangeAllocations = buildRangeAllocationsFromRows({
+      rows: rangeAllocationRows,
       permitPurpose,
     });
 
@@ -135,7 +143,7 @@ export function AcquisitionPermitApplicationForm({
       return;
     }
 
-    if (!counterparty) {
+    if (!selectedCounterparty) {
       setError("譲渡者（購入先）を選んでください");
       return;
     }
@@ -146,8 +154,8 @@ export function AcquisitionPermitApplicationForm({
       periodTo: validTo,
       currentHomeStock: Number(homeStock) || 0,
       rangeAllocations,
-      counterpartyName: counterparty.name,
-      counterpartyAddress: counterparty.address,
+      counterpartyName: selectedCounterparty.name,
+      counterpartyAddress: selectedCounterparty.address,
     });
 
     setConsumptionPlan(plan);
@@ -161,7 +169,7 @@ export function AcquisitionPermitApplicationForm({
       return;
     }
 
-    if (!counterparty) {
+    if (!selectedCounterparty) {
       setError("譲渡者（購入先）を選んでください");
       return;
     }
@@ -183,8 +191,8 @@ export function AcquisitionPermitApplicationForm({
       validFrom,
       validTo,
       storageLocation,
-      counterpartyName: counterparty.name,
-      counterpartyAddress: counterparty.address,
+      counterpartyName: selectedCounterparty.name,
+      counterpartyAddress: selectedCounterparty.address,
       consumptionPlan,
     };
 
@@ -290,8 +298,8 @@ export function AcquisitionPermitApplicationForm({
               <Input
                 id="requested-quantity"
                 type="number"
-                min={25}
-                step={25}
+                min={250}
+                step={250}
                 value={requestedQuantity}
                 onChange={(event) => setRequestedQuantity(event.target.value)}
               />
@@ -384,7 +392,8 @@ export function AcquisitionPermitApplicationForm({
           id="counterparty"
           label="銃砲火薬店"
           value={counterpartyId}
-          onChange={setCounterpartyId}
+          onChange={(nextCounterpartyId) => handleCounterpartyChange({ nextCounterpartyId })}
+          onMasterSelect={setSelectedCounterparty}
           catalogKind="gun_shop"
           pickerData={counterpartyPickerData}
           sheetTitle="購入先を選ぶ"
@@ -395,61 +404,14 @@ export function AcquisitionPermitApplicationForm({
       <AmmoLedgerPanel title="消費（購入）計画">
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            購入は250発単位、消費は25発単位で期間内に振り分けます。自宅保管は800発を超えないよう調整します。
+            購入は250・500・750発…（250の倍数）、消費は25・50・75発…（25の倍数）で期間内にまとめて振り分けます。自宅保管は800発を超えないよう調整します。
           </p>
 
-          {ranges.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              射撃場が未登録です。
-              <Link href="/lab/ammo-ledger/settings/ranges" className="underline">
-                射撃場を登録
-              </Link>
-            </p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FieldSelect
-                id="primary-range"
-                label="射撃場（主）"
-                value={primaryRangeId}
-                onChange={setPrimaryRangeId}
-                options={ranges.map((range) => ({ value: range.id, label: range.name }))}
-                required
-                placeholder=""
-              />
-              <div className="space-y-2">
-                <Label htmlFor="primary-range-weight">配分 weight</Label>
-                <Input
-                  id="primary-range-weight"
-                  type="number"
-                  min={1}
-                  value={primaryRangeWeight}
-                  onChange={(event) => setPrimaryRangeWeight(event.target.value)}
-                />
-              </div>
-              <FieldSelect
-                id="secondary-range"
-                label="射撃場（副）"
-                value={secondaryRangeId}
-                onChange={setSecondaryRangeId}
-                options={[
-                  { value: "", label: "なし" },
-                  ...ranges.map((range) => ({ value: range.id, label: range.name })),
-                ]}
-                placeholder=""
-              />
-              <div className="space-y-2">
-                <Label htmlFor="secondary-range-weight">配分 weight</Label>
-                <Input
-                  id="secondary-range-weight"
-                  type="number"
-                  min={0}
-                  value={secondaryRangeWeight}
-                  onChange={(event) => setSecondaryRangeWeight(event.target.value)}
-                  disabled={!secondaryRangeId}
-                />
-              </div>
-            </div>
-          )}
+          <ConsumptionPlanRangeAllocationList
+            rows={rangeAllocationRows}
+            onRowsChange={setRangeAllocationRows}
+            rangePickerData={rangePickerData}
+          />
 
           <Button type="button" variant="outline" onClick={handleGeneratePlan}>
             消費計画を生成
@@ -476,44 +438,20 @@ export function AcquisitionPermitApplicationForm({
   );
 }
 
-function buildRangeAllocations({
-  ranges,
-  primaryRangeId,
-  secondaryRangeId,
-  primaryRangeWeight,
-  secondaryRangeWeight,
-  permitPurpose,
+function findPickerMaster({
+  masterId,
+  pickerData,
 }: {
-  ranges: RangeOption[];
-  primaryRangeId: string;
-  secondaryRangeId: string;
-  primaryRangeWeight: number;
-  secondaryRangeWeight: number;
-  permitPurpose: AcquisitionPermitPurpose;
-}) {
-  const allocations = [];
-
-  const primary = ranges.find((range) => range.id === primaryRangeId);
-  if (primary && primaryRangeWeight > 0) {
-    allocations.push({
-      rangeId: primary.id,
-      rangeName: primary.name,
-      rangeAddress: primary.address,
-      purpose: permitPurpose,
-      weight: primaryRangeWeight,
-    });
+  masterId: string;
+  pickerData: MasterPickerData;
+}): PickerMasterEntry | null {
+  if (!masterId) {
+    return null;
   }
 
-  const secondary = ranges.find((range) => range.id === secondaryRangeId);
-  if (secondary && secondaryRangeId && secondaryRangeWeight > 0) {
-    allocations.push({
-      rangeId: secondary.id,
-      rangeName: secondary.name,
-      rangeAddress: secondary.address,
-      purpose: permitPurpose,
-      weight: secondaryRangeWeight,
-    });
-  }
-
-  return allocations;
+  return (
+    pickerData.recent.find((item) => item.id === masterId) ??
+    pickerData.registered.find((item) => item.id === masterId) ??
+    null
+  );
 }

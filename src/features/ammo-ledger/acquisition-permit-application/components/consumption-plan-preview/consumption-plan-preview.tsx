@@ -1,6 +1,7 @@
 "use client";
 
 import type { ConsumptionPlan } from "../../consumption-plan/consumption-plan-types";
+import { formatPlanPeriodLabel } from "../../consumption-plan/plan-period/plan-period";
 
 type ConsumptionPlanPreviewProps = {
   plan: ConsumptionPlan | null;
@@ -35,7 +36,7 @@ export function ConsumptionPlanPreview({ plan }: ConsumptionPlanPreviewProps) {
             <thead className="bg-muted/40 text-left">
               <tr>
                 <th className="px-3 py-2">#</th>
-                <th className="px-3 py-2">日付</th>
+                <th className="px-3 py-2">予定時期</th>
                 <th className="px-3 py-2">種別</th>
                 <th className="px-3 py-2">場所</th>
                 <th className="px-3 py-2 text-right">購入</th>
@@ -46,7 +47,9 @@ export function ConsumptionPlanPreview({ plan }: ConsumptionPlanPreviewProps) {
               {plan.rows.map((row) => (
                 <tr key={row.rowIndex} className="border-t border-border/50">
                   <td className="px-3 py-2">{row.rowIndex}</td>
-                  <td className="px-3 py-2 whitespace-nowrap">{row.date}</td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {formatPlanPeriodLabel({ value: row.scheduledPeriod })}
+                  </td>
                   <td className="px-3 py-2">{row.isAcquisition ? "購入" : "消費"}</td>
                   <td className="px-3 py-2">{row.locationName}</td>
                   <td className="px-3 py-2 text-right">

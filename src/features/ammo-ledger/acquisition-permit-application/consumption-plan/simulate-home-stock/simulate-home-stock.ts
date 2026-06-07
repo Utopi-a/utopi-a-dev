@@ -1,4 +1,5 @@
 import type { AcquisitionEvent, ConsumptionEvent } from "../consumption-plan-types";
+import { comparePlanPeriod, type PlanPeriod } from "../plan-period/plan-period";
 
 export type HomeStockSimulation = {
   peakHomeStock: number;
@@ -6,7 +7,7 @@ export type HomeStockSimulation = {
 };
 
 export type HomeStockTimelineEntry = {
-  date: string;
+  scheduledPeriod: PlanPeriod;
   stockAfter: number;
   kind: "acquisition" | "consumption";
   quantity: number;
@@ -46,8 +47,12 @@ export function rebalanceConsumptionsForHomeStorage({
   acquisitions: AcquisitionEvent[];
   consumptions: ConsumptionEvent[];
 }): ConsumptionEvent[] {
-  const sortedAcquisitions = [...acquisitions].sort((a, b) => a.date.localeCompare(b.date));
-  const mutableConsumptions = [...consumptions].sort((a, b) => a.date.localeCompare(b.date));
+  const sortedAcquisitions = [...acquisitions].sort((a, b) =>
+    comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod }),
+  );
+  const mutableConsumptions = [...consumptions].sort((a, b) =>
+    comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod }),
+  );
 
   for (const acquisition of sortedAcquisitions) {
     let simulation = simulateHomeStock({
@@ -58,7 +63,7 @@ export function rebalanceConsumptionsForHomeStorage({
 
     while (simulation.peakHomeStock > homeStorageLimit) {
       const moved = pullForwardConsumption({
-        acquisitionDate: acquisition.date,
+        acquisitionPeriod: acquisition.scheduledPeriod,
         consumptions: mutableConsumptions,
       });
 
@@ -74,29 +79,33 @@ export function rebalanceConsumptionsForHomeStorage({
     }
   }
 
-  return mutableConsumptions.sort((a, b) => a.date.localeCompare(b.date));
+  return mutableConsumptions.sort((a, b) =>
+    comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod }),
+  );
 }
 
 function pullForwardConsumption({
-  acquisitionDate,
+  acquisitionPeriod,
   consumptions,
 }: {
-  acquisitionDate: string;
+  acquisitionPeriod: PlanPeriod;
   consumptions: ConsumptionEvent[];
 }): boolean {
   const futureIndex = [...consumptions]
     .map((event, index) => ({ event, index }))
     .reverse()
-    .find(({ event }) => event.date > acquisitionDate)?.index;
+    .find(
+      ({ event }) => comparePlanPeriod({ a: event.scheduledPeriod, b: acquisitionPeriod }) > 0,
+    )?.index;
 
   if (futureIndex === undefined) {
     return false;
   }
 
   const [event] = consumptions.splice(futureIndex, 1);
-  event.date = acquisitionDate;
+  event.scheduledPeriod = acquisitionPeriod;
   consumptions.push(event);
-  consumptions.sort((a, b) => a.date.localeCompare(b.date));
+  consumptions.sort((a, b) => comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod }));
   return true;
 }
 
@@ -117,9 +126,9 @@ function buildTimeline({
     ...acquisitions.map((event) => ({ kind: "acquisition" as const, ...event })),
     ...consumptions.map((event) => ({ kind: "consumption" as const, ...event })),
   ].sort((a, b) => {
-    const byDate = a.date.localeCompare(b.date);
-    if (byDate !== 0) {
-      return byDate;
+    const byPeriod = comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod });
+    if (byPeriod !== 0) {
+      return byPeriod;
     }
     if (a.kind === b.kind) {
       return 0;
@@ -138,7 +147,7 @@ function buildTimeline({
     }
 
     timeline.push({
-      date: event.date,
+      scheduledPeriod: event.scheduledPeriod,
       stockAfter: stock,
       kind: event.kind,
       quantity: event.quantity,

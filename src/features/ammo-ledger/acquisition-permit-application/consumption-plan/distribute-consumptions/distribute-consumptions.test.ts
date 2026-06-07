@@ -19,7 +19,7 @@ const ranges = [
 ];
 
 describe("distributeConsumptions", () => {
-  it("25発単位で射撃場 weight に比例配分する", () => {
+  it("25倍数のまとまりで射撃場 weight に比例配分する", () => {
     const events = distributeConsumptions({
       requestedQuantity: 300,
       periodFrom: "2026-04-01",
@@ -28,8 +28,9 @@ describe("distributeConsumptions", () => {
       consumptionUnit: 25,
     });
 
-    expect(events).toHaveLength(12);
+    expect(events.length).toBeLessThanOrEqual(2);
     expect(events.reduce((sum, event) => sum + event.quantity, 0)).toBe(300);
+    expect(events.every((event) => event.quantity % 25 === 0)).toBe(true);
 
     const byRange = events.reduce<Record<string, number>>((acc, event) => {
       acc[event.rangeId] = (acc[event.rangeId] ?? 0) + event.quantity;

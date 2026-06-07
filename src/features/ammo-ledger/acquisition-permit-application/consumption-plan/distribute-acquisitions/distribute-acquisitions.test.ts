@@ -1,29 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { distributeAcquisitions, distributeDatesEvenly } from "./distribute-acquisitions";
-
-describe("distributeDatesEvenly", () => {
-  it("1件なら開始日を返す", () => {
-    expect(
-      distributeDatesEvenly({
-        from: "2026-04-01",
-        to: "2027-03-31",
-        count: 1,
-      }),
-    ).toEqual(["2026-04-01"]);
-  });
-
-  it("期間内に均等配置する", () => {
-    const dates = distributeDatesEvenly({
-      from: "2026-04-01",
-      to: "2026-04-03",
-      count: 3,
-    });
-    expect(dates).toEqual(["2026-04-01", "2026-04-02", "2026-04-03"]);
-  });
-});
+import { distributeAcquisitions } from "./distribute-acquisitions";
 
 describe("distributeAcquisitions", () => {
-  it("5000発を250発単位で20回に分割する", () => {
+  it("5000発を250倍数の少数回にまとめる", () => {
     const events = distributeAcquisitions({
       requestedQuantity: 5000,
       periodFrom: "2026-04-01",
@@ -31,22 +10,25 @@ describe("distributeAcquisitions", () => {
       purchaseUnit: 250,
     });
 
-    expect(events).toHaveLength(20);
+    expect(events.length).toBeLessThan(20);
     expect(events.reduce((sum, event) => sum + event.quantity, 0)).toBe(5000);
-    expect(events.every((event) => event.quantity === 250)).toBe(true);
+    expect(events.every((event) => event.quantity % 250 === 0)).toBe(true);
+    expect(events.some((event) => event.quantity >= 500)).toBe(true);
   });
 
-  it("端数を最後の1回に載せる", () => {
+  it("500発なら1回の購入にまとめる", () => {
     const events = distributeAcquisitions({
-      requestedQuantity: 300,
+      requestedQuantity: 500,
       periodFrom: "2026-04-01",
       periodTo: "2026-06-30",
       purchaseUnit: 250,
     });
 
     expect(events).toEqual([
-      { date: "2026-04-01", quantity: 250 },
-      { date: "2026-06-30", quantity: 50 },
+      {
+        scheduledPeriod: { year: 2026, month: 4, period: "上旬" },
+        quantity: 500,
+      },
     ]);
   });
 });

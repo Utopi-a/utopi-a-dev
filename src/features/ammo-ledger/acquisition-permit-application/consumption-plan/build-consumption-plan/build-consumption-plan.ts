@@ -8,6 +8,7 @@ import type {
 } from "../consumption-plan-types";
 import { distributeAcquisitions } from "../distribute-acquisitions/distribute-acquisitions";
 import { distributeConsumptions } from "../distribute-consumptions/distribute-consumptions";
+import { comparePlanPeriod } from "../plan-period/plan-period";
 import {
   rebalanceConsumptionsForHomeStorage,
   simulateHomeStock,
@@ -40,10 +41,10 @@ export function buildConsumptionPlan({
     };
   }
 
-  if (requestedQuantity % consumptionUnit !== 0) {
+  if (requestedQuantity % purchaseUnit !== 0) {
     return {
       rows: [],
-      warnings: [`申請数量は ${consumptionUnit} 発単位で指定してください`],
+      warnings: [`申請数量は ${purchaseUnit} 発単位（250, 500, 750…）で指定してください`],
       peakHomeStock: currentHomeStock,
       totalAcquisition: 0,
       totalConsumption: 0,
@@ -123,7 +124,7 @@ function mergeEventsIntoRows({
   for (const acquisition of acquisitions) {
     rows.push({
       rowIndex: 0,
-      date: acquisition.date,
+      scheduledPeriod: acquisition.scheduledPeriod,
       locationName: counterpartyName,
       locationAddress: counterpartyAddress,
       purpose: consumptions[0]?.purpose ?? "標的射撃",
@@ -136,7 +137,7 @@ function mergeEventsIntoRows({
   for (const consumption of consumptions) {
     rows.push({
       rowIndex: 0,
-      date: consumption.date,
+      scheduledPeriod: consumption.scheduledPeriod,
       locationName: consumption.rangeName,
       locationAddress: consumption.rangeAddress,
       purpose: consumption.purpose,
@@ -148,9 +149,9 @@ function mergeEventsIntoRows({
 
   return rows
     .sort((a, b) => {
-      const byDate = a.date.localeCompare(b.date);
-      if (byDate !== 0) {
-        return byDate;
+      const byPeriod = comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod });
+      if (byPeriod !== 0) {
+        return byPeriod;
       }
       if (a.isAcquisition && !b.isAcquisition) {
         return -1;

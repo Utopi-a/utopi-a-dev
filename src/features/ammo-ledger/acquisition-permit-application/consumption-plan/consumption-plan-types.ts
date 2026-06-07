@@ -1,4 +1,5 @@
 import type { AcquisitionPermitPurpose } from "@/features/ammo-ledger/schema/acquisition-permit-purpose-options";
+import type { PlanPeriod } from "./plan-period/plan-period";
 
 export type RangeAllocation = {
   rangeId: string;
@@ -9,12 +10,12 @@ export type RangeAllocation = {
 };
 
 export type AcquisitionEvent = {
-  date: string;
+  scheduledPeriod: PlanPeriod;
   quantity: number;
 };
 
 export type ConsumptionEvent = {
-  date: string;
+  scheduledPeriod: PlanPeriod;
   quantity: number;
   rangeId: string;
   rangeName: string;
@@ -24,7 +25,7 @@ export type ConsumptionEvent = {
 
 export type ConsumptionPlanRow = {
   rowIndex: number;
-  date: string;
+  scheduledPeriod: PlanPeriod;
   locationName: string;
   locationAddress: string;
   purpose: AcquisitionPermitPurpose;

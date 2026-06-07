@@ -1,4 +1,5 @@
 import type { ConsumptionPlanRow } from "../consumption-plan-types";
+import { formatPlanPeriodLabel } from "../plan-period/plan-period";
 
 export type ValidateConsumptionPlanInput = {
   rows: ConsumptionPlanRow[];
@@ -39,12 +40,12 @@ export function validateConsumptionPlan({
   for (const row of rows) {
     if (row.acquisitionQuantity > 0 && row.acquisitionQuantity % purchaseUnit !== 0) {
       warnings.push(
-        `${row.date} の譲受数量 ${row.acquisitionQuantity} は ${purchaseUnit} 発単位ではありません`,
+        `${formatPlanPeriodLabel({ value: row.scheduledPeriod })} の譲受数量 ${row.acquisitionQuantity} は ${purchaseUnit} 発単位ではありません`,
       );
     }
     if (row.consumptionQuantity > 0 && row.consumptionQuantity % consumptionUnit !== 0) {
       warnings.push(
-        `${row.date} の消費数量 ${row.consumptionQuantity} は ${consumptionUnit} 発単位ではありません`,
+        `${formatPlanPeriodLabel({ value: row.scheduledPeriod })} の消費数量 ${row.consumptionQuantity} は ${consumptionUnit} 発単位ではありません`,
       );
     }
   }

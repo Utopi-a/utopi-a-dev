@@ -1,5 +1,5 @@
 import type { AcquisitionPermitApplicationInput } from "../acquisition-permit-application-types";
-import { formatDatePeriodParts, formatJapaneseDate } from "../acquisition-permit-application-types";
+import { formatJapaneseDate } from "../acquisition-permit-application-types";
 import type { ConsumptionPlanRow } from "../consumption-plan/consumption-plan-types";
 import type {
   ApplicationFieldValues,
@@ -39,15 +39,14 @@ export function buildApplicationFieldValues({
   };
 
   const supplementRows = input.consumptionPlan.rows.map((row: ConsumptionPlanRow) => {
-    const dateParts = formatDatePeriodParts({ value: row.date });
     const purposeLabel = row.isAcquisition ? "購入" : row.purpose;
 
     return {
       rowIndex: row.rowIndex,
       values: {
-        year: dateParts.year,
-        month: dateParts.month,
-        period: dateParts.period,
+        year: String(row.scheduledPeriod.year),
+        month: String(row.scheduledPeriod.month),
+        period: row.scheduledPeriod.period,
         purchaseQuantity: row.acquisitionQuantity > 0 ? String(row.acquisitionQuantity) : "",
         consumptionQuantity: row.consumptionQuantity > 0 ? String(row.consumptionQuantity) : "",
         location: row.locationName,

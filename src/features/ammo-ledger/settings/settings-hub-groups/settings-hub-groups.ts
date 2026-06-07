@@ -54,8 +54,8 @@ export const settingsHubGroups = [
       },
       {
         href: "/lab/ammo-ledger/settings/counterparties/catalog",
-        label: "全国の銃砲店一覧",
-        description: "333件・県別表示・検索・お気に入り",
+        label: "全国の銃砲店・射撃場一覧",
+        description: "購入先として使える銃砲店・射撃場",
       },
     ],
   },

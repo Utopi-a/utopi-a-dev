@@ -26,6 +26,7 @@ type OpeningBalanceAmmoType = {
 type OpeningBalanceFormProps = {
   years: number[];
   initialYear: number;
+  initialPurpose: LedgerPurpose;
   ammoTypes: OpeningBalanceAmmoType[];
   snapshotsByPurpose: Record<LedgerPurpose, OpeningBalanceSnapshot>;
 };
@@ -46,6 +47,7 @@ function SectionHeading({ title, description }: { title: string; description: st
 export function OpeningBalanceForm({
   years,
   initialYear,
+  initialPurpose,
   ammoTypes,
   snapshotsByPurpose,
 }: OpeningBalanceFormProps) {
@@ -56,7 +58,11 @@ export function OpeningBalanceForm({
     setYear(initialYear);
   }, [initialYear]);
 
-  const [purpose, setPurpose] = useState<LedgerPurpose>("shooting");
+  const [purpose, setPurpose] = useState<LedgerPurpose>(initialPurpose);
+
+  useEffect(() => {
+    setPurpose(initialPurpose);
+  }, [initialPurpose]);
   const [permitBalance, setPermitBalance] = useState("");
   const [stockByAmmoType, setStockByAmmoType] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);

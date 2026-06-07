@@ -1,3 +1,5 @@
+export type CatalogSource = "gun_shop" | "range";
+
 export type CatalogEntry = {
   catalogId: string;
   name: string;
@@ -7,6 +9,7 @@ export type CatalogEntry = {
   phone: string | null;
   defaultPurpose?: string | null;
   kind?: "shop";
+  catalogSource?: CatalogSource;
 };
 
 export type PickerMasterEntry = {
@@ -28,4 +31,7 @@ export type MasterPickerData = {
   catalogByPrefecture: CatalogPrefectureGroup[];
   favoriteCatalogIds: string[];
   registeredCatalogIds: string[];
+  counterpartyIdByCatalogId?: Record<string, string>;
+  includesRangeCatalog?: boolean;
+  registeredRangeMasters?: PickerMasterEntry[];
 };

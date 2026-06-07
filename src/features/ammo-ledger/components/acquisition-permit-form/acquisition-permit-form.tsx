@@ -141,7 +141,7 @@ export function AcquisitionPermitForm() {
           onChange={(e) => setQuantity(e.target.value)}
         />
         <p className="text-xs text-muted-foreground">
-          1回の譲受許可で交付される数量です。帳簿の許可残数は消費に応じて減ります。
+          1回の譲受許可で交付される数量です。帳簿の許可残数は譲受に応じて減ります。
         </p>
       </div>
 

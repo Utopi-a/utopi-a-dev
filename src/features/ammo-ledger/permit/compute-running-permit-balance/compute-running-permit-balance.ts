@@ -15,7 +15,7 @@ type LedgerRow = {
   quantity: number;
 };
 
-const outboundCategories: LedgerCategory[] = ["consume", "transfer", "dispose", "manufacture"];
+const permitConsumingCategories: LedgerCategory[] = ["acquire"];
 
 function compareDate({ a, b }: { a: string; b: string }): number {
   return a.localeCompare(b);
@@ -53,7 +53,7 @@ export function computeRunningPermitBalance({
       eventIndex += 1;
     }
 
-    if (outboundCategories.includes(entry.category)) {
+    if (permitConsumingCategories.includes(entry.category)) {
       balance = Math.max(0, balance - entry.quantity);
     }
 
@@ -94,7 +94,7 @@ export function computeCurrentPermitBalance({
       eventIndex += 1;
     }
 
-    if (outboundCategories.includes(entry.category)) {
+    if (permitConsumingCategories.includes(entry.category)) {
       balance = Math.max(0, balance - entry.quantity);
     }
   }

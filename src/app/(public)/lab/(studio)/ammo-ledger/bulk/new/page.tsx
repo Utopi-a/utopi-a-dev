@@ -15,7 +15,7 @@ export default async function BulkNewPage() {
     listGuns({ userId: user.id }),
     listAmmoTypes({ userId: user.id }),
     buildRangePickerData({ userId: user.id }),
-    buildCounterpartyPickerData({ userId: user.id }),
+    buildCounterpartyPickerData({ userId: user.id, includeRangeCatalog: true }),
   ]);
 
   const defaultCounterpartyId =

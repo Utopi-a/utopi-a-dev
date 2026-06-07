@@ -1,5 +1,4 @@
 import { ChevronRightIcon } from "lucide-react";
-import type { ammoLedgerEntry } from "@/db/schema/ammo-ledger";
 import {
   isAmmoCarryoverEntry,
   LedgerCategoryBadge,
@@ -22,13 +21,7 @@ type LedgerEntryCardProps = {
   row: LedgerDisplayRow;
   permitBalance?: number;
   isHomeStorageExceeded?: boolean;
-  onSelect: ({
-    entry,
-    permitBalance,
-  }: {
-    entry: typeof ammoLedgerEntry.$inferSelect;
-    permitBalance?: number;
-  }) => void;
+  onSelect: ({ row, permitBalance }: { row: LedgerDisplayRow; permitBalance?: number }) => void;
 };
 
 function DetailLine({ label, value }: { label: string; value: string }) {
@@ -46,9 +39,15 @@ export function LedgerEntryCard({
   isHomeStorageExceeded = false,
   onSelect,
 }: LedgerEntryCardProps) {
+  const selectable = isDisplayRowSelectable({ row });
+
   if (row.kind === "permit_carryover") {
     return (
-      <div className="flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5">
+      <button
+        type="button"
+        onClick={() => onSelect({ row, permitBalance })}
+        className="flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5 text-left transition-colors hover:border-border hover:bg-muted/30 active:bg-muted/40"
+      >
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium tabular-nums">{row.occurredOn}</span>
@@ -57,18 +56,18 @@ export function LedgerEntryCard({
           <p className="font-medium leading-snug">{buildPermitCarryoverLabel()}</p>
           <DetailLine label="許可残数" value={formatPermitBalance({ balance: row.quantity })} />
         </div>
-      </div>
+        <ChevronRightIcon className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden />
+      </button>
     );
   }
 
   const entry = row.entry;
-  const selectable = isDisplayRowSelectable({ row });
 
   return (
     <button
       type="button"
       disabled={!selectable}
-      onClick={() => selectable && onSelect({ entry, permitBalance })}
+      onClick={() => selectable && onSelect({ row, permitBalance })}
       className={cn(
         "flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5 text-left transition-colors",
         selectable && "hover:border-border hover:bg-muted/30 active:bg-muted/40",

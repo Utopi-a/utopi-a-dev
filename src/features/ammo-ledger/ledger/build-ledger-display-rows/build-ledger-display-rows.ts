@@ -1,5 +1,4 @@
 import type { ammoLedgerEntry, ammoPermitEvent } from "@/db/schema/ammo-ledger";
-import { buildYearOpeningDay } from "@/features/ammo-ledger/opening-balance/build-year-day/build-year-day";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 
 export type LedgerDisplayRow =
@@ -86,7 +85,7 @@ export function resolveDisplayRowPermitBalance({
 }
 
 export function isDisplayRowSelectable({ row }: { row: LedgerDisplayRow }): boolean {
-  return row.kind === "entry";
+  return row.kind === "entry" || row.kind === "permit_carryover";
 }
 
 export function resolveDisplayRowId({ row }: { row: LedgerDisplayRow }): string {
@@ -95,8 +94,4 @@ export function resolveDisplayRowId({ row }: { row: LedgerDisplayRow }): string 
 
 export function buildPermitCarryoverLabel(): string {
   return "譲受許可";
-}
-
-export function isYearOpeningDay({ date }: { date: string }): boolean {
-  return date === buildYearOpeningDay({ year: Number(date.slice(0, 4)) });
 }

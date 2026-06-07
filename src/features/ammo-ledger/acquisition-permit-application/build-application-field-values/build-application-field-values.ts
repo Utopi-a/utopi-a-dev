@@ -5,6 +5,10 @@ import type {
   ApplicationFieldValues,
   SupplementRowFieldValues,
 } from "../form-template/form-template-types";
+import {
+  resolveSupplementRowLocationFields,
+  resolveSupplementRowMemoFields,
+} from "./resolve-supplement-row-field-values";
 
 export type BuiltApplicationFieldValues = {
   mainFields: ApplicationFieldValues;
@@ -67,10 +71,15 @@ export function buildApplicationFieldValues({
   };
 
   const supplementRows = input.consumptionPlan.rows.map((row: ConsumptionPlanRow) => {
-    const purposeLabel = row.isAcquisition ? "購入" : row.purpose;
-    const locationText = row.isAcquisition
-      ? row.locationName
-      : `${row.locationName}（${row.locationAddress}）`;
+    const locationFields = resolveSupplementRowLocationFields({
+      isAcquisition: row.isAcquisition,
+      locationName: row.locationName,
+      locationAddress: row.locationAddress,
+    });
+    const memoFields = resolveSupplementRowMemoFields({
+      purpose: row.purpose,
+      isAcquisition: row.isAcquisition,
+    });
 
     return {
       rowIndex: row.rowIndex,
@@ -80,8 +89,8 @@ export function buildApplicationFieldValues({
         period: row.scheduledPeriod.period,
         purchaseQuantity: row.acquisitionQuantity > 0 ? String(row.acquisitionQuantity) : "",
         consumptionQuantity: row.consumptionQuantity > 0 ? String(row.consumptionQuantity) : "",
-        location: locationText,
-        memo: purposeLabel,
+        ...locationFields,
+        ...memoFields,
       },
     };
   });

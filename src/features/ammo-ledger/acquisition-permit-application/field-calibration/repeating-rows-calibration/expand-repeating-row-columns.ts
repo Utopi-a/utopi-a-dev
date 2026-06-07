@@ -14,8 +14,12 @@ export function expandRepeatingRowColumnsToFields({
     x: column.x,
     y: repeatingRows.startY + (column.yOffset ?? 0),
     width: column.width,
+    height: column.height,
     fontSize: column.fontSize,
     align: column.align,
+    verticalAlign: column.verticalAlign,
+    fitText: column.fitText,
+    variant: column.variant,
   }));
 }
 

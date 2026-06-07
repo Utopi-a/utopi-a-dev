@@ -195,6 +195,20 @@ export function FieldCalibrationView() {
     [fields, repeatingRows, pageIndex],
   );
 
+  const calibrationPageFieldIdsKey = useMemo(
+    () => calibrationPageFields.map((field) => field.id).join("\0"),
+    [calibrationPageFields],
+  );
+
+  const orderedCalibrationPageFields = useMemo(() => {
+    const selectedIdSet = new Set(selectedFieldIds);
+    return [...calibrationPageFields].sort((left, right) => {
+      const leftSelected = selectedIdSet.has(left.id) ? 1 : 0;
+      const rightSelected = selectedIdSet.has(right.id) ? 1 : 0;
+      return leftSelected - rightSelected;
+    });
+  }, [calibrationPageFields, selectedFieldIds]);
+
   const allCalibrationFields = useMemo(
     () =>
       Array.from({ length: pageCount }, (_, index) =>
@@ -205,13 +219,26 @@ export function FieldCalibrationView() {
 
   useEffect(() => {
     setSelectedFieldIds((current) => {
-      const onPage = current.filter((id) => calibrationPageFields.some((field) => field.id === id));
+      const validIds = new Set(
+        calibrationPageFieldIdsKey.split("\0").filter((id) => id.length > 0),
+      );
+      const onPage = current.filter((id) => validIds.has(id));
       if (onPage.length > 0) {
+        if (
+          onPage.length === current.length &&
+          onPage.every((id, index) => id === current[index])
+        ) {
+          return current;
+        }
         return onPage;
       }
-      return calibrationPageFields[0] ? [calibrationPageFields[0].id] : [];
+      if (current.length === 0) {
+        return current;
+      }
+      const firstId = calibrationPageFieldIdsKey.split("\0")[0];
+      return firstId ? [firstId] : [];
     });
-  }, [calibrationPageFields]);
+  }, [calibrationPageFieldIdsKey]);
 
   const primaryFieldId = selectedFieldIds[selectedFieldIds.length - 1] ?? null;
   const selectedField =
@@ -810,16 +837,24 @@ export function FieldCalibrationView() {
                     type="number"
                     step={key === "maxRowsPerPage" ? 1 : 0.1}
                     value={repeatingRows[key]}
+                    onFocus={beginInteraction}
+                    onBlur={endInteraction}
                     onChange={(event) => {
                       const fallback = repeatingRows[key];
                       const parsed = parseNumberInput({ value: event.target.value, fallback });
                       replaceRepeatingRows({
-                        repeatingRows: {
-                          ...repeatingRows,
-                          [key]:
-                            key === "maxRowsPerPage"
-                              ? Math.max(1, Math.round(parsed))
-                              : roundMm({ value: parsed }),
+                        recordHistory: false,
+                        updater: (current) => {
+                          if (!current) {
+                            return current;
+                          }
+                          return {
+                            ...current,
+                            [key]:
+                              key === "maxRowsPerPage"
+                                ? Math.max(1, Math.round(parsed))
+                                : roundMm({ value: parsed }),
+                          };
                         },
                       });
                     }}
@@ -875,14 +910,14 @@ export function FieldCalibrationView() {
                               left: `${(column.x / template.pageWidthMm) * 100}%`,
                               top: `${((repeatingRows.startY + rowNumber * repeatingRows.rowHeight + (column.yOffset ?? 0)) / template.pageHeightMm) * 100}%`,
                               width: `${(column.width / template.pageWidthMm) * 100}%`,
-                              height: `${((column.fontSize * 1.4) / template.pageHeightMm) * 100}%`,
+                              height: `${((column.height ?? column.fontSize * 1.4) / template.pageHeightMm) * 100}%`,
                             }}
                           />
                         ));
                       },
                     )
                   : null}
-                {calibrationPageFields.map((field) => (
+                {orderedCalibrationPageFields.map((field) => (
                   <CalibrationFieldOverlay
                     key={field.id}
                     field={field}
@@ -966,6 +1001,8 @@ export function FieldCalibrationView() {
                     min={0.5}
                     className="h-8"
                     value={ptFromMm({ mm: selectedField.fontSize })}
+                    onFocus={beginInteraction}
+                    onBlur={endInteraction}
                     onChange={(event) => {
                       const pt = parseNumberInput({
                         value: event.target.value,
@@ -973,6 +1010,7 @@ export function FieldCalibrationView() {
                       });
                       updateSelectedFields({
                         patch: { fontSize: mmFromPt({ pt }) },
+                        recordHistory: false,
                       });
                     }}
                   />

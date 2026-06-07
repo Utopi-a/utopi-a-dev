@@ -21,8 +21,12 @@ export type RepeatingRowColumnDef = {
   id: string;
   x: number;
   width: number;
+  height?: number;
   fontSize: number;
   align?: FieldAlign;
+  verticalAlign?: FieldVerticalAlign;
+  fitText?: boolean;
+  variant?: OverlayFieldVariant;
   /** 行内での縦方向オフセット（mm） */
   yOffset?: number;
 };

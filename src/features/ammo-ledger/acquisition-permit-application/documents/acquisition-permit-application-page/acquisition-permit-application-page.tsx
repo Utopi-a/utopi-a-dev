@@ -1,7 +1,6 @@
 import { Fragment } from "react";
 import { cn } from "@/lib/cn";
 import type { FormTemplate } from "../../form-template/form-template-types";
-import { buildOverlayMmStyle } from "../overlay-field/build-overlay-mm-style";
 import { OverlayField } from "../overlay-field/overlay-field";
 
 type ApplicationPageVariant = "main-front" | "main-back" | "supplement";
@@ -66,21 +65,25 @@ export function AcquisitionPermitApplicationPage({
               return (
                 <Fragment key={rowKey}>
                   {repeatingRows.columns.map((column) => (
-                    <span
+                    <OverlayField
                       key={`${rowKey}-${column.id}`}
-                      className="application-overlay-field"
-                      style={buildOverlayMmStyle({
+                      field={{
+                        id: `${rowKey}-${column.id}`,
+                        page: pageIndex,
                         x: column.x,
                         y: y + (column.yOffset ?? 0),
                         width: column.width,
+                        height: column.height,
                         fontSize: column.fontSize,
                         align: column.align,
-                        pageWidthMm,
-                        pageHeightMm,
-                      })}
-                    >
-                      {row.values[column.id] ?? ""}
-                    </span>
+                        verticalAlign: column.verticalAlign,
+                        fitText: column.fitText,
+                        variant: column.variant,
+                      }}
+                      value={row.values[column.id] ?? ""}
+                      pageWidthMm={pageWidthMm}
+                      pageHeightMm={pageHeightMm}
+                    />
                   ))}
                 </Fragment>
               );

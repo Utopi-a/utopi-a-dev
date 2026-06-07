@@ -2,24 +2,15 @@
 
 import { useCallback, useRef, useState } from "react";
 import type { OverlayFieldDef, RepeatingRowMap } from "../form-template/form-template-types";
-import { cloneCalibrationFields } from "./clone-calibration-fields";
-import { cloneRepeatingRows } from "./repeating-rows-calibration/clone-repeating-rows";
+import {
+  type CalibrationSnapshot,
+  cloneCalibrationSnapshot,
+  snapshotsEqual,
+} from "./calibration-snapshot";
+
+export type { CalibrationSnapshot };
 
 const MAX_HISTORY = 50;
-
-export type CalibrationSnapshot = {
-  fields: OverlayFieldDef[];
-  repeatingRows: RepeatingRowMap | null;
-};
-
-function cloneSnapshot({ snapshot }: { snapshot: CalibrationSnapshot }): CalibrationSnapshot {
-  return {
-    fields: cloneCalibrationFields({ fields: snapshot.fields }),
-    repeatingRows: snapshot.repeatingRows
-      ? cloneRepeatingRows({ repeatingRows: snapshot.repeatingRows })
-      : null,
-  };
-}
 
 export function useCalibrationHistory({
   initialSnapshot,
@@ -33,12 +24,19 @@ export function useCalibrationHistory({
   presentRef.current = present;
   const transactionSnapshotRef = useRef<CalibrationSnapshot | null>(null);
 
-  const resetHistory = useCallback(({ snapshot }: { snapshot: CalibrationSnapshot }) => {
+  const clearTransaction = useCallback(() => {
     transactionSnapshotRef.current = null;
-    setPast([]);
-    setFuture([]);
-    setPresent(snapshot);
   }, []);
+
+  const resetHistory = useCallback(
+    ({ snapshot }: { snapshot: CalibrationSnapshot }) => {
+      clearTransaction();
+      setPast([]);
+      setFuture([]);
+      setPresent(snapshot);
+    },
+    [clearTransaction],
+  );
 
   const pushPast = useCallback((snapshot: CalibrationSnapshot) => {
     setPast((current) => [...current.slice(-(MAX_HISTORY - 1)), snapshot]);
@@ -57,7 +55,7 @@ export function useCalibrationHistory({
     }) => {
       const next = snapshot ?? updater?.(presentRef.current) ?? presentRef.current;
       if (recordHistory) {
-        pushPast(cloneSnapshot({ snapshot: presentRef.current }));
+        pushPast(cloneCalibrationSnapshot({ snapshot: presentRef.current }));
       }
       setPresent(next);
     },
@@ -108,7 +106,7 @@ export function useCalibrationHistory({
 
   const beginInteraction = useCallback(() => {
     if (!transactionSnapshotRef.current) {
-      transactionSnapshotRef.current = cloneSnapshot({ snapshot: presentRef.current });
+      transactionSnapshotRef.current = cloneCalibrationSnapshot({ snapshot: presentRef.current });
     }
   }, []);
 
@@ -118,39 +116,46 @@ export function useCalibrationHistory({
     if (!snapshot) {
       return;
     }
-    const changed =
-      JSON.stringify(snapshot) !== JSON.stringify(cloneSnapshot({ snapshot: presentRef.current }));
+    const changed = !snapshotsEqual({
+      left: snapshot,
+      right: presentRef.current,
+    });
     if (changed) {
       pushPast(snapshot);
     }
   }, [pushPast]);
 
   const undo = useCallback(() => {
+    clearTransaction();
     setPast((currentPast) => {
       if (currentPast.length === 0) {
         return currentPast;
       }
       const previous = currentPast[currentPast.length - 1];
       setFuture((currentFuture) => [
-        cloneSnapshot({ snapshot: presentRef.current }),
+        cloneCalibrationSnapshot({ snapshot: presentRef.current }),
         ...currentFuture,
       ]);
       setPresent(previous);
       return currentPast.slice(0, -1);
     });
-  }, []);
+  }, [clearTransaction]);
 
   const redo = useCallback(() => {
+    clearTransaction();
     setFuture((currentFuture) => {
       if (currentFuture.length === 0) {
         return currentFuture;
       }
       const [next, ...rest] = currentFuture;
-      setPast((currentPast) => [...currentPast, cloneSnapshot({ snapshot: presentRef.current })]);
+      setPast((currentPast) => [
+        ...currentPast,
+        cloneCalibrationSnapshot({ snapshot: presentRef.current }),
+      ]);
       setPresent(next);
       return rest;
     });
-  }, []);
+  }, [clearTransaction]);
 
   return {
     fields: present.fields,

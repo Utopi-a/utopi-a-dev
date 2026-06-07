@@ -34,11 +34,39 @@ export function applyRepeatingColumnOverlayPatch({
       if (patch.width !== undefined) {
         nextColumn.width = roundMm({ value: patch.width });
       }
+      if ("height" in patch) {
+        if (patch.height === undefined) {
+          delete nextColumn.height;
+        } else {
+          nextColumn.height = roundMm({ value: patch.height });
+        }
+      }
       if (patch.fontSize !== undefined) {
         nextColumn.fontSize = roundMm({ value: patch.fontSize });
       }
       if (patch.align !== undefined) {
         nextColumn.align = patch.align;
+      }
+      if ("verticalAlign" in patch) {
+        if (patch.verticalAlign === undefined) {
+          delete nextColumn.verticalAlign;
+        } else {
+          nextColumn.verticalAlign = patch.verticalAlign;
+        }
+      }
+      if ("fitText" in patch) {
+        if (patch.fitText === undefined) {
+          delete nextColumn.fitText;
+        } else {
+          nextColumn.fitText = patch.fitText;
+        }
+      }
+      if ("variant" in patch) {
+        if (patch.variant === undefined) {
+          delete nextColumn.variant;
+        } else {
+          nextColumn.variant = patch.variant;
+        }
       }
 
       return nextColumn;

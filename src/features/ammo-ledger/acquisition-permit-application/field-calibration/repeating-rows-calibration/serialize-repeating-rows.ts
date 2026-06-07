@@ -18,8 +18,20 @@ function formatColumn(column: RepeatingRowColumnDef): string {
   if (column.align) {
     parts.push(`align: "${column.align}"`);
   }
+  if (column.verticalAlign) {
+    parts.push(`verticalAlign: "${column.verticalAlign}"`);
+  }
+  if (column.fitText === false) {
+    parts.push("fitText: false");
+  }
+  if (column.variant) {
+    parts.push(`variant: "${column.variant}"`);
+  }
   if (column.yOffset !== undefined) {
     parts.push(`yOffset: ${roundMm({ value: column.yOffset })}`);
+  }
+  if (column.height !== undefined) {
+    parts.push(`height: ${roundMm({ value: column.height })}`);
   }
 
   return `      { ${parts.join(", ")} }`;

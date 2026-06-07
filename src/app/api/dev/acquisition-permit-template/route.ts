@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { findCalibrationTemplate } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/calibration-template-registry";
 import { writeFormTemplateFields } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/write-form-template-fields";
-import type { OverlayFieldDef } from "@/features/ammo-ledger/acquisition-permit-application/form-template/form-template-types";
+import type {
+  OverlayFieldDef,
+  RepeatingRowMap,
+} from "@/features/ammo-ledger/acquisition-permit-application/form-template/form-template-types";
 
 type ApplyTemplateRequest = {
   templateId: string;
   fields: OverlayFieldDef[];
+  repeatingRows?: RepeatingRowMap | null;
 };
 
 export async function POST(request: Request) {
@@ -37,6 +41,7 @@ export async function POST(request: Request) {
       projectRoot: process.cwd(),
       relativeFilePath: entry.sourceFilePath,
       fields: body.fields,
+      repeatingRows: body.repeatingRows ?? entry.template.repeatingRows ?? null,
     });
 
     return NextResponse.json({

@@ -22,6 +22,7 @@ type CalibrationFieldOverlayProps = {
   pageHeightMm: number;
   isSelected: boolean;
   isPrimary: boolean;
+  isRepeatingRowColumn?: boolean;
   onMakePrimary: () => void;
   onPrepareDrag: ({ additive }: { additive: boolean }) => boolean;
   onDragMove: ({ dx, dy }: { dx: number; dy: number }) => void;
@@ -38,6 +39,7 @@ export function CalibrationFieldOverlay({
   pageHeightMm,
   isSelected,
   isPrimary,
+  isRepeatingRowColumn = false,
   onMakePrimary,
   onPrepareDrag,
   onDragMove,
@@ -151,8 +153,12 @@ export function CalibrationFieldOverlay({
         isPrimary
           ? "border-blue-600 bg-blue-500/10 ring-1 ring-blue-600"
           : isSelected
-            ? "border-blue-500 bg-blue-500/5 ring-1 ring-blue-400 ring-dashed"
-            : "border-orange-400/80 bg-orange-400/5",
+            ? isRepeatingRowColumn
+              ? "border-violet-600 bg-violet-500/10 ring-1 ring-violet-500 ring-dashed"
+              : "border-blue-500 bg-blue-500/5 ring-1 ring-blue-400 ring-dashed"
+            : isRepeatingRowColumn
+              ? "border-violet-400/80 bg-violet-400/5"
+              : "border-orange-400/80 bg-orange-400/5",
         isCheckbox && "flex items-center justify-center",
       )}
       style={buildOverlayMmStyle({

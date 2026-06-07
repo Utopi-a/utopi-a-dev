@@ -45,12 +45,25 @@ import {
   stepFontSizePt,
 } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/font-size-units";
 import {
-  applyGroupMoveDelta,
-  applyGroupNudge,
   buildGroupMoveOrigins,
   reorderSelectionPrimary,
   resolveGroupMoveIds,
 } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/move-selected-fields";
+import {
+  applyCalibrationFieldPatch,
+  applyCalibrationFieldPatches,
+  applyGroupMoveDeltaToCalibration,
+} from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/repeating-rows-calibration/apply-repeating-column-patch";
+import { cloneRepeatingRows } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/repeating-rows-calibration/clone-repeating-rows";
+import {
+  buildCalibrationPageFields,
+  findCalibrationFieldDef,
+} from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/repeating-rows-calibration/expand-repeating-row-columns";
+import {
+  isRepeatingCalibrationFieldId,
+  parseRepeatingCalibrationColumnId,
+} from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/repeating-rows-calibration/repeating-rows-calibration-ids";
+import { serializeRepeatingRows } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/repeating-rows-calibration/serialize-repeating-rows";
 import { serializeOverlayFields } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/serialize-overlay-fields";
 import { useCalibrationHistory } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/use-calibration-history";
 import type {
@@ -72,6 +85,20 @@ function parseNumberInput({ value, fallback }: { value: string; fallback: number
 
 type NumericFieldKey = "x" | "y" | "width" | "height";
 
+function resolveCalibrationPreviewValue({
+  field,
+  previewValues,
+}: {
+  field: OverlayFieldDef;
+  previewValues: Record<string, string>;
+}): string {
+  const columnId = parseRepeatingCalibrationColumnId({ fieldId: field.id });
+  if (columnId) {
+    return previewValues[columnId] ?? "";
+  }
+  return previewValues[field.id] ?? "";
+}
+
 export function FieldCalibrationView() {
   const [templateId, setTemplateId] = useState(calibrationTemplateRegistry[0]?.id ?? "");
   const [pageIndex, setPageIndex] = useState(0);
@@ -87,7 +114,10 @@ export function FieldCalibrationView() {
 
   const {
     fields,
+    repeatingRows,
     replaceFields,
+    replaceRepeatingRows,
+    replaceSnapshot,
     resetHistory,
     beginInteraction,
     endInteraction,
@@ -95,7 +125,9 @@ export function FieldCalibrationView() {
     redo,
     canUndo,
     canRedo,
-  } = useCalibrationHistory({ initialFields: [] });
+  } = useCalibrationHistory({
+    initialSnapshot: { fields: [], repeatingRows: null },
+  });
 
   const selectedFieldIdsRef = useRef(selectedFieldIds);
   selectedFieldIdsRef.current = selectedFieldIds;
@@ -113,13 +145,28 @@ export function FieldCalibrationView() {
 
     const saved = loadCalibrationFieldOverrides({ templateId: template.id });
     const savedPreview = loadCalibrationPreviewText({ templateId: template.id });
+    const initialFields = saved?.fields ?? cloneCalibrationFields({ fields: template.fields });
+    const initialRepeatingRows = saved?.repeatingRows
+      ? cloneRepeatingRows({ repeatingRows: saved.repeatingRows })
+      : template.repeatingRows
+        ? cloneRepeatingRows({ repeatingRows: template.repeatingRows })
+        : null;
     resetHistory({
-      fields: saved ?? cloneCalibrationFields({ fields: template.fields }),
+      snapshot: {
+        fields: initialFields,
+        repeatingRows: initialRepeatingRows,
+      },
     });
     setPreviewValues(savedPreview ?? { ...calibrationSampleFieldValues });
     setBackgroundScale(loadCalibrationBackgroundScale({ templateId: template.id }));
+    setLayoutRepeatOffsetY(template.repeatingRows?.rowHeight ?? 19);
     setPageIndex(0);
-    setSelectedFieldIds(template.fields[0] ? [template.fields[0].id] : []);
+    const initialPageFields = buildCalibrationPageFields({
+      fields: initialFields,
+      repeatingRows: initialRepeatingRows,
+      pageIndex: 0,
+    });
+    setSelectedFieldIds(initialPageFields[0] ? [initialPageFields[0].id] : []);
   }, [template, resetHistory]);
 
   useEffect(() => {
@@ -133,8 +180,8 @@ export function FieldCalibrationView() {
     if (!template || fields.length === 0) {
       return;
     }
-    saveCalibrationFieldOverrides({ templateId: template.id, fields });
-  }, [fields, template]);
+    saveCalibrationFieldOverrides({ templateId: template.id, fields, repeatingRows });
+  }, [fields, repeatingRows, template]);
 
   useEffect(() => {
     if (!template) {
@@ -143,23 +190,39 @@ export function FieldCalibrationView() {
     saveCalibrationPreviewText({ templateId: template.id, values: previewValues });
   }, [previewValues, template]);
 
-  const pageFields = useMemo(
-    () => fields.filter((field) => field.page === pageIndex),
-    [fields, pageIndex],
+  const calibrationPageFields = useMemo(
+    () => buildCalibrationPageFields({ fields, repeatingRows, pageIndex }),
+    [fields, repeatingRows, pageIndex],
+  );
+
+  const allCalibrationFields = useMemo(
+    () =>
+      Array.from({ length: pageCount }, (_, index) =>
+        buildCalibrationPageFields({ fields, repeatingRows, pageIndex: index }),
+      ).flat(),
+    [fields, pageCount, repeatingRows],
   );
 
   useEffect(() => {
     setSelectedFieldIds((current) => {
-      const onPage = current.filter((id) => pageFields.some((field) => field.id === id));
+      const onPage = current.filter((id) => calibrationPageFields.some((field) => field.id === id));
       if (onPage.length > 0) {
         return onPage;
       }
-      return pageFields[0] ? [pageFields[0].id] : [];
+      return calibrationPageFields[0] ? [calibrationPageFields[0].id] : [];
     });
-  }, [pageFields]);
+  }, [calibrationPageFields]);
 
   const primaryFieldId = selectedFieldIds[selectedFieldIds.length - 1] ?? null;
-  const selectedField = fields.find((field) => field.id === primaryFieldId) ?? null;
+  const selectedField =
+    primaryFieldId && template
+      ? findCalibrationFieldDef({
+          fields,
+          repeatingRows,
+          pageCount,
+          fieldId: primaryFieldId,
+        })
+      : null;
 
   const selectFields = useCallback(
     ({ fieldIds, additive }: { fieldIds: string[]; additive: boolean }) => {
@@ -204,13 +267,20 @@ export function FieldCalibrationView() {
       patch: Partial<OverlayFieldDef>;
       recordHistory?: boolean;
     }) => {
-      replaceFields({
-        updater: (current) =>
-          current.map((field) => (field.id === id ? { ...field, ...patch } : field)),
+      replaceSnapshot({
+        updater: (current) => {
+          const result = applyCalibrationFieldPatch({
+            fields: current.fields,
+            repeatingRows: current.repeatingRows,
+            fieldId: id,
+            patch,
+          });
+          return { fields: result.fields, repeatingRows: result.repeatingRows };
+        },
         recordHistory,
       });
     },
-    [replaceFields],
+    [replaceSnapshot],
   );
 
   const updateSelectedFields = useCallback(
@@ -221,24 +291,43 @@ export function FieldCalibrationView() {
       patch: Partial<OverlayFieldDef> | ((field: OverlayFieldDef) => Partial<OverlayFieldDef>);
       recordHistory?: boolean;
     }) => {
-      const selectedIds = new Set(selectedFieldIdsRef.current);
-      if (selectedIds.size === 0) {
+      const selectedIds = selectedFieldIdsRef.current;
+      if (selectedIds.length === 0 || !template) {
         return;
       }
 
-      replaceFields({
-        updater: (current) =>
-          current.map((field) => {
-            if (!selectedIds.has(field.id)) {
-              return field;
+      replaceSnapshot({
+        updater: (current) => {
+          let nextFields = current.fields;
+          let nextRepeatingRows = current.repeatingRows;
+
+          for (const fieldId of selectedIds) {
+            const fieldDef = findCalibrationFieldDef({
+              fields: current.fields,
+              repeatingRows: current.repeatingRows,
+              pageCount,
+              fieldId,
+            });
+            if (!fieldDef) {
+              continue;
             }
-            const resolvedPatch = typeof patch === "function" ? patch(field) : patch;
-            return { ...field, ...resolvedPatch };
-          }),
+            const resolvedPatch = typeof patch === "function" ? patch(fieldDef) : patch;
+            const result = applyCalibrationFieldPatch({
+              fields: nextFields,
+              repeatingRows: nextRepeatingRows,
+              fieldId,
+              patch: resolvedPatch,
+            });
+            nextFields = result.fields;
+            nextRepeatingRows = result.repeatingRows;
+          }
+
+          return { fields: nextFields, repeatingRows: nextRepeatingRows };
+        },
         recordHistory,
       });
     },
-    [replaceFields],
+    [pageCount, replaceSnapshot, template],
   );
 
   const nudgeField = useCallback(
@@ -247,11 +336,42 @@ export function FieldCalibrationView() {
         fieldId: id,
         selectedIds: selectedFieldIdsRef.current,
       });
-      replaceFields({
-        updater: (current) => applyGroupNudge({ fields: current, moveIds, dx, dy }),
+
+      replaceSnapshot({
+        updater: (current) => {
+          const patches = moveIds
+            .map((fieldId) => {
+              const fieldDef = findCalibrationFieldDef({
+                fields: current.fields,
+                repeatingRows: current.repeatingRows,
+                pageCount,
+                fieldId,
+              });
+              if (!fieldDef) {
+                return null;
+              }
+              return {
+                fieldId,
+                patch: {
+                  x: roundMm({ value: fieldDef.x + dx }),
+                  y: roundMm({ value: fieldDef.y + dy }),
+                },
+              };
+            })
+            .filter((patch): patch is { fieldId: string; patch: Partial<OverlayFieldDef> } =>
+              Boolean(patch),
+            );
+
+          const result = applyCalibrationFieldPatches({
+            fields: current.fields,
+            repeatingRows: current.repeatingRows,
+            patches,
+          });
+          return { fields: result.fields, repeatingRows: result.repeatingRows };
+        },
       });
     },
-    [replaceFields],
+    [pageCount, replaceSnapshot],
   );
 
   const prepareFieldDrag = useCallback(
@@ -277,19 +397,20 @@ export function FieldCalibrationView() {
       setSelectedFieldIds(nextSelection);
 
       const moveIds = resolveGroupMoveIds({ fieldId, selectedIds: nextSelection });
-      dragOriginsRef.current = buildGroupMoveOrigins({ fields, moveIds });
+      dragOriginsRef.current = buildGroupMoveOrigins({ fields: allCalibrationFields, moveIds });
       beginInteraction();
       return true;
     },
-    [beginInteraction, fields],
+    [allCalibrationFields, beginInteraction],
   );
 
   const handleDragMove = useCallback(
     ({ dx, dy }: { dx: number; dy: number }) => {
-      replaceFields({
+      replaceSnapshot({
         updater: (current) =>
-          applyGroupMoveDelta({
-            fields: current,
+          applyGroupMoveDeltaToCalibration({
+            fields: current.fields,
+            repeatingRows: current.repeatingRows,
             origins: dragOriginsRef.current,
             dx,
             dy,
@@ -297,7 +418,7 @@ export function FieldCalibrationView() {
         recordHistory: false,
       });
     },
-    [replaceFields],
+    [replaceSnapshot],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -306,12 +427,15 @@ export function FieldCalibrationView() {
   }, [endInteraction]);
 
   const handleDuplicate = useCallback(() => {
-    if (selectedFieldIds.length === 0) {
+    const staticSelectedIds = selectedFieldIds.filter(
+      (id) => !isRepeatingCalibrationFieldId({ id }),
+    );
+    if (staticSelectedIds.length === 0) {
       return;
     }
     const result = duplicateSelectedFields({
       fields,
-      selectedIds: selectedFieldIds,
+      selectedIds: staticSelectedIds,
     });
     replaceFields({ fields: result.fields });
     setSelectedFieldIds(result.newIds);
@@ -319,12 +443,15 @@ export function FieldCalibrationView() {
   }, [fields, replaceFields, selectedFieldIds]);
 
   const handleRepeatLayout = useCallback(() => {
-    if (selectedFieldIds.length === 0 || layoutRepeatCount < 1) {
+    const staticSelectedIds = selectedFieldIds.filter(
+      (id) => !isRepeatingCalibrationFieldId({ id }),
+    );
+    if (staticSelectedIds.length === 0 || layoutRepeatCount < 1) {
       return;
     }
     const result = repeatSelectedFieldLayout({
       fields,
-      selectedIds: selectedFieldIds,
+      selectedIds: staticSelectedIds,
       repeatCount: layoutRepeatCount,
       offsetY: layoutRepeatOffsetY,
     });
@@ -334,12 +461,39 @@ export function FieldCalibrationView() {
   }, [fields, layoutRepeatCount, layoutRepeatOffsetY, replaceFields, selectedFieldIds]);
 
   function handleAlign({ mode }: { mode: AlignMode }) {
-    replaceFields({
-      fields: alignCalibrationFields({
-        fields,
-        selectedIds: selectedFieldIds,
-        mode,
-      }),
+    const aligned = alignCalibrationFields({
+      fields: allCalibrationFields,
+      selectedIds: selectedFieldIds,
+      mode,
+    });
+    const patches = selectedFieldIds
+      .map((fieldId) => {
+        const before = allCalibrationFields.find((field) => field.id === fieldId);
+        const after = aligned.find((field) => field.id === fieldId);
+        if (!before || !after) {
+          return null;
+        }
+        return {
+          fieldId,
+          patch: {
+            x: after.x,
+            y: after.y,
+          },
+        };
+      })
+      .filter((patch): patch is { fieldId: string; patch: Partial<OverlayFieldDef> } =>
+        Boolean(patch),
+      );
+
+    replaceSnapshot({
+      updater: (current) => {
+        const result = applyCalibrationFieldPatches({
+          fields: current.fields,
+          repeatingRows: current.repeatingRows,
+          patches,
+        });
+        return { fields: result.fields, repeatingRows: result.repeatingRows };
+      },
     });
   }
 
@@ -371,6 +525,7 @@ export function FieldCalibrationView() {
       const result = await applyTemplateFieldsToSource({
         templateId: template.id,
         fields,
+        repeatingRows,
       });
       clearCalibrationFieldOverrides({ templateId: template.id });
       toast.success(`${result.filePath} に ${result.fieldCount} 件反映しました`);
@@ -382,16 +537,26 @@ export function FieldCalibrationView() {
   }
 
   async function handleCopyTypeScript() {
-    const serialized = serializeOverlayFields({ fields });
-    await navigator.clipboard.writeText(serialized);
-    toast.success("fields 配列をクリップボードにコピーしました");
+    const serializedFields = serializeOverlayFields({ fields });
+    const serializedRepeatingRows = repeatingRows
+      ? `\n\n${serializeRepeatingRows({ repeatingRows })}`
+      : "";
+    await navigator.clipboard.writeText(`${serializedFields}${serializedRepeatingRows}`);
+    toast.success("テンプレート定義をクリップボードにコピーしました");
   }
 
   function handleResetToTemplate() {
     if (!template) {
       return;
     }
-    resetHistory({ fields: cloneCalibrationFields({ fields: template.fields }) });
+    resetHistory({
+      snapshot: {
+        fields: cloneCalibrationFields({ fields: template.fields }),
+        repeatingRows: template.repeatingRows
+          ? cloneRepeatingRows({ repeatingRows: template.repeatingRows })
+          : null,
+      },
+    });
     clearCalibrationFieldOverrides({ templateId: template.id });
     toast.message("テンプレート定義に戻しました");
   }
@@ -435,6 +600,10 @@ export function FieldCalibrationView() {
   }
 
   const page = template.pages[pageIndex];
+  const previewTextKey =
+    selectedField && isRepeatingCalibrationFieldId({ id: selectedField.id })
+      ? (parseRepeatingCalibrationColumnId({ fieldId: selectedField.id }) ?? selectedField.id)
+      : (selectedField?.id ?? "");
 
   return (
     <div className="space-y-2">
@@ -483,14 +652,8 @@ export function FieldCalibrationView() {
       <p className="text-xs text-muted-foreground">
         空白をドラッグで範囲選択 · Cmd/Ctrl+クリックで複数選択 · 複数選択中はドラッグで一緒に移動 ·
         Cmd/Ctrl+Z/Y で Undo/Redo · Cmd/Ctrl+D で複製
+        {repeatingRows ? " · 紫枠は表行（repeatingRows）の列" : ""}
       </p>
-
-      {templateEntry.supportsRepeatingRows ? (
-        <p className="text-sm text-amber-700">
-          このテンプレートは repeatingRows（別紙の表行）があります。現状は static fields
-          のみ編集できます。
-        </p>
-      ) : null}
 
       <div className="grid gap-1 lg:grid-cols-[190px_minmax(0,1fr)_250px]">
         <aside className="space-y-2 rounded-md border p-2">
@@ -606,7 +769,7 @@ export function FieldCalibrationView() {
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">フィールド</p>
             <ul className="max-h-[480px] space-y-0.5 overflow-y-auto text-xs">
-              {pageFields.map((field) => (
+              {calibrationPageFields.map((field) => (
                 <li key={field.id}>
                   <button
                     type="button"
@@ -614,6 +777,7 @@ export function FieldCalibrationView() {
                       "w-full rounded px-1.5 py-0.5 text-left hover:bg-muted",
                       selectedFieldIds.includes(field.id) && "bg-muted font-medium",
                       primaryFieldId === field.id && "ring-1 ring-blue-500",
+                      isRepeatingCalibrationFieldId({ id: field.id }) && "text-violet-700",
                     )}
                     onClick={(event) =>
                       selectField({
@@ -628,6 +792,42 @@ export function FieldCalibrationView() {
               ))}
             </ul>
           </div>
+
+          {repeatingRows ? (
+            <div className="space-y-1 rounded border border-dashed border-violet-300 p-2">
+              <p className="text-xs font-medium text-violet-800">表行レイアウト</p>
+              {(
+                [
+                  { key: "startY", label: "startY" },
+                  { key: "rowHeight", label: "rowHeight" },
+                  { key: "maxRowsPerPage", label: "maxRowsPerPage" },
+                ] as const
+              ).map(({ key, label }) => (
+                <div key={key} className="space-y-0.5">
+                  <Label htmlFor={`repeating-${key}`}>{label}</Label>
+                  <Input
+                    id={`repeating-${key}`}
+                    type="number"
+                    step={key === "maxRowsPerPage" ? 1 : 0.1}
+                    value={repeatingRows[key]}
+                    onChange={(event) => {
+                      const fallback = repeatingRows[key];
+                      const parsed = parseNumberInput({ value: event.target.value, fallback });
+                      replaceRepeatingRows({
+                        repeatingRows: {
+                          ...repeatingRows,
+                          [key]:
+                            key === "maxRowsPerPage"
+                              ? Math.max(1, Math.round(parsed))
+                              : roundMm({ value: parsed }),
+                        },
+                      });
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : null}
         </aside>
 
         <div className="overflow-auto rounded-md border bg-muted/10 p-0.5">
@@ -659,18 +859,39 @@ export function FieldCalibrationView() {
                 <CalibrationMarqueeLayer
                   pageWidthMm={template.pageWidthMm}
                   pageHeightMm={template.pageHeightMm}
-                  pageFields={pageFields}
+                  pageFields={calibrationPageFields}
                   onSelectFields={selectFields}
                 />
-                {pageFields.map((field) => (
+                {repeatingRows && pageIndex === 0
+                  ? Array.from(
+                      { length: Math.min(2, repeatingRows.maxRowsPerPage - 1) },
+                      (_, index) => {
+                        const rowNumber = index + 1;
+                        return repeatingRows.columns.map((column) => (
+                          <div
+                            key={`ghost-row-${rowNumber}-${column.id}`}
+                            className="pointer-events-none absolute z-[1] box-border border border-dashed border-violet-300/60 bg-violet-200/5"
+                            style={{
+                              left: `${(column.x / template.pageWidthMm) * 100}%`,
+                              top: `${((repeatingRows.startY + rowNumber * repeatingRows.rowHeight + (column.yOffset ?? 0)) / template.pageHeightMm) * 100}%`,
+                              width: `${(column.width / template.pageWidthMm) * 100}%`,
+                              height: `${((column.fontSize * 1.4) / template.pageHeightMm) * 100}%`,
+                            }}
+                          />
+                        ));
+                      },
+                    )
+                  : null}
+                {calibrationPageFields.map((field) => (
                   <CalibrationFieldOverlay
                     key={field.id}
                     field={field}
-                    value={previewValues[field.id] ?? ""}
+                    value={resolveCalibrationPreviewValue({ field, previewValues })}
                     pageWidthMm={template.pageWidthMm}
                     pageHeightMm={template.pageHeightMm}
                     isSelected={selectedFieldIds.includes(field.id)}
                     isPrimary={primaryFieldId === field.id}
+                    isRepeatingRowColumn={isRepeatingCalibrationFieldId({ id: field.id })}
                     onMakePrimary={() => selectField({ fieldId: field.id, additive: false })}
                     onPrepareDrag={({ additive }) =>
                       prepareFieldDrag({ fieldId: field.id, additive })
@@ -823,11 +1044,11 @@ export function FieldCalibrationView() {
                 <Textarea
                   id="field-preview-text"
                   rows={4}
-                  value={previewValues[selectedField.id] ?? ""}
+                  value={previewValues[previewTextKey] ?? ""}
                   onChange={(event) =>
                     setPreviewValues((current) => ({
                       ...current,
-                      [selectedField.id]: event.target.value,
+                      [previewTextKey]: event.target.value,
                     }))
                   }
                 />

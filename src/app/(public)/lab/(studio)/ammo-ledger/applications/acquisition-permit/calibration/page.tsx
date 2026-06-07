@@ -1,6 +1,12 @@
+import { notFound } from "next/navigation";
 import { FieldCalibrationView } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/field-calibration-view";
+import { isFieldCalibrationEnabled } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/is-field-calibration-enabled";
 
 export default function AcquisitionPermitFieldCalibrationPage() {
+  if (!isFieldCalibrationEnabled()) {
+    notFound();
+  }
+
   return (
     <div className="space-y-1">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">

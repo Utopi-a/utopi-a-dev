@@ -7,8 +7,6 @@ export type CalibrationTemplateEntry = {
   label: string;
   template: FormTemplate;
   sourceFilePath?: string;
-  /** repeatingRows は別 UI が必要なため、現状は static fields のみ編集可能 */
-  supportsRepeatingRows: boolean;
 };
 
 export const calibrationTemplateRegistry: CalibrationTemplateEntry[] = [
@@ -18,7 +16,6 @@ export const calibrationTemplateRegistry: CalibrationTemplateEntry[] = [
     template: hokkaidoMainTemplate,
     sourceFilePath:
       "src/features/ammo-ledger/acquisition-permit-application/form-template/hokkaido-main/hokkaido-main-template.ts",
-    supportsRepeatingRows: false,
   },
   {
     id: ibarakiR7SupplementTemplate.id,
@@ -26,7 +23,6 @@ export const calibrationTemplateRegistry: CalibrationTemplateEntry[] = [
     template: ibarakiR7SupplementTemplate,
     sourceFilePath:
       "src/features/ammo-ledger/acquisition-permit-application/form-template/ibaraki-r7-supplement/ibaraki-r7-supplement-template.ts",
-    supportsRepeatingRows: true,
   },
 ];
 

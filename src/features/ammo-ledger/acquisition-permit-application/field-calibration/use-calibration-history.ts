@@ -1,30 +1,68 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import type { OverlayFieldDef } from "../form-template/form-template-types";
+import type { OverlayFieldDef, RepeatingRowMap } from "../form-template/form-template-types";
 import { cloneCalibrationFields } from "./clone-calibration-fields";
+import { cloneRepeatingRows } from "./repeating-rows-calibration/clone-repeating-rows";
 
 const MAX_HISTORY = 50;
 
-export function useCalibrationHistory({ initialFields }: { initialFields: OverlayFieldDef[] }) {
-  const [past, setPast] = useState<OverlayFieldDef[][]>([]);
-  const [present, setPresent] = useState(initialFields);
-  const [future, setFuture] = useState<OverlayFieldDef[][]>([]);
+export type CalibrationSnapshot = {
+  fields: OverlayFieldDef[];
+  repeatingRows: RepeatingRowMap | null;
+};
+
+function cloneSnapshot({ snapshot }: { snapshot: CalibrationSnapshot }): CalibrationSnapshot {
+  return {
+    fields: cloneCalibrationFields({ fields: snapshot.fields }),
+    repeatingRows: snapshot.repeatingRows
+      ? cloneRepeatingRows({ repeatingRows: snapshot.repeatingRows })
+      : null,
+  };
+}
+
+export function useCalibrationHistory({
+  initialSnapshot,
+}: {
+  initialSnapshot: CalibrationSnapshot;
+}) {
+  const [past, setPast] = useState<CalibrationSnapshot[]>([]);
+  const [present, setPresent] = useState(initialSnapshot);
+  const [future, setFuture] = useState<CalibrationSnapshot[]>([]);
   const presentRef = useRef(present);
   presentRef.current = present;
-  const transactionSnapshotRef = useRef<OverlayFieldDef[] | null>(null);
+  const transactionSnapshotRef = useRef<CalibrationSnapshot | null>(null);
 
-  const resetHistory = useCallback(({ fields }: { fields: OverlayFieldDef[] }) => {
+  const resetHistory = useCallback(({ snapshot }: { snapshot: CalibrationSnapshot }) => {
     transactionSnapshotRef.current = null;
     setPast([]);
     setFuture([]);
-    setPresent(fields);
+    setPresent(snapshot);
   }, []);
 
-  const pushPast = useCallback((snapshot: OverlayFieldDef[]) => {
+  const pushPast = useCallback((snapshot: CalibrationSnapshot) => {
     setPast((current) => [...current.slice(-(MAX_HISTORY - 1)), snapshot]);
     setFuture([]);
   }, []);
+
+  const replaceSnapshot = useCallback(
+    ({
+      snapshot,
+      updater,
+      recordHistory = true,
+    }: {
+      snapshot?: CalibrationSnapshot;
+      updater?: (current: CalibrationSnapshot) => CalibrationSnapshot;
+      recordHistory?: boolean;
+    }) => {
+      const next = snapshot ?? updater?.(presentRef.current) ?? presentRef.current;
+      if (recordHistory) {
+        pushPast(cloneSnapshot({ snapshot: presentRef.current }));
+      }
+      setPresent(next);
+    },
+    [pushPast],
+  );
 
   const replaceFields = useCallback(
     ({
@@ -36,18 +74,41 @@ export function useCalibrationHistory({ initialFields }: { initialFields: Overla
       updater?: (current: OverlayFieldDef[]) => OverlayFieldDef[];
       recordHistory?: boolean;
     }) => {
-      const next = fields ?? updater?.(presentRef.current) ?? presentRef.current;
-      if (recordHistory) {
-        pushPast(cloneCalibrationFields({ fields: presentRef.current }));
-      }
-      setPresent(next);
+      replaceSnapshot({
+        updater: (current) => ({
+          ...current,
+          fields: fields ?? updater?.(current.fields) ?? current.fields,
+        }),
+        recordHistory,
+      });
     },
-    [pushPast],
+    [replaceSnapshot],
+  );
+
+  const replaceRepeatingRows = useCallback(
+    ({
+      repeatingRows,
+      updater,
+      recordHistory = true,
+    }: {
+      repeatingRows?: RepeatingRowMap | null;
+      updater?: (current: RepeatingRowMap | null) => RepeatingRowMap | null;
+      recordHistory?: boolean;
+    }) => {
+      replaceSnapshot({
+        updater: (current) => ({
+          ...current,
+          repeatingRows: repeatingRows ?? updater?.(current.repeatingRows) ?? current.repeatingRows,
+        }),
+        recordHistory,
+      });
+    },
+    [replaceSnapshot],
   );
 
   const beginInteraction = useCallback(() => {
     if (!transactionSnapshotRef.current) {
-      transactionSnapshotRef.current = cloneCalibrationFields({ fields: presentRef.current });
+      transactionSnapshotRef.current = cloneSnapshot({ snapshot: presentRef.current });
     }
   }, []);
 
@@ -58,8 +119,7 @@ export function useCalibrationHistory({ initialFields }: { initialFields: Overla
       return;
     }
     const changed =
-      JSON.stringify(snapshot) !==
-      JSON.stringify(cloneCalibrationFields({ fields: presentRef.current }));
+      JSON.stringify(snapshot) !== JSON.stringify(cloneSnapshot({ snapshot: presentRef.current }));
     if (changed) {
       pushPast(snapshot);
     }
@@ -72,7 +132,7 @@ export function useCalibrationHistory({ initialFields }: { initialFields: Overla
       }
       const previous = currentPast[currentPast.length - 1];
       setFuture((currentFuture) => [
-        cloneCalibrationFields({ fields: presentRef.current }),
+        cloneSnapshot({ snapshot: presentRef.current }),
         ...currentFuture,
       ]);
       setPresent(previous);
@@ -86,18 +146,18 @@ export function useCalibrationHistory({ initialFields }: { initialFields: Overla
         return currentFuture;
       }
       const [next, ...rest] = currentFuture;
-      setPast((currentPast) => [
-        ...currentPast,
-        cloneCalibrationFields({ fields: presentRef.current }),
-      ]);
+      setPast((currentPast) => [...currentPast, cloneSnapshot({ snapshot: presentRef.current })]);
       setPresent(next);
       return rest;
     });
   }, []);
 
   return {
-    fields: present,
+    fields: present.fields,
+    repeatingRows: present.repeatingRows,
     replaceFields,
+    replaceRepeatingRows,
+    replaceSnapshot,
     resetHistory,
     beginInteraction,
     endInteraction,

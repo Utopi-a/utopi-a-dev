@@ -8,6 +8,7 @@ import type { BuiltApplicationFieldValues } from "@/features/ammo-ledger/acquisi
 import { buildApplicationFieldValues } from "@/features/ammo-ledger/acquisition-permit-application/build-application-field-values/build-application-field-values";
 import { ApplicationPrintButtons } from "@/features/ammo-ledger/acquisition-permit-application/components/application-print-buttons/application-print-buttons";
 import { AcquisitionPermitApplicationDocument } from "@/features/ammo-ledger/acquisition-permit-application/documents/acquisition-permit-application-document/acquisition-permit-application-document";
+import { isFieldCalibrationEnabled } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/is-field-calibration-enabled";
 import { cn } from "@/lib/cn";
 
 export function AcquisitionPermitApplicationPrintView() {
@@ -49,12 +50,14 @@ export function AcquisitionPermitApplicationPrintView() {
           >
             ← 入力に戻る
           </Link>
-          <Link
-            href="/lab/ammo-ledger/applications/acquisition-permit/calibration"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-          >
-            座標調整
-          </Link>
+          {isFieldCalibrationEnabled() ? (
+            <Link
+              href="/lab/ammo-ledger/applications/acquisition-permit/calibration"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              座標調整
+            </Link>
+          ) : null}
         </div>
         <ApplicationPrintButtons supplementPageCount={fieldValues.supplementPageCount} />
         <div className="space-y-1 text-sm text-muted-foreground">

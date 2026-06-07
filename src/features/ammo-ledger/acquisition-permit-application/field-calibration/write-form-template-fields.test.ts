@@ -43,4 +43,44 @@ describe("writeFormTemplateFields", () => {
     expect(updated).not.toContain('id: "old"');
     expect(updated).toContain('id: "sample"');
   });
+
+  it("repeatingRows ブロックも差し替える", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "template-write-"));
+    tempDirs.push(tempDir);
+
+    const relativeFilePath = "supplement-template.ts";
+    const original = `export const supplementTemplate = {
+  id: "supplement",
+  fields: [
+    { id: "label", page: 0, x: 1, y: 2, fontSize: 3 },
+  ],
+  repeatingRows: {
+    startY: 50,
+    rowHeight: 19,
+    maxRowsPerPage: 10,
+    columns: [
+      { id: "year", x: 23, width: 20, fontSize: 2.8, align: "right", yOffset: 1.2 },
+    ],
+  },
+};
+`;
+    await writeFile(path.join(tempDir, relativeFilePath), original, "utf8");
+
+    await writeFormTemplateFields({
+      projectRoot: tempDir,
+      relativeFilePath,
+      fields: [{ id: "label", page: 0, x: 2, y: 3, fontSize: 3.2 }],
+      repeatingRows: {
+        startY: 51,
+        rowHeight: 20,
+        maxRowsPerPage: 10,
+        columns: [{ id: "year", x: 24, width: 21, fontSize: 2.9, align: "right", yOffset: 1.5 }],
+      },
+    });
+
+    const updated = await readFile(path.join(tempDir, relativeFilePath), "utf8");
+    expect(updated).toContain("startY: 51");
+    expect(updated).toContain("rowHeight: 20");
+    expect(updated).toContain("yOffset: 1.5");
+  });
 });

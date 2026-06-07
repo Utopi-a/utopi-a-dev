@@ -23,6 +23,8 @@ export async function upsertLedgerProfileAction(input: unknown) {
       userId: user.id,
       ownerName: parsed.data.ownerName,
       ownerAddress: parsed.data.ownerAddress ?? null,
+      ownerBirthDate: parsed.data.ownerBirthDate ?? null,
+      ownerPhone: parsed.data.ownerPhone ?? null,
       updatedAt: new Date(),
     })
     .onConflictDoUpdate({
@@ -30,6 +32,8 @@ export async function upsertLedgerProfileAction(input: unknown) {
       set: {
         ownerName: parsed.data.ownerName,
         ownerAddress: parsed.data.ownerAddress ?? null,
+        ownerBirthDate: parsed.data.ownerBirthDate ?? null,
+        ownerPhone: parsed.data.ownerPhone ?? null,
         updatedAt: new Date(),
       },
     });

@@ -64,6 +64,11 @@ export function AmmoLedgerHomeView() {
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <AmmoLedgerActionTile
+            href="/lab/ammo-ledger/applications/acquisition-permit/new"
+            label="譲受許可申請書を作る"
+            description="別記様式第2号を入力して印刷"
+          />
+          <AmmoLedgerActionTile
             href="/lab/ammo-ledger/settings/permits"
             label="譲受許可を登録"
             description="警察交付の許可を登録すると、帳簿に許可残数が出ます"

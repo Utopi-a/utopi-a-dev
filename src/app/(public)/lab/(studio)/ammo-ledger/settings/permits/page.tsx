@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AcquisitionPermitForm } from "@/features/ammo-ledger/components/acquisition-permit-form/acquisition-permit-form";
 import { AcquisitionPermitRowActions } from "@/features/ammo-ledger/components/acquisition-permit-row-actions/acquisition-permit-row-actions";
@@ -7,6 +9,7 @@ import { formatPermitExpiryLabel } from "@/features/ammo-ledger/permit/compute-p
 import { listAcquisitionPermits } from "@/features/ammo-ledger/permit/list-acquisition-permits/list-acquisition-permits";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
+import { cn } from "@/lib/cn";
 
 export default async function AcquisitionPermitsSettingsPage() {
   const user = await requireAmmoUser();
@@ -22,6 +25,15 @@ export default async function AcquisitionPermitsSettingsPage() {
         </p>
       </div>
       <AmmoLedgerNav />
+
+      <div className="no-print">
+        <Link
+          href="/lab/ammo-ledger/applications/acquisition-permit/new"
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        >
+          譲受許可申請書を作る
+        </Link>
+      </div>
 
       <AmmoLedgerPanel title="登録済み">
         {permits.length === 0 ? (

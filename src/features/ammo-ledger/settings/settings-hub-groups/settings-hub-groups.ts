@@ -8,6 +8,11 @@ export const settingsHubGroups = [
         description: "氏名・住所（印刷にも使用）",
       },
       {
+        href: "/lab/ammo-ledger/applications/acquisition-permit/new",
+        label: "譲受許可申請書",
+        description: "別記様式第2号を入力して印刷",
+      },
+      {
         href: "/lab/ammo-ledger/settings/permits",
         label: "譲受許可",
         description: "付与日・名称・数量・目的・有効期限",

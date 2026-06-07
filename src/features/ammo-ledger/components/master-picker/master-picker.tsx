@@ -35,6 +35,7 @@ type MasterPickerProps = {
   required?: boolean;
   value: string;
   onChange: (value: string) => void;
+  onMasterSelect?: (master: PickerMasterEntry) => void;
   catalogKind: CatalogKind;
   pickerData: MasterPickerData;
   sheetTitle: string;
@@ -49,6 +50,7 @@ export function MasterPicker({
   required,
   value,
   onChange,
+  onMasterSelect,
   catalogKind,
   pickerData,
   sheetTitle,
@@ -88,6 +90,7 @@ export function MasterPicker({
 
   function handleSelectMaster({ master }: { master: PickerMasterEntry }) {
     onChange(master.id);
+    onMasterSelect?.(master);
     closePicker();
   }
 
@@ -116,7 +119,14 @@ export function MasterPicker({
   function handleSelectCatalog({ entry }: { entry: CatalogEntry }) {
     const knownCounterpartyId = pickerData.counterpartyIdByCatalogId?.[entry.catalogId];
     if (knownCounterpartyId) {
+      const master = allMasters.get(knownCounterpartyId) ?? {
+        id: knownCounterpartyId,
+        name: entry.name,
+        address: entry.address,
+        catalogId: entry.catalogId,
+      };
       onChange(knownCounterpartyId);
+      onMasterSelect?.(master);
       closePicker();
       return;
     }
@@ -163,6 +173,7 @@ export function MasterPicker({
         current.includes(entry.catalogId) ? current : [...current, entry.catalogId],
       );
       onChange(result.id);
+      onMasterSelect?.(master);
     });
   }
 

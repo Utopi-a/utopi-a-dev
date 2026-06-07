@@ -160,6 +160,8 @@ export const ammoLedgerProfile = pgTable("ammo_ledger_profile", {
     .references(() => user.id, { onDelete: "cascade" }),
   ownerName: text("owner_name").notNull(),
   ownerAddress: text("owner_address"),
+  ownerBirthDate: text("owner_birth_date"),
+  ownerPhone: text("owner_phone"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

@@ -22,6 +22,13 @@
       "when": 1780807277737,
       "tag": "0002_opposite_terror",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780808027427,
+      "tag": "0003_smooth_vivisector",
+      "breakpoints": true
     }
   ]
 }

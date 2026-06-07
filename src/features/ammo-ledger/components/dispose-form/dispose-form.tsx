@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoType } from "@/db/schema/ammo-ledger";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
 
@@ -24,6 +25,7 @@ export function DisposeForm({ ammoTypes, initialValues }: DisposeFormProps) {
 
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
+  const [outerBoxCount, setOuterBoxCount] = useState("0");
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
   const [memo, setMemo] = useState("");
@@ -35,11 +37,12 @@ export function DisposeForm({ ammoTypes, initialValues }: DisposeFormProps) {
   const computedRounds = useMemo(() => {
     if (!selectedAmmoType) return 0;
     return computeRounds({
+      outerBoxCount: Number(outerBoxCount) || 0,
       boxCount: Number(boxCount) || 0,
       looseRounds: Number(looseRounds) || 0,
       roundsPerBox: selectedAmmoType.roundsPerBox,
     });
-  }, [selectedAmmoType, boxCount, looseRounds]);
+  }, [selectedAmmoType, outerBoxCount, boxCount, looseRounds]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -50,6 +53,7 @@ export function DisposeForm({ ammoTypes, initialValues }: DisposeFormProps) {
       inputKind: "dispose",
       occurredOn,
       ammoTypeId,
+      outerBoxCount: Number(outerBoxCount) || 0,
       boxCount: Number(boxCount) || 0,
       looseRounds: Number(looseRounds) || 0,
       memo: memo || undefined,
@@ -86,28 +90,14 @@ export function DisposeForm({ ammoTypes, initialValues }: DisposeFormProps) {
         required
       />
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="box-count">箱数</Label>
-          <Input
-            id="box-count"
-            type="number"
-            min={0}
-            value={boxCount}
-            onChange={(e) => setBoxCount(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="loose-rounds">バラ</Label>
-          <Input
-            id="loose-rounds"
-            type="number"
-            min={0}
-            value={looseRounds}
-            onChange={(e) => setLooseRounds(e.target.value)}
-          />
-        </div>
-      </div>
+      <PackagingFields
+        outerBoxCount={outerBoxCount}
+        boxCount={boxCount}
+        looseRounds={looseRounds}
+        onOuterBoxCountChange={setOuterBoxCount}
+        onBoxCountChange={setBoxCount}
+        onLooseRoundsChange={setLooseRounds}
+      />
 
       <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
         <p className="text-muted-foreground">廃棄数量（法定出力）</p>

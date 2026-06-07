@@ -17,6 +17,11 @@ const settingsLinks = [
     description: "名称・許可番号・銃種",
   },
   { href: "/lab/ammo-ledger/settings/ranges", label: "射撃場マスタ", description: "名称・所在地" },
+  {
+    href: "/lab/ammo-ledger/settings/counterparties",
+    label: "購入先マスタ",
+    description: "銃砲火薬店・譲渡相手の氏名と住所",
+  },
 ] as const;
 
 export default async function AmmoLedgerSettingsPage() {

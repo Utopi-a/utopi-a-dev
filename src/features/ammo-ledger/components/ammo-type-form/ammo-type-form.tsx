@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { createAmmoTypeAction } from "@/features/ammo-ledger/master/create-ammo-type/create-ammo-type-action";
 import { buildAmmoTypeLabel } from "@/features/ammo-ledger/schema/build-ammo-type-label";
+import { shotGaugeOptions } from "@/features/ammo-ledger/schema/shot-gauge-options";
 import type { ShotType } from "@/features/ammo-ledger/schema/shot-type";
 import { shotTypeLabels, shotTypes } from "@/features/ammo-ledger/schema/shot-type";
 
@@ -96,18 +97,15 @@ export function AmmoTypeForm() {
 
       <div className="space-y-4 rounded-lg border border-border/70 px-4 py-4">
         <p className="text-sm font-medium">詳細（任意）</p>
-        <div className="space-y-2">
-          <Label htmlFor="gauge-number">号数</Label>
-          <Input
-            id="gauge-number"
-            placeholder="例: 5, 7.5"
-            value={gaugeNumber}
-            onChange={(e) => setGaugeNumber(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            帳簿出力には使いません。管理用のメモです。
-          </p>
-        </div>
+        <FieldSelect
+          id="gauge-number"
+          label="号数（散弾のみ）"
+          value={gaugeNumber}
+          onChange={setGaugeNumber}
+          options={shotGaugeOptions.map((g) => ({ value: g, label: `${g}号` }))}
+          placeholder="未選択"
+        />
+        <p className="text-xs text-muted-foreground">帳簿出力には使いません。管理用の詳細です。</p>
         <div className="space-y-2">
           <Label htmlFor="ammo-name">名称</Label>
           <Input

@@ -4,26 +4,35 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { ammoType } from "@/db/schema/ammo-ledger";
+import type { ammoCounterparty, ammoType } from "@/db/schema/ammo-ledger";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
 
+const manualCounterpartyId = "__manual__";
+
 type AcquireFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
+  counterparties: (typeof ammoCounterparty.$inferSelect)[];
   initialValues?: {
     occurredOn?: string;
     ammoTypeId?: string;
+    outerBoxCount?: number;
     boxCount?: number;
     looseRounds?: number;
   };
 };
 
-export function AcquireForm({ ammoTypes, initialValues }: AcquireFormProps) {
+export function AcquireForm({ ammoTypes, counterparties, initialValues }: AcquireFormProps) {
   const today = new Date().toISOString().slice(0, 10);
 
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
+  const [counterpartyId, setCounterpartyId] = useState(
+    counterparties[0]?.id ?? manualCounterpartyId,
+  );
+  const [outerBoxCount, setOuterBoxCount] = useState(String(initialValues?.outerBoxCount ?? 0));
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
   const [counterpartyName, setCounterpartyName] = useState("");
@@ -33,15 +42,17 @@ export function AcquireForm({ ammoTypes, initialValues }: AcquireFormProps) {
   const [isPending, setIsPending] = useState(false);
 
   const selectedAmmoType = ammoTypes.find((t) => t.id === ammoTypeId);
+  const isManualCounterparty = counterpartyId === manualCounterpartyId;
 
   const computedRounds = useMemo(() => {
     if (!selectedAmmoType) return 0;
     return computeRounds({
+      outerBoxCount: Number(outerBoxCount) || 0,
       boxCount: Number(boxCount) || 0,
       looseRounds: Number(looseRounds) || 0,
       roundsPerBox: selectedAmmoType.roundsPerBox,
     });
-  }, [selectedAmmoType, boxCount, looseRounds]);
+  }, [selectedAmmoType, outerBoxCount, boxCount, looseRounds]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -52,10 +63,10 @@ export function AcquireForm({ ammoTypes, initialValues }: AcquireFormProps) {
       inputKind: "acquire",
       occurredOn,
       ammoTypeId,
+      outerBoxCount: Number(outerBoxCount) || 0,
       boxCount: Number(boxCount) || 0,
       looseRounds: Number(looseRounds) || 0,
-      counterpartyName,
-      counterpartyAddress,
+      ...(isManualCounterparty ? { counterpartyName, counterpartyAddress } : { counterpartyId }),
       memo: memo || undefined,
     });
 
@@ -85,58 +96,63 @@ export function AcquireForm({ ammoTypes, initialValues }: AcquireFormProps) {
         onChange={setAmmoTypeId}
         options={ammoTypes.map((t) => ({
           value: t.id,
-          label: `${t.name}（1箱${t.roundsPerBox}発）`,
+          label: `${t.name}（小箱${t.roundsPerBox}発）`,
         }))}
         required
       />
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="box-count">箱数</Label>
-          <Input
-            id="box-count"
-            type="number"
-            min={0}
-            value={boxCount}
-            onChange={(e) => setBoxCount(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="loose-rounds">バラ</Label>
-          <Input
-            id="loose-rounds"
-            type="number"
-            min={0}
-            value={looseRounds}
-            onChange={(e) => setLooseRounds(e.target.value)}
-          />
-        </div>
-      </div>
+      <PackagingFields
+        outerBoxCount={outerBoxCount}
+        boxCount={boxCount}
+        looseRounds={looseRounds}
+        onOuterBoxCountChange={setOuterBoxCount}
+        onBoxCountChange={setBoxCount}
+        onLooseRoundsChange={setLooseRounds}
+      />
 
       <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
         <p className="text-muted-foreground">譲受数量（法定出力）</p>
         <p className="text-lg font-semibold">{computedRounds}発</p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="counterparty-name">相手方氏名</Label>
-        <Input
-          id="counterparty-name"
-          required
-          value={counterpartyName}
-          onChange={(e) => setCounterpartyName(e.target.value)}
-        />
-      </div>
+      <FieldSelect
+        id="counterparty"
+        label="譲渡元（購入先）"
+        value={counterpartyId}
+        onChange={setCounterpartyId}
+        options={[
+          ...counterparties.map((c) => ({
+            value: c.id,
+            label: `${c.name}（${c.address}）`,
+          })),
+          { value: manualCounterpartyId, label: "手入力する" },
+        ]}
+        required
+        placeholder=""
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="counterparty-address">相手方住所</Label>
-        <Input
-          id="counterparty-address"
-          required
-          value={counterpartyAddress}
-          onChange={(e) => setCounterpartyAddress(e.target.value)}
-        />
-      </div>
+      {isManualCounterparty ? (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="counterparty-name">相手方氏名</Label>
+            <Input
+              id="counterparty-name"
+              required
+              value={counterpartyName}
+              onChange={(e) => setCounterpartyName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="counterparty-address">相手方住所</Label>
+            <Input
+              id="counterparty-address"
+              required
+              value={counterpartyAddress}
+              onChange={(e) => setCounterpartyAddress(e.target.value)}
+            />
+          </div>
+        </>
+      ) : null}
 
       <div className="space-y-2">
         <Label htmlFor="memo">メモ（帳簿には出ません）</Label>

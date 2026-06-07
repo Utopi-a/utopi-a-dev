@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun, ammoRange, ammoType } from "@/db/schema/ammo-ledger";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
 
@@ -30,6 +31,7 @@ export function ConsumeForm({ guns, ammoTypes, ranges, initialValues }: ConsumeF
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
   const [gunId, setGunId] = useState(initialValues?.gunId ?? "");
   const [rangeId, setRangeId] = useState(initialValues?.rangeId ?? "");
+  const [outerBoxCount, setOuterBoxCount] = useState("0");
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
   const [memo, setMemo] = useState("");
@@ -41,11 +43,12 @@ export function ConsumeForm({ guns, ammoTypes, ranges, initialValues }: ConsumeF
   const computedRounds = useMemo(() => {
     if (!selectedAmmoType) return 0;
     return computeRounds({
+      outerBoxCount: Number(outerBoxCount) || 0,
       boxCount: Number(boxCount) || 0,
       looseRounds: Number(looseRounds) || 0,
       roundsPerBox: selectedAmmoType.roundsPerBox,
     });
-  }, [selectedAmmoType, boxCount, looseRounds]);
+  }, [selectedAmmoType, outerBoxCount, boxCount, looseRounds]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -58,6 +61,7 @@ export function ConsumeForm({ guns, ammoTypes, ranges, initialValues }: ConsumeF
       ammoTypeId,
       gunId,
       rangeId,
+      outerBoxCount: Number(outerBoxCount) || 0,
       boxCount: Number(boxCount) || 0,
       looseRounds: Number(looseRounds) || 0,
       memo: memo || undefined,
@@ -112,27 +116,15 @@ export function ConsumeForm({ guns, ammoTypes, ranges, initialValues }: ConsumeF
         required
       />
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="box-count">箱数</Label>
-          <Input
-            id="box-count"
-            type="number"
-            min={0}
-            value={boxCount}
-            onChange={(e) => setBoxCount(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="loose-rounds">バラ（±）</Label>
-          <Input
-            id="loose-rounds"
-            type="number"
-            value={looseRounds}
-            onChange={(e) => setLooseRounds(e.target.value)}
-          />
-        </div>
-      </div>
+      <PackagingFields
+        outerBoxCount={outerBoxCount}
+        boxCount={boxCount}
+        looseRounds={looseRounds}
+        onOuterBoxCountChange={setOuterBoxCount}
+        onBoxCountChange={setBoxCount}
+        onLooseRoundsChange={setLooseRounds}
+        looseLabel="バラ（±）"
+      />
 
       <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
         <p className="text-muted-foreground">実消費（法定出力に使われる数量）</p>

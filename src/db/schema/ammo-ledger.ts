@@ -32,6 +32,19 @@ export const ammoType = pgTable("ammo_type", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const ammoCounterparty = pgTable("ammo_counterparty", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  address: text("address").notNull(),
+  kind: text("kind").notNull().default("shop"),
+  memo: text("memo"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const ammoRange = pgTable("ammo_range", {
   id: text("id").primaryKey(),
   userId: text("user_id")
@@ -56,6 +69,10 @@ export const ammoTransaction = pgTable("ammo_transaction", {
   ammoTypeId: text("ammo_type_id").references(() => ammoType.id, { onDelete: "set null" }),
   gunId: text("gun_id").references(() => ammoGun.id, { onDelete: "set null" }),
   rangeId: text("range_id").references(() => ammoRange.id, { onDelete: "set null" }),
+  counterpartyId: text("counterparty_id").references(() => ammoCounterparty.id, {
+    onDelete: "set null",
+  }),
+  outerBoxCount: integer("outer_box_count").notNull().default(0),
   boxCount: integer("box_count").notNull().default(0),
   looseRounds: integer("loose_rounds").notNull().default(0),
   computedRounds: integer("computed_rounds"),

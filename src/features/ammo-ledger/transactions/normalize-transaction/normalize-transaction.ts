@@ -22,6 +22,7 @@ type NormalizeTransactionInput = {
   occurredOn: string;
   ammoTypeId: string;
   ammoTypeName: string;
+  outerBoxCount?: number;
   boxCount: number;
   looseRounds: number;
   roundsPerBox: number;
@@ -44,6 +45,7 @@ export function normalizeTransaction(
   }
 
   const quantity = computeRounds({
+    outerBoxCount: input.outerBoxCount ?? 0,
     boxCount: input.boxCount,
     looseRounds: input.looseRounds,
     roundsPerBox: input.roundsPerBox,

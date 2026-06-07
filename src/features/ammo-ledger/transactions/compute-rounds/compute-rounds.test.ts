@@ -12,6 +12,18 @@ describe("computeRounds", () => {
     ).toBe(73);
   });
 
+  it("大箱・小箱・バラから発数を計算する", () => {
+    expect(
+      computeRounds({
+        outerBoxCount: 1,
+        boxCount: 2,
+        looseRounds: 5,
+        roundsPerBox: 25,
+        smallBoxesPerOuterBox: 10,
+      }),
+    ).toBe(305);
+  });
+
   it("箱数のみの場合", () => {
     expect(
       computeRounds({

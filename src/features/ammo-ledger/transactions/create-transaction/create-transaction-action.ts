@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import {
+  ammoCounterparty,
   ammoGun,
   ammoLedgerEntry,
   ammoRange,
@@ -11,6 +12,7 @@ import {
   ammoType,
 } from "@/db/schema/ammo-ledger";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { resolveCounterparty } from "@/features/ammo-ledger/master/resolve-counterparty/resolve-counterparty";
 import { transactionInputSchema } from "@/features/ammo-ledger/schema/transaction-schema";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { normalizeTransaction } from "@/features/ammo-ledger/transactions/normalize-transaction/normalize-transaction";
@@ -62,7 +64,33 @@ export async function createTransactionAction(input: unknown) {
     rangeRow = range;
   }
 
+  let counterpartyRow: typeof ammoCounterparty.$inferSelect | undefined;
+  if ("counterpartyId" in data && data.counterpartyId) {
+    const [row] = await db
+      .select()
+      .from(ammoCounterparty)
+      .where(
+        and(eq(ammoCounterparty.id, data.counterpartyId), eq(ammoCounterparty.userId, user.id)),
+      );
+    counterpartyRow = row;
+  }
+
+  const counterparty =
+    "counterpartyId" in data || "counterpartyName" in data
+      ? resolveCounterparty({
+          counterpartyId: "counterpartyId" in data ? data.counterpartyId : undefined,
+          counterpartyName: "counterpartyName" in data ? data.counterpartyName : undefined,
+          counterpartyAddress: "counterpartyAddress" in data ? data.counterpartyAddress : undefined,
+          master: counterpartyRow ?? null,
+        })
+      : null;
+
+  if ((data.inputKind === "acquire" || data.inputKind === "transfer") && !counterparty) {
+    return { ok: false as const, error: "相手方を選択するか、氏名と住所を入力してください" };
+  }
+
   const computedRounds = computeRounds({
+    outerBoxCount: data.outerBoxCount,
     boxCount: data.boxCount,
     looseRounds: data.looseRounds,
     roundsPerBox: ammoTypeRow.roundsPerBox,
@@ -73,6 +101,7 @@ export async function createTransactionAction(input: unknown) {
     occurredOn: data.occurredOn,
     ammoTypeId: ammoTypeRow.id,
     ammoTypeName: ammoTypeRow.name,
+    outerBoxCount: data.outerBoxCount,
     boxCount: data.boxCount,
     looseRounds: data.looseRounds,
     roundsPerBox: ammoTypeRow.roundsPerBox,
@@ -82,8 +111,8 @@ export async function createTransactionAction(input: unknown) {
     rangeId: rangeRow?.id,
     rangeName: rangeRow?.name,
     rangeAddress: rangeRow?.address,
-    counterpartyName: "counterpartyName" in data ? data.counterpartyName : undefined,
-    counterpartyAddress: "counterpartyAddress" in data ? data.counterpartyAddress : undefined,
+    counterpartyName: counterparty?.name,
+    counterpartyAddress: counterparty?.address,
   });
 
   if (!normalized) {
@@ -111,11 +140,13 @@ export async function createTransactionAction(input: unknown) {
       ammoTypeId: ammoTypeRow.id,
       gunId: gunRow?.id ?? null,
       rangeId: rangeRow?.id ?? null,
+      counterpartyId: counterparty?.counterpartyId ?? null,
+      outerBoxCount: data.outerBoxCount,
       boxCount: data.boxCount,
       looseRounds: data.looseRounds,
       computedRounds,
-      counterpartyName: "counterpartyName" in data ? data.counterpartyName : null,
-      counterpartyAddress: "counterpartyAddress" in data ? data.counterpartyAddress : null,
+      counterpartyName: counterparty?.name ?? null,
+      counterpartyAddress: counterparty?.address ?? null,
       memo: data.memo ?? null,
     });
 

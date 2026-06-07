@@ -27,6 +27,7 @@
     "db:migrate": "doppler run -- drizzle-kit migrate",
     "db:studio": "doppler run -- drizzle-kit studio",
     "scrape:shooting-ranges": "pnpm dlx tsx src/features/ammo-ledger/range-seed/scrape-shajoukyo-ranges/scrape-shajoukyo-ranges.ts",
+    "scrape:gun-shops": "pnpm dlx tsx src/features/ammo-ledger/counterparty-seed/scrape-nikkaren-traders/scrape-nikkaren-traders.ts",
     "resolve:shooting-range-addresses": "pnpm dlx tsx src/features/ammo-ledger/range-seed/resolve-range-addresses/resolve-range-addresses.ts"
   },
   "dependencies": {
@@ -66,6 +67,7 @@
     "@vitejs/plugin-react": "^6.0.2",
     "drizzle-kit": "^0.31.10",
     "jsdom": "^29.1.1",
+    "pdf-parse": "^1.1.1",
     "lefthook": "^2.1.9",
     "tailwindcss": "^4",
     "typescript": "^5",

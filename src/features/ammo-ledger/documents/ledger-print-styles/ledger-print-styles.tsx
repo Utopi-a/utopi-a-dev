@@ -64,12 +64,11 @@ export function LedgerPrintStyles() {
         text-align: right;
       }
 
-      .ledger-print-cell-clamp {
+      .ledger-print-cell-text {
+        display: block;
         overflow: hidden;
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-        word-break: break-all;
+        white-space: nowrap;
+        text-overflow: ellipsis;
       }
 
       @media print {

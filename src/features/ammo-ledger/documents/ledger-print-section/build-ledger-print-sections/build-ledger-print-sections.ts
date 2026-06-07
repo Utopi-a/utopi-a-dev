@@ -10,6 +10,7 @@ import {
   type LedgerPrintSectionKey,
 } from "@/features/ammo-ledger/documents/ledger-print-section/build-ledger-print-section-key/build-ledger-print-section-key";
 import { computePrintPermitBalance } from "@/features/ammo-ledger/documents/ledger-print-section/compute-print-permit-balance/compute-print-permit-balance";
+import { formatLedgerPrintPermitPurposeLabel } from "@/features/ammo-ledger/documents/ledger-print-section/format-ledger-print-permit-purpose-label/format-ledger-print-permit-purpose-label";
 import { resolveEntryPermitName } from "@/features/ammo-ledger/documents/ledger-print-section/resolve-entry-permit-name/resolve-entry-permit-name";
 import { mapLedgerPurposeToPermitPurpose } from "@/features/ammo-ledger/opening-balance/map-ledger-purpose-to-permit-purpose/map-ledger-purpose-to-permit-purpose";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
@@ -251,5 +252,9 @@ export function formatLedgerPrintSectionLabel({
 }: {
   section: Pick<LedgerPrintSection, "permitName" | "permitPurpose">;
 }): string {
-  return `${section.permitName}（${section.permitPurpose}）`;
+  const purposeLabel = formatLedgerPrintPermitPurposeLabel({
+    permitPurpose: section.permitPurpose,
+  });
+
+  return `${section.permitName}（${purposeLabel}）`;
 }

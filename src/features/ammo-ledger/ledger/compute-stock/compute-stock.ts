@@ -6,7 +6,7 @@ type StockEntry = {
   quantity: number;
 };
 
-const increaseCategories: LedgerCategory[] = ["acquire", "manufacture"];
+const increaseCategories: LedgerCategory[] = ["acquire", "manufacture", "carryover"];
 const decreaseCategories: LedgerCategory[] = ["consume", "transfer", "dispose"];
 
 export function computeStockByAmmoType({

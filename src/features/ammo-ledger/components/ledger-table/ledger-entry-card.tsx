@@ -1,13 +1,27 @@
 import { ChevronRightIcon } from "lucide-react";
 import type { ammoLedgerEntry } from "@/db/schema/ammo-ledger";
-import { LedgerCategoryBadge } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
+import {
+  LedgerCategoryBadge,
+  PermitCarryoverBadge,
+} from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
+import {
+  buildPermitCarryoverLabel,
+  isDisplayRowSelectable,
+  type LedgerDisplayRow,
+} from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
 import { cn } from "@/lib/cn";
 
 type LedgerEntryCardProps = {
-  entry: typeof ammoLedgerEntry.$inferSelect;
+  row: LedgerDisplayRow;
   permitBalance?: number;
   isHomeStorageExceeded?: boolean;
-  onSelect: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
+  onSelect: ({
+    entry,
+    permitBalance,
+  }: {
+    entry: typeof ammoLedgerEntry.$inferSelect;
+    permitBalance?: number;
+  }) => void;
 };
 
 function DetailLine({ label, value }: { label: string; value: string }) {
@@ -20,18 +34,40 @@ function DetailLine({ label, value }: { label: string; value: string }) {
 }
 
 export function LedgerEntryCard({
-  entry,
+  row,
   permitBalance,
   isHomeStorageExceeded = false,
   onSelect,
 }: LedgerEntryCardProps) {
+  if (row.kind === "permit_carryover") {
+    return (
+      <div className="flex w-full items-start gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-3.5">
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium tabular-nums">{row.occurredOn}</span>
+            <PermitCarryoverBadge />
+          </div>
+          <p className="font-medium leading-snug">
+            {buildPermitCarryoverLabel({ occurredOn: row.occurredOn })}
+          </p>
+          <DetailLine label="許可残数" value={`${row.quantity}発`} />
+        </div>
+      </div>
+    );
+  }
+
+  const entry = row.entry;
+  const selectable = isDisplayRowSelectable({ row });
+
   return (
     <button
       type="button"
-      onClick={() => onSelect({ ledgerEntryId: entry.id })}
+      disabled={!selectable}
+      onClick={() => selectable && onSelect({ entry, permitBalance })}
       className={cn(
         "flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5 text-left transition-colors",
-        "hover:border-border hover:bg-muted/30 active:bg-muted/40",
+        selectable && "hover:border-border hover:bg-muted/30 active:bg-muted/40",
+        !selectable && "cursor-default",
         isHomeStorageExceeded && "border-amber-500/30 bg-amber-500/5",
       )}
     >
@@ -69,7 +105,9 @@ export function LedgerEntryCard({
           ) : null}
         </div>
       </div>
-      <ChevronRightIcon className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden />
+      {selectable ? (
+        <ChevronRightIcon className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden />
+      ) : null}
     </button>
   );
 }

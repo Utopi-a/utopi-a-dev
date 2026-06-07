@@ -16,11 +16,18 @@ export function AmmoLedgerHomeView() {
         <h2 className="px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
           帳簿の準備
         </h2>
-        <AmmoLedgerActionTile
-          href="/lab/ammo-ledger/settings/permits"
-          label="譲受許可を登録"
-          description="警察交付の許可を登録すると、帳簿に許可残数が出ます"
-        />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <AmmoLedgerActionTile
+            href="/lab/ammo-ledger/settings/permits"
+            label="譲受許可を登録"
+            description="警察交付の許可を登録すると、帳簿に許可残数が出ます"
+          />
+          <AmmoLedgerActionTile
+            href="/lab/ammo-ledger/settings/opening-balance"
+            label="年初繰越を登録"
+            description="紙の帳簿から移行するときの残弾数・許可残数"
+          />
+        </div>
       </section>
 
       <section className="space-y-3">

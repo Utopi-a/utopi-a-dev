@@ -12,6 +12,11 @@ export const settingsHubGroups = [
         label: "譲受許可",
         description: "付与日・名称・数量・目的・有効期限",
       },
+      {
+        href: "/lab/ammo-ledger/settings/opening-balance",
+        label: "年初繰越",
+        description: "紙の帳簿から移行するときの残弾数・許可残数",
+      },
     ],
   },
   {

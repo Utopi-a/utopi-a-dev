@@ -4,6 +4,7 @@ export const ledgerCategories = [
   "transfer",
   "dispose",
   "manufacture",
+  "carryover",
 ] as const;
 
 export type LedgerCategory = (typeof ledgerCategories)[number];
@@ -14,4 +15,5 @@ export const ledgerCategoryLabels: Record<LedgerCategory, string> = {
   transfer: "譲渡",
   dispose: "廃棄",
   manufacture: "製造",
+  carryover: "繰越",
 };

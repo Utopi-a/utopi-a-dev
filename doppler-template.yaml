@@ -18,6 +18,11 @@ projects:
         configs:
           - slug: prd
 
+      - name: GitHub Actions
+        slug: github
+        configs:
+          - slug: ci
+
     secrets:
       dev:
         DATABASE_URL: ""
@@ -60,6 +65,9 @@ projects:
         NEXT_PUBLIC_APP_URL: ""
         AUTH_ALLOW_SIGNUP: "false"
         OWNER_EMAILS: ""
+
+      ci:
+        DATABASE_URL: ""
 
       prd:
         DATABASE_URL: ""

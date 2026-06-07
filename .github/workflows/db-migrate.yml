@@ -33,13 +33,10 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v3
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Apply migrations
-        run: doppler run -- drizzle-kit migrate
+        run: pnpm exec drizzle-kit migrate
         env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

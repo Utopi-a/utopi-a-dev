@@ -20,8 +20,12 @@ type CalibrationFieldOverlayProps = {
   isSelected: boolean;
   isPrimary: boolean;
   onMakePrimary: () => void;
-  onSelect: (event: ReactPointerEvent<HTMLDivElement>) => void;
+  onPrepareDrag: ({ additive }: { additive: boolean }) => boolean;
+  onDragMove: ({ dx, dy }: { dx: number; dy: number }) => void;
+  onDragEnd: () => void;
   onFieldChange: ({ patch }: { patch: Partial<OverlayFieldDef> }) => void;
+  onInteractionStart: () => void;
+  onInteractionEnd: () => void;
 };
 
 export function CalibrationFieldOverlay({
@@ -32,8 +36,12 @@ export function CalibrationFieldOverlay({
   isSelected,
   isPrimary,
   onMakePrimary,
-  onSelect,
+  onPrepareDrag,
+  onDragMove,
+  onDragEnd,
   onFieldChange,
+  onInteractionStart,
+  onInteractionEnd,
 }: CalibrationFieldOverlayProps) {
   const displayValue = value || field.id;
   const isCheckbox = field.variant === "checkbox";
@@ -55,9 +63,11 @@ export function CalibrationFieldOverlay({
     }
 
     event.preventDefault();
-    onSelect(event);
 
-    if (event.metaKey || event.ctrlKey) {
+    const shouldDrag = onPrepareDrag({
+      additive: event.metaKey || event.ctrlKey,
+    });
+    if (!shouldDrag) {
       return;
     }
 
@@ -69,24 +79,18 @@ export function CalibrationFieldOverlay({
     const { mmPerPxX, mmPerPxY } = getMmPerPx(pageElement);
     const startX = event.clientX;
     const startY = event.clientY;
-    const originX = field.x;
-    const originY = field.y;
 
     function handlePointerMove(moveEvent: PointerEvent) {
       const dx = (moveEvent.clientX - startX) * mmPerPxX;
       const dy = (moveEvent.clientY - startY) * mmPerPxY;
-      onFieldChange({
-        patch: {
-          x: Math.round((originX + dx) * 100) / 100,
-          y: Math.round((originY + dy) * 100) / 100,
-        },
-      });
+      onDragMove({ dx, dy });
       moveEvent.preventDefault();
     }
 
     function handlePointerUp() {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
+      onDragEnd();
     }
 
     window.addEventListener("pointermove", handlePointerMove);
@@ -112,6 +116,8 @@ export function CalibrationFieldOverlay({
     const startY = event.clientY;
     const originField = { ...field, width, height };
 
+    onInteractionStart();
+
     function handlePointerMove(moveEvent: PointerEvent) {
       const dx = (moveEvent.clientX - startX) * mmPerPxX;
       const dy = (moveEvent.clientY - startY) * mmPerPxY;
@@ -128,6 +134,7 @@ export function CalibrationFieldOverlay({
     function handlePointerUp() {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
+      onInteractionEnd();
     }
 
     window.addEventListener("pointermove", handlePointerMove);
@@ -137,7 +144,7 @@ export function CalibrationFieldOverlay({
   return (
     <div
       className={cn(
-        "absolute box-border cursor-move border text-left",
+        "absolute z-10 box-border cursor-move border text-left",
         isPrimary
           ? "border-blue-600 bg-blue-500/10 ring-1 ring-blue-600"
           : isSelected

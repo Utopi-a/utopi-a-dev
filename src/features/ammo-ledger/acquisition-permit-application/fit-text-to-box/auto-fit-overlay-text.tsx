@@ -19,8 +19,8 @@ type AutoFitOverlayTextProps = {
 
 export function AutoFitOverlayText({
   text,
-  widthMm,
-  heightMm,
+  widthMm: _widthMm,
+  heightMm: _heightMm,
   baseFontSizeMm,
   align = "left",
   className,

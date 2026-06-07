@@ -8,6 +8,20 @@
       "when": 1780412695882,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780806649968,
+      "tag": "0001_normal_timeslip",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780807277737,
+      "tag": "0002_opposite_terror",
+      "breakpoints": true
     }
   ]
 }

@@ -9,6 +9,7 @@ import { cn } from "@/lib/cn";
 
 const studioLinks = [
   { href: "/lab/studio", label: "ダッシュボード" },
+  { href: "/lab/ammo-ledger", label: "実包管理帳簿" },
   { href: "/lab/blog/manage", label: "ブログ管理" },
   { href: "/lab/settings", label: "アカウント" },
 ] as const;

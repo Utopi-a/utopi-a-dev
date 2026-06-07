@@ -24,5 +24,7 @@ export const config = {
     "/lab/blog/manage/:path*",
     "/lab/settings",
     "/lab/settings/:path*",
+    "/lab/ammo-ledger",
+    "/lab/ammo-ledger/:path*",
   ],
 };

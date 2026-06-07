@@ -15,7 +15,15 @@ const categoryTone: Record<LedgerCategory, string> = {
 };
 
 export function PermitCarryoverBadge() {
-  return <LedgerCategoryBadge category="carryover" />;
+  return (
+    <span className="inline-flex min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+      繰越
+    </span>
+  );
+}
+
+export function isAmmoCarryoverEntry({ category }: { category: string }): boolean {
+  return category === "carryover";
 }
 
 export function LedgerCategoryBadge({ category }: { category: string }) {

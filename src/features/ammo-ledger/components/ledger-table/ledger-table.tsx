@@ -5,6 +5,7 @@ import type { ammoLedgerEntry } from "@/db/schema/ammo-ledger";
 import { LedgerEntryActionsSheet } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-actions-sheet";
 import { LedgerEntryCard } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-card";
 import {
+  isAmmoCarryoverEntry,
   LedgerCategoryBadge,
   PermitCarryoverBadge,
 } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
@@ -118,10 +119,7 @@ export function LedgerTable({
 
                 if (row.kind === "permit_carryover") {
                   return (
-                    <tr
-                      key={row.id}
-                      className="border-b border-border/25 bg-emerald-500/5 last:border-0"
-                    >
+                    <tr key={row.id} className="border-b border-border/25 last:border-0">
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
                         <span className="whitespace-nowrap tabular-nums">{row.occurredOn}</span>
                       </td>
@@ -191,6 +189,7 @@ export function LedgerTable({
                       selectable &&
                         "cursor-pointer border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20",
                       !selectable && "border-b border-border/25 last:border-0",
+                      isAmmoCarryoverEntry({ category: entry.category }) && "bg-emerald-500/5",
                       exceededSet.has(entry.id) && "bg-amber-500/5",
                     )}
                   >
@@ -268,7 +267,7 @@ export function LedgerTable({
           </table>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          記録行をクリックすると編集・取消ができます。琥珀色の行はその時点で自宅保管の目安（800発）を超えています。薄緑の行は許可残数の繰越です。
+          記録行をクリックすると編集・取消ができます。琥珀色の行はその時点で自宅保管の目安（800発）を超えています。薄緑の行は弾の繰越です。
         </p>
       </div>
 

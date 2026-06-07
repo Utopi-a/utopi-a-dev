@@ -1,6 +1,7 @@
 "use client";
 
 import { AmmoLedgerActionTile } from "@/features/ammo-ledger/components/ammo-ledger-action-tile/ammo-ledger-action-tile";
+import { AmmoLedgerPwaInstallBanner } from "@/features/ammo-ledger/components/ammo-ledger-pwa-install/ammo-ledger-pwa-install-banner";
 
 export function AmmoLedgerHomeView() {
   return (
@@ -11,6 +12,8 @@ export function AmmoLedgerHomeView() {
           まず記録を入力し、必要なときに帳簿や残弾を確認します。
         </p>
       </div>
+
+      <AmmoLedgerPwaInstallBanner />
 
       <section className="space-y-3">
         <h2 className="px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">

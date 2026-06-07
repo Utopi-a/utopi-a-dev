@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SiteNav } from "@/components/layout/site-header/site-nav";
 import { siteProfile } from "@/features/portfolio/site-config";
 import { SocialLinks } from "@/features/portfolio/social-links/social-links";
+import { ThemeToggle } from "@/lib/theme/theme-toggle";
 
 export function SiteHeader() {
   return (
@@ -26,6 +27,7 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2 sm:gap-3">
           <SiteNav />
+          <ThemeToggle />
           <div className="hidden sm:block">
             <SocialLinks size="sm" />
           </div>

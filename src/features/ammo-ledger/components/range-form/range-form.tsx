@@ -6,13 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createRangeAction } from "@/features/ammo-ledger/master/create-range/create-range-action";
+import { updateRangeAction } from "@/features/ammo-ledger/master/update-range/update-range-action";
 
-export function RangeForm() {
+type RangeFormProps = {
+  recordId?: string;
+  initialValues?: {
+    name: string;
+    address: string;
+    defaultPurpose?: string | null;
+    memo?: string | null;
+  };
+};
+
+export function RangeForm({ recordId, initialValues }: RangeFormProps = {}) {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-  const [defaultPurpose, setDefaultPurpose] = useState("");
-  const [memo, setMemo] = useState("");
+  const isEdit = Boolean(recordId);
+  const [name, setName] = useState(initialValues?.name ?? "");
+  const [address, setAddress] = useState(initialValues?.address ?? "");
+  const [defaultPurpose, setDefaultPurpose] = useState(initialValues?.defaultPurpose ?? "");
+  const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -21,16 +33,25 @@ export function RangeForm() {
     setIsPending(true);
     setError(null);
 
-    const result = await createRangeAction({
+    const payload = {
       name,
       address,
       defaultPurpose: defaultPurpose || undefined,
       memo: memo || undefined,
-    });
+    };
+
+    const result = isEdit
+      ? await updateRangeAction({ id: recordId!, input: payload })
+      : await createRangeAction(payload);
 
     if (!result.ok) {
       setError(result.error);
       setIsPending(false);
+      return;
+    }
+
+    if (isEdit) {
+      router.push("/lab/ammo-ledger/settings/ranges");
       return;
     }
 
@@ -66,7 +87,7 @@ export function RangeForm() {
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="submit" disabled={isPending}>
-        {isPending ? "追加中…" : "射撃場を追加"}
+        {isPending ? "保存中…" : isEdit ? "変更を保存" : "射撃場を追加"}
       </Button>
     </form>
   );

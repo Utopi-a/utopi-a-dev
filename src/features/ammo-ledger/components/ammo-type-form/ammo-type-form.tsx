@@ -7,20 +7,35 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { createAmmoTypeAction } from "@/features/ammo-ledger/master/create-ammo-type/create-ammo-type-action";
+import { updateAmmoTypeAction } from "@/features/ammo-ledger/master/update-ammo-type/update-ammo-type-action";
 import { buildAmmoTypeLabel } from "@/features/ammo-ledger/schema/build-ammo-type-label";
 import { shotGaugeOptions } from "@/features/ammo-ledger/schema/shot-gauge-options";
 import type { ShotType } from "@/features/ammo-ledger/schema/shot-type";
 import { shotTypeLabels, shotTypes } from "@/features/ammo-ledger/schema/shot-type";
 
-export function AmmoTypeForm() {
+type AmmoTypeFormProps = {
+  recordId?: string;
+  initialValues?: {
+    name: string;
+    caliber: string;
+    shotType: string;
+    gaugeNumber?: string | null;
+    roundsPerBox: number;
+    defaultPurpose?: string | null;
+    memo?: string | null;
+  };
+};
+
+export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}) {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [caliber, setCaliber] = useState("12番");
-  const [shotType, setShotType] = useState<string>(shotTypes[1]);
-  const [gaugeNumber, setGaugeNumber] = useState("");
-  const [roundsPerBox, setRoundsPerBox] = useState("25");
-  const [defaultPurpose, setDefaultPurpose] = useState("");
-  const [memo, setMemo] = useState("");
+  const isEdit = Boolean(recordId);
+  const [name, setName] = useState(initialValues?.name ?? "");
+  const [caliber, setCaliber] = useState(initialValues?.caliber ?? "12番");
+  const [shotType, setShotType] = useState<string>(initialValues?.shotType ?? shotTypes[1]);
+  const [gaugeNumber, setGaugeNumber] = useState(initialValues?.gaugeNumber ?? "");
+  const [roundsPerBox, setRoundsPerBox] = useState(initialValues?.roundsPerBox?.toString() ?? "25");
+  const [defaultPurpose, setDefaultPurpose] = useState(initialValues?.defaultPurpose ?? "");
+  const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -36,7 +51,7 @@ export function AmmoTypeForm() {
     setIsPending(true);
     setError(null);
 
-    const result = await createAmmoTypeAction({
+    const payload = {
       name: name || undefined,
       caliber,
       shotType,
@@ -44,11 +59,20 @@ export function AmmoTypeForm() {
       roundsPerBox: Number(roundsPerBox),
       defaultPurpose: defaultPurpose || undefined,
       memo: memo || undefined,
-    });
+    };
+
+    const result = isEdit
+      ? await updateAmmoTypeAction({ id: recordId!, input: payload })
+      : await createAmmoTypeAction(payload);
 
     if (!result.ok) {
       setError(result.error);
       setIsPending(false);
+      return;
+    }
+
+    if (isEdit) {
+      router.push("/lab/ammo-ledger/settings/ammo-types");
       return;
     }
 
@@ -136,7 +160,7 @@ export function AmmoTypeForm() {
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="submit" disabled={isPending}>
-        {isPending ? "追加中…" : "弾種を追加"}
+        {isPending ? "保存中…" : isEdit ? "変更を保存" : "弾種を追加"}
       </Button>
     </form>
   );

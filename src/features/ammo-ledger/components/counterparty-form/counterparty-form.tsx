@@ -6,12 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createCounterpartyAction } from "@/features/ammo-ledger/master/create-counterparty/create-counterparty-action";
+import { updateCounterpartyAction } from "@/features/ammo-ledger/master/update-counterparty/update-counterparty-action";
 
-export function CounterpartyForm() {
+type CounterpartyFormProps = {
+  recordId?: string;
+  initialValues?: {
+    name: string;
+    address: string;
+    memo?: string | null;
+  };
+};
+
+export function CounterpartyForm({ recordId, initialValues }: CounterpartyFormProps = {}) {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-  const [memo, setMemo] = useState("");
+  const isEdit = Boolean(recordId);
+  const [name, setName] = useState(initialValues?.name ?? "");
+  const [address, setAddress] = useState(initialValues?.address ?? "");
+  const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -20,16 +31,25 @@ export function CounterpartyForm() {
     setIsPending(true);
     setError(null);
 
-    const result = await createCounterpartyAction({
+    const payload = {
       name,
       address,
-      kind: "shop",
+      kind: "shop" as const,
       memo: memo || undefined,
-    });
+    };
+
+    const result = isEdit
+      ? await updateCounterpartyAction({ id: recordId!, input: payload })
+      : await createCounterpartyAction(payload);
 
     if (!result.ok) {
       setError(result.error);
       setIsPending(false);
+      return;
+    }
+
+    if (isEdit) {
+      router.push("/lab/ammo-ledger/settings/counterparties");
       return;
     }
 
@@ -66,7 +86,7 @@ export function CounterpartyForm() {
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="submit" disabled={isPending}>
-        {isPending ? "追加中…" : "購入先を追加"}
+        {isPending ? "保存中…" : isEdit ? "変更を保存" : "購入先を追加"}
       </Button>
     </form>
   );

@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav";
 import { AmmoTypeForm } from "@/features/ammo-ledger/components/ammo-type-form/ammo-type-form";
+import { MasterRowActions } from "@/features/ammo-ledger/components/master-row-actions/master-row-actions";
+import { deleteAmmoTypeAction } from "@/features/ammo-ledger/master/delete-ammo-type/delete-ammo-type-action";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import type { ShotType } from "@/features/ammo-ledger/schema/shot-type";
 import { shotTypeLabels } from "@/features/ammo-ledger/schema/shot-type";
@@ -22,12 +24,18 @@ export default async function AmmoTypesSettingsPage() {
           {ammoTypes.length === 0 ? (
             <p className="text-sm text-muted-foreground">まだ登録がありません。</p>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3 text-sm">
               {ammoTypes.map((type) => (
-                <li key={type.id}>
-                  {type.name}
-                  {type.gaugeNumber ? `（${type.gaugeNumber}号）` : ""} — {type.caliber}{" "}
-                  {shotTypeLabels[type.shotType as ShotType]}（1箱{type.roundsPerBox}発）
+                <li key={type.id} className="flex items-start justify-between gap-4">
+                  <span>
+                    {type.name}
+                    {type.gaugeNumber ? `（${type.gaugeNumber}号）` : ""} — {type.caliber}{" "}
+                    {shotTypeLabels[type.shotType as ShotType]}（1箱{type.roundsPerBox}発）
+                  </span>
+                  <MasterRowActions
+                    editHref={`/lab/ammo-ledger/settings/ammo-types/${type.id}/edit`}
+                    onDelete={() => deleteAmmoTypeAction({ id: type.id })}
+                  />
                 </li>
               ))}
             </ul>

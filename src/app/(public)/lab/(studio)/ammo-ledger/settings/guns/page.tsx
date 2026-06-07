@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav";
 import { GunForm } from "@/features/ammo-ledger/components/gun-form/gun-form";
+import { MasterRowActions } from "@/features/ammo-ledger/components/master-row-actions/master-row-actions";
+import { deleteGunAction } from "@/features/ammo-ledger/master/delete-gun/delete-gun-action";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 
 export default async function GunsSettingsPage() {
@@ -20,10 +22,16 @@ export default async function GunsSettingsPage() {
           {guns.length === 0 ? (
             <p className="text-sm text-muted-foreground">まだ登録がありません。</p>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3 text-sm">
               {guns.map((gun) => (
-                <li key={gun.id}>
-                  {gun.name} — {gun.permitNumber}（{gun.gunType} / {gun.caliber}）
+                <li key={gun.id} className="flex items-start justify-between gap-4">
+                  <span>
+                    {gun.name} — {gun.permitNumber}（{gun.gunType} / {gun.caliber}）
+                  </span>
+                  <MasterRowActions
+                    editHref={`/lab/ammo-ledger/settings/guns/${gun.id}/edit`}
+                    onDelete={() => deleteGunAction({ id: gun.id })}
+                  />
                 </li>
               ))}
             </ul>

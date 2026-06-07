@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav";
 import { CounterpartyForm } from "@/features/ammo-ledger/components/counterparty-form/counterparty-form";
+import { MasterRowActions } from "@/features/ammo-ledger/components/master-row-actions/master-row-actions";
+import { deleteCounterpartyAction } from "@/features/ammo-ledger/master/delete-counterparty/delete-counterparty-action";
 import { listCounterparties } from "@/features/ammo-ledger/master/list-counterparties/list-counterparties";
 
 export default async function CounterpartiesSettingsPage() {
@@ -20,10 +22,16 @@ export default async function CounterpartiesSettingsPage() {
           {counterparties.length === 0 ? (
             <p className="text-sm text-muted-foreground">まだ登録がありません。</p>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3 text-sm">
               {counterparties.map((item) => (
-                <li key={item.id}>
-                  {item.name} — {item.address}
+                <li key={item.id} className="flex items-start justify-between gap-4">
+                  <span>
+                    {item.name} — {item.address}
+                  </span>
+                  <MasterRowActions
+                    editHref={`/lab/ammo-ledger/settings/counterparties/${item.id}/edit`}
+                    onDelete={() => deleteCounterpartyAction({ id: item.id })}
+                  />
                 </li>
               ))}
             </ul>

@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav";
+import { MasterRowActions } from "@/features/ammo-ledger/components/master-row-actions/master-row-actions";
 import { RangeForm } from "@/features/ammo-ledger/components/range-form/range-form";
+import { deleteRangeAction } from "@/features/ammo-ledger/master/delete-range/delete-range-action";
 import { listRanges } from "@/features/ammo-ledger/master/list-ranges/list-ranges";
 
 export default async function RangesSettingsPage() {
@@ -20,10 +22,16 @@ export default async function RangesSettingsPage() {
           {ranges.length === 0 ? (
             <p className="text-sm text-muted-foreground">まだ登録がありません。</p>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3 text-sm">
               {ranges.map((range) => (
-                <li key={range.id}>
-                  {range.name} — {range.address}
+                <li key={range.id} className="flex items-start justify-between gap-4">
+                  <span>
+                    {range.name} — {range.address}
+                  </span>
+                  <MasterRowActions
+                    editHref={`/lab/ammo-ledger/settings/ranges/${range.id}/edit`}
+                    onDelete={() => deleteRangeAction({ id: range.id })}
+                  />
                 </li>
               ))}
             </ul>

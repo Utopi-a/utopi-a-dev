@@ -25,9 +25,24 @@ export function AmmoLedgerOptimisticNavProvider({ children }: { children: ReactN
     if (!activePath) {
       return;
     }
-    if (!resolveShellRoute({ path: pathname })) {
+
+    if (pathname === activePath) {
       setActivePathState(null);
+      return;
     }
+
+    if (resolveShellRoute({ path: pathname }) === null) {
+      if (typeof window !== "undefined" && window.location.pathname === pathname) {
+        setActivePathState(null);
+      }
+      return;
+    }
+
+    if (typeof window !== "undefined" && window.location.pathname === activePath) {
+      return;
+    }
+
+    setActivePathState(null);
   }, [pathname, activePath]);
 
   useEffect(() => {

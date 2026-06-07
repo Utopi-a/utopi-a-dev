@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useTransition } from "react";
 import { useAmmoLedgerOptimisticNav } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
+import { matchesNavTarget } from "@/features/ammo-ledger/workspace/matches-nav-target/matches-nav-target";
 import {
   isClientShellNavPath,
   isWorkspaceShellRoute,
@@ -10,8 +12,11 @@ import {
 import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 export function useAmmoLedgerClientNav() {
+  const pathname = usePathname();
+  const router = useRouter();
   const { setActivePath } = useAmmoLedgerOptimisticNav();
   const requestWorkspaceRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
+  const [, startTransition] = useTransition();
 
   const navigate = useCallback(
     ({ href }: { href: string }) => {
@@ -30,6 +35,12 @@ export function useAmmoLedgerClientNav() {
       }
       window.history.pushState(window.history.state, "", href);
 
+      if (!matchesNavTarget({ target: href, current: pathname })) {
+        startTransition(() => {
+          router.replace(href);
+        });
+      }
+
       if (process.env.NODE_ENV === "development") {
         performance.mark(`ammo-ledger:nav:${href}:end`);
         performance.measure(
@@ -41,7 +52,7 @@ export function useAmmoLedgerClientNav() {
 
       return true;
     },
-    [requestWorkspaceRevalidation, setActivePath],
+    [pathname, requestWorkspaceRevalidation, router, setActivePath],
   );
 
   return { navigate };

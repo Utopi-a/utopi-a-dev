@@ -278,12 +278,13 @@ export function LedgerTable({
           </table>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          行をクリックすると編集・取消ができます。琥珀色の行はその時点で自宅保管の目安（800発）を超えています。
+          行をクリックすると編集・並び替え・取消ができます。琥珀色の行はその時点で自宅保管の目安（800発）を超えています。
         </p>
       </div>
 
       <LedgerEntryActionsSheet
         row={selectedRow}
+        rows={rows}
         purpose={purpose}
         permitBalance={selectedPermitBalance}
         open={selectedRow !== null}

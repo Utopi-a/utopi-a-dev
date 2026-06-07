@@ -1,4 +1,4 @@
-import { and, eq, gte, isNull, lte } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, lte } from "drizzle-orm";
 import { db } from "@/db";
 import { ammoLedgerEntry } from "@/db/schema/ammo-ledger";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
@@ -30,5 +30,9 @@ export async function listLedgerEntries({
     .select()
     .from(ammoLedgerEntry)
     .where(and(...conditions))
-    .orderBy(ammoLedgerEntry.occurredOn);
+    .orderBy(
+      asc(ammoLedgerEntry.occurredOn),
+      asc(ammoLedgerEntry.dayOrder),
+      asc(ammoLedgerEntry.createdAt),
+    );
 }

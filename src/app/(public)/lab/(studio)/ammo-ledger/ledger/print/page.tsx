@@ -77,6 +77,8 @@ export default async function LedgerPrintPage({ searchParams }: PageProps) {
           ledgerEntries: entries.map((entry) => ({
             id: entry.id,
             occurredOn: entry.occurredOn,
+            dayOrder: entry.dayOrder,
+            createdAt: entry.createdAt,
             category: entry.category as LedgerCategory,
             quantity: entry.quantity,
           })),

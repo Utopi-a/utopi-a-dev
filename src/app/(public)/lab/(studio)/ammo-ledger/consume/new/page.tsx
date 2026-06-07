@@ -4,6 +4,8 @@ import { buildRangePickerData } from "@/features/ammo-ledger/catalog/build-range
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { ConsumeForm } from "@/features/ammo-ledger/components/consume-form/consume-form";
+import { getInventorySummary } from "@/features/ammo-ledger/ledger/get-inventory-summary/get-inventory-summary";
+import { buildStockByAmmoTypeId } from "@/features/ammo-ledger/master/build-stock-by-ammo-type-id/build-stock-by-ammo-type-id";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 import { getDraftTransaction } from "@/features/ammo-ledger/transactions/get-draft/get-draft";
@@ -16,12 +18,15 @@ export default async function ConsumeNewPage({ searchParams }: PageProps) {
   const user = await requireAmmoUser();
   const { draft: draftId } = await searchParams;
 
-  const [guns, ammoTypes, rangePickerData, draft] = await Promise.all([
+  const [guns, ammoTypes, rangePickerData, inventoryItems, draft] = await Promise.all([
     listGuns({ userId: user.id }),
     listAmmoTypes({ userId: user.id }),
     buildRangePickerData({ userId: user.id }),
+    getInventorySummary({ userId: user.id }),
     draftId ? getDraftTransaction({ userId: user.id, draftId }) : Promise.resolve(null),
   ]);
+
+  const stockByAmmoTypeId = buildStockByAmmoTypeId({ inventoryItems });
 
   const initialValues = draft
     ? {
@@ -62,6 +67,7 @@ export default async function ConsumeNewPage({ searchParams }: PageProps) {
             key={draftId ?? "new"}
             guns={guns}
             ammoTypes={ammoTypes}
+            stockByAmmoTypeId={stockByAmmoTypeId}
             rangePickerData={rangePickerData}
             initialValues={initialValues}
           />

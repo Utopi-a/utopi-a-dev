@@ -4,6 +4,8 @@ import { buildCounterpartyPickerData } from "@/features/ammo-ledger/catalog/buil
 import { buildRangePickerData } from "@/features/ammo-ledger/catalog/build-range-picker-data/build-range-picker-data";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { BulkEntryForm } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-form";
+import { getInventorySummary } from "@/features/ammo-ledger/ledger/get-inventory-summary/get-inventory-summary";
+import { buildStockByAmmoTypeId } from "@/features/ammo-ledger/master/build-stock-by-ammo-type-id/build-stock-by-ammo-type-id";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
@@ -11,12 +13,16 @@ import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-count
 export default async function BulkNewPage() {
   const user = await requireAmmoUser();
 
-  const [guns, ammoTypes, rangePickerData, counterpartyPickerData] = await Promise.all([
-    listGuns({ userId: user.id }),
-    listAmmoTypes({ userId: user.id }),
-    buildRangePickerData({ userId: user.id }),
-    buildCounterpartyPickerData({ userId: user.id, includeRangeCatalog: true }),
-  ]);
+  const [guns, ammoTypes, rangePickerData, counterpartyPickerData, inventoryItems] =
+    await Promise.all([
+      listGuns({ userId: user.id }),
+      listAmmoTypes({ userId: user.id }),
+      buildRangePickerData({ userId: user.id }),
+      buildCounterpartyPickerData({ userId: user.id, includeRangeCatalog: true }),
+      getInventorySummary({ userId: user.id }),
+    ]);
+
+  const stockByAmmoTypeId = buildStockByAmmoTypeId({ inventoryItems });
 
   const defaultCounterpartyId =
     counterpartyPickerData.recent[0]?.id ??
@@ -55,6 +61,7 @@ export default async function BulkNewPage() {
         <BulkEntryForm
           guns={guns}
           ammoTypes={ammoTypes}
+          stockByAmmoTypeId={stockByAmmoTypeId}
           rangePickerData={rangePickerData}
           counterpartyPickerData={counterpartyPickerData}
           defaultCounterpartyId={defaultCounterpartyId}

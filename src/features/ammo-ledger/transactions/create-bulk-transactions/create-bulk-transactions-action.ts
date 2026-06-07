@@ -3,6 +3,10 @@
 import { db } from "@/db";
 import { ammoLedgerEntry, ammoTransaction } from "@/db/schema/ammo-ledger";
 import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
+import {
+  assignDayOrdersForNewEntries,
+  fetchMaxDayOrderByDate,
+} from "@/features/ammo-ledger/ledger/resolve-day-orders-for-new-entries/resolve-day-orders-for-new-entries";
 import { bulkTransactionsInputSchema } from "@/features/ammo-ledger/schema/bulk-transaction-schema";
 import {
   type PreparedConfirmedTransaction,
@@ -40,7 +44,18 @@ export async function createBulkTransactionsAction(input: unknown) {
   }
 
   await db.transaction(async (tx) => {
-    for (const prepared of preparedTransactions) {
+    const occurredOnDates = preparedTransactions.map((prepared) => prepared.normalized.occurredOn);
+    const maxDayOrderByDate = await fetchMaxDayOrderByDate({
+      tx,
+      userId: user.id,
+      occurredOnDates,
+    });
+    const dayOrders = assignDayOrdersForNewEntries({
+      occurredOnDates,
+      maxDayOrderByDate,
+    });
+
+    for (const [index, prepared] of preparedTransactions.entries()) {
       const { input: data, gunRow, rangeRow, counterparty, computedRounds, normalized } = prepared;
 
       const transactionId = crypto.randomUUID();
@@ -73,6 +88,7 @@ export async function createBulkTransactionsAction(input: unknown) {
         category: normalized.category,
         purpose: data.purpose,
         occurredOn: normalized.occurredOn,
+        dayOrder: dayOrders[index],
         ammoTypeId: normalized.ammoTypeId,
         ammoTypeName: normalized.ammoTypeName,
         quantity: normalized.quantity,

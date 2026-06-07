@@ -27,6 +27,8 @@ function InventoryViewContent({ workspace, isRefreshing }: InventoryViewContentP
         entries: entries.map((entry) => ({
           id: entry.id,
           occurredOn: entry.occurredOn,
+          dayOrder: entry.dayOrder,
+          createdAt: entry.createdAt,
           category: entry.category as LedgerCategory,
           quantity: entry.quantity,
         })),

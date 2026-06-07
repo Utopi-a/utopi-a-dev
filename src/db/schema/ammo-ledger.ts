@@ -185,6 +185,7 @@ export const ammoLedgerEntry = pgTable("ammo_ledger_entry", {
   gunNumber: text("gun_number"),
   gunPermitNumber: text("gun_permit_number"),
   voidedAt: timestamp("voided_at"),
+  dayOrder: integer("day_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

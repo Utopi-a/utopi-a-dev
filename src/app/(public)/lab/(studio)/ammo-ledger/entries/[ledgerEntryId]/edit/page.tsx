@@ -9,6 +9,8 @@ import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-p
 import { ConsumeForm } from "@/features/ammo-ledger/components/consume-form/consume-form";
 import { DisposeForm } from "@/features/ammo-ledger/components/dispose-form/dispose-form";
 import { TransferForm } from "@/features/ammo-ledger/components/transfer-form/transfer-form";
+import { getInventorySummary } from "@/features/ammo-ledger/ledger/get-inventory-summary/get-inventory-summary";
+import { buildStockByAmmoTypeId } from "@/features/ammo-ledger/master/build-stock-by-ammo-type-id/build-stock-by-ammo-type-id";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 import { ledgerCategoryLabels } from "@/features/ammo-ledger/schema/ledger-category";
@@ -30,17 +32,22 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
   const { inputKind, category, initialValues } = editData;
   const categoryLabel = ledgerCategoryLabels[category];
 
-  const [guns, ammoTypes, rangePickerData, counterpartyPickerData] = await Promise.all([
-    inputKind === "consume" ? listGuns({ userId: user.id }) : Promise.resolve([]),
-    listAmmoTypes({ userId: user.id }),
-    inputKind === "consume" ? buildRangePickerData({ userId: user.id }) : Promise.resolve(null),
-    inputKind === "acquire" || inputKind === "transfer"
-      ? buildCounterpartyPickerData({
-          userId: user.id,
-          includeRangeCatalog: inputKind === "acquire",
-        })
-      : Promise.resolve(null),
-  ]);
+  const [guns, ammoTypes, rangePickerData, counterpartyPickerData, inventoryItems] =
+    await Promise.all([
+      inputKind === "consume" ? listGuns({ userId: user.id }) : Promise.resolve([]),
+      listAmmoTypes({ userId: user.id }),
+      inputKind === "consume" ? buildRangePickerData({ userId: user.id }) : Promise.resolve(null),
+      inputKind === "acquire" || inputKind === "transfer"
+        ? buildCounterpartyPickerData({
+            userId: user.id,
+            includeRangeCatalog: inputKind === "acquire",
+          })
+        : Promise.resolve(null),
+      inputKind === "consume" ? getInventorySummary({ userId: user.id }) : Promise.resolve([]),
+    ]);
+
+  const stockByAmmoTypeId =
+    inputKind === "consume" ? buildStockByAmmoTypeId({ inventoryItems }) : {};
 
   function renderForm() {
     switch (inputKind) {
@@ -62,6 +69,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
             ledgerEntryId={ledgerEntryId}
             guns={guns}
             ammoTypes={ammoTypes}
+            stockByAmmoTypeId={stockByAmmoTypeId}
             rangePickerData={rangePickerData}
             initialValues={initialValues}
           />

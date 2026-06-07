@@ -1,19 +1,15 @@
+import { compareLedgerEntries } from "@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries";
 import { homeStorageRoundLimit } from "@/features/ammo-ledger/schema/home-storage-limit";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 
 type HomeStockEntry = {
   id: string;
-  occurredOn: string;
   category: LedgerCategory;
   quantity: number;
-};
+} & import("@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries").LedgerEntrySortKey;
 
 const increaseCategories: LedgerCategory[] = ["acquire", "manufacture", "carryover"];
 const decreaseCategories: LedgerCategory[] = ["consume", "transfer", "dispose"];
-
-function compareDate({ a, b }: { a: string; b: string }): number {
-  return a.localeCompare(b);
-}
 
 export function computeRunningHomeStock({
   entries,
@@ -23,7 +19,7 @@ export function computeRunningHomeStock({
   const stockByEntryId = new Map<string, number>();
   let total = 0;
 
-  const sorted = [...entries].sort((a, b) => compareDate({ a: a.occurredOn, b: b.occurredOn }));
+  const sorted = [...entries].sort((a, b) => compareLedgerEntries({ a, b }));
 
   for (const entry of sorted) {
     if (increaseCategories.includes(entry.category)) {

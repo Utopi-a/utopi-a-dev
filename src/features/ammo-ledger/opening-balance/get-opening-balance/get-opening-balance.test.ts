@@ -51,6 +51,7 @@ describe("getOpeningBalance", () => {
           gunNumber: null,
           gunPermitNumber: null,
           voidedAt: null,
+          dayOrder: 0,
           createdAt: new Date(),
           updatedAt: new Date(),
         },

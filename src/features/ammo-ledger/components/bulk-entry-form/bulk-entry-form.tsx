@@ -17,13 +17,16 @@ import {
   duplicateBulkEntryRow,
   hasBulkEntryPackaging,
 } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-row-state";
+import { moveBulkEntryRow } from "@/features/ammo-ledger/components/bulk-entry-form/move-bulk-entry-row/move-bulk-entry-row";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
+import { buildAmmoTypeFieldOptions } from "@/features/ammo-ledger/master/build-ammo-type-field-options/build-ammo-type-field-options";
 import { createBulkTransactionsAction } from "@/features/ammo-ledger/transactions/create-bulk-transactions/create-bulk-transactions-action";
 import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type BulkEntryFormProps = {
   guns: (typeof ammoGun.$inferSelect)[];
   ammoTypes: (typeof ammoType.$inferSelect)[];
+  stockByAmmoTypeId: Record<string, number>;
   rangePickerData: MasterPickerData;
   counterpartyPickerData: MasterPickerData;
   defaultCounterpartyId: string;
@@ -32,6 +35,7 @@ type BulkEntryFormProps = {
 export function BulkEntryForm({
   guns,
   ammoTypes,
+  stockByAmmoTypeId,
   rangePickerData,
   counterpartyPickerData,
   defaultCounterpartyId,
@@ -49,6 +53,16 @@ export function BulkEntryForm({
   ]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+
+  const ammoTypeOptions = useMemo(
+    () =>
+      buildAmmoTypeFieldOptions({
+        ammoTypes,
+        stockByAmmoTypeId,
+        roundsPerBoxLabel: "小箱",
+      }),
+    [ammoTypes, stockByAmmoTypeId],
+  );
 
   const activeRowCount = useMemo(
     () => rows.filter((row) => hasBulkEntryPackaging({ row })).length,
@@ -115,6 +129,10 @@ export function BulkEntryForm({
     });
   }
 
+  function moveRow({ fromIndex, toIndex }: { fromIndex: number; toIndex: number }) {
+    setRows((current) => moveBulkEntryRow({ rows: current, fromIndex, toIndex }));
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setIsPending(true);
@@ -156,12 +174,17 @@ export function BulkEntryForm({
             rowIndex={rowIndex}
             guns={guns}
             ammoTypes={ammoTypes}
+            ammoTypeOptions={ammoTypeOptions}
             rangePickerData={rangePickerData}
             counterpartyPickerData={counterpartyPickerData}
             canRemove={rows.length > 1}
+            canMoveUp={rowIndex > 0}
+            canMoveDown={rowIndex < rows.length - 1}
             onRowChange={({ nextRow }) => updateRow({ clientId: row.clientId, nextRow })}
             onCopyField={({ field }) => copyFieldFromAbove({ rowIndex, field })}
             onDuplicateRow={() => duplicateRowFromAbove({ rowIndex })}
+            onMoveUp={() => moveRow({ fromIndex: rowIndex, toIndex: rowIndex - 1 })}
+            onMoveDown={() => moveRow({ fromIndex: rowIndex, toIndex: rowIndex + 1 })}
             onRemove={() => removeRow({ clientId: row.clientId })}
           />
         ))}

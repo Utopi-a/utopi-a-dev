@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
@@ -29,12 +29,17 @@ type BulkEntryRowCardProps = {
   rowIndex: number;
   guns: (typeof ammoGun.$inferSelect)[];
   ammoTypes: (typeof ammoType.$inferSelect)[];
+  ammoTypeOptions: { value: string; label: string }[];
   rangePickerData: MasterPickerData;
   counterpartyPickerData: MasterPickerData;
   canRemove: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
   onRowChange: ({ nextRow }: { nextRow: BulkEntryRowState }) => void;
   onCopyField: ({ field }: { field: BulkEntryCopyField }) => void;
   onDuplicateRow: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
   onRemove: () => void;
 };
 
@@ -48,12 +53,17 @@ export function BulkEntryRowCard({
   rowIndex,
   guns,
   ammoTypes,
+  ammoTypeOptions,
   rangePickerData,
   counterpartyPickerData,
   canRemove,
+  canMoveUp,
+  canMoveDown,
   onRowChange,
   onCopyField,
   onDuplicateRow,
+  onMoveUp,
+  onMoveDown,
   onRemove,
 }: BulkEntryRowCardProps) {
   const computedRounds = computeBulkEntryRounds({ row, ammoTypes });
@@ -86,16 +96,36 @@ export function BulkEntryRowCard({
             <span className="ml-2 text-muted-foreground">{inputKindLabels[row.inputKind]}</span>
           </p>
         </div>
-        {canRemove ? (
+        <div className="flex items-center gap-1">
           <button
             type="button"
-            onClick={onRemove}
-            aria-label={`${rowIndex + 1}件目を削除`}
-            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            onClick={onMoveUp}
+            disabled={!canMoveUp}
+            aria-label={`${rowIndex + 1}件目を上へ`}
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
           >
-            <Trash2 className="size-4" />
+            <ChevronUp className="size-4" />
           </button>
-        ) : null}
+          <button
+            type="button"
+            onClick={onMoveDown}
+            disabled={!canMoveDown}
+            aria-label={`${rowIndex + 1}件目を下へ`}
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+          >
+            <ChevronDown className="size-4" />
+          </button>
+          {canRemove ? (
+            <button
+              type="button"
+              onClick={onRemove}
+              aria-label={`${rowIndex + 1}件目を削除`}
+              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            >
+              <Trash2 className="size-4" />
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {rowIndex > 0 ? (
@@ -145,10 +175,7 @@ export function BulkEntryRowCard({
         label="弾"
         value={row.ammoTypeId}
         onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
-        options={ammoTypes.map((type) => ({
-          value: type.id,
-          label: `${type.name}（小箱${type.roundsPerBox}発）`,
-        }))}
+        options={ammoTypeOptions}
         required
       />
 

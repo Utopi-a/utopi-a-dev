@@ -97,8 +97,10 @@ pnpm exec next dev --turbopack
 | コマンド | 説明 |
 | --- | --- |
 | `pnpm dev` | 開発サーバー（Turbopack、Doppler 経由で env 注入） |
-| `pnpm build` | 本番ビルド |
+| `pnpm build` | 本番ビルド（Vercel / CI 向け。環境変数は実行環境から注入） |
+| `pnpm build:local` | ローカルで Doppler 経由の本番ビルド |
 | `pnpm start` | 本番サーバー起動 |
+| `pnpm start:local` | ローカルで Doppler 経由の本番サーバー起動 |
 | `pnpm check` | Biome による format + lint |
 | `pnpm test:run` | Vitest（単発実行） |
 | `pnpm test:e2e` | Playwright E2E（smoke） |
@@ -115,7 +117,10 @@ pnpm exec next dev --turbopack
 
 1. [Doppler と Vercel の連携](https://docs.doppler.com/docs/vercel)を Dashboard で設定する
 2. `utopi-a-dev` の **stg** を Vercel Preview、**prd** を Production に同期する
-3. 以降、Doppler 上でシークレットを更新すると Vercel に反映される
+3. 以降、Doppler 上でシークレットを更新すると Vercel の Environment Variables に同期される
+4. Vercel の Build Command はデフォルトの `pnpm run build` のままでよい（`next build` のみ実行。Doppler CLI は不要）
+
+Vercel 上では Doppler CLI を使わない。連携により Doppler のシークレットが Vercel の環境変数として注入されるため、`process.env.*` はビルド・ランタイムの両方でそのまま参照できる。ローカルだけ `doppler run` で同じ変数を注入する。
 
 ## CI（GitHub Actions）
 

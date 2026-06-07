@@ -1,6 +1,7 @@
 import {
   ammoLedgerPwaConfig,
   ammoLedgerPwaIconSizes,
+  ammoLedgerPwaIcons,
 } from "@/features/ammo-ledger/pwa/ammo-ledger-pwa-config";
 
 export function GET() {
@@ -18,13 +19,13 @@ export function GET() {
     theme_color: ammoLedgerPwaConfig.themeColor,
     icons: [
       ...ammoLedgerPwaIconSizes.map((size) => ({
-        src: `/lab/ammo-ledger/pwa-icon/${size}`,
+        src: ammoLedgerPwaIcons[size],
         sizes: `${size}x${size}`,
         type: "image/png",
         purpose: "any",
       })),
       {
-        src: "/lab/ammo-ledger/pwa-icon/512",
+        src: ammoLedgerPwaIcons.maskable512,
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",

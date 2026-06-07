@@ -32,7 +32,8 @@
     "scrape:sportsgun-ranges": "pnpm dlx tsx src/features/ammo-ledger/range-seed/scrape-sportsgun-ranges/scrape-sportsgun-ranges.ts",
     "scrape:gun-shops": "pnpm dlx tsx src/features/ammo-ledger/counterparty-seed/scrape-nikkaren-traders/scrape-nikkaren-traders.ts",
     "resolve:shooting-range-addresses": "pnpm dlx tsx src/features/ammo-ledger/range-seed/resolve-range-addresses/resolve-range-addresses.ts",
-    "fill:shooting-range-partial-addresses": "pnpm dlx tsx src/features/ammo-ledger/range-seed/resolve-range-addresses/fill-partial-addresses.ts"
+    "fill:shooting-range-partial-addresses": "pnpm dlx tsx src/features/ammo-ledger/range-seed/resolve-range-addresses/fill-partial-addresses.ts",
+    "icons:postprocess": "pnpm dlx tsx src/features/portfolio/brand-icons/postprocess-generated-icon.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -75,6 +76,7 @@
     "@vitejs/plugin-react": "^6.0.2",
     "drizzle-kit": "^0.31.10",
     "esbuild": "^0.28.0",
+    "sharp": "^0.34.5",
     "jsdom": "^29.1.1",
     "lefthook": "^2.1.9",
     "pdf-parse": "^1.1.1",

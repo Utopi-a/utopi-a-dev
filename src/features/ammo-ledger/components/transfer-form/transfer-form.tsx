@@ -10,6 +10,7 @@ import type { MasterPickerData } from "@/features/ammo-ledger/catalog/schema/cat
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
+import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
@@ -105,6 +106,10 @@ export function TransferForm({
       : await createTransactionAction(payload);
 
     if (result.ok) {
+      showAmmoLedgerToast({
+        action: ledgerEntryId ? "updated" : "created",
+        subject: "譲渡記録",
+      });
       await invalidateWorkspace();
       router.push(result.redirectPath);
       return;

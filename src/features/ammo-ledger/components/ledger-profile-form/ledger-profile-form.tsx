@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { upsertLedgerProfileAction } from "@/features/ammo-ledger/profile/upsert-ledger-profile/upsert-ledger-profile-action";
 
 type LedgerProfileFormProps = {
@@ -38,6 +39,7 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
       return;
     }
 
+    showAmmoLedgerToast({ action: "saved", subject: "帳簿プロフィール" });
     router.refresh();
     setIsPending(false);
   }

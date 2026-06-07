@@ -12,6 +12,7 @@ export function GunRowActions({ gunId }: GunRowActionsProps) {
     <MasterRowActions
       editHref={`/lab/ammo-ledger/settings/guns/${gunId}/edit`}
       recordId={gunId}
+      deletedSubject="銃"
       deleteAction={deleteGunAction}
     />
   );

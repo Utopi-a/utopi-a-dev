@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { cn } from "@/lib/cn";
 
 export type MasterDeleteResult = { ok: true } | { ok: false; error?: string };
@@ -11,10 +12,16 @@ export type MasterDeleteResult = { ok: true } | { ok: false; error?: string };
 type MasterRowActionsProps = {
   editHref?: string;
   recordId: string;
+  deletedSubject: string;
   deleteAction: (args: { id: string }) => Promise<MasterDeleteResult>;
 };
 
-export function MasterRowActions({ editHref, recordId, deleteAction }: MasterRowActionsProps) {
+export function MasterRowActions({
+  editHref,
+  recordId,
+  deletedSubject,
+  deleteAction,
+}: MasterRowActionsProps) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +38,8 @@ export function MasterRowActions({ editHref, recordId, deleteAction }: MasterRow
       setIsPending(false);
       return;
     }
+
+    showAmmoLedgerToast({ action: "deleted", subject: deletedSubject });
     router.refresh();
     setIsPending(false);
   }

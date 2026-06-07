@@ -12,6 +12,7 @@ import { scrollToPrefectureSection } from "@/features/ammo-ledger/catalog/scroll
 import { CatalogFavoriteButton } from "@/features/ammo-ledger/components/catalog-favorite-button/catalog-favorite-button";
 import { CatalogScrollPane } from "@/features/ammo-ledger/components/catalog-scroll-pane/catalog-scroll-pane";
 import { PrefectureSectionHeading } from "@/features/ammo-ledger/components/prefecture-section-heading/prefecture-section-heading";
+import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { cn } from "@/lib/cn";
 
 type CatalogListProps = {
@@ -86,7 +87,13 @@ export function CatalogList({
       if (!result.ok) {
         setRegisteredIds((current) => current.filter((id) => id !== catalogId));
         setError(result.error);
+        return;
       }
+
+      showAmmoLedgerToast({
+        action: "created",
+        subject: catalogKind === "range" ? "射撃場" : "購入先",
+      });
     });
   }
 

@@ -12,6 +12,7 @@ export function AmmoTypeRowActions({ ammoTypeId }: AmmoTypeRowActionsProps) {
     <MasterRowActions
       editHref={`/lab/ammo-ledger/settings/ammo-types/${ammoTypeId}/edit`}
       recordId={ammoTypeId}
+      deletedSubject="弾種"
       deleteAction={deleteAmmoTypeAction}
     />
   );

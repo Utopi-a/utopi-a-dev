@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { createDraftSuggestionsFromDiff } from "@/features/ammo-ledger/inventory/create-draft-from-diff/create-draft-from-diff";
 import { createDraftFromDiffAction } from "@/features/ammo-ledger/transactions/create-draft/create-draft-action";
 
@@ -57,6 +58,7 @@ export function StockCheckForm({ items }: StockCheckFormProps) {
       return;
     }
 
+    showAmmoLedgerToast({ action: "created", subject: "記録下書き" });
     router.push(result.redirectPath);
   }
 

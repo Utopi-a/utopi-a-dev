@@ -24,6 +24,7 @@ import { CatalogFavoriteButton } from "@/features/ammo-ledger/components/catalog
 import { CatalogScrollPane } from "@/features/ammo-ledger/components/catalog-scroll-pane/catalog-scroll-pane";
 import { PickerEntryRow } from "@/features/ammo-ledger/components/picker-entry-row/picker-entry-row";
 import { PrefectureSectionHeading } from "@/features/ammo-ledger/components/prefecture-section-heading/prefecture-section-heading";
+import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { cn } from "@/lib/cn";
 
 type MasterPickerProps = {
@@ -100,6 +101,11 @@ export function MasterPicker({
         setError(result.error);
         return;
       }
+
+      showAmmoLedgerToast({
+        action: "created",
+        subject: catalogKind === "range" ? "射撃場" : "購入先",
+      });
 
       const master: PickerMasterEntry = {
         id: result.id,

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/features/auth/auth-client";
 import { toAuthErrorMessage } from "@/features/auth/auth-error-message/auth-error-message";
+import { readNamedFormField } from "@/features/auth/read-named-form-field/read-named-form-field";
 import {
   clearSavedSignInEmail,
   readSavedSignInEmail,
@@ -39,9 +40,13 @@ export function SignInForm({ callbackURL }: SignInFormProps) {
     setIsPending(true);
     setErrorMessage(null);
 
+    const form = event.currentTarget;
+    const submittedEmail = readNamedFormField({ form, name: "email" });
+    const submittedPassword = readNamedFormField({ form, name: "password" });
+
     const result = await authClient.signIn.email({
-      email,
-      password,
+      email: submittedEmail,
+      password: submittedPassword,
       callbackURL,
     });
 
@@ -52,7 +57,7 @@ export function SignInForm({ callbackURL }: SignInFormProps) {
     }
 
     if (rememberEmail) {
-      writeSavedSignInEmail({ email });
+      writeSavedSignInEmail({ email: submittedEmail });
     } else {
       clearSavedSignInEmail();
     }
@@ -74,7 +79,8 @@ export function SignInForm({ callbackURL }: SignInFormProps) {
           spellCheck={false}
           required
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => setEmail(event.currentTarget.value)}
+          onInput={(event) => setEmail(event.currentTarget.value)}
         />
       </div>
       <div className="space-y-2">
@@ -94,7 +100,8 @@ export function SignInForm({ callbackURL }: SignInFormProps) {
           autoComplete="current-password"
           required
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(event) => setPassword(event.currentTarget.value)}
+          onInput={(event) => setPassword(event.currentTarget.value)}
         />
       </div>
       <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">

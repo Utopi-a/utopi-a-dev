@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LoginAuthTabs } from "@/features/auth/login-view/login-auth-tabs";
 import { SignInForm } from "@/features/auth/sign-in-form/sign-in-form";
-import { SignUpForm } from "@/features/auth/sign-up-form/sign-up-form";
 import type { SocialProviderId } from "@/features/auth/social-sign-in/social-provider-ui";
 import { SocialSignInButtons } from "@/features/auth/social-sign-in/social-sign-in-buttons";
 import type { SocialBrandIconId } from "@/features/portfolio/social-icons/social-brand-icon";
@@ -53,22 +52,11 @@ export function LoginView({
           ) : null}
 
           {canSignUp ? (
-            <Tabs defaultValue="sign-in">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="sign-in">ログイン</TabsTrigger>
-                <TabsTrigger value="sign-up">新規登録</TabsTrigger>
-              </TabsList>
-              <TabsContent value="sign-in" className="mt-4">
-                <SignInForm callbackURL={callbackURL} />
-              </TabsContent>
-              <TabsContent value="sign-up" className="mt-4">
-                <SignUpForm
-                  callbackURL={callbackURL}
-                  sendsVerificationEmail={sendsVerificationEmail}
-                  requiresEmailVerification={requiresEmailVerification}
-                />
-              </TabsContent>
-            </Tabs>
+            <LoginAuthTabs
+              callbackURL={callbackURL}
+              sendsVerificationEmail={sendsVerificationEmail}
+              requiresEmailVerification={requiresEmailVerification}
+            />
           ) : (
             <SignInForm callbackURL={callbackURL} />
           )}

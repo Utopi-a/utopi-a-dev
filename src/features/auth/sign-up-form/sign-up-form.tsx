@@ -14,6 +14,7 @@ import {
 } from "@/features/auth/password-policy/evaluate-password";
 import { passwordPolicyLimits } from "@/features/auth/password-policy/password-policy";
 import { PasswordStrengthPanel } from "@/features/auth/password-policy/password-strength-panel";
+import { readNamedFormField } from "@/features/auth/read-named-form-field/read-named-form-field";
 import { storePendingVerificationEmail } from "@/features/auth/resend-verification-form/resend-verification-form";
 
 type SignUpFormProps = {
@@ -42,7 +43,12 @@ export function SignUpForm({
     setIsPending(true);
     setErrorMessage(null);
 
-    const policyError = getPasswordPolicyError({ password });
+    const form = event.currentTarget;
+    const submittedName = readNamedFormField({ form, name: "name" });
+    const submittedEmail = readNamedFormField({ form, name: "email" });
+    const submittedPassword = readNamedFormField({ form, name: "password" });
+
+    const policyError = getPasswordPolicyError({ password: submittedPassword });
     if (policyError) {
       setErrorMessage(policyError);
       setIsPending(false);
@@ -50,9 +56,9 @@ export function SignUpForm({
     }
 
     const result = await authClient.signUp.email({
-      name,
-      email,
-      password,
+      name: submittedName,
+      email: submittedEmail,
+      password: submittedPassword,
       callbackURL: sendsVerificationEmail ? authEmailCallbackPaths.afterVerify : callbackURL,
     });
 
@@ -63,7 +69,7 @@ export function SignUpForm({
     }
 
     if (requiresEmailVerification || sendsVerificationEmail) {
-      storePendingVerificationEmail({ email });
+      storePendingVerificationEmail({ email: submittedEmail });
       router.push(authEmailCallbackPaths.afterSignUp);
       router.refresh();
       return;
@@ -74,40 +80,48 @@ export function SignUpForm({
   }
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
+    <form className="space-y-4" onSubmit={handleSubmit} autoComplete="on">
       <div className="space-y-2">
         <Label htmlFor="sign-up-name">表示名</Label>
         <Input
           id="sign-up-name"
+          name="name"
           type="text"
           autoComplete="name"
           required
           value={name}
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => setName(event.currentTarget.value)}
+          onInput={(event) => setName(event.currentTarget.value)}
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor="sign-up-email">メールアドレス</Label>
         <Input
           id="sign-up-email"
+          name="email"
           type="email"
+          inputMode="email"
           autoComplete="email"
+          spellCheck={false}
           required
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => setEmail(event.currentTarget.value)}
+          onInput={(event) => setEmail(event.currentTarget.value)}
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor="sign-up-password">パスワード</Label>
         <Input
           id="sign-up-password"
+          name="password"
           type="password"
           autoComplete="new-password"
           required
           minLength={passwordPolicyLimits.minLength}
           maxLength={passwordPolicyLimits.maxLength}
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(event) => setPassword(event.currentTarget.value)}
+          onInput={(event) => setPassword(event.currentTarget.value)}
           aria-describedby="sign-up-password-strength"
         />
         <div id="sign-up-password-strength">

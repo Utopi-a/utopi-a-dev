@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { createRangeAction } from "@/features/ammo-ledger/master/create-range/create-range-action";
 import { updateRangeAction } from "@/features/ammo-ledger/master/update-range/update-range-action";
 
@@ -49,6 +50,11 @@ export function RangeForm({ recordId, initialValues }: RangeFormProps = {}) {
       setIsPending(false);
       return;
     }
+
+    showAmmoLedgerToast({
+      action: isEdit ? "updated" : "created",
+      subject: "射撃場",
+    });
 
     if (isEdit) {
       router.push("/lab/ammo-ledger/settings/ranges");

@@ -8,5 +8,11 @@ type AcquisitionPermitRowActionsProps = {
 };
 
 export function AcquisitionPermitRowActions({ permitId }: AcquisitionPermitRowActionsProps) {
-  return <MasterRowActions recordId={permitId} deleteAction={deleteAcquisitionPermitAction} />;
+  return (
+    <MasterRowActions
+      recordId={permitId}
+      deletedSubject="譲受許可"
+      deleteAction={deleteAcquisitionPermitAction}
+    />
+  );
 }

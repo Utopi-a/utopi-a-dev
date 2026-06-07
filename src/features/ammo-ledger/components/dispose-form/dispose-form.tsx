@@ -9,6 +9,7 @@ import type { ammoType } from "@/db/schema/ammo-ledger";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
+import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
@@ -86,6 +87,10 @@ export function DisposeForm({ ammoTypes, ledgerEntryId, initialValues }: Dispose
       : await createTransactionAction(payload);
 
     if (result.ok) {
+      showAmmoLedgerToast({
+        action: ledgerEntryId ? "updated" : "created",
+        subject: "廃棄記録",
+      });
       await invalidateWorkspace();
       router.push(result.redirectPath);
       return;

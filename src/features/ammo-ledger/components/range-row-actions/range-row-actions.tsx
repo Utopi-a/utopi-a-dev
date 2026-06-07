@@ -12,6 +12,7 @@ export function RangeRowActions({ rangeId }: RangeRowActionsProps) {
     <MasterRowActions
       editHref={`/lab/ammo-ledger/settings/ranges/${rangeId}/edit`}
       recordId={rangeId}
+      deletedSubject="射撃場"
       deleteAction={deleteRangeAction}
     />
   );

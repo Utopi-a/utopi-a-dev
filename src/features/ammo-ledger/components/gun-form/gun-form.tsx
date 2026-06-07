@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { createGunAction } from "@/features/ammo-ledger/master/create-gun/create-gun-action";
 import { updateGunAction } from "@/features/ammo-ledger/master/update-gun/update-gun-action";
 
@@ -58,6 +59,11 @@ export function GunForm({ recordId, initialValues }: GunFormProps = {}) {
       setIsPending(false);
       return;
     }
+
+    showAmmoLedgerToast({
+      action: isEdit ? "updated" : "created",
+      subject: "銃",
+    });
 
     if (isEdit) {
       router.push("/lab/ammo-ledger/settings/guns");

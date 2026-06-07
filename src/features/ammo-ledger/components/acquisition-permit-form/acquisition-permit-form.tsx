@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
+import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { createAcquisitionPermitAction } from "@/features/ammo-ledger/permit/create-acquisition-permit/create-acquisition-permit-action";
 import {
   type AcquisitionPermitName,
@@ -68,6 +69,7 @@ export function AcquisitionPermitForm() {
       return;
     }
 
+    showAmmoLedgerToast({ action: "created", subject: "譲受許可" });
     router.refresh();
     setQuantity("5000");
     setMemo("");

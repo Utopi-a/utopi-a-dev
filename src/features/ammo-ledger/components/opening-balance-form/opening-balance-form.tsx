@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { LedgerYearSelect } from "@/features/ammo-ledger/components/ledger-year-select/ledger-year-select";
 import { OpeningBalanceAmmoTypeAdd } from "@/features/ammo-ledger/components/opening-balance-form/opening-balance-ammo-type-add";
 import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/purpose-filter";
+import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import type { OpeningBalanceSnapshot } from "@/features/ammo-ledger/opening-balance/get-opening-balance/get-opening-balance";
 import { saveOpeningBalanceAction } from "@/features/ammo-ledger/opening-balance/save-opening-balance/save-opening-balance-action";
 import {
@@ -121,6 +122,7 @@ export function OpeningBalanceForm({
       return;
     }
 
+    showAmmoLedgerToast({ action: "saved", subject: "年初繰越" });
     router.refresh();
     setIsPending(false);
   }

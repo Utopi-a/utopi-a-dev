@@ -8,5 +8,11 @@ type PermitEventRowActionsProps = {
 };
 
 export function PermitEventRowActions({ eventId }: PermitEventRowActionsProps) {
-  return <MasterRowActions recordId={eventId} deleteAction={deletePermitEventAction} />;
+  return (
+    <MasterRowActions
+      recordId={eventId}
+      deletedSubject="許可イベント"
+      deleteAction={deletePermitEventAction}
+    />
+  );
 }

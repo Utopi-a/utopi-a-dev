@@ -12,6 +12,7 @@ export function CounterpartyRowActions({ counterpartyId }: CounterpartyRowAction
     <MasterRowActions
       editHref={`/lab/ammo-ledger/settings/counterparties/${counterpartyId}/edit`}
       recordId={counterpartyId}
+      deletedSubject="購入先"
       deleteAction={deleteCounterpartyAction}
     />
   );

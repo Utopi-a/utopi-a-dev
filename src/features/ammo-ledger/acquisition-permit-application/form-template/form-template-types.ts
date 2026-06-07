@@ -1,4 +1,5 @@
 export type FieldAlign = "left" | "center" | "right";
+export type OverlayFieldVariant = "text" | "checkbox";
 
 export type OverlayFieldDef = {
   id: string;
@@ -9,6 +10,9 @@ export type OverlayFieldDef = {
   height?: number;
   fontSize: number;
   align?: FieldAlign;
+  variant?: OverlayFieldVariant;
+  /** false のとき base fontSize のまま。デフォルトは width があるフィールドで自動調整 */
+  fitText?: boolean;
 };
 
 export type RepeatingRowColumnDef = {
@@ -17,6 +21,8 @@ export type RepeatingRowColumnDef = {
   width: number;
   fontSize: number;
   align?: FieldAlign;
+  /** 行内での縦方向オフセット（mm） */
+  yOffset?: number;
 };
 
 export type RepeatingRowMap = {

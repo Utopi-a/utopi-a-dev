@@ -1,6 +1,6 @@
 import type { FormTemplate } from "../form-template-types";
 
-/** 別記様式第2号 別紙（r4-15 版）。10行。座標は mm。 */
+/** 別記様式第2号 別紙（r4-15 版）。PNG は申請書表と同じ左余白（20.1mm）に正規化済み。 */
 export const ibarakiR7SupplementTemplate: FormTemplate = {
   id: "ibaraki-r7-supplement",
   version: "r4-15",
@@ -10,19 +10,19 @@ export const ibarakiR7SupplementTemplate: FormTemplate = {
   pageWidthMm: 210,
   pageHeightMm: 297,
   pages: [{ imagePath: "/forms/acquisition-permit/ibaraki-r7/png/supplement-r4-15.pdf.png" }],
-  fields: [{ id: "planPurposeLabel", page: 0, x: 118, y: 18, width: 40, fontSize: 3.2 }],
+  fields: [{ id: "planPurposeLabel", page: 0, x: 116, y: 15.5, width: 30, fontSize: 3.0 }],
   repeatingRows: {
-    startY: 36,
-    rowHeight: 19.5,
+    startY: 50,
+    rowHeight: 19,
     maxRowsPerPage: 10,
     columns: [
-      { id: "year", x: 8, width: 12, fontSize: 3.0, align: "center" },
-      { id: "month", x: 22, width: 10, fontSize: 3.0, align: "center" },
-      { id: "period", x: 34, width: 10, fontSize: 2.8, align: "center" },
-      { id: "purchaseQuantity", x: 48, width: 14, fontSize: 3.0, align: "right" },
-      { id: "consumptionQuantity", x: 68, width: 14, fontSize: 3.0, align: "right" },
-      { id: "location", x: 86, width: 52, fontSize: 2.8 },
-      { id: "memo", x: 142, width: 58, fontSize: 2.6 },
+      { id: "year", x: 23, width: 20, fontSize: 2.8, align: "right", yOffset: 1.2 },
+      { id: "month", x: 23, width: 20, fontSize: 2.8, align: "right", yOffset: 6.8 },
+      { id: "period", x: 23, width: 20, fontSize: 2.8, align: "left", yOffset: 12.4 },
+      { id: "purchaseQuantity", x: 46, width: 18, fontSize: 3.0, align: "right", yOffset: 4 },
+      { id: "consumptionQuantity", x: 66, width: 18, fontSize: 3.0, align: "right", yOffset: 4 },
+      { id: "location", x: 119, width: 30, fontSize: 2.4, yOffset: 1.5 },
+      { id: "memo", x: 152, width: 36, fontSize: 2.4, yOffset: 1.5 },
     ],
   },
 };

@@ -6,8 +6,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { loadAcquisitionPermitApplicationPayload } from "@/features/ammo-ledger/acquisition-permit-application/application-session/application-session";
 import type { BuiltApplicationFieldValues } from "@/features/ammo-ledger/acquisition-permit-application/build-application-field-values/build-application-field-values";
 import { buildApplicationFieldValues } from "@/features/ammo-ledger/acquisition-permit-application/build-application-field-values/build-application-field-values";
+import { ApplicationPrintButtons } from "@/features/ammo-ledger/acquisition-permit-application/components/application-print-buttons/application-print-buttons";
 import { AcquisitionPermitApplicationDocument } from "@/features/ammo-ledger/acquisition-permit-application/documents/acquisition-permit-application-document/acquisition-permit-application-document";
-import { PrintButton } from "@/features/ammo-ledger/components/print-button/print-button";
 import { cn } from "@/lib/cn";
 
 export function AcquisitionPermitApplicationPrintView() {
@@ -41,14 +41,32 @@ export function AcquisitionPermitApplicationPrintView() {
 
   return (
     <div className="space-y-4">
-      <div className="no-print flex flex-wrap gap-2">
-        <Link
-          href="/lab/ammo-ledger/applications/acquisition-permit/new"
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-        >
-          ← 入力に戻る
-        </Link>
-        <PrintButton />
+      <div className="no-print space-y-3">
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/lab/ammo-ledger/applications/acquisition-permit/new"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            ← 入力に戻る
+          </Link>
+          <Link
+            href="/lab/ammo-ledger/applications/acquisition-permit/calibration"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            座標調整
+          </Link>
+        </div>
+        <ApplicationPrintButtons supplementPageCount={fieldValues.supplementPageCount} />
+        <div className="space-y-1 text-sm text-muted-foreground">
+          <p>
+            <strong>申請書:</strong>「両面」・「長辺とじ」・倍率
+            100%・余白なしで印刷（表→裏の2ページ）。
+          </p>
+          <p>
+            <strong>別紙:</strong>「片面」・倍率
+            100%・余白なし。枚数分ある場合は1枚ずつ、または片面で全ページ印刷。
+          </p>
+        </div>
       </div>
 
       <AcquisitionPermitApplicationDocument fieldValues={fieldValues} />

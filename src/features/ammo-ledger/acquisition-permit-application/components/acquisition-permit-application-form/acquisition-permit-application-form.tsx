@@ -71,6 +71,7 @@ export function AcquisitionPermitApplicationForm({
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
 
+  const [prefectureName, setPrefectureName] = useState("茨城県");
   const [applicationDate, setApplicationDate] = useState(today);
   const [name, setName] = useState(ownerName);
   const [furigana, setFurigana] = useState("");
@@ -85,7 +86,6 @@ export function AcquisitionPermitApplicationForm({
   const [validFrom, setValidFrom] = useState(today);
   const [validTo, setValidTo] = useState(defaultValidTo({ validFrom: today }));
   const [storageLocation, setStorageLocation] = useState(ownerAddress);
-  const [permitCertificateNumber, setPermitCertificateNumber] = useState("");
   const [selectedGunIds, setSelectedGunIds] = useState<string[]>(
     guns.length > 0 ? [guns[0].id] : [],
   );
@@ -106,6 +106,9 @@ export function AcquisitionPermitApplicationForm({
   const [error, setError] = useState<string | null>(null);
 
   const selectedGuns = guns.filter((gun) => selectedGunIds.includes(gun.id));
+  const gunType = selectedGuns.map((gun) => gun.gunType).join("、");
+  const compatibleAmmunition = ammoName;
+  const gunPermitNumber = selectedGuns[0]?.permitNumber ?? "";
   const gunTypeAndCaliber = selectedGuns.map((gun) => `${gun.gunType} ${gun.caliber}`).join("、");
 
   function handleValidFromChange(value: string) {
@@ -175,6 +178,7 @@ export function AcquisitionPermitApplicationForm({
     }
 
     const payload: AcquisitionPermitApplicationPayload = {
+      prefectureName,
       applicationDate,
       ownerName: name,
       ownerFurigana: furigana || undefined,
@@ -184,8 +188,10 @@ export function AcquisitionPermitApplicationForm({
       ammoName,
       requestedQuantity: Number(requestedQuantity) || 0,
       currentHomeStock: Number(homeStock) || 0,
+      gunType,
+      compatibleAmmunition,
+      gunPermitNumber: gunPermitNumber || undefined,
       gunTypeAndCaliber,
-      permitCertificateNumber: permitCertificateNumber || undefined,
       permitPurpose,
       ledgerPurpose,
       validFrom,
@@ -205,7 +211,7 @@ export function AcquisitionPermitApplicationForm({
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">譲受許可申請書</h1>
         <p className="text-sm text-muted-foreground">
-          別記様式第2号（茨城県警・令和7年3月改定）に入力値を重ねて印刷します。
+          別記様式第2号（全国共通様式・北海道警察掲載版）に入力値を重ねて印刷します。提出先の都道府県名を入力してください。
         </p>
       </div>
 
@@ -213,6 +219,18 @@ export function AcquisitionPermitApplicationForm({
 
       <AmmoLedgerPanel title="申請者">
         <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="prefecture-name">提出先（公安委員会）</Label>
+            <Input
+              id="prefecture-name"
+              value={prefectureName}
+              onChange={(event) => setPrefectureName(event.target.value)}
+              placeholder="茨城県"
+            />
+            <p className="text-xs text-muted-foreground">
+              「○○公安委員会殿」の ○○ 部分。例: 茨城県、北海道
+            </p>
+          </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="application-date">申請日</Label>
             <Input
@@ -347,15 +365,16 @@ export function AcquisitionPermitApplicationForm({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="permit-certificate-number">許可証等の番号</Label>
-            <Input
-              id="permit-certificate-number"
-              value={permitCertificateNumber}
-              onChange={(event) => setPermitCertificateNumber(event.target.value)}
-              placeholder="銃の所持許可証 第○○号 など"
-            />
-          </div>
+          {selectedGuns.length > 0 ? (
+            <p className="text-sm text-muted-foreground">
+              許可証等の番号: 銃の所持許可証 第{selectedGuns[0].permitNumber}
+              号（使用銃から自動反映）
+            </p>
+          ) : (
+            <p className="text-sm text-destructive">
+              使用銃を選ぶと、所持許可証番号が申請書に反映されます。
+            </p>
+          )}
         </div>
       </AmmoLedgerPanel>
 

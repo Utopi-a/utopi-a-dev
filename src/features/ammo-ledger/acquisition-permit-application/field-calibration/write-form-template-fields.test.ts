@@ -1,0 +1,46 @@
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { afterEach, describe, expect, it } from "vitest";
+import { writeFormTemplateFields } from "./write-form-template-fields";
+
+const tempDirs: string[] = [];
+
+afterEach(async () => {
+  await Promise.all(
+    tempDirs
+      .splice(0)
+      .map((dir) =>
+        import("node:fs/promises").then((fs) => fs.rm(dir, { recursive: true, force: true })),
+      ),
+  );
+});
+
+describe("writeFormTemplateFields", () => {
+  it("fields 配列だけを差し替える", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "template-write-"));
+    tempDirs.push(tempDir);
+
+    const relativeFilePath = "sample-template.ts";
+    const original = `export const sampleTemplate = {
+  id: "sample",
+  fields: [
+    { id: "old", page: 0, x: 1, y: 2, fontSize: 3 },
+  ],
+};
+`;
+    await writeFile(path.join(tempDir, relativeFilePath), original, "utf8");
+
+    await writeFormTemplateFields({
+      projectRoot: tempDir,
+      relativeFilePath,
+      fields: [{ id: "new", page: 0, x: 10, y: 20, width: 30, height: 4, fontSize: 2.5 }],
+    });
+
+    const updated = await readFile(path.join(tempDir, relativeFilePath), "utf8");
+    expect(updated).toContain('id: "new"');
+    expect(updated).toContain("width: 30");
+    expect(updated).not.toContain('id: "old"');
+    expect(updated).toContain('id: "sample"');
+  });
+});

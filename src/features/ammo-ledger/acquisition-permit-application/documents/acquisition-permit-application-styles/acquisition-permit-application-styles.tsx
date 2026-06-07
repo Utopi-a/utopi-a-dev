@@ -7,20 +7,14 @@ export function AcquisitionPermitApplicationStyles() {
 
       .application-form-page {
         position: relative;
+        box-sizing: border-box;
         margin: 0 auto 16px;
         overflow: hidden;
-        background: #fff;
+        background-color: #fff;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 100% 100%;
         box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
-      }
-
-      .application-form-page__background {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: fill;
-        pointer-events: none;
-        user-select: none;
       }
 
       .application-form-page__overlay {
@@ -30,11 +24,20 @@ export function AcquisitionPermitApplicationStyles() {
 
       .application-overlay-field {
         position: absolute;
+        box-sizing: border-box;
         line-height: 1.2;
         white-space: pre-wrap;
         overflow: hidden;
         color: #000;
         font-family: "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif;
+      }
+
+      .application-overlay-field--checkbox {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        overflow: visible;
       }
 
       @media print {
@@ -43,22 +46,69 @@ export function AcquisitionPermitApplicationStyles() {
           margin: 0;
         }
 
+        html,
         body {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        body * {
+          visibility: hidden;
+        }
+
+        .application-form-print,
+        .application-form-print * {
+          visibility: visible;
+        }
+
+        .application-form-print {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 210mm;
           margin: 0;
+          padding: 0;
+        }
+
+        .application-form-print > .no-print {
+          display: none !important;
         }
 
         .no-print {
           display: none !important;
         }
 
-        .application-form-page {
-          margin: 0;
-          box-shadow: none;
-          break-after: page;
-          page-break-after: always;
+        :is(main, div)[class*="max-w-3xl"] {
+          max-width: none !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
         }
 
-        .application-form-page:last-child {
+        html.printing-application-main .application-form-supplement {
+          display: none !important;
+        }
+
+        html.printing-application-supplement .application-form-main {
+          display: none !important;
+        }
+
+        .application-form-page {
+          width: 210mm !important;
+          height: 297mm !important;
+          margin: 0 !important;
+          box-shadow: none !important;
+          break-after: page;
+          page-break-after: always;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .application-form-main .application-form-page:last-child {
+          break-after: auto;
+          page-break-after: auto;
+        }
+
+        .application-form-supplement .application-form-page:last-child {
           break-after: auto;
           page-break-after: auto;
         }

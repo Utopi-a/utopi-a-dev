@@ -1,6 +1,10 @@
 import { Fragment } from "react";
+import { cn } from "@/lib/cn";
 import type { FormTemplate } from "../../form-template/form-template-types";
+import { buildOverlayMmStyle } from "../overlay-field/build-overlay-mm-style";
 import { OverlayField } from "../overlay-field/overlay-field";
+
+type ApplicationPageVariant = "main-front" | "main-back" | "supplement";
 
 type AcquisitionPermitApplicationPageProps = {
   template: FormTemplate;
@@ -8,6 +12,7 @@ type AcquisitionPermitApplicationPageProps = {
   fieldValues: Record<string, string>;
   supplementRows?: Array<{ rowIndex?: number; values: Record<string, string> }>;
   supplementPageOffset?: number;
+  pageVariant?: ApplicationPageVariant;
 };
 
 export function AcquisitionPermitApplicationPage({
@@ -16,30 +21,34 @@ export function AcquisitionPermitApplicationPage({
   fieldValues,
   supplementRows = [],
   supplementPageOffset = 0,
+  pageVariant,
 }: AcquisitionPermitApplicationPageProps) {
   const page = template.pages[pageIndex];
   const pageFields = template.fields.filter((field) => field.page === pageIndex);
   const repeatingRows = template.repeatingRows;
+  const { pageWidthMm, pageHeightMm } = template;
 
   return (
     <section
-      className="application-form-page"
+      className={cn(
+        "application-form-page",
+        pageVariant && `application-form-page--${pageVariant}`,
+      )}
       style={{
-        width: `${template.pageWidthMm}mm`,
-        height: `${template.pageHeightMm}mm`,
+        width: `${pageWidthMm}mm`,
+        height: `${pageHeightMm}mm`,
+        backgroundImage: `url(${page.imagePath})`,
       }}
     >
-      {/* biome-ignore lint/performance/noImgElement: 印刷用テンプレート背景 */}
-      <img
-        src={page.imagePath}
-        alt=""
-        className="application-form-page__background"
-        draggable={false}
-      />
-
       <div className="application-form-page__overlay">
         {pageFields.map((field) => (
-          <OverlayField key={field.id} field={field} value={fieldValues[field.id] ?? ""} />
+          <OverlayField
+            key={field.id}
+            field={field}
+            value={fieldValues[field.id] ?? ""}
+            pageWidthMm={pageWidthMm}
+            pageHeightMm={pageHeightMm}
+          />
         ))}
 
         {repeatingRows
@@ -60,13 +69,15 @@ export function AcquisitionPermitApplicationPage({
                     <span
                       key={`${rowKey}-${column.id}`}
                       className="application-overlay-field"
-                      style={{
-                        left: `${column.x}mm`,
-                        top: `${y}mm`,
-                        width: `${column.width}mm`,
-                        fontSize: `${column.fontSize}mm`,
-                        textAlign: column.align ?? "left",
-                      }}
+                      style={buildOverlayMmStyle({
+                        x: column.x,
+                        y: y + (column.yOffset ?? 0),
+                        width: column.width,
+                        fontSize: column.fontSize,
+                        align: column.align,
+                        pageWidthMm,
+                        pageHeightMm,
+                      })}
                     >
                       {row.values[column.id] ?? ""}
                     </span>

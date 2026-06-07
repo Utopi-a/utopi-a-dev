@@ -1,5 +1,5 @@
 import type { BuiltApplicationFieldValues } from "../../build-application-field-values/build-application-field-values";
-import { ibarakiR7MainTemplate } from "../../form-template/ibaraki-r7-main/ibaraki-r7-main-template";
+import { hokkaidoMainTemplate } from "../../form-template/hokkaido-main/hokkaido-main-template";
 import { ibarakiR7SupplementTemplate } from "../../form-template/ibaraki-r7-supplement/ibaraki-r7-supplement-template";
 import { AcquisitionPermitApplicationPage } from "../acquisition-permit-application-page/acquisition-permit-application-page";
 import { AcquisitionPermitApplicationStyles } from "../acquisition-permit-application-styles/acquisition-permit-application-styles";
@@ -23,33 +23,44 @@ export function AcquisitionPermitApplicationDocument({
 
       <div className="no-print mb-4 space-y-2 text-sm text-muted-foreground">
         <p>
-          公式様式（茨城県警・令和7年3月改定）の背景に入力値を重ねて表示します。印刷時は倍率
-          100%・A4 白無地で出力してください。署名・押印欄は手書きで記入してください。
+          申請書は表（入力あり）・裏（記載例）の2ページです。「申請書を印刷」は表裏両面、別紙は1枚ずつ片面で印刷してください。
         </p>
         <p>
-          別紙 {supplementPages.length} 枚（計 {fieldValues.supplementRows.length}{" "}
-          行）。座標は初期キャリブレーション値のため、実機でずれがあれば調整が必要です。
+          倍率 100%・余白なし・ヘッダー/フッター OFF・A4
+          白無地。署名・押印欄は手書きで記入してください。
+        </p>
+        <p>
+          別紙 {supplementPages.length} 枚（計 {fieldValues.supplementRows.length} 行）。
         </p>
       </div>
 
-      <AcquisitionPermitApplicationPage
-        template={ibarakiR7MainTemplate}
-        pageIndex={0}
-        fieldValues={fieldValues.mainFields}
-      />
+      <div className="application-form-main">
+        {hokkaidoMainTemplate.pages.map((page, pageIndex) => (
+          <AcquisitionPermitApplicationPage
+            key={`main-page-${page.imagePath}`}
+            template={hokkaidoMainTemplate}
+            pageIndex={pageIndex}
+            fieldValues={fieldValues.mainFields}
+            pageVariant={pageIndex === 0 ? "main-front" : "main-back"}
+          />
+        ))}
+      </div>
 
-      {supplementPages.map((pageRows, pageIndex) => (
-        <AcquisitionPermitApplicationPage
-          key={`supplement-page-${pageRows[0]?.rowIndex ?? pageIndex}`}
-          template={ibarakiR7SupplementTemplate}
-          pageIndex={0}
-          fieldValues={{
-            planPurposeLabel: fieldValues.mainFields.permitPurpose ?? "",
-          }}
-          supplementRows={pageRows}
-          supplementPageOffset={0}
-        />
-      ))}
+      <div className="application-form-supplement">
+        {supplementPages.map((pageRows, pageIndex) => (
+          <AcquisitionPermitApplicationPage
+            key={`supplement-page-${pageRows[0]?.rowIndex ?? pageIndex}`}
+            template={ibarakiR7SupplementTemplate}
+            pageIndex={0}
+            fieldValues={{
+              planPurposeLabel: fieldValues.mainFields.permitPurpose ?? "",
+            }}
+            supplementRows={pageRows}
+            supplementPageOffset={0}
+            pageVariant="supplement"
+          />
+        ))}
+      </div>
     </div>
   );
 }

@@ -25,7 +25,9 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "doppler run -- drizzle-kit generate",
     "db:migrate": "doppler run -- drizzle-kit migrate",
-    "db:studio": "doppler run -- drizzle-kit studio"
+    "db:studio": "doppler run -- drizzle-kit studio",
+    "scrape:shooting-ranges": "pnpm dlx tsx src/features/ammo-ledger/range-seed/scrape-shajoukyo-ranges/scrape-shajoukyo-ranges.ts",
+    "resolve:shooting-range-addresses": "pnpm dlx tsx src/features/ammo-ledger/range-seed/resolve-range-addresses/resolve-range-addresses.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

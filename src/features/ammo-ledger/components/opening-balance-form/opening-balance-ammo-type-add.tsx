@@ -38,8 +38,12 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
     gaugeNumber: gaugeNumber || undefined,
   });
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  async function handleAdd() {
+    if (!caliber.trim() || !roundsPerBox || Number(roundsPerBox) < 1) {
+      setError("入力内容を確認してください");
+      return;
+    }
+
     setIsPending(true);
     setError(null);
 
@@ -72,14 +76,13 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
   }
 
   return (
-    <form className="space-y-3 border-t border-border/50 pt-4" onSubmit={handleSubmit}>
+    <div className="space-y-3 border-t border-border/50 pt-4">
       <p className="text-sm font-medium">弾種を追加</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="add-caliber">番径</Label>
           <Input
             id="add-caliber"
-            required
             value={caliber}
             onChange={(event) => setCaliber(event.target.value)}
           />
@@ -90,7 +93,6 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
           value={shotType}
           onChange={setShotType}
           options={shotTypes.map((type) => ({ value: type, label: shotTypeLabels[type] }))}
-          required
           placeholder=""
         />
         <FieldSelect
@@ -107,7 +109,6 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
             id="add-rounds-per-box"
             type="number"
             min={1}
-            required
             value={roundsPerBox}
             onChange={(event) => setRoundsPerBox(event.target.value)}
           />
@@ -116,7 +117,7 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
       <p className="text-xs text-muted-foreground">表示名: {previewLabel}</p>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" size="sm" disabled={isPending}>
+        <Button type="button" size="sm" disabled={isPending} onClick={handleAdd}>
           {isPending ? "追加中…" : "追加して一覧に反映"}
         </Button>
         <Button
@@ -129,6 +130,6 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
           キャンセル
         </Button>
       </div>
-    </form>
+    </div>
   );
 }

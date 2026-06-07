@@ -58,11 +58,30 @@ export const ammoRange = pgTable("ammo_range", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const ammoAcquisitionPermit = pgTable("ammo_acquisition_permit", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  ledgerPurpose: text("ledger_purpose").notNull(),
+  name: text("name").notNull(),
+  permitPurpose: text("permit_purpose").notNull(),
+  grantedOn: text("granted_on").notNull(),
+  expiresOn: text("expires_on").notNull(),
+  quantity: integer("quantity").notNull(),
+  memo: text("memo"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const ammoPermitEvent = pgTable("ammo_permit_event", {
   id: text("id").primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  permitId: text("permit_id").references(() => ammoAcquisitionPermit.id, {
+    onDelete: "cascade",
+  }),
   purpose: text("purpose").notNull(),
   eventKind: text("event_kind").notNull(),
   occurredOn: text("occurred_on").notNull(),

@@ -12,9 +12,9 @@ const settingsGroups = [
         description: "氏名・住所（印刷にも使用）",
       },
       {
-        href: "/lab/ammo-ledger/settings/permit-events",
-        label: "許可残数イベント",
-        description: "許可取得・失効・繰越",
+        href: "/lab/ammo-ledger/settings/permits",
+        label: "譲受許可",
+        description: "付与日・名称・数量・目的・有効期限",
       },
     ],
   },

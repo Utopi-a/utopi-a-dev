@@ -1,14 +1,30 @@
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
+import { HomeStorageWarning } from "@/features/ammo-ledger/components/home-storage-warning/home-storage-warning";
 import { InventoryOverviewPanel } from "@/features/ammo-ledger/components/inventory-overview/inventory-overview";
 import { StockCheckForm } from "@/features/ammo-ledger/components/stock-check-form/stock-check-form";
 import { buildInventoryOverview } from "@/features/ammo-ledger/inventory/build-inventory-overview/build-inventory-overview";
+import { evaluateHomeStorageLimit } from "@/features/ammo-ledger/ledger/compute-running-home-stock/compute-running-home-stock";
 import { getInventorySummary } from "@/features/ammo-ledger/ledger/get-inventory-summary/get-inventory-summary";
+import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-entries/list-ledger-entries";
+import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 
 export default async function InventoryPage() {
   const user = await requireAmmoUser();
-  const summary = await getInventorySummary({ userId: user.id });
+  const [summary, allEntries] = await Promise.all([
+    getInventorySummary({ userId: user.id }),
+    listLedgerEntries({ userId: user.id }),
+  ]);
+
+  const homeStorage = evaluateHomeStorageLimit({
+    entries: allEntries.map((entry) => ({
+      id: entry.id,
+      occurredOn: entry.occurredOn,
+      category: entry.category as LedgerCategory,
+      quantity: entry.quantity,
+    })),
+  });
 
   const items = summary.map((s) => ({
     ammoTypeId: s.ammoType.id,
@@ -37,6 +53,11 @@ export default async function InventoryPage() {
         </p>
       </div>
       <AmmoLedgerNav />
+
+      <HomeStorageWarning
+        currentStock={homeStorage.currentStock}
+        peakStock={homeStorage.peakStock}
+      />
 
       <AmmoLedgerPanel title="帳簿残数" description="弾種・号数・グループごとに一覧表示します">
         <InventoryOverviewPanel overview={overview} />

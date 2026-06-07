@@ -8,6 +8,8 @@ import { cn } from "@/lib/cn";
 
 type LedgerTableProps = {
   entries: (typeof ammoLedgerEntry.$inferSelect)[];
+  permitBalances?: Map<string, number>;
+  homeStorageExceededEntryIds?: string[];
 };
 
 const categoryTone: Record<LedgerCategory, string> = {
@@ -29,7 +31,12 @@ function LedgerCategoryBadge({ category }: { category: string }) {
   );
 }
 
-export function LedgerTable({ entries }: LedgerTableProps) {
+export function LedgerTable({
+  entries,
+  permitBalances,
+  homeStorageExceededEntryIds = [],
+}: LedgerTableProps) {
+  const exceededSet = new Set(homeStorageExceededEntryIds);
   if (entries.length === 0) {
     return (
       <p className="py-10 text-center text-sm text-muted-foreground">
@@ -47,6 +54,7 @@ export function LedgerTable({ entries }: LedgerTableProps) {
             <th className="px-3 py-2.5">区分</th>
             <th className="px-3 py-2.5">種類</th>
             <th className="px-3 py-2.5 text-right">数量</th>
+            <th className="px-3 py-2.5 text-right">許可残数</th>
             <th className="px-3 py-2.5">場所</th>
             <th className="px-3 py-2.5">相手方</th>
             <th className="px-3 py-2.5">使用銃</th>
@@ -57,7 +65,10 @@ export function LedgerTable({ entries }: LedgerTableProps) {
           {entries.map((entry) => (
             <tr
               key={entry.id}
-              className="border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20"
+              className={cn(
+                "border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20",
+                exceededSet.has(entry.id) && "bg-amber-500/5",
+              )}
             >
               <td className="px-3 py-3 align-top">
                 <span className="whitespace-nowrap tabular-nums">{entry.occurredOn}</span>
@@ -71,6 +82,11 @@ export function LedgerTable({ entries }: LedgerTableProps) {
               <td className="px-3 py-3 align-top">
                 <span className="block text-right font-medium whitespace-nowrap tabular-nums">
                   {entry.quantity}発
+                </span>
+              </td>
+              <td className="px-3 py-3 align-top">
+                <span className="block text-right whitespace-nowrap text-muted-foreground tabular-nums">
+                  {permitBalances?.has(entry.id) ? `${permitBalances.get(entry.id)}発` : "—"}
                 </span>
               </td>
               <td className="px-3 py-3 align-top text-muted-foreground">{entry.location ?? "—"}</td>

@@ -27,7 +27,7 @@ export function ActivePermitStatus({
     isPermitActive({ grantedOn: permit.grantedOn, expiresOn: permit.expiresOn, today }),
   );
 
-  if (purposePermits.length === 0) {
+  if (purposePermits.length === 0 && permitBalance <= 0) {
     return (
       <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm">
         <p className="font-medium text-amber-800 dark:text-amber-200">譲受許可が未登録です</p>

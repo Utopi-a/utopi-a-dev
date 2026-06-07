@@ -16,12 +16,14 @@ import {
   LedgerCategoryBadge,
   PermitCarryoverBadge,
 } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
+import { LedgerEntryReorderButtons } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-reorder-buttons";
 import { VoidLedgerEntryButton } from "@/features/ammo-ledger/components/ledger-table/void-ledger-entry-button";
 import {
   buildPermitCarryoverLabel,
   type LedgerDisplayRow,
 } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
 import { formatPermitBalance } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
+import { resolveLedgerEntryReorderState } from "@/features/ammo-ledger/ledger/resolve-ledger-entry-reorder-state/resolve-ledger-entry-reorder-state";
 import { buildOpeningBalanceHref } from "@/features/ammo-ledger/opening-balance/build-opening-balance-href/build-opening-balance-href";
 import { formatPermitExpiryLabel } from "@/features/ammo-ledger/permit/compute-permit-expiry/compute-permit-expiry";
 import {
@@ -33,6 +35,7 @@ import { cn } from "@/lib/cn";
 
 type LedgerEntryActionsSheetProps = {
   row: LedgerDisplayRow | null;
+  rows: LedgerDisplayRow[];
   purpose: LedgerPurpose;
   permitBalance?: number;
   open: boolean;
@@ -43,6 +46,7 @@ type LedgerEntryActionsSheetProps = {
 
 export function LedgerEntryActionsSheet({
   row,
+  rows,
   purpose,
   permitBalance,
   open,
@@ -125,6 +129,7 @@ export function LedgerEntryActionsSheet({
         purpose,
       })
     : buildLedgerEntryEditHref({ ledgerEntryId: entry.id });
+  const reorderState = resolveLedgerEntryReorderState({ rows, ledgerEntryId: entry.id });
 
   return (
     <Sheet open={open} onOpenChange={(nextOpen) => onOpenChange({ open: nextOpen })}>
@@ -159,6 +164,11 @@ export function LedgerEntryActionsSheet({
           ) : (
             <p className="text-sm text-muted-foreground">{categoryLabel}記録は編集できません。</p>
           )}
+          <LedgerEntryReorderButtons
+            ledgerEntryId={entry.id}
+            canMoveUp={reorderState.canMoveUp}
+            canMoveDown={reorderState.canMoveDown}
+          />
           <VoidLedgerEntryButton
             ledgerEntryId={entry.id}
             onVoided={handleVoided}

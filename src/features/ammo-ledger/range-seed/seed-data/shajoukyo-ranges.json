@@ -1,0 +1,1967 @@
+{
+  "scrapedAt": "2026-06-07T05:31:49.978Z",
+  "sourceUrl": "https://shajoukyo.ciao.jp/index.php?%E5%85%A8%E5%9B%BD",
+  "count": 196,
+  "ranges": [
+    {
+      "name": "豊滝クレー",
+      "prefecture": "北海道",
+      "location": "札幌市南区",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "011-596-2281",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "栗山クレー",
+      "prefecture": "北海道",
+      "location": "夕張郡栗山町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "012-376-3840",
+      "surfaceTypes": "T･(S･R)",
+      "websiteUrl": null
+    },
+    {
+      "name": "浦臼国際散弾銃",
+      "prefecture": "北海道",
+      "location": "樺戸郡浦臼町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0125-67-3833",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "浦臼国際ライフル",
+      "prefecture": "北海道",
+      "location": "樺戸郡浦臼町",
+      "address": "",
+      "defaultPurpose": "教習･練習",
+      "phone": "0125-67-3945",
+      "surfaceTypes": "(LB･SB･AR)",
+      "websiteUrl": "http://urausu-rifle.com/shisetu.html"
+    },
+    {
+      "name": "ﾉｰｽﾏﾝ室内ﾗｲﾌﾙ",
+      "prefecture": "北海道",
+      "location": "函館市亀田中野町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0138-47-2611",
+      "surfaceTypes": "(LB･SB･AR)",
+      "websiteUrl": "http://www.northman.jp/index.html"
+    },
+    {
+      "name": "函館七飯総合",
+      "prefecture": "北海道",
+      "location": "亀田郡七飯町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0138-27-3617",
+      "surfaceTypes": "T･S(SB･LB･AR)",
+      "websiteUrl": null
+    },
+    {
+      "name": "ユーラップ",
+      "prefecture": "北海道",
+      "location": "二海郡八雲町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0137-63-4308",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "江差支部",
+      "prefecture": "北海道",
+      "location": "檜山郡江差町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0139-53-6539",
+      "surfaceTypes": "S･LB",
+      "websiteUrl": null
+    },
+    {
+      "name": "旭川国際クレー",
+      "prefecture": "北海道",
+      "location": "旭川市江丹別町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0166-62-0136",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "道北",
+      "prefecture": "北海道",
+      "location": "名寄市字日進",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "090-8706-8961",
+      "surfaceTypes": "T･(S･R)",
+      "websiteUrl": null
+    },
+    {
+      "name": "稚内",
+      "prefecture": "北海道",
+      "location": "稚内市大字声問村",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0162-27-2422",
+      "surfaceTypes": "(S･A･T)",
+      "websiteUrl": null
+    },
+    {
+      "name": "HIPI釧路総合",
+      "prefecture": "北海道",
+      "location": "釧路市新野",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0154-57-5555",
+      "surfaceTypes": "(T･S)(LB･SB･AR)",
+      "websiteUrl": null
+    },
+    {
+      "name": "帯広国際ｸﾚｰ･ﾗｲﾌﾙ",
+      "prefecture": "北海道",
+      "location": "河西郡芽室町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0155-65-2111",
+      "surfaceTypes": "T･(S･R)(SB･LB･AR)",
+      "websiteUrl": null
+    },
+    {
+      "name": "帯広総合",
+      "prefecture": "北海道",
+      "location": "河西郡芽室町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0155-62-2451",
+      "surfaceTypes": "(T･R)･S･A(SB･LB･AR)",
+      "websiteUrl": "http://www.komiya-gunshop.com/shooting/shooting.html"
+    },
+    {
+      "name": "北見国際クレー",
+      "prefecture": "北海道",
+      "location": "北見市大和",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0157-23-1440",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "網走射撃協会",
+      "prefecture": "北海道",
+      "location": "網走市字能取",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "0152-44-7239",
+      "surfaceTypes": "S(SB･LB･AR)",
+      "websiteUrl": null
+    },
+    {
+      "name": "登別総合クレー",
+      "prefecture": "北海道",
+      "location": "登別市富岸町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0143-86-7912",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "白金クレー",
+      "prefecture": "北海道",
+      "location": "上川郡美瑛町",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "0166-92-4956",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "当麻ライフル",
+      "prefecture": "北海道",
+      "location": "上川郡当麻町",
+      "address": "",
+      "defaultPurpose": "教習･練習",
+      "phone": "01654-3-6280",
+      "surfaceTypes": "(LB･SB･AR)",
+      "websiteUrl": null
+    },
+    {
+      "name": "北見ライフル",
+      "prefecture": "北海道",
+      "location": "北見市端野町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0157-25-0728",
+      "surfaceTypes": "(LB･SB･AR)",
+      "websiteUrl": null
+    },
+    {
+      "name": "青森散弾銃",
+      "prefecture": "青森",
+      "location": "青森市大字野沢",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "017-739-8299",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "下北郡猟友会入口ｸﾚｰ",
+      "prefecture": "青森",
+      "location": "下北郡東通村",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0175-27-3022",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "弘前",
+      "prefecture": "青森",
+      "location": "弘前市大字小栗山",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0172-87-3946",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "八戸",
+      "prefecture": "青森",
+      "location": "三戸郡南部町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0178-84-4446",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "鶯宿温泉",
+      "prefecture": "岩手",
+      "location": "岩手郡雫石町",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "019-692-2334",
+      "surfaceTypes": "(T･A) S(SB･LB･AR)",
+      "websiteUrl": null
+    },
+    {
+      "name": "矢巾総合",
+      "prefecture": "岩手",
+      "location": "紫波郡矢巾町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "019-697-4200",
+      "surfaceTypes": "(T･LB･AR)S･(S･R)･A",
+      "websiteUrl": null
+    },
+    {
+      "name": "花巻市クレ",
+      "prefecture": "岩手",
+      "location": "花巻市湯口",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0198-25-2453",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www.iwatetabi.jp/spot/detail/03205/448.html"
+    },
+    {
+      "name": "大東町摺沢",
+      "prefecture": "岩手",
+      "location": "一関市大東町",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "0191-75-4354",
+      "surfaceTypes": "T",
+      "websiteUrl": null
+    },
+    {
+      "name": "北上総合",
+      "prefecture": "岩手",
+      "location": "北上市口内町",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "0197-69-2916",
+      "surfaceTypes": "T･(S･R)(SB･LB･AR)",
+      "websiteUrl": null
+    },
+    {
+      "name": "釜石綜合",
+      "prefecture": "岩手",
+      "location": "釜石市唐丹町",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "0193-55-2170",
+      "surfaceTypes": "T･S･(LB･AR)",
+      "websiteUrl": null
+    },
+    {
+      "name": "宮古指定",
+      "prefecture": "岩手",
+      "location": "宮古市大字津軽石",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0193-86-3458",
+      "surfaceTypes": "T･S･LB",
+      "websiteUrl": null
+    },
+    {
+      "name": "岩手一戸綜合",
+      "prefecture": "岩手",
+      "location": "二戸郡一戸町",
+      "address": "",
+      "defaultPurpose": "教習・練習･装弾",
+      "phone": "0195-35-2850",
+      "surfaceTypes": "(LB･SB･AR)",
+      "websiteUrl": null
+    },
+    {
+      "name": "久慈常設",
+      "prefecture": "岩手",
+      "location": "久慈市大川目町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0194-55-2524",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "仙台綜合",
+      "prefecture": "宮城",
+      "location": "仙台市青葉区",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾･保管",
+      "phone": "022-394-2392",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "気仙沼ライフル",
+      "prefecture": "宮城",
+      "location": "気仙沼市字川上",
+      "address": "",
+      "defaultPurpose": "練習",
+      "phone": "0226-22-3583",
+      "surfaceTypes": "(LB･SB)",
+      "websiteUrl": null
+    },
+    {
+      "name": "宮城県クレー",
+      "prefecture": "宮城",
+      "location": "柴田郡村田町",
+      "address": "",
+      "defaultPurpose": "装弾",
+      "phone": "0224-84-6551",
+      "surfaceTypes": "T･(T･S)(S･R)",
+      "websiteUrl": "http://www.pref.miyagi.jp/soshiki/sizenhogo/clay.html"
+    },
+    {
+      "name": "鳴子町クレー",
+      "prefecture": "宮城",
+      "location": "大崎市鳴子町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0229-83-4358",
+      "surfaceTypes": "T･(S･R)",
+      "websiteUrl": null
+    },
+    {
+      "name": "志たかぢや綜合",
+      "prefecture": "宮城",
+      "location": "登米市東和町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0220-22-2330",
+      "surfaceTypes": "T･(S･R)･LB",
+      "websiteUrl": "http://www.shitakadiya.co.jp/cp/top.html"
+    },
+    {
+      "name": "宮城県ライフル",
+      "prefecture": "宮城",
+      "location": "石巻市沢田",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "022-349-1062",
+      "surfaceTypes": "SB･AR",
+      "websiteUrl": "http://www.pref.miyagi.jp/supoken/sisetu/raihuru.html"
+    },
+    {
+      "name": "大館大子内",
+      "prefecture": "秋田",
+      "location": "大館市大子内",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0186-42-8877",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "北部シーサイド",
+      "prefecture": "秋田",
+      "location": "能代市浅内",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0185-52-7518",
+      "surfaceTypes": "T･S･(SB･LB)",
+      "websiteUrl": "http://sekai-travel.com/hokubuseaside.html"
+    },
+    {
+      "name": "男鹿市脇本クレー",
+      "prefecture": "秋田",
+      "location": "男鹿市脇本",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "0185-25-4143",
+      "surfaceTypes": "T",
+      "websiteUrl": null
+    },
+    {
+      "name": "本荘",
+      "prefecture": "秋田",
+      "location": "由利本荘市三条",
+      "address": "",
+      "defaultPurpose": "練習",
+      "phone": "0184-24-3706",
+      "surfaceTypes": "T･(S･R)",
+      "websiteUrl": null
+    },
+    {
+      "name": "秋田県立総合",
+      "prefecture": "秋田",
+      "location": "由利本荘市岩城道川",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "0184-73-3900",
+      "surfaceTypes": "T･S･SB･AR",
+      "websiteUrl": "http://www.akisouko.com/firing/index.html"
+    },
+    {
+      "name": "大曲綜合",
+      "prefecture": "秋田",
+      "location": "大仙市内小友",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0187-68-2888",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "鳥海",
+      "prefecture": "秋田",
+      "location": "由利本荘市上川内",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0184-59-2359",
+      "surfaceTypes": "T･S･LB",
+      "websiteUrl": null
+    },
+    {
+      "name": "東根クレー",
+      "prefecture": "山形",
+      "location": "東根市大字東根",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0237-43-5341",
+      "surfaceTypes": "(T･LB)･S(S･A)",
+      "websiteUrl": null
+    },
+    {
+      "name": "山形県射撃教習ｾﾝﾀｰ",
+      "prefecture": "山形",
+      "location": "最上郡舟形町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0233-22-2111",
+      "surfaceTypes": "T･(S･R)･LB",
+      "websiteUrl": null
+    },
+    {
+      "name": "遊佐町",
+      "prefecture": "山形",
+      "location": "飽海郡遊佐町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0234-72-2579",
+      "surfaceTypes": "T･(S･R)",
+      "websiteUrl": null
+    },
+    {
+      "name": "羽黒",
+      "prefecture": "山形",
+      "location": "鶴岡市羽黒手向",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0235-22-0607",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "南陽市赤湯クレー",
+      "prefecture": "山形",
+      "location": "南陽市新田",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0238-52-0559",
+      "surfaceTypes": "T･(S･R)",
+      "websiteUrl": null
+    },
+    {
+      "name": "米沢猟友会クレー",
+      "prefecture": "山形",
+      "location": "米沢市大字長手向",
+      "address": "",
+      "defaultPurpose": "装弾",
+      "phone": "0238-28-0367",
+      "surfaceTypes": "(T･S)",
+      "websiteUrl": null
+    },
+    {
+      "name": "小国町猟友会",
+      "prefecture": "山形",
+      "location": "西置賜郡小国町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0238-62-2050",
+      "surfaceTypes": "(S･T･A･LB)",
+      "websiteUrl": null
+    },
+    {
+      "name": "福島市クレー",
+      "prefecture": "福島",
+      "location": "福島市小田",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0245-46-5590",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "梁川",
+      "prefecture": "福島",
+      "location": "伊達市梁川町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "024-577-0119",
+      "surfaceTypes": "T",
+      "websiteUrl": null
+    },
+    {
+      "name": "二本松総合",
+      "prefecture": "福島",
+      "location": "二本松市大森沢",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0243-23-4388",
+      "surfaceTypes": "T･S･SB･AR",
+      "websiteUrl": "http://www.city.nihonmatsu.lg.jp/site/shisetu/1560.html"
+    },
+    {
+      "name": "福島中央国際",
+      "prefecture": "福島",
+      "location": "須賀川市大字小倉",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0248-79-2020",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "石川常設",
+      "prefecture": "福島",
+      "location": "石川郡石川町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0247-26-3637",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www.h7.dion.ne.jp/~fgs/guide.htm"
+    },
+    {
+      "name": "矢祭",
+      "prefecture": "福島",
+      "location": "東白川郡矢祭町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0247-47-2216",
+      "surfaceTypes": "T",
+      "websiteUrl": null
+    },
+    {
+      "name": "磐梯国際クレー",
+      "prefecture": "福島",
+      "location": "会津若松市河東町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾･保管",
+      "phone": "0242-94-2248",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www.aizu-gunshop.jp/bandai.html"
+    },
+    {
+      "name": "喜多方猟友会研修ｾﾝﾀｰ",
+      "prefecture": "福島",
+      "location": "喜多方市山都町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0241-62-1311",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "田島町川島",
+      "prefecture": "福島",
+      "location": "南会津郡会津町",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "0241-62-1311",
+      "surfaceTypes": "T",
+      "websiteUrl": null
+    },
+    {
+      "name": "いわき総合",
+      "prefecture": "福島",
+      "location": "いわき市好間町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0246-36-5151",
+      "surfaceTypes": "T･S(SB･LB)･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "相馬市初野",
+      "prefecture": "福島",
+      "location": "相馬市初野",
+      "address": "",
+      "defaultPurpose": "教習・練習･装弾･保管",
+      "phone": "0244-35-3158",
+      "surfaceTypes": "A",
+      "websiteUrl": null
+    },
+    {
+      "name": "小野常設",
+      "prefecture": "福島",
+      "location": "田村郡小野町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0247-85-3113",
+      "surfaceTypes": "(T･S)",
+      "websiteUrl": null
+    },
+    {
+      "name": "茨城県狩猟研修ｾﾝﾀｰ",
+      "prefecture": "茨城",
+      "location": "笠間市大字石寺",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾･保管",
+      "phone": "0296-72-3817",
+      "surfaceTypes": "T･S(SB･LB)･AR",
+      "websiteUrl": "http://www4.ocn.ne.jp/~ibaryo/newpage1.htm"
+    },
+    {
+      "name": "高萩",
+      "prefecture": "茨城",
+      "location": "高萩市大字秋山",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0293-24-1162",
+      "surfaceTypes": "(T･S)",
+      "websiteUrl": "http://www.shotgun-shooters.net/takahagi/range-takahagi.html"
+    },
+    {
+      "name": "土浦射撃倶楽部筑波",
+      "prefecture": "茨城",
+      "location": "つくば市大字大形",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0298-67-1151",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www.tukuba.biz/index.html"
+    },
+    {
+      "name": "友部",
+      "prefecture": "茨城",
+      "location": "笠間市平町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0296-77-0601",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "栃木県総合",
+      "prefecture": "栃木",
+      "location": "宇都宮市新里町",
+      "address": "",
+      "defaultPurpose": "休場中",
+      "phone": "028-674-2451",
+      "surfaceTypes": "T･S･SB･LB･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "足利常設クレー",
+      "prefecture": "栃木",
+      "location": "足利市松田町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾･保管",
+      "phone": "0284-61-1246",
+      "surfaceTypes": "T･S･A",
+      "websiteUrl": "http://homepage3.nifty.com/claypigeonshooting/srrepo/ashikaga.htm"
+    },
+    {
+      "name": "ニッコー栃木綜合",
+      "prefecture": "栃木",
+      "location": "栃木市尻内町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0284-31-1125",
+      "surfaceTypes": "T･(T･S)(SB･LB･AR)",
+      "websiteUrl": "http://www.nikko-tochigi.com/"
+    },
+    {
+      "name": "古峰ヶ原",
+      "prefecture": "栃木",
+      "location": "鹿沼市草久",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "0289-74-2111",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www.kobugahara.com"
+    },
+    {
+      "name": "塩那総合",
+      "prefecture": "栃木",
+      "location": "那須塩原市高林",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0287-68-0925",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "那須国際",
+      "prefecture": "栃木",
+      "location": "那須郡那須町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0287-62-1471",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://homepage3.nifty.com/claypigeonshooting/srrepo/nasu.htm"
+    },
+    {
+      "name": "塩谷",
+      "prefecture": "栃木",
+      "location": "塩谷郡塩谷町",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "0287-45-0085",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "栃木県ライフル",
+      "prefecture": "栃木",
+      "location": "宇都宮市新里町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "028ｰ689ｰ9715",
+      "surfaceTypes": "LB･SB･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "鬼石国際",
+      "prefecture": "群馬",
+      "location": "藤岡市譲原栢ヶ舞",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "0274-52-3393",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "ぐんまｼﾞｬｲｱﾝﾄ総合",
+      "prefecture": "群馬",
+      "location": "富岡市桑原",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0274-63-3073",
+      "surfaceTypes": "T･S･(S･A)･LB",
+      "websiteUrl": "http://www.daicel.co.jp/nihonsoudan/gunmagyaiant/"
+    },
+    {
+      "name": "群馬県クレー",
+      "prefecture": "群馬",
+      "location": "安中市仲宿",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "027-381-0900",
+      "surfaceTypes": "T･S･(S･R)",
+      "websiteUrl": "http://homepage3.nifty.com/claypigeonshooting/srrepo/gummaken.htm"
+    },
+    {
+      "name": "百穴",
+      "prefecture": "埼玉",
+      "location": "比企郡吉見町",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "0493-54-1909",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://hyakuana.com/"
+    },
+    {
+      "name": "埼玉県長瀞総合",
+      "prefecture": "埼玉",
+      "location": "秩父郡長瀞町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0494-66-1111",
+      "surfaceTypes": "T･S･(T･S)SB･LB･AR",
+      "websiteUrl": "http://www.nsr.bz/modules/bulletin/"
+    },
+    {
+      "name": "成田",
+      "prefecture": "千葉",
+      "location": "印旛郡印西村",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "0476-98-1221",
+      "surfaceTypes": "T･(T･S)",
+      "websiteUrl": "http://www2u.biglobe.ne.jp/~narita/narita00.htm"
+    },
+    {
+      "name": "銚子",
+      "prefecture": "千葉",
+      "location": "銚子市森戸町",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "0479-33-0608",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "京葉射撃倶楽部",
+      "prefecture": "千葉",
+      "location": "市原市犬成",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0436-75-5507",
+      "surfaceTypes": "T･(S･R)",
+      "websiteUrl": "http://keiyosc.web.fc2.com/"
+    },
+    {
+      "name": "千葉県",
+      "prefecture": "千葉",
+      "location": "市原市古敷谷",
+      "address": "",
+      "defaultPurpose": "教習・装弾",
+      "phone": "0436-98-0314",
+      "surfaceTypes": "(SB･LB･AR)",
+      "websiteUrl": null
+    },
+    {
+      "name": "金谷国際",
+      "prefecture": "千葉",
+      "location": "富津市金谷",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "0439-69-2560",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www.green.dti.ne.jp/kanaya-official/"
+    },
+    {
+      "name": "鴨川国際",
+      "prefecture": "千葉",
+      "location": "鴨川市打墨大台",
+      "address": "",
+      "defaultPurpose": "教習･保管",
+      "phone": "0470-92-3350",
+      "surfaceTypes": "T",
+      "websiteUrl": null
+    },
+    {
+      "name": "千葉県総合スポーツセンター",
+      "prefecture": "千葉",
+      "location": "千葉市若葉区小間子町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "043-239-0164",
+      "surfaceTypes": "(SB・AR)・AR",
+      "websiteUrl": "http://www.cra1964.sakura.ne.jp/"
+    },
+    {
+      "name": "神奈川大井",
+      "prefecture": "神奈川",
+      "location": "足柄上郡大井町",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "0465-83-5523",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://ooi-clay.com/"
+    },
+    {
+      "name": "神奈川県立伊勢原",
+      "prefecture": "神奈川",
+      "location": "伊勢原市上粕谷",
+      "address": "",
+      "defaultPurpose": "休場中",
+      "phone": "0463-92-7882",
+      "surfaceTypes": "T･S･SB･LB･AR",
+      "websiteUrl": "http://www.pref.kanagawa.jp/cnt/f470080/"
+    },
+    {
+      "name": "新津クレー",
+      "prefecture": "新潟",
+      "location": "新潟市秋葉区",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "0250-38-4585",
+      "surfaceTypes": "T･(S･R)",
+      "websiteUrl": "http://tmga.web.fc2.com/"
+    },
+    {
+      "name": "巻",
+      "prefecture": "新潟",
+      "location": "新潟市西浦区",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "0256-73-3871",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "長岡国際",
+      "prefecture": "新潟",
+      "location": "長岡市大積町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0258-46-5711",
+      "surfaceTypes": "T･S･AR",
+      "websiteUrl": "http://www.city.nagaoka.niigata.jp/kurashi/kokutai/kaijyou07.html"
+    },
+    {
+      "name": "柏崎",
+      "prefecture": "新潟",
+      "location": "柏崎市大字鯨波",
+      "address": "",
+      "defaultPurpose": "練習",
+      "phone": "0257-22-4521",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "まつだい",
+      "prefecture": "新潟",
+      "location": "十日町",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "025-597-3412",
+      "surfaceTypes": "T",
+      "websiteUrl": null
+    },
+    {
+      "name": "山梨県立八代",
+      "prefecture": "山梨",
+      "location": "笛吹市八代町",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "055-265-3051",
+      "surfaceTypes": "SB･AR",
+      "websiteUrl": "http://www.sports.pref.yamanashi.jp/ysi_wdm/html/taikyo/54290442274.html"
+    },
+    {
+      "name": "下部",
+      "prefecture": "山梨",
+      "location": "南巨摩郡身延町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0556-37-0626",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "都留市鹿留",
+      "prefecture": "山梨",
+      "location": "都留市鹿留",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "055-43-1816",
+      "surfaceTypes": "(T･S)･(T･LB)",
+      "websiteUrl": null
+    },
+    {
+      "name": "富士五湖ﾗｲﾌﾙ・ｸﾚｰ",
+      "prefecture": "山梨",
+      "location": "南都留郡忍野村",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0555-23-8666",
+      "surfaceTypes": "(T･S･SB･LB)",
+      "websiteUrl": null
+    },
+    {
+      "name": "大月国際",
+      "prefecture": "山梨",
+      "location": "大月市猿橋町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0554-22-5023",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "長野",
+      "prefecture": "長野",
+      "location": "長野市大字広瀬",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "026-239-2895",
+      "surfaceTypes": "T･S･LB･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "中野総合教習",
+      "prefecture": "長野",
+      "location": "中野市大字田上",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0269-82-3880",
+      "surfaceTypes": "T･S･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "菅平",
+      "prefecture": "長野",
+      "location": "上田市菅平高原",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0268-74-2576",
+      "surfaceTypes": "T･S･LB",
+      "websiteUrl": null
+    },
+    {
+      "name": "佐久平クレー",
+      "prefecture": "長野",
+      "location": "佐久市内山水上",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0267-63-1674",
+      "surfaceTypes": "T･(T･S)･LB",
+      "websiteUrl": "http://saku-s.com/"
+    },
+    {
+      "name": "長野県営総合",
+      "prefecture": "長野",
+      "location": "上伊那郡辰野町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0266-43-3322",
+      "surfaceTypes": "T･S･(S･R)(SB･LB)･AR",
+      "websiteUrl": "http://www.keneishajou.jp/"
+    },
+    {
+      "name": "飯田国際",
+      "prefecture": "長野",
+      "location": "飯田市大瀬木",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0265-25-3700",
+      "surfaceTypes": "T･(S･R)･AR",
+      "websiteUrl": "http://www16.plala.or.jp/hanirengou/index.html"
+    },
+    {
+      "name": "木曽国際",
+      "prefecture": "長野",
+      "location": "木曽郡上松町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0264-24-2211",
+      "surfaceTypes": "T･S・LB･AR",
+      "websiteUrl": "http://www5.ocn.ne.jp/~kiso/"
+    },
+    {
+      "name": "寿スキート",
+      "prefecture": "長野",
+      "location": "松本市寿白瀬渕",
+      "address": "",
+      "defaultPurpose": "･装弾",
+      "phone": "0263-32-2476",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "中信国際",
+      "prefecture": "長野",
+      "location": "安曇野市豊科高家",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0263-72-2526",
+      "surfaceTypes": "T･S･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "大町総合",
+      "prefecture": "長野",
+      "location": "大町市大町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0261-23-1658",
+      "surfaceTypes": "T･S･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "須山クレー",
+      "prefecture": "静岡",
+      "location": "裾野市須山",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "055-998-1267",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://homepage3.nifty.com/suyama-sr/index.html"
+    },
+    {
+      "name": "富士国際岩本山",
+      "prefecture": "静岡",
+      "location": "富士市岩本",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "0545-61-6808",
+      "surfaceTypes": "T･S･A(SB･LB･AR)",
+      "websiteUrl": "http://www.izu.biz/iwamotoyama/"
+    },
+    {
+      "name": "静岡クレー",
+      "prefecture": "静岡",
+      "location": "静岡市駿河区",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "054-262-5753",
+      "surfaceTypes": "T･S･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "袋井クレー",
+      "prefecture": "静岡",
+      "location": "袋井市堀越",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0538-42-1934",
+      "surfaceTypes": "T",
+      "websiteUrl": null
+    },
+    {
+      "name": "西富士ﾗｲﾌﾙ・国際ﾙｰﾙ",
+      "prefecture": "静岡",
+      "location": "富士宮市猪之頭",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0544-52-1040",
+      "surfaceTypes": "T･(SB･LB)",
+      "websiteUrl": "http://nisifuji-syageki.cocolog-nifty.com/"
+    },
+    {
+      "name": "観音山",
+      "prefecture": "静岡",
+      "location": "浜松市天竜区",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "053-928-0726",
+      "surfaceTypes": "LB",
+      "websiteUrl": null
+    },
+    {
+      "name": "水窪射撃技術訓練ｾﾝﾀｰ",
+      "prefecture": "静岡",
+      "location": "河西郡芽室町",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "053-987-0987",
+      "surfaceTypes": "T･LB",
+      "websiteUrl": null
+    },
+    {
+      "name": "富山県福光",
+      "prefecture": "富山",
+      "location": "南砺市才川七",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0763-55-1938",
+      "surfaceTypes": "SB･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "南砺市クレー",
+      "prefecture": "富山",
+      "location": "南砺市才川七",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0763-55-8456",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www.city.nanto.toyama.jp/webapps/www/section/detail.jsp?id=7232"
+    },
+    {
+      "name": "南砺市大口径ライフル",
+      "prefecture": "富山",
+      "location": "南砺市才川七",
+      "address": "",
+      "defaultPurpose": "教習・練習・装弾",
+      "phone": "0763-55-8457",
+      "surfaceTypes": "LB",
+      "websiteUrl": "http://www.city.nanto.toyama.jp/webapps/www/section/detail.jsp?id=7232"
+    },
+    {
+      "name": "医王山ライフル",
+      "prefecture": "石川",
+      "location": "金沢市田島町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0762-29-1591",
+      "surfaceTypes": "SB･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "加賀散弾",
+      "prefecture": "石川",
+      "location": "加賀市分校町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾･保管",
+      "phone": "076-74-1476",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www.isekigun.com/kaga.htm"
+    },
+    {
+      "name": "福井県立クレー",
+      "prefecture": "福井",
+      "location": "勝山市野向町",
+      "address": "",
+      "defaultPurpose": "休場中",
+      "phone": "0779-88-0703",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "揖斐教習",
+      "prefecture": "岐阜",
+      "location": "揖斐郡揖斐川町",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "0585-23-1111",
+      "surfaceTypes": "T･S･LB",
+      "websiteUrl": null
+    },
+    {
+      "name": "関国際",
+      "prefecture": "岐阜",
+      "location": "関市池尻",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0575-28-2051",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "土岐市総合",
+      "prefecture": "岐阜",
+      "location": "土岐市妻木町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0572-55-0708",
+      "surfaceTypes": "T･S･(SB･LB)･AR",
+      "websiteUrl": "http://www3.pref.gifu.lg.jp/shougai/smileInstitutionDetail.do;jsessionid=337FB107D8FEED91D25032FCE69BF33D?action=%8F%C6%89%EF&referenceSeiriNo=00032542&sclassCd=&mclassCd="
+    },
+    {
+      "name": "飛騨猟友会片野教習",
+      "prefecture": "岐阜",
+      "location": "高野市片野町",
+      "address": "",
+      "defaultPurpose": "教習・練習･保管",
+      "phone": "0577-62-3043",
+      "surfaceTypes": "(T･S)･LB",
+      "websiteUrl": null
+    },
+    {
+      "name": "郡上総合",
+      "prefecture": "岐阜",
+      "location": "郡上市大和町",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "0575-67-1835",
+      "surfaceTypes": "(T･S)",
+      "websiteUrl": null
+    },
+    {
+      "name": "恵那市",
+      "prefecture": "岐阜",
+      "location": "恵那市大井町",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "0573-25-7416",
+      "surfaceTypes": "A",
+      "websiteUrl": null
+    },
+    {
+      "name": "白川",
+      "prefecture": "岐阜",
+      "location": "加茂郡白川町",
+      "address": "",
+      "defaultPurpose": "練習",
+      "phone": "0574-72-2188",
+      "surfaceTypes": "T・S",
+      "websiteUrl": null
+    },
+    {
+      "name": "岡崎常設",
+      "prefecture": "愛知",
+      "location": "岡崎市藤川町",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "0564-48-6556",
+      "surfaceTypes": "T",
+      "websiteUrl": null
+    },
+    {
+      "name": "愛知県総合",
+      "prefecture": "愛知",
+      "location": "豊田市宇連野町",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "0565-90-3971",
+      "surfaceTypes": "T･S･(T･S)･(S･R).SB･LB･AR",
+      "websiteUrl": "http://www.hm10.aitai.ne.jp/~shooting/"
+    },
+    {
+      "name": "三重県上野",
+      "prefecture": "三重",
+      "location": "伊賀市蓮池",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0595-36-2570",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www.za.ztv.ne.jp/up36uvks/syagekijyo.html"
+    },
+    {
+      "name": "京都笠取国際",
+      "prefecture": "京都",
+      "location": "宇治市西笠取",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "075-571-6550",
+      "surfaceTypes": "T･S･AR･A",
+      "websiteUrl": "http://kasatori.main.jp/"
+    },
+    {
+      "name": "京都府",
+      "prefecture": "京都",
+      "location": "京都市右京区",
+      "address": "",
+      "defaultPurpose": "休場中",
+      "phone": "0771-52-1025",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "京北綜合",
+      "prefecture": "京都",
+      "location": "京都市右京区",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0771-53-0341",
+      "surfaceTypes": "(T･A)･(S･R)LB･(SB･LB)",
+      "websiteUrl": "http://www.keihoku-sr.com/"
+    },
+    {
+      "name": "岩屋",
+      "prefecture": "京都",
+      "location": "与謝郡与謝野町",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "0772-22-2227",
+      "surfaceTypes": "T",
+      "websiteUrl": null
+    },
+    {
+      "name": "高槻国際",
+      "prefecture": "大阪",
+      "location": "高槻市大字原",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "072-687-1548",
+      "surfaceTypes": "T･S･A",
+      "websiteUrl": "http://www.ryoyu-kai.or.jp/takatsuki/index.html"
+    },
+    {
+      "name": "岸和田国際",
+      "prefecture": "大阪",
+      "location": "岸和田市大沢町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "072-479-1662",
+      "surfaceTypes": "T･(S･A)",
+      "websiteUrl": null
+    },
+    {
+      "name": "大阪総合",
+      "prefecture": "大阪",
+      "location": "泉南市新家",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾･保管",
+      "phone": "072-483-5600",
+      "surfaceTypes": "T･(S･R)(SB･LB･AR)",
+      "websiteUrl": "http://osaka-shootingrange.co.jp/"
+    },
+    {
+      "name": "須磨綜合",
+      "prefecture": "兵庫",
+      "location": "神戸市西区",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "078-974-1057",
+      "surfaceTypes": "S･AR(LB･SB･R･T)",
+      "websiteUrl": "http://suma.blog.ocn.ne.jp/weblog/"
+    },
+    {
+      "name": "上郡クレー",
+      "prefecture": "兵庫",
+      "location": "赤穂郡上郡町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0791-52-2021",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "田辺",
+      "prefecture": "和歌山",
+      "location": "田辺市稲成町",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "0739-25-1570",
+      "surfaceTypes": "A",
+      "websiteUrl": "http://www3.ocn.ne.jp/~wakakai/fulukawa.htm"
+    },
+    {
+      "name": "米子国際",
+      "prefecture": "鳥取",
+      "location": "西伯郡南部町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0859-66-2630",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "倉吉市営",
+      "prefecture": "鳥取",
+      "location": "倉吉市葵町",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "0858-22-2311",
+      "surfaceTypes": "A",
+      "websiteUrl": "http://www.kurasuposen.jp/shisetsu/shageki.html"
+    },
+    {
+      "name": "島根大東クレー",
+      "prefecture": "島根",
+      "location": "雲南市大東町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0854-43-4077",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "太田市猟友会クレー",
+      "prefecture": "島根",
+      "location": "太田市富山町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0854-82-0723",
+      "surfaceTypes": "(T･S)",
+      "websiteUrl": "http://www009.upp.so-net.ne.jp/katzkatz/sr-navi/oota/navi-oota.htm"
+    },
+    {
+      "name": "浜田",
+      "prefecture": "島根",
+      "location": "浜田市後野町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0855-42-2151",
+      "surfaceTypes": "(S･R)",
+      "websiteUrl": "http://www009.upp.so-net.ne.jp/katzkatz/sr-navi/hamada/navi-hamada.htm"
+    },
+    {
+      "name": "隠岐猟友会飯の山",
+      "prefecture": "島根",
+      "location": "隠岐市隠岐の山町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "08512-2-6345",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "岡山県クレー",
+      "prefecture": "岡山",
+      "location": "岡山市北区",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0867-24-5590",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www.enjoy-clay-shooting.com/okayama/"
+    },
+    {
+      "name": "備前",
+      "prefecture": "岡山",
+      "location": "備前市大内",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0869-66-9435",
+      "surfaceTypes": "T･(S･R)",
+      "websiteUrl": null
+    },
+    {
+      "name": "倉敷国際",
+      "prefecture": "岡山",
+      "location": "倉敷市福田町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0864-56-3252",
+      "surfaceTypes": "S･AR･A",
+      "websiteUrl": null
+    },
+    {
+      "name": "湯原国際",
+      "prefecture": "岡山",
+      "location": "真庭市仲間",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾･保管",
+      "phone": "0867-62-3000",
+      "surfaceTypes": "T･S･LB",
+      "websiteUrl": null
+    },
+    {
+      "name": "広島国際",
+      "prefecture": "広島",
+      "location": "安芸高田市八千代町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0826-52-3038",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www.sumiyoshi-gunshop.com/syagekijyou.htm"
+    },
+    {
+      "name": "甲山国際",
+      "prefecture": "広島",
+      "location": "世羅郡世羅町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0847-22-2905",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www.morichika.jp/shageki_jyo/shageki_jyo.html"
+    },
+    {
+      "name": "東城国際",
+      "prefecture": "広島",
+      "location": "庄原市東城町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "08477-2-3628",
+      "surfaceTypes": "S･(SB･LB)",
+      "websiteUrl": null
+    },
+    {
+      "name": "熊毛総合",
+      "prefecture": "山口",
+      "location": "周南市大河内",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾･保管",
+      "phone": "0833-91-0116",
+      "surfaceTypes": "T･(S･R)･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "鹿野",
+      "prefecture": "山口",
+      "location": "周南市鹿野下",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0834-68-3715",
+      "surfaceTypes": "(S･A)",
+      "websiteUrl": null
+    },
+    {
+      "name": "宇部",
+      "prefecture": "山口",
+      "location": "宇部市大字善和",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0836-32-2028",
+      "surfaceTypes": "T･S･(S･R)",
+      "websiteUrl": "http://www009.upp.so-net.ne.jp/katzkatz/sr-navi/ube/navi-ube.htm"
+    },
+    {
+      "name": "萩クレー",
+      "prefecture": "山口",
+      "location": "萩市大字山田",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "090-7135-3037",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www009.upp.so-net.ne.jp/katzkatz/sr-navi/hagi/navi-hagi.htm"
+    },
+    {
+      "name": "下関国際総合",
+      "prefecture": "山口",
+      "location": "下関市大字蒲生野",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "083-258-0385",
+      "surfaceTypes": "T･S･(S･R)LB･AR",
+      "websiteUrl": "http://konyajk.rakuraku-web.jp/category/1361807.html"
+    },
+    {
+      "name": "大神子",
+      "prefecture": "徳島",
+      "location": "徳島市一宮町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "088-662-6805",
+      "surfaceTypes": "S",
+      "websiteUrl": "http://www009.upp.so-net.ne.jp/katzkatz/sr-navi/oomiko/navi-oomiko.htm"
+    },
+    {
+      "name": "一宮",
+      "prefecture": "徳島",
+      "location": "徳島市一宮町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾･保管",
+      "phone": "088-644-1222",
+      "surfaceTypes": "S(T･SB･LB･AR)",
+      "websiteUrl": "http://www1a.biglobe.ne.jp/ichinomiya/top.htm"
+    },
+    {
+      "name": "鷲敷",
+      "prefecture": "徳島",
+      "location": "那賀郡那賀町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0884-62-0646",
+      "surfaceTypes": "T",
+      "websiteUrl": null
+    },
+    {
+      "name": "徳島市ライフル",
+      "prefecture": "徳島",
+      "location": "徳島市入田町",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "088-644-3955",
+      "surfaceTypes": "SB･AR",
+      "websiteUrl": "http://www.city.tokushima.tokushima.jp/sports_sinko/sisetu05.html"
+    },
+    {
+      "name": "高松国際",
+      "prefecture": "香川",
+      "location": "高松市国分町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "087-874-2382",
+      "surfaceTypes": "T･S･A",
+      "websiteUrl": "http://www.gunshop-takahashi.com/index.html"
+    },
+    {
+      "name": "四国中央",
+      "prefecture": "愛媛",
+      "location": "四国中央市金生町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0896-58-4185",
+      "surfaceTypes": "S･(T･LB･AR)",
+      "websiteUrl": "http://www.netwave.or.jp/~maron/index2.html"
+    },
+    {
+      "name": "東予クレー",
+      "prefecture": "愛媛",
+      "location": "西条市小松町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0898-68-6525",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "犬寄国際クレー",
+      "prefecture": "愛媛",
+      "location": "伊予市双海町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0899-86-0392",
+      "surfaceTypes": "S･A",
+      "websiteUrl": null
+    },
+    {
+      "name": "松山総合クレー",
+      "prefecture": "愛媛",
+      "location": "伊予郡砥部町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾･保管",
+      "phone": "089-962-5055",
+      "surfaceTypes": "T･S･LB･SB･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "鬼北クレー",
+      "prefecture": "愛媛",
+      "location": "北宇和郡鬼北町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0895-22-1078",
+      "surfaceTypes": "S･(SB･A)",
+      "websiteUrl": null
+    },
+    {
+      "name": "ミロク高知",
+      "prefecture": "高知",
+      "location": "安芸郡芸西村",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "0887-33-2952",
+      "surfaceTypes": "T･S",
+      "websiteUrl": null
+    },
+    {
+      "name": "高知クレー",
+      "prefecture": "高知",
+      "location": "香美郡土佐山田町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0887-53-2188",
+      "surfaceTypes": "T･S･LB",
+      "websiteUrl": null
+    },
+    {
+      "name": "佐川",
+      "prefecture": "高知",
+      "location": "高岡郡佐川町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0889-22-1558",
+      "surfaceTypes": "(S･R)",
+      "websiteUrl": "http://www009.upp.so-net.ne.jp/katzkatz/sr-navi/sagawa/navi-sagawa.htm"
+    },
+    {
+      "name": "北幡",
+      "prefecture": "高知",
+      "location": "高岡郡四万十町",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "08802-8-5088",
+      "surfaceTypes": "LB･A",
+      "websiteUrl": null
+    },
+    {
+      "name": "竹村クレー",
+      "prefecture": "高知",
+      "location": "四万十市山路中和田",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0880-35-2219",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "福岡県立総合",
+      "prefecture": "福岡",
+      "location": "筑紫野市大字袖須原",
+      "address": "",
+      "defaultPurpose": "教習･保管",
+      "phone": "0880-35-2219",
+      "surfaceTypes": "T･S･SB･LB･AR",
+      "websiteUrl": "http://www.sponet.pref.fukuoka.jp/accions/k_shooting01/"
+    },
+    {
+      "name": "佐賀県射撃研修ｾﾝﾀｰ",
+      "prefecture": "佐賀",
+      "location": "佐賀市大和町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0952-62-8119",
+      "surfaceTypes": "T･S･(SB･LB)",
+      "websiteUrl": "http://www.pref.saga.lg.jp/web/kankou/sports/sp-sisetu/syageki-01.html"
+    },
+    {
+      "name": "鳥栖クレー",
+      "prefecture": "佐賀",
+      "location": "鳥栖市山都町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0942-83-3329",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "長崎クレー",
+      "prefecture": "長崎",
+      "location": "長崎市琴海形上町",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "095-885-2573",
+      "surfaceTypes": "S･A",
+      "websiteUrl": null
+    },
+    {
+      "name": "玉名クレー",
+      "prefecture": "熊本",
+      "location": "玉名市石貫",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0968-74-9927",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "熊本クレー",
+      "prefecture": "熊本",
+      "location": "熊本市富合町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "096-357-4965",
+      "surfaceTypes": "S･A",
+      "websiteUrl": null
+    },
+    {
+      "name": "八代日奈久",
+      "prefecture": "熊本",
+      "location": "八代市日奈久新田町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0965-32-6640",
+      "surfaceTypes": "S･AR",
+      "websiteUrl": null
+    },
+    {
+      "name": "芦北町立湯浦温泉",
+      "prefecture": "熊本",
+      "location": "葦北郡芦北町",
+      "address": "",
+      "defaultPurpose": null,
+      "phone": "0966-82-4122",
+      "surfaceTypes": "(S･R)",
+      "websiteUrl": null
+    },
+    {
+      "name": "人吉",
+      "prefecture": "熊本",
+      "location": "人吉市上林町",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0966-24-8703",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "上球磨",
+      "prefecture": "熊本",
+      "location": "球磨郡多良木町",
+      "address": "",
+      "defaultPurpose": "教習・練習",
+      "phone": "0966-42-3185",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "別府市営湯山クレー",
+      "prefecture": "大分",
+      "location": "別府市大字野田",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0977-66-3740",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www009.upp.so-net.ne.jp/katzkatz/sr-navi/beppu/navi-beppu.htm"
+    },
+    {
+      "name": "玖珠郡クレー",
+      "prefecture": "大分",
+      "location": "玖珠郡玖珠町",
+      "address": "",
+      "defaultPurpose": "練習",
+      "phone": "09737-2-2020",
+      "surfaceTypes": "T･S",
+      "websiteUrl": "http://www009.upp.so-net.ne.jp/katzkatz/sr-navi/kusu/navi-kusu.htm"
+    },
+    {
+      "name": "大分",
+      "prefecture": "大分",
+      "location": "豊後大野市犬飼町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾･保管",
+      "phone": "097-578-1193",
+      "surfaceTypes": "(T･LB)･S･(S･R)",
+      "websiteUrl": "http://www.enoha.net/sabot.htm"
+    },
+    {
+      "name": "宮崎遠山クレー",
+      "prefecture": "宮崎",
+      "location": "宮崎市大字広原",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "0985-39-0228",
+      "surfaceTypes": "S･(S･R)",
+      "websiteUrl": null
+    },
+    {
+      "name": "上村クレー",
+      "prefecture": "宮崎",
+      "location": "南那珂郡北郷町",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0987-55-2952",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "日向石川クレー",
+      "prefecture": "宮崎",
+      "location": "日向市似市川内",
+      "address": "",
+      "defaultPurpose": "教習･装弾",
+      "phone": "0982-52-2437",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "延岡",
+      "prefecture": "宮崎",
+      "location": "延岡市愛宕山横谷",
+      "address": "",
+      "defaultPurpose": "教習",
+      "phone": "0982-32-5876",
+      "surfaceTypes": "S",
+      "websiteUrl": null
+    },
+    {
+      "name": "鹿児島",
+      "prefecture": "鹿児島",
+      "location": "鹿児島市犬迫町",
+      "address": "",
+      "defaultPurpose": "教習･練習･装弾",
+      "phone": "0992-38-2361",
+      "surfaceTypes": "S",
+      "websiteUrl": "http://www1.bbiq.jp/ken.jea/kagosimasiyageki.html"
+    },
+    {
+      "name": "加治木クレー",
+      "prefecture": "鹿児島",
+      "location": "姶良郡加治木町",
+      "address": "",
+      "defaultPurpose": "教習･装弾･保管",
+      "phone": "0995-62-1068",
+      "surfaceTypes": "T･S･(S･R･A)",
+      "websiteUrl": null
+    }
+  ]
+}

@@ -19,6 +19,12 @@ export const labEntries: LabEntry[] = [
     status: "active",
   },
   {
+    id: "ammo-ledger",
+    title: "実包管理帳簿",
+    description: "猟銃実包の消費・譲受記録と法定帳簿出力。/lab/ammo-ledger",
+    status: "active",
+  },
+  {
     id: "blog-engine",
     title: "ブログ基盤",
     description: "記事の下書き・公開は /lab/blog/manage で整備予定。",

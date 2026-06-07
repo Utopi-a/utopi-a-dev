@@ -1,0 +1,1 @@
+ALTER TABLE "ammo_type" ADD COLUMN "gauge_number" text;

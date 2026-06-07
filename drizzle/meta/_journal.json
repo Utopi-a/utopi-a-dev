@@ -8,6 +8,55 @@
       "when": 1780412695882,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780806649968,
+      "tag": "0001_normal_timeslip",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780807277737,
+      "tag": "0002_opposite_terror",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780808027427,
+      "tag": "0003_smooth_vivisector",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780810000000,
+      "tag": "0004_ledger_purpose_permit",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780811000000,
+      "tag": "0005_ledger_profile",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780812000000,
+      "tag": "0006_acquisition_permit",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1780812183538,
+      "tag": "0007_redundant_vertigo",
+      "breakpoints": true
     }
   ]
 }

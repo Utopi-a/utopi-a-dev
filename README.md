@@ -128,6 +128,18 @@ Vercel 上では Doppler CLI を使わない。連携により Doppler のシー
 2. [GitHub 連携](https://docs.doppler.com/docs/github-actions)で `utopi-a-dev` の config を Repository secrets に同期する
 3. Workflow 内で `doppler run -- pnpm test:run` などを実行する（`DOPPLER_TOKEN` は連携で注入される）
 
+### 本番 DB マイグレーション
+
+`.github/workflows/db-migrate.yml` が `main` への push（`drizzle/` や `src/db/schema/` の変更時）と手動実行で本番マイグレーションを走らせます。
+
+初回セットアップ:
+
+1. GitHub で **production** Environment を作成する（Settings → Environments）
+2. Doppler の GitHub 連携を追加し、**prd** config を **production** Environment secrets に同期する（`DOPPLER_TOKEN` と `DATABASE_URL` などが入る）
+3. Actions タブから **Database migrate** を `workflow_dispatch` で手動実行し、初回マイグレーションを適用する
+
+以降は `main` にスキーマ変更がマージされると自動で `drizzle-kit migrate` が実行されます。
+
 ## ルート一覧
 
 **公開**

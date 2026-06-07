@@ -54,3 +54,63 @@ export function splitIntoUnitMultiples({
 
   return quantities.filter((quantity) => quantity > 0);
 }
+
+/** 各枠にできるだけ均等に配分する（25発単位・1枠上限を守る） */
+export function distributeEvenlyAcrossSlots({
+  slotCount,
+  totalQuantity,
+  maxPerSlot,
+  unit,
+}: {
+  slotCount: number;
+  totalQuantity: number;
+  maxPerSlot: number;
+  unit: number;
+}): number[] {
+  if (slotCount <= 0 || totalQuantity <= 0) {
+    return [];
+  }
+
+  const capacity = slotCount * maxPerSlot;
+  const target = Math.min(totalQuantity, capacity);
+  const quantities = Array.from({ length: slotCount }, () => 0);
+  let remaining = target;
+
+  while (remaining >= unit) {
+    const eligibleIndices = quantities
+      .map((quantity, index) => ({ quantity, index }))
+      .filter(({ quantity }) => quantity + unit <= maxPerSlot)
+      .map(({ index }) => index);
+
+    if (eligibleIndices.length === 0) {
+      break;
+    }
+
+    const shareUnits = Math.floor(remaining / unit / eligibleIndices.length);
+    if (shareUnits <= 0) {
+      for (const index of eligibleIndices) {
+        if (remaining < unit) {
+          break;
+        }
+        quantities[index] += unit;
+        remaining -= unit;
+      }
+      continue;
+    }
+
+    for (const index of eligibleIndices) {
+      const addUnits = Math.min(
+        shareUnits,
+        Math.floor((maxPerSlot - quantities[index]) / unit),
+        Math.floor(remaining / unit),
+      );
+      if (addUnits <= 0) {
+        continue;
+      }
+      quantities[index] += addUnits * unit;
+      remaining -= addUnits * unit;
+    }
+  }
+
+  return quantities;
+}

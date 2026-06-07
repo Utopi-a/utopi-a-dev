@@ -1,5 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { partitionQuantity, splitIntoUnitMultiples } from "./partition-quantity";
+import {
+  distributeEvenlyAcrossSlots,
+  partitionQuantity,
+  splitIntoUnitMultiples,
+} from "./partition-quantity";
+
+describe("distributeEvenlyAcrossSlots", () => {
+  it("450を4枠に125上限で均等配分する", () => {
+    const quantities = distributeEvenlyAcrossSlots({
+      slotCount: 4,
+      totalQuantity: 450,
+      maxPerSlot: 125,
+      unit: 25,
+    });
+
+    expect(quantities).toEqual([125, 125, 100, 100]);
+  });
+});
 
 describe("splitIntoUnitMultiples", () => {
   it("5000を7分割に250倍数で分ける", () => {

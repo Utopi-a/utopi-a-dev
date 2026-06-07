@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ensureCounterpartyFromCatalog } from "@/features/ammo-ledger/catalog/ensure-counterparty-from-catalog/ensure-counterparty-from-catalog";
 import { ensureRangeFromCatalog } from "@/features/ammo-ledger/catalog/ensure-range-from-catalog/ensure-range-from-catalog";
+import { removeCounterpartyFromMyList } from "@/features/ammo-ledger/catalog/remove-counterparty-from-my-list/remove-counterparty-from-my-list";
+import { removeRangeFromMyList } from "@/features/ammo-ledger/catalog/remove-range-from-my-list/remove-range-from-my-list";
 import type {
   CatalogEntry,
   CatalogPrefectureGroup,
@@ -43,7 +45,7 @@ function resolveEntryCatalogKind({
   return catalogKind;
 }
 
-function resolveEnsureAction({
+function resolveMyListAction({
   entry,
   catalogKind,
   includesRangeCatalog,
@@ -59,6 +61,25 @@ function resolveEnsureAction({
   return entryCatalogKind === "range" ? "range" : "counterparty";
 }
 
+function resolveMyListSubject({
+  entry,
+  catalogKind,
+  includesRangeCatalog,
+}: {
+  entry: CatalogEntry;
+  catalogKind: CatalogKind;
+  includesRangeCatalog?: boolean;
+}): string {
+  const entryCatalogKind = resolveEntryCatalogKind({ entry, catalogKind });
+  if (entryCatalogKind === "range" && !includesRangeCatalog) {
+    return "射撃場";
+  }
+  if (entryCatalogKind === "range") {
+    return "購入先（射撃場）";
+  }
+  return "購入先";
+}
+
 export function CatalogList({
   catalogKind,
   catalogByPrefecture,
@@ -71,7 +92,10 @@ export function CatalogList({
   const [prefectureFilter, setPrefectureFilter] = useState<string | null>(null);
   const [favoriteIds, setFavoriteIds] = useState(favoriteCatalogIds);
   const [registeredIds, setRegisteredIds] = useState(registeredCatalogIds);
-  const [pendingCatalogId, setPendingCatalogId] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<{
+    catalogId: string;
+    kind: "add" | "remove";
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -109,19 +133,19 @@ export function CatalogList({
   function handleAddToMyList({ entry }: { entry: CatalogEntry }) {
     const { catalogId } = entry;
     setError(null);
-    setPendingCatalogId(catalogId);
+    setPendingAction({ catalogId, kind: "add" });
     setRegisteredIds((current) =>
       current.includes(catalogId) ? current : [...current, catalogId],
     );
 
     startTransition(async () => {
-      const ensureAction = resolveEnsureAction({ entry, catalogKind, includesRangeCatalog });
+      const myListAction = resolveMyListAction({ entry, catalogKind, includesRangeCatalog });
       const result =
-        ensureAction === "range"
+        myListAction === "range"
           ? await ensureRangeFromCatalog({ catalogId })
           : await ensureCounterpartyFromCatalog({ catalogId });
 
-      setPendingCatalogId(null);
+      setPendingAction(null);
 
       if (!result.ok) {
         setRegisteredIds((current) => current.filter((id) => id !== catalogId));
@@ -129,22 +153,47 @@ export function CatalogList({
         return;
       }
 
-      const entryCatalogKind = resolveEntryCatalogKind({ entry, catalogKind });
       showAmmoLedgerToast({
         action: "created",
-        subject:
-          entryCatalogKind === "range" && !includesRangeCatalog
-            ? "射撃場"
-            : entryCatalogKind === "range"
-              ? "購入先（射撃場）"
-              : "購入先",
+        subject: resolveMyListSubject({ entry, catalogKind, includesRangeCatalog }),
+      });
+    });
+  }
+
+  function handleRemoveFromMyList({ entry }: { entry: CatalogEntry }) {
+    const { catalogId } = entry;
+    setError(null);
+    setPendingAction({ catalogId, kind: "remove" });
+    setRegisteredIds((current) => current.filter((id) => id !== catalogId));
+
+    startTransition(async () => {
+      const myListAction = resolveMyListAction({ entry, catalogKind, includesRangeCatalog });
+      const result =
+        myListAction === "range"
+          ? await removeRangeFromMyList({ catalogId })
+          : await removeCounterpartyFromMyList({ catalogId });
+
+      setPendingAction(null);
+
+      if (!result.ok) {
+        setRegisteredIds((current) =>
+          current.includes(catalogId) ? current : [...current, catalogId],
+        );
+        setError(result.error);
+        return;
+      }
+
+      showAmmoLedgerToast({
+        action: "deleted",
+        subject: resolveMyListSubject({ entry, catalogKind, includesRangeCatalog }),
       });
     });
   }
 
   function renderCatalogEntry({ entry }: { entry: CatalogEntry }) {
     const isRegistered = registeredIds.includes(entry.catalogId);
-    const isAdding = pendingCatalogId === entry.catalogId && isPending;
+    const entryPendingAction =
+      pendingAction?.catalogId === entry.catalogId && isPending ? pendingAction.kind : null;
     const entryCatalogKind = resolveEntryCatalogKind({ entry, catalogKind });
 
     return (
@@ -172,17 +221,21 @@ export function CatalogList({
           type="button"
           variant={isRegistered ? "secondary" : "outline"}
           size="xs"
-          disabled={isRegistered || isAdding}
-          onClick={() => handleAddToMyList({ entry })}
+          disabled={entryPendingAction !== null}
+          onClick={() =>
+            isRegistered ? handleRemoveFromMyList({ entry }) : handleAddToMyList({ entry })
+          }
           className="shrink-0"
         >
-          {isRegistered ? (
+          {entryPendingAction === "remove" ? (
+            "削除中…"
+          ) : entryPendingAction === "add" ? (
+            "追加中…"
+          ) : isRegistered ? (
             <>
               <CheckIcon className="size-3" />
-              追加済
+              マイリストから削除
             </>
-          ) : isAdding ? (
-            "追加中…"
           ) : (
             "マイリストに追加"
           )}

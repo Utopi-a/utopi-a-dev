@@ -36,6 +36,7 @@ export default async function EditGunPage({ params }: PageProps) {
             recordId={gun.id}
             initialValues={{
               name: gun.name,
+              gunNumber: gun.gunNumber,
               permitNumber: gun.permitNumber,
               gunType: gun.gunType,
               caliber: gun.caliber,

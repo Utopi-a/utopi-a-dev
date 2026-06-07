@@ -126,6 +126,7 @@ export async function saveOpeningBalanceAction(input: unknown) {
             counterpartyAddress: null,
             gunId: null,
             gunName: null,
+            gunNumber: null,
             gunPermitNumber: null,
           });
         }

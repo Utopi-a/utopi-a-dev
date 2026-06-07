@@ -106,6 +106,7 @@ export async function prepareConfirmedTransaction({
     roundsPerBox: ammoTypeRow.roundsPerBox,
     gunId: gunRow?.id,
     gunName: gunRow?.name,
+    gunNumber: gunRow?.gunNumber,
     gunPermitNumber: gunRow?.permitNumber,
     rangeId: rangeRow?.id,
     rangeName: rangeRow?.name,

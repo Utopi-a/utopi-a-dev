@@ -79,6 +79,7 @@ export async function createTransactionAction(input: unknown) {
       counterpartyAddress: normalized.counterpartyAddress,
       gunId: normalized.gunId,
       gunName: normalized.gunName,
+      gunNumber: normalized.gunNumber,
       gunPermitNumber: normalized.gunPermitNumber,
     });
   });

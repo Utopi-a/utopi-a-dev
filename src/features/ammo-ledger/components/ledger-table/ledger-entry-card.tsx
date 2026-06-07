@@ -105,11 +105,12 @@ export function LedgerEntryCard({
           {entry.gunName ? (
             <DetailLine
               label="使用銃"
-              value={
-                entry.gunPermitNumber
-                  ? `${entry.gunName}（${entry.gunPermitNumber}）`
-                  : entry.gunName
-              }
+              value={(() => {
+                const details = [entry.gunNumber, entry.gunPermitNumber]
+                  .filter(Boolean)
+                  .join(" / ");
+                return details ? `${entry.gunName}（${details}）` : entry.gunName;
+              })()}
             />
           ) : null}
           {isHomeStorageExceeded ? (

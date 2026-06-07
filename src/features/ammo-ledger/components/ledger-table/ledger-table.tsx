@@ -253,8 +253,10 @@ export function LedgerTable({
                       {entry.gunName ? (
                         <span className="block leading-snug">
                           {entry.gunName}
-                          {entry.gunPermitNumber ? (
-                            <span className="mt-0.5 block text-xs">{entry.gunPermitNumber}</span>
+                          {entry.gunNumber || entry.gunPermitNumber ? (
+                            <span className="mt-0.5 block text-xs">
+                              {[entry.gunNumber, entry.gunPermitNumber].filter(Boolean).join(" / ")}
+                            </span>
                           ) : null}
                         </span>
                       ) : (

@@ -116,7 +116,9 @@ export function LedgerPrintView({
                 </td>
                 <td className="border border-black px-2 py-1">
                   {entry.gunName ?? ""}
-                  {entry.gunPermitNumber ? ` ${entry.gunPermitNumber}` : ""}
+                  {[entry.gunNumber, entry.gunPermitNumber].filter(Boolean).length > 0
+                    ? ` ${[entry.gunNumber, entry.gunPermitNumber].filter(Boolean).join(" / ")}`
+                    : ""}
                 </td>
               </tr>
             );

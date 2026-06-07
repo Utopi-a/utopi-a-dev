@@ -140,7 +140,10 @@ export function ConsumeForm({
         label="銃"
         value={gunId}
         onChange={setGunId}
-        options={guns.map((g) => ({ value: g.id, label: `${g.name}（${g.permitNumber}）` }))}
+        options={guns.map((g) => ({
+          value: g.id,
+          label: `${g.name}（${g.gunNumber} / ${g.permitNumber}）`,
+        }))}
         required
       />
 

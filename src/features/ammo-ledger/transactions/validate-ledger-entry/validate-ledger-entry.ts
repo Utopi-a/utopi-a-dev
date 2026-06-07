@@ -9,6 +9,7 @@ export type LedgerEntryForValidation = {
   counterpartyName: string | null;
   counterpartyAddress: string | null;
   gunId: string | null;
+  gunNumber: string | null;
   gunPermitNumber: string | null;
 };
 
@@ -37,6 +38,9 @@ export function validateLedgerEntry(entry: LedgerEntryForValidation): Validation
       }
       if (!entry.gunId) {
         missingFields.push("使用銃");
+      }
+      if (!entry.gunNumber) {
+        missingFields.push("使用銃の銃番号");
       }
       if (!entry.gunPermitNumber) {
         missingFields.push("使用銃の許可番号等");

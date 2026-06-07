@@ -35,6 +35,7 @@ describe("buildLedgerDisplayRows", () => {
           counterpartyAddress: null,
           gunId: null,
           gunName: null,
+          gunNumber: null,
           gunPermitNumber: null,
           voidedAt: null,
           createdAt: new Date(),

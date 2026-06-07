@@ -8,6 +8,7 @@ export const ammoGun = pgTable("ammo_gun", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
+  gunNumber: text("gun_number").notNull(),
   permitNumber: text("permit_number").notNull(),
   gunType: text("gun_type").notNull(),
   caliber: text("caliber").notNull(),
@@ -181,6 +182,7 @@ export const ammoLedgerEntry = pgTable("ammo_ledger_entry", {
   counterpartyAddress: text("counterparty_address"),
   gunId: text("gun_id").references(() => ammoGun.id, { onDelete: "set null" }),
   gunName: text("gun_name"),
+  gunNumber: text("gun_number"),
   gunPermitNumber: text("gun_permit_number"),
   voidedAt: timestamp("voided_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

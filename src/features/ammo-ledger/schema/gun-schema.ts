@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const gunSchema = z.object({
   name: z.string().min(1).max(100),
+  gunNumber: z.string().min(1).max(50),
   permitNumber: z.string().min(1).max(50),
   gunType: z.string().min(1).max(50),
   caliber: z.string().min(1).max(30),

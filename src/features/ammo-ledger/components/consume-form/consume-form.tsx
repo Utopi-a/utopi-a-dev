@@ -12,6 +12,7 @@ import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/ma
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
+import { buildAmmoTypeFieldOptions } from "@/features/ammo-ledger/master/build-ammo-type-field-options/build-ammo-type-field-options";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
@@ -22,6 +23,7 @@ import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspa
 type ConsumeFormProps = {
   guns: (typeof ammoGun.$inferSelect)[];
   ammoTypes: (typeof ammoType.$inferSelect)[];
+  stockByAmmoTypeId: Record<string, number>;
   rangePickerData: MasterPickerData;
   ledgerEntryId?: string;
   initialValues?: {
@@ -40,6 +42,7 @@ type ConsumeFormProps = {
 export function ConsumeForm({
   guns,
   ammoTypes,
+  stockByAmmoTypeId,
   rangePickerData,
   ledgerEntryId,
   initialValues,
@@ -69,6 +72,11 @@ export function ConsumeForm({
       setPurpose(resolveDefaultPurpose({ defaultPurpose: nextType.defaultPurpose }));
     }
   }
+
+  const ammoTypeOptions = useMemo(
+    () => buildAmmoTypeFieldOptions({ ammoTypes, stockByAmmoTypeId }),
+    [ammoTypes, stockByAmmoTypeId],
+  );
 
   const computedRounds = useMemo(() => {
     if (!selectedAmmoType) return 0;
@@ -159,10 +167,7 @@ export function ConsumeForm({
         label="弾"
         value={ammoTypeId}
         onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
-        options={ammoTypes.map((t) => ({
-          value: t.id,
-          label: `${t.name}（1箱${t.roundsPerBox}発）`,
-        }))}
+        options={ammoTypeOptions}
         required
       />
 

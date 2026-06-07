@@ -407,8 +407,9 @@ export function FieldCalibrationView() {
                 },
               };
             })
-            .filter((patch): patch is { fieldId: string; patch: Partial<OverlayFieldDef> } =>
-              Boolean(patch),
+            .filter(
+              (patch): patch is { fieldId: string; patch: { x: number; y: number } } =>
+                patch !== null,
             );
 
           const result = applyCalibrationFieldPatches({
@@ -615,8 +616,8 @@ export function FieldCalibrationView() {
           },
         };
       })
-      .filter((patch): patch is { fieldId: string; patch: Partial<OverlayFieldDef> } =>
-        Boolean(patch),
+      .filter(
+        (patch): patch is { fieldId: string; patch: { x: number; y: number } } => patch !== null,
       );
 
     replaceSnapshot({

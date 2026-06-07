@@ -12,6 +12,7 @@ type GunFormProps = {
   recordId?: string;
   initialValues?: {
     name: string;
+    gunNumber: string;
     permitNumber: string;
     gunType: string;
     caliber: string;
@@ -24,6 +25,7 @@ export function GunForm({ recordId, initialValues }: GunFormProps = {}) {
   const router = useRouter();
   const isEdit = Boolean(recordId);
   const [name, setName] = useState(initialValues?.name ?? "");
+  const [gunNumber, setGunNumber] = useState(initialValues?.gunNumber ?? "");
   const [permitNumber, setPermitNumber] = useState(initialValues?.permitNumber ?? "");
   const [gunType, setGunType] = useState(initialValues?.gunType ?? "散弾銃");
   const [caliber, setCaliber] = useState(initialValues?.caliber ?? "12番");
@@ -39,6 +41,7 @@ export function GunForm({ recordId, initialValues }: GunFormProps = {}) {
 
     const payload = {
       name,
+      gunNumber,
       permitNumber,
       gunType,
       caliber,
@@ -63,6 +66,7 @@ export function GunForm({ recordId, initialValues }: GunFormProps = {}) {
 
     router.refresh();
     setName("");
+    setGunNumber("");
     setPermitNumber("");
     setPurpose("");
     setMemo("");
@@ -74,6 +78,15 @@ export function GunForm({ recordId, initialValues }: GunFormProps = {}) {
       <div className="space-y-2">
         <Label htmlFor="gun-name">名称</Label>
         <Input id="gun-name" required value={name} onChange={(e) => setName(e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="gun-number">銃番号</Label>
+        <Input
+          id="gun-number"
+          required
+          value={gunNumber}
+          onChange={(e) => setGunNumber(e.target.value)}
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="permit-number">許可番号</Label>

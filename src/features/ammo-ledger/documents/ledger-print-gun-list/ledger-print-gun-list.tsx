@@ -14,6 +14,7 @@ export function LedgerPrintGunList({ guns }: LedgerPrintGunListProps) {
         <thead>
           <tr>
             <th className="border border-black px-2 py-1">名称</th>
+            <th className="border border-black px-2 py-1">銃番号</th>
             <th className="border border-black px-2 py-1">許可番号</th>
             <th className="border border-black px-2 py-1">銃種</th>
             <th className="border border-black px-2 py-1">番径</th>
@@ -23,7 +24,7 @@ export function LedgerPrintGunList({ guns }: LedgerPrintGunListProps) {
         <tbody>
           {guns.length === 0 ? (
             <tr>
-              <td colSpan={5} className="border border-black px-2 py-2 text-center">
+              <td colSpan={6} className="border border-black px-2 py-2 text-center">
                 登録なし
               </td>
             </tr>
@@ -31,6 +32,7 @@ export function LedgerPrintGunList({ guns }: LedgerPrintGunListProps) {
             guns.map((gun) => (
               <tr key={gun.id}>
                 <td className="border border-black px-2 py-1">{gun.name}</td>
+                <td className="border border-black px-2 py-1">{gun.gunNumber}</td>
                 <td className="border border-black px-2 py-1">{gun.permitNumber}</td>
                 <td className="border border-black px-2 py-1">{gun.gunType}</td>
                 <td className="border border-black px-2 py-1">{gun.caliber}</td>

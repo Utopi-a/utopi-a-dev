@@ -57,6 +57,13 @@
       "when": 1780812183538,
       "tag": "0007_redundant_vertigo",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1780836482340,
+      "tag": "0008_gun_number",
+      "breakpoints": true
     }
   ]
 }

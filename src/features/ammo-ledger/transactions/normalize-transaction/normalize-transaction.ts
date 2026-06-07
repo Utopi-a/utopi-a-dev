@@ -14,6 +14,7 @@ export type NormalizedLedgerEntry = {
   counterpartyAddress: string | null;
   gunId: string | null;
   gunName: string | null;
+  gunNumber: string | null;
   gunPermitNumber: string | null;
 };
 
@@ -28,6 +29,7 @@ type NormalizeTransactionInput = {
   roundsPerBox: number;
   gunId?: string;
   gunName?: string;
+  gunNumber?: string;
   gunPermitNumber?: string;
   rangeId?: string;
   rangeName?: string;
@@ -71,6 +73,7 @@ export function normalizeTransaction(
     counterpartyAddress: input.counterpartyAddress ?? null,
     gunId: input.gunId ?? null,
     gunName: input.gunName ?? null,
+    gunNumber: input.gunNumber ?? null,
     gunPermitNumber: input.gunPermitNumber ?? null,
   };
 }

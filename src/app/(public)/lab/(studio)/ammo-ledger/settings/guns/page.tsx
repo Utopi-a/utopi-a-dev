@@ -24,7 +24,7 @@ export default async function GunsSettingsPage() {
                 className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
               >
                 <span>
-                  {gun.name} — {gun.permitNumber}（{gun.gunType} / {gun.caliber}）
+                  {gun.name} — {gun.gunNumber} / {gun.permitNumber}（{gun.gunType} / {gun.caliber}）
                 </span>
                 <GunRowActions gunId={gun.id} />
               </li>

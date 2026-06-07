@@ -13,6 +13,7 @@ describe("normalizeTransaction", () => {
       roundsPerBox: 25,
       gunId: "gun-1",
       gunName: "DT11",
+      gunNumber: "7654321",
       gunPermitNumber: "12345",
       rangeId: "range-1",
       rangeName: "成田射撃場",
@@ -30,6 +31,7 @@ describe("normalizeTransaction", () => {
       counterpartyAddress: null,
       gunId: "gun-1",
       gunName: "DT11",
+      gunNumber: "7654321",
       gunPermitNumber: "12345",
     });
   });
@@ -58,6 +60,7 @@ describe("normalizeTransaction", () => {
       counterpartyAddress: "東京都千代田区",
       gunId: null,
       gunName: null,
+      gunNumber: null,
       gunPermitNumber: null,
     });
   });
@@ -73,6 +76,7 @@ describe("normalizeTransaction", () => {
       roundsPerBox: 25,
       gunId: "gun-1",
       gunName: "DT11",
+      gunNumber: "7654321",
       gunPermitNumber: "12345",
       rangeId: "range-1",
       rangeName: "成田射撃場",

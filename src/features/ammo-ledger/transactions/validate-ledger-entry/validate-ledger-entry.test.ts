@@ -15,6 +15,7 @@ describe("validateLedgerEntry", () => {
       ...baseEntry,
       location: "成田射撃場 千葉県成田市",
       gunId: "gun-1",
+      gunNumber: "7654321",
       gunPermitNumber: "12345",
       counterpartyName: null,
       counterpartyAddress: null,
@@ -23,12 +24,29 @@ describe("validateLedgerEntry", () => {
     expect(result).toEqual({ valid: true, missingFields: [] });
   });
 
+  it("消費で銃番号が未入力なら invalid", () => {
+    const result = validateLedgerEntry({
+      category: "consume",
+      ...baseEntry,
+      location: "成田射撃場 千葉県成田市",
+      gunId: "gun-1",
+      gunNumber: null,
+      gunPermitNumber: "12345",
+      counterpartyName: null,
+      counterpartyAddress: null,
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.missingFields).toContain("使用銃の銃番号");
+  });
+
   it("消費で場所が未入力なら invalid", () => {
     const result = validateLedgerEntry({
       category: "consume",
       ...baseEntry,
       location: null,
       gunId: "gun-1",
+      gunNumber: "7654321",
       gunPermitNumber: "12345",
       counterpartyName: null,
       counterpartyAddress: null,
@@ -44,6 +62,7 @@ describe("validateLedgerEntry", () => {
       ...baseEntry,
       location: null,
       gunId: null,
+      gunNumber: null,
       gunPermitNumber: null,
       counterpartyName: null,
       counterpartyAddress: "東京都",
@@ -59,6 +78,7 @@ describe("validateLedgerEntry", () => {
       ...baseEntry,
       location: null,
       gunId: null,
+      gunNumber: null,
       gunPermitNumber: null,
       counterpartyName: "山田太郎",
       counterpartyAddress: null,
@@ -74,6 +94,7 @@ describe("validateLedgerEntry", () => {
       ...baseEntry,
       location: null,
       gunId: null,
+      gunNumber: null,
       gunPermitNumber: null,
       counterpartyName: null,
       counterpartyAddress: null,

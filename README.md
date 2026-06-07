@@ -11,7 +11,7 @@
 - Drizzle ORM + PostgreSQL
 - Better Auth（GitHub OAuth）
 - Hono（Route Handler 上の RPC API）
-- Biome + Lefthook + Vitest
+- Biome + Lefthook + Vitest + Playwright
 - [Doppler](https://www.doppler.com/)（環境変数の共有・同期）
 
 ## 開発の始め方
@@ -101,6 +101,9 @@ pnpm exec next dev --turbopack
 | `pnpm start` | 本番サーバー起動 |
 | `pnpm check` | Biome による format + lint |
 | `pnpm test:run` | Vitest（単発実行） |
+| `pnpm test:e2e` | Playwright E2E（smoke） |
+| `pnpm test:e2e:ui` | Playwright UI モード |
+| `pnpm test:e2e:install` | Chromium ブラウザのインストール |
 | `pnpm typecheck` | TypeScript の型チェック |
 | `pnpm db:generate` | Drizzle マイグレーション生成 |
 | `pnpm db:migrate` | マイグレーション適用 |

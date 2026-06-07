@@ -1,5 +1,5 @@
+import { compareTimelinePosition } from "../consumption-plan-timeline/consumption-plan-timeline";
 import type { AcquisitionEvent, ConsumptionEvent } from "../consumption-plan-types";
-import { comparePlanPeriod, type PlanPeriod } from "../plan-period/plan-period";
 
 export type HomeStockSimulation = {
   peakHomeStock: number;
@@ -7,7 +7,9 @@ export type HomeStockSimulation = {
 };
 
 export type HomeStockTimelineEntry = {
-  scheduledPeriod: PlanPeriod;
+  scheduledPeriod: ConsumptionEvent["scheduledPeriod"];
+  slotSequence?: number;
+  eventSequence?: number;
   stockAfter: number;
   kind: "bufferConsumption" | "acquisition" | "consumption";
   quantity: number;
@@ -57,17 +59,24 @@ function buildTimeline({
 
   const pending: PendingEvent[] = [
     ...bufferConsumptions.map((event) => ({ kind: "bufferConsumption" as const, ...event })),
-    ...acquisitions.map((event) => ({ kind: "acquisition" as const, ...event })),
     ...shootingConsumptions.map((event) => ({ kind: "consumption" as const, ...event })),
-  ].sort((a, b) => {
-    const byPeriod = comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod });
-    if (byPeriod !== 0) {
-      return byPeriod;
-    }
-
-    const order = { bufferConsumption: 0, acquisition: 1, consumption: 2 };
-    return order[a.kind] - order[b.kind];
-  });
+    ...acquisitions.map((event) => ({ kind: "acquisition" as const, ...event })),
+  ].sort((a, b) =>
+    compareTimelinePosition({
+      a: {
+        scheduledPeriod: a.scheduledPeriod,
+        slotSequence: a.slotSequence,
+        eventSequence: "eventSequence" in a ? a.eventSequence : undefined,
+        kind: a.kind,
+      },
+      b: {
+        scheduledPeriod: b.scheduledPeriod,
+        slotSequence: b.slotSequence,
+        eventSequence: "eventSequence" in b ? b.eventSequence : undefined,
+        kind: b.kind,
+      },
+    }),
+  );
 
   let stock = initialStock;
   const timeline: HomeStockTimelineEntry[] = [];
@@ -81,6 +90,8 @@ function buildTimeline({
 
     timeline.push({
       scheduledPeriod: event.scheduledPeriod,
+      slotSequence: event.slotSequence,
+      eventSequence: "eventSequence" in event ? event.eventSequence : undefined,
       stockAfter: stock,
       kind: event.kind,
       quantity: event.quantity,

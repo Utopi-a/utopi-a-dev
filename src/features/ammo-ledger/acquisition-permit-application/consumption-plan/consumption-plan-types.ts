@@ -12,6 +12,8 @@ export type RangeAllocation = {
 export type AcquisitionEvent = {
   scheduledPeriod: PlanPeriod;
   quantity: number;
+  /** 同一上中下旬内の並び順（0 始まり） */
+  slotSequence?: number;
 };
 
 export type ConsumptionEvent = {
@@ -21,6 +23,9 @@ export type ConsumptionEvent = {
   rangeName: string;
   rangeAddress: string;
   purpose: AcquisitionPermitPurpose;
+  /** 購入スロットと揃える。同一スロット内の複数消費は eventSequence で区別 */
+  slotSequence?: number;
+  eventSequence?: number;
 };
 
 export type ConsumptionPlanRow = {

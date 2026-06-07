@@ -38,9 +38,12 @@ describe("buildConsumptionPlan", () => {
 
     const consumptionRows = plan.rows.filter((row) => !row.isAcquisition);
     const consumptionQuantities = consumptionRows.map((row) => row.consumptionQuantity);
+    const regularConsumptions = consumptionQuantities.slice(0, -1);
+    const lastConsumption = consumptionQuantities.at(-1);
 
-    expect(consumptionQuantities.every((quantity) => quantity >= 250)).toBe(true);
-    expect(consumptionQuantities.every((quantity) => quantity <= 550)).toBe(true);
+    expect(regularConsumptions.every((quantity) => quantity >= 250)).toBe(true);
+    expect(regularConsumptions.every((quantity) => quantity <= 550)).toBe(true);
+    expect(lastConsumption).toBeGreaterThanOrEqual(25);
     expect(consumptionQuantities.some((quantity) => quantity < 500)).toBe(true);
 
     const lastAcquisition = plan.rows.filter((row) => row.isAcquisition).at(-1)!;
@@ -80,5 +83,9 @@ describe("buildConsumptionPlan", () => {
       .filter((row) => !row.isAcquisition)
       .map((row) => row.consumptionQuantity);
     expect(consumptionQuantities.every((quantity) => quantity >= 250)).toBe(true);
+    expect(consumptionQuantities.every((quantity) => quantity <= 550)).toBe(true);
+    expect(
+      plan.warnings.some((warning) => warning.includes("消費のないまま購入が連続しています")),
+    ).toBe(false);
   });
 });

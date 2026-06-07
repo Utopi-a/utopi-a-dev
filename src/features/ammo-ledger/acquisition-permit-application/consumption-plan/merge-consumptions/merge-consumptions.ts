@@ -1,15 +1,15 @@
+import {
+  compareTimelinePosition,
+  sortAcquisitions,
+} from "../consumption-plan-timeline/consumption-plan-timeline";
 import type {
   AcquisitionEvent,
   ConsumptionEvent,
   RangeAllocation,
 } from "../consumption-plan-types";
-import {
-  comparePlanPeriod,
-  type PlanPeriod,
-  serializePlanPeriodKey,
-} from "../plan-period/plan-period";
+import { type PlanPeriod, serializePlanPeriodKey } from "../plan-period/plan-period";
 
-/** 各購入の直前に必要な保管上限対策消費量を算出する（配置は別処理） */
+/** 各購入の直後に必要な保管上限対策消費量を算出する（配置は別処理） */
 export function computeBufferNeedByAcquisition({
   initialStock,
   homeStorageLimit,
@@ -25,14 +25,24 @@ export function computeBufferNeedByAcquisition({
   bufferConsumptions?: ConsumptionEvent[];
   consumptionUnit: number;
 }): number[] {
-  const sortedAcquisitions = [...acquisitions].sort((a, b) =>
-    comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod }),
-  );
+  const sortedAcquisitions = sortAcquisitions({ acquisitions });
   const needs = Array.from({ length: sortedAcquisitions.length }, () => 0);
 
   type TimelineItem =
-    | { kind: "acquisition"; period: PlanPeriod; quantity: number; acquisitionIndex: number }
-    | { kind: "consumption"; period: PlanPeriod; quantity: number };
+    | {
+        kind: "acquisition";
+        period: PlanPeriod;
+        quantity: number;
+        acquisitionIndex: number;
+        slotSequence?: number;
+      }
+    | {
+        kind: "consumption";
+        period: PlanPeriod;
+        quantity: number;
+        slotSequence?: number;
+        eventSequence?: number;
+      };
 
   const timeline: TimelineItem[] = [
     ...sortedAcquisitions.map((event, acquisitionIndex) => ({
@@ -40,24 +50,38 @@ export function computeBufferNeedByAcquisition({
       period: event.scheduledPeriod,
       quantity: event.quantity,
       acquisitionIndex,
+      slotSequence: event.slotSequence,
     })),
     ...shootingConsumptions.map((event) => ({
       kind: "consumption" as const,
       period: event.scheduledPeriod,
       quantity: event.quantity,
+      slotSequence: event.slotSequence,
+      eventSequence: event.eventSequence,
     })),
     ...bufferConsumptions.map((event) => ({
       kind: "consumption" as const,
       period: event.scheduledPeriod,
       quantity: event.quantity,
+      slotSequence: event.slotSequence,
+      eventSequence: event.eventSequence,
     })),
-  ].sort((a, b) => {
-    const byPeriod = comparePlanPeriod({ a: a.period, b: b.period });
-    if (byPeriod !== 0) {
-      return byPeriod;
-    }
-    return a.kind === "acquisition" ? -1 : 1;
-  });
+  ].sort((a, b) =>
+    compareTimelinePosition({
+      a: {
+        scheduledPeriod: a.period,
+        slotSequence: a.slotSequence,
+        eventSequence: a.eventSequence,
+        kind: a.kind === "acquisition" ? "acquisition" : "consumption",
+      },
+      b: {
+        scheduledPeriod: b.period,
+        slotSequence: b.slotSequence,
+        eventSequence: b.eventSequence,
+        kind: b.kind === "acquisition" ? "acquisition" : "consumption",
+      },
+    }),
+  );
 
   const bufferScheduled = bufferConsumptions.some((event) => event.quantity > 0);
 
@@ -65,10 +89,18 @@ export function computeBufferNeedByAcquisition({
 
   for (const item of timeline) {
     if (item.kind === "acquisition") {
+      stock += item.quantity;
+
+      const nextAcquisition = sortedAcquisitions[item.acquisitionIndex + 1];
+      if (!nextAcquisition) {
+        continue;
+      }
+
       const room = homeStorageLimit - stock;
-      if (item.quantity > room) {
+      const overflow = nextAcquisition.quantity - room;
+      if (overflow > 0) {
         const need = roundUpToUnit({
-          value: item.quantity - room,
+          value: overflow,
           unit: consumptionUnit,
         });
         needs[item.acquisitionIndex] = need;
@@ -76,7 +108,6 @@ export function computeBufferNeedByAcquisition({
           stock -= need;
         }
       }
-      stock += item.quantity;
       continue;
     }
 
@@ -101,27 +132,45 @@ export function computeStorageBufferConsumptions({
   consumptionUnit: number;
 }): Map<string, number> {
   type TimelineItem =
-    | { kind: "acquisition"; period: PlanPeriod; quantity: number }
-    | { kind: "shooting"; period: PlanPeriod; quantity: number };
+    | { kind: "acquisition"; period: PlanPeriod; quantity: number; slotSequence?: number }
+    | {
+        kind: "shooting";
+        period: PlanPeriod;
+        quantity: number;
+        slotSequence?: number;
+        eventSequence?: number;
+      };
 
   const timeline: TimelineItem[] = [
     ...acquisitions.map((event) => ({
       kind: "acquisition" as const,
       period: event.scheduledPeriod,
       quantity: event.quantity,
+      slotSequence: event.slotSequence,
     })),
     ...shootingConsumptions.map((event) => ({
       kind: "shooting" as const,
       period: event.scheduledPeriod,
       quantity: event.quantity,
+      slotSequence: event.slotSequence,
+      eventSequence: event.eventSequence,
     })),
-  ].sort((a, b) => {
-    const byPeriod = comparePlanPeriod({ a: a.period, b: b.period });
-    if (byPeriod !== 0) {
-      return byPeriod;
-    }
-    return a.kind === "acquisition" ? -1 : 1;
-  });
+  ].sort((a, b) =>
+    compareTimelinePosition({
+      a: {
+        scheduledPeriod: a.period,
+        slotSequence: a.slotSequence,
+        eventSequence: "eventSequence" in a ? a.eventSequence : undefined,
+        kind: a.kind === "acquisition" ? "acquisition" : "consumption",
+      },
+      b: {
+        scheduledPeriod: b.period,
+        slotSequence: b.slotSequence,
+        eventSequence: "eventSequence" in b ? b.eventSequence : undefined,
+        kind: b.kind === "acquisition" ? "acquisition" : "consumption",
+      },
+    }),
+  );
 
   const quantitiesByPeriod = new Map<string, number>();
   let stock = initialStock;
@@ -190,11 +239,14 @@ export function mergeConsumptions({
   }
 
   return [...merged.values()].sort((a, b) =>
-    comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod }),
+    compareTimelinePosition({
+      a: { ...a, kind: "consumption" },
+      b: { ...b, kind: "consumption" },
+    }),
   );
 }
 
-function bufferEventsFromPeriodMap({
+function _bufferEventsFromPeriodMap({
   bufferByPeriod,
 }: {
   bufferByPeriod: Map<string, number>;

@@ -1,13 +1,9 @@
+import { splitGapConsumptionQuantity } from "../consumption-chunk-size/consumption-chunk-size";
 import {
-  allocateQuotaAcrossGaps,
-  buildBeforeFirstAcquisitionPeriods,
-  buildStrictBetweenPurchaseGaps,
-  pickPeriodsForGapChunks,
-} from "../between-purchase-gap/between-purchase-gap";
-import {
-  computePreferredConsumptionBatchSize,
-  splitGapConsumptionQuantity,
-} from "../consumption-chunk-size/consumption-chunk-size";
+  compareTimelinePosition,
+  isConsumptionBetweenAcquisitions,
+  sortAcquisitions,
+} from "../consumption-plan-timeline/consumption-plan-timeline";
 import type {
   AcquisitionEvent,
   ConsumptionEvent,
@@ -15,8 +11,6 @@ import type {
 } from "../consumption-plan-types";
 import {
   comparePlanPeriod,
-  computeMaxConsumptionPerPlanPeriod,
-  listPlanPeriodsInRange,
   type PlanPeriod,
   serializePlanPeriodKey,
 } from "../plan-period/plan-period";
@@ -26,16 +20,17 @@ export type ScheduledConsumptions = {
   bufferConsumptions: ConsumptionEvent[];
 };
 
-const maxConsumptionsPerGap = 2;
+const maxConsumptionsBeforePurchase = 2;
+const maxConsumptionPerEvent = 500;
 
-/** 購入と購入の間に消費を挟み、1回あたりの量を自然な大きさに保つ */
+/** 各購入の直後に消費を置き、購入・消費・購入・消費…の交互配置を保つ */
 export function scheduleConsumptionsFromAcquisitions({
   acquisitions,
-  requestedQuantity,
+  requestedQuantity: _requestedQuantity,
   shootingQuantity,
   bufferNeedByAcquisition,
-  periodFrom,
-  periodTo,
+  periodFrom: _periodFrom,
+  periodTo: _periodTo,
   rangeAllocations,
   consumptionUnit = 25,
 }: {
@@ -60,136 +55,18 @@ export function scheduleConsumptionsFromAcquisitions({
     throw new Error("shootingQuantity must be a multiple of consumptionUnit");
   }
 
-  const availablePeriods = listPlanPeriodsInRange({ from: periodFrom, to: periodTo });
-  if (availablePeriods.length === 0) {
+  const sortedAcquisitions = sortAcquisitions({ acquisitions });
+  if (sortedAcquisitions.length === 0) {
     return { shootingConsumptions: [], bufferConsumptions: [] };
   }
 
-  const sortedAcquisitions = [...acquisitions].sort((a, b) =>
-    comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod }),
-  );
-
-  const nominalMaxPerEvent = computeMaxConsumptionPerPlanPeriod({
-    requestedQuantity,
-    periodFrom,
-    periodTo,
+  const shootingBySlot = distributeShootingAcrossSlots({
+    slotCount: sortedAcquisitions.length,
+    shootingQuantity,
     consumptionUnit,
   });
 
-  const betweenGaps = buildStrictBetweenPurchaseGaps({
-    acquisitions: sortedAcquisitions,
-    availablePeriods,
-  });
-
-  const preferredBatchSize = computePreferredConsumptionBatchSize({
-    requestedQuantity,
-    gapCount: Math.max(1, betweenGaps.length),
-    maxEventsPerGap: maxConsumptionsPerGap,
-    consumptionUnit,
-    maxPerEvent: nominalMaxPerEvent,
-  });
-
-  const perPurchaseAverage =
-    Math.floor(requestedQuantity / Math.max(1, sortedAcquisitions.length) / consumptionUnit) *
-    consumptionUnit;
-  const maxPerEvent = Math.min(500, Math.max(preferredBatchSize, perPurchaseAverage));
   const primaryRange = rangeAllocations[0];
-  const shootingByPeriod = new Map<string, number>();
-  const bufferByPeriod = new Map<string, number>();
-
-  const beforeFirstPeriods = buildBeforeFirstAcquisitionPeriods({
-    acquisitions: sortedAcquisitions,
-    availablePeriods,
-  });
-  const firstBufferNeed = bufferNeedByAcquisition[0] ?? 0;
-  if (firstBufferNeed > 0) {
-    assignQuantityToGap({
-      periods:
-        beforeFirstPeriods.length > 0
-          ? beforeFirstPeriods
-          : [sortedAcquisitions[0].scheduledPeriod],
-      gapTotal: firstBufferNeed,
-      consumptionUnit,
-      maxPerEvent,
-      preferredBatchSize,
-      targetByPeriod: bufferByPeriod,
-    });
-  }
-
-  const shootingQuotas =
-    shootingQuantity > 0 && betweenGaps.length > 0
-      ? allocateQuotaAcrossGaps({
-          gaps: betweenGaps,
-          totalQuantity: shootingQuantity,
-          consumptionUnit,
-        })
-      : [];
-
-  for (const [gapIndex, gap] of betweenGaps.entries()) {
-    const bufferNeed = bufferNeedByAcquisition[gap.followingAcquisitionIndex] ?? 0;
-    const shootingNeed = shootingQuotas[gapIndex] ?? 0;
-    const gapTotal = bufferNeed + shootingNeed;
-
-    if (gapTotal <= 0) {
-      continue;
-    }
-
-    const chunks = splitGapConsumptionQuantity({
-      gapTotal,
-      consumptionUnit,
-      maxEventsPerGap: maxConsumptionsPerGap,
-      preferredBatchSize,
-      maxPerEvent,
-    });
-
-    const chunkPeriods = pickPeriodsForGapChunks({
-      periods: gap.periods,
-      chunkCount: chunks.length,
-    });
-
-    const mergedChunks = mergeChunksOnSamePeriod({ periods: chunkPeriods, chunks });
-    let bufferLeft = bufferNeed;
-    let shootingLeft = shootingNeed;
-
-    for (const { period, quantity } of mergedChunks) {
-      const bufferPart = Math.min(bufferLeft, quantity);
-      const shootingPart = quantity - bufferPart;
-
-      if (bufferPart > 0) {
-        addQuantityToPeriod({
-          period,
-          quantity: bufferPart,
-          targetByPeriod: bufferByPeriod,
-        });
-        bufferLeft -= bufferPart;
-      }
-
-      if (shootingPart > 0) {
-        addQuantityToPeriod({
-          period,
-          quantity: shootingPart,
-          targetByPeriod: shootingByPeriod,
-        });
-        shootingLeft -= shootingPart;
-      }
-    }
-
-    if (bufferLeft > 0) {
-      assignRemainderToPeriod({
-        periods: gap.periods,
-        quantity: bufferLeft,
-        targetByPeriod: bufferByPeriod,
-      });
-    }
-    if (shootingLeft > 0) {
-      assignRemainderToPeriod({
-        periods: gap.periods,
-        quantity: shootingLeft,
-        targetByPeriod: shootingByPeriod,
-      });
-    }
-  }
-
   const quantityByRange = allocateQuantityByWeight({
     totalQuantity: shootingQuantity,
     consumptionUnit,
@@ -199,173 +76,118 @@ export function scheduleConsumptionsFromAcquisitions({
     quantityByRange.map((allocation) => [allocation.rangeId, allocation.quantity]),
   );
 
-  const shootingConsumptions = buildConsumptionEvents({
-    quantitiesByPeriod: shootingByPeriod,
-    rangeAllocations,
-    remainingByRange,
-  });
+  const bufferConsumptions: ConsumptionEvent[] = [];
+  const shootingConsumptions: ConsumptionEvent[] = [];
 
-  const bufferConsumptions = buildBufferConsumptionEvents({
-    quantitiesByPeriod: bufferByPeriod,
-    primaryRange,
-  });
+  for (const [index, acquisition] of sortedAcquisitions.entries()) {
+    const bufferPart = bufferNeedByAcquisition[index] ?? 0;
+    const shootingPart = shootingBySlot[index] ?? 0;
+    const slotTotal = bufferPart + shootingPart;
 
-  return { shootingConsumptions, bufferConsumptions };
+    if (slotTotal <= 0) {
+      continue;
+    }
+
+    const chunks = splitGapConsumptionQuantity({
+      gapTotal: slotTotal,
+      consumptionUnit,
+      maxEventsPerGap: maxConsumptionsBeforePurchase,
+      preferredBatchSize: Math.min(maxConsumptionPerEvent, slotTotal),
+      maxPerEvent: maxConsumptionPerEvent,
+    });
+
+    let bufferLeft = bufferPart;
+    let shootingLeft = shootingPart;
+
+    for (const [eventSequence, quantity] of chunks.entries()) {
+      const bufferQuantity = Math.min(bufferLeft, quantity);
+      const shootingQuantityPart = quantity - bufferQuantity;
+
+      if (bufferQuantity > 0) {
+        bufferConsumptions.push({
+          scheduledPeriod: acquisition.scheduledPeriod,
+          slotSequence: acquisition.slotSequence,
+          eventSequence,
+          quantity: bufferQuantity,
+          rangeId: primaryRange.rangeId,
+          rangeName: primaryRange.rangeName,
+          rangeAddress: primaryRange.rangeAddress,
+          purpose: primaryRange.purpose,
+        });
+        bufferLeft -= bufferQuantity;
+      }
+
+      if (shootingQuantityPart > 0) {
+        const range = pickRangeWithRemaining({
+          remainingByRange,
+          rangeAllocations,
+        });
+        if (!range) {
+          continue;
+        }
+
+        remainingByRange.set(
+          range.rangeId,
+          (remainingByRange.get(range.rangeId) ?? 0) - shootingQuantityPart,
+        );
+
+        shootingConsumptions.push({
+          scheduledPeriod: acquisition.scheduledPeriod,
+          slotSequence: acquisition.slotSequence,
+          eventSequence,
+          quantity: shootingQuantityPart,
+          rangeId: range.rangeId,
+          rangeName: range.rangeName,
+          rangeAddress: range.rangeAddress,
+          purpose: range.purpose,
+        });
+        shootingLeft -= shootingQuantityPart;
+      }
+    }
+
+    if (bufferLeft > 0 || shootingLeft > 0) {
+      throw new Error("failed to allocate consumption before purchase");
+    }
+  }
+
+  return {
+    shootingConsumptions: sortConsumptionEvents({ events: shootingConsumptions }),
+    bufferConsumptions: sortConsumptionEvents({ events: bufferConsumptions }),
+  };
 }
 
-function assignQuantityToGap({
-  periods,
-  gapTotal,
+function distributeShootingAcrossSlots({
+  slotCount,
+  shootingQuantity,
   consumptionUnit,
-  maxPerEvent,
-  preferredBatchSize,
-  targetByPeriod,
 }: {
-  periods: PlanPeriod[];
-  gapTotal: number;
+  slotCount: number;
+  shootingQuantity: number;
   consumptionUnit: number;
-  maxPerEvent: number;
-  preferredBatchSize: number;
-  targetByPeriod: Map<string, number>;
-}): void {
-  const chunks = splitGapConsumptionQuantity({
-    gapTotal,
-    consumptionUnit,
-    maxEventsPerGap: maxConsumptionsPerGap,
-    preferredBatchSize,
-    maxPerEvent,
-  });
-
-  const chunkPeriods = pickPeriodsForGapChunks({
-    periods,
-    chunkCount: chunks.length,
-  });
-
-  const merged = mergeChunksOnSamePeriod({ periods: chunkPeriods, chunks });
-
-  for (const { period, quantity } of merged) {
-    addQuantityToPeriod({
-      period,
-      quantity,
-      targetByPeriod,
-    });
-  }
-}
-
-function assignRemainderToPeriod({
-  periods,
-  quantity,
-  targetByPeriod,
-}: {
-  periods: PlanPeriod[];
-  quantity: number;
-  targetByPeriod: Map<string, number>;
-}): void {
-  const period = periods.at(-1);
-  if (!period || quantity <= 0) {
-    return;
+}): number[] {
+  if (slotCount <= 0) {
+    return [];
   }
 
-  addQuantityToPeriod({
-    period,
-    quantity,
-    targetByPeriod,
-  });
-}
+  const base = Math.floor(shootingQuantity / slotCount / consumptionUnit) * consumptionUnit;
+  const quotas = Array.from({ length: slotCount }, () => base);
+  let remaining = shootingQuantity - base * slotCount;
 
-function addQuantityToPeriod({
-  period,
-  quantity,
-  targetByPeriod,
-}: {
-  period: PlanPeriod;
-  quantity: number;
-  targetByPeriod: Map<string, number>;
-}): void {
-  const key = serializePlanPeriodKey({ period });
-  targetByPeriod.set(key, (targetByPeriod.get(key) ?? 0) + quantity);
-}
-
-function mergeChunksOnSamePeriod({
-  periods,
-  chunks,
-}: {
-  periods: PlanPeriod[];
-  chunks: number[];
-}): Array<{ period: PlanPeriod; quantity: number }> {
-  const merged = new Map<string, { period: PlanPeriod; quantity: number }>();
-
-  for (const [index, quantity] of chunks.entries()) {
-    const period = periods[Math.min(index, periods.length - 1)];
-    const key = serializePlanPeriodKey({ period });
-    const existing = merged.get(key);
-    if (existing) {
-      existing.quantity += quantity;
-      continue;
-    }
-    merged.set(key, { period, quantity });
+  for (let index = 0; remaining > 0; index += 1) {
+    quotas[index % slotCount] += consumptionUnit;
+    remaining -= consumptionUnit;
   }
 
-  return [...merged.values()];
+  return quotas;
 }
 
-function buildConsumptionEvents({
-  quantitiesByPeriod,
-  rangeAllocations,
-  remainingByRange,
-}: {
-  quantitiesByPeriod: Map<string, number>;
-  rangeAllocations: RangeAllocation[];
-  remainingByRange: Map<string, number>;
-}): ConsumptionEvent[] {
-  const events: ConsumptionEvent[] = [];
-
-  for (const [key, quantity] of quantitiesByPeriod) {
-    if (quantity <= 0) {
-      continue;
-    }
-
-    const range = pickRangeWithRemaining({
-      remainingByRange,
-      rangeAllocations,
-    });
-    if (!range) {
-      continue;
-    }
-
-    remainingByRange.set(range.rangeId, (remainingByRange.get(range.rangeId) ?? 0) - quantity);
-
-    events.push({
-      scheduledPeriod: parsePeriodKey({ key }),
-      quantity,
-      rangeId: range.rangeId,
-      rangeName: range.rangeName,
-      rangeAddress: range.rangeAddress,
-      purpose: range.purpose,
-    });
-  }
-
-  return events.sort((a, b) => comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod }));
-}
-
-function buildBufferConsumptionEvents({
-  quantitiesByPeriod,
-  primaryRange,
-}: {
-  quantitiesByPeriod: Map<string, number>;
-  primaryRange: RangeAllocation;
-}): ConsumptionEvent[] {
-  return [...quantitiesByPeriod.entries()]
-    .filter(([, quantity]) => quantity > 0)
-    .map(([key, quantity]) => ({
-      scheduledPeriod: parsePeriodKey({ key }),
-      quantity,
-      rangeId: primaryRange.rangeId,
-      rangeName: primaryRange.rangeName,
-      rangeAddress: primaryRange.rangeAddress,
-      purpose: primaryRange.purpose,
-    }))
-    .sort((a, b) => comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod }));
+function sortConsumptionEvents({ events }: { events: ConsumptionEvent[] }): ConsumptionEvent[] {
+  return [...events].sort((a, b) =>
+    compareTimelinePosition({
+      a: { ...a, kind: "consumption" },
+      b: { ...b, kind: "consumption" },
+    }),
+  );
 }
 
 function pickRangeWithRemaining({
@@ -428,15 +250,6 @@ function allocateQuantityByWeight({
   }));
 }
 
-function parsePeriodKey({ key }: { key: string }): PlanPeriod {
-  const [year, month, period] = key.split("-");
-  return {
-    year: Number(year),
-    month: Number(month),
-    period: period as PlanPeriod["period"],
-  };
-}
-
 export function collectPeriodsBetweenPurchases({
   acquisitions,
   availablePeriods,
@@ -444,8 +257,32 @@ export function collectPeriodsBetweenPurchases({
   acquisitions: AcquisitionEvent[];
   availablePeriods: PlanPeriod[];
 }): PlanPeriod[] {
-  const gaps = buildStrictBetweenPurchaseGaps({ acquisitions, availablePeriods });
-  return gaps.flatMap((gap) => gap.periods);
+  const sortedAcquisitions = sortAcquisitions({ acquisitions });
+  if (sortedAcquisitions.length <= 1) {
+    return [];
+  }
+
+  const periods: PlanPeriod[] = [];
+
+  for (let index = 0; index < sortedAcquisitions.length - 1; index += 1) {
+    const current = sortedAcquisitions[index];
+    const next = sortedAcquisitions[index + 1];
+
+    const strictBetween = availablePeriods.filter(
+      (period) =>
+        comparePlanPeriod({ a: current.scheduledPeriod, b: period }) < 0 &&
+        comparePlanPeriod({ a: period, b: next.scheduledPeriod }) < 0,
+    );
+
+    if (strictBetween.length > 0) {
+      periods.push(...strictBetween);
+      continue;
+    }
+
+    periods.push(next.scheduledPeriod);
+  }
+
+  return periods;
 }
 
 export function isPeriodBetweenPurchases({
@@ -458,21 +295,9 @@ export function isPeriodBetweenPurchases({
   availablePeriods: PlanPeriod[];
 }): boolean {
   const betweenPeriods = collectPeriodsBetweenPurchases({ acquisitions, availablePeriods });
+  const periodKey = serializePlanPeriodKey({ period });
   return betweenPeriods.some(
-    (candidate) =>
-      serializePlanPeriodKey({ period: candidate }) === serializePlanPeriodKey({ period }),
-  );
-}
-
-export function isPeriodBeforeAnyPurchase({
-  period,
-  acquisitions,
-}: {
-  period: PlanPeriod;
-  acquisitions: AcquisitionEvent[];
-}): boolean {
-  return acquisitions.every(
-    (acquisition) => comparePlanPeriod({ a: period, b: acquisition.scheduledPeriod }) < 0,
+    (candidate) => serializePlanPeriodKey({ period: candidate }) === periodKey,
   );
 }
 
@@ -483,18 +308,12 @@ export function countConsumptionsBetweenPurchases({
   consumptions: ConsumptionEvent[];
   acquisitions: AcquisitionEvent[];
 }): number[] {
-  const sortedAcquisitions = [...acquisitions].sort((a, b) =>
-    comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod }),
-  );
+  const sortedAcquisitions = sortAcquisitions({ acquisitions });
 
   return sortedAcquisitions.slice(0, -1).map((current, index) => {
     const next = sortedAcquisitions[index + 1];
-    return consumptions.filter((event) => {
-      const afterCurrent =
-        comparePlanPeriod({ a: current.scheduledPeriod, b: event.scheduledPeriod }) <= 0;
-      const beforeNext =
-        comparePlanPeriod({ a: event.scheduledPeriod, b: next.scheduledPeriod }) <= 0;
-      return afterCurrent && beforeNext;
-    }).length;
+    return consumptions.filter((event) =>
+      isConsumptionBetweenAcquisitions({ consumption: event, current, next }),
+    ).length;
   });
 }

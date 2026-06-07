@@ -1,4 +1,8 @@
 import { homeStorageRoundLimit } from "@/features/ammo-ledger/schema/home-storage-limit";
+import {
+  compareTimelinePosition,
+  serializeConsumptionSlotKey,
+} from "../consumption-plan-timeline/consumption-plan-timeline";
 import type {
   AcquisitionEvent,
   BuildConsumptionPlanInput,
@@ -7,7 +11,7 @@ import type {
   ConsumptionPlanRow,
 } from "../consumption-plan-types";
 import { computeBufferNeedByAcquisition } from "../merge-consumptions/merge-consumptions";
-import { comparePlanPeriod, serializePlanPeriodKey } from "../plan-period/plan-period";
+import { comparePlanPeriod } from "../plan-period/plan-period";
 import {
   hasConsecutivePurchasesWithoutConsumption,
   scheduleAcquisitions,
@@ -180,7 +184,10 @@ function mergeBufferAndShootingSamePeriod({
   const merged = new Map<string, ConsumptionEvent>();
 
   for (const event of [...bufferConsumptions, ...shootingConsumptions]) {
-    const key = serializePlanPeriodKey({ period: event.scheduledPeriod });
+    const key = serializeConsumptionSlotKey({
+      period: event.scheduledPeriod,
+      slotSequence: event.slotSequence,
+    });
     const existing = merged.get(key);
 
     if (!existing) {
@@ -192,7 +199,10 @@ function mergeBufferAndShootingSamePeriod({
   }
 
   return [...merged.values()].sort((a, b) =>
-    comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod }),
+    compareTimelinePosition({
+      a: { ...a, kind: "consumption" },
+      b: { ...b, kind: "consumption" },
+    }),
   );
 }
 
@@ -207,7 +217,11 @@ function mergeEventsIntoRows({
   counterpartyName: string;
   counterpartyAddress: string;
 }): ConsumptionPlanRow[] {
-  type PendingRow = ConsumptionPlanRow & { kind: "acquisition" | "consumption" };
+  type PendingRow = ConsumptionPlanRow & {
+    kind: "acquisition" | "consumption";
+    slotSequence?: number;
+    eventSequence?: number;
+  };
 
   const pendingRows: PendingRow[] = [];
 
@@ -222,6 +236,8 @@ function mergeEventsIntoRows({
       acquisitionQuantity: 0,
       isAcquisition: false,
       kind: "consumption",
+      slotSequence: consumption.slotSequence,
+      eventSequence: consumption.eventSequence,
     });
   }
 
@@ -236,24 +252,36 @@ function mergeEventsIntoRows({
       acquisitionQuantity: acquisition.quantity,
       isAcquisition: true,
       kind: "acquisition",
+      slotSequence: acquisition.slotSequence,
     });
   }
 
   return pendingRows
-    .sort((a, b) => {
-      const byPeriod = comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod });
-      if (byPeriod !== 0) {
-        return byPeriod;
-      }
-      if (a.kind === "consumption" && b.kind === "acquisition") {
-        return -1;
-      }
-      if (a.kind === "acquisition" && b.kind === "consumption") {
-        return 1;
-      }
-      return 0;
-    })
-    .map(({ kind: _kind, ...row }, index) => ({ ...row, rowIndex: index + 1 }));
+    .sort((a, b) =>
+      compareTimelinePosition({
+        a: {
+          scheduledPeriod: a.scheduledPeriod,
+          slotSequence: a.slotSequence,
+          eventSequence: a.eventSequence,
+          kind: a.kind,
+        },
+        b: {
+          scheduledPeriod: b.scheduledPeriod,
+          slotSequence: b.slotSequence,
+          eventSequence: b.eventSequence,
+          kind: b.kind,
+        },
+      }),
+    )
+    .map(
+      (
+        { kind: _kind, slotSequence: _slotSequence, eventSequence: _eventSequence, ...row },
+        index,
+      ) => ({
+        ...row,
+        rowIndex: index + 1,
+      }),
+    );
 }
 
 function sumConsumptionQuantity({ consumptions }: { consumptions: ConsumptionEvent[] }): number {

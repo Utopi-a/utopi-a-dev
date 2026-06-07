@@ -1,10 +1,14 @@
-import type { AcquisitionEvent, ConsumptionEvent } from "../consumption-plan-types";
-import { splitIntoUnitMultiples } from "../partition-quantity/partition-quantity";
 import {
-  comparePlanPeriod,
+  compareTimelinePosition,
+  isConsumptionBetweenAcquisitions,
+  sortAcquisitions,
+} from "../consumption-plan-timeline/consumption-plan-timeline";
+import type { AcquisitionEvent, ConsumptionEvent } from "../consumption-plan-types";
+import {
   distributePlanPeriodsEvenly,
   listPlanPeriodsInRange,
   type PlanPeriod,
+  serializePlanPeriodKey,
 } from "../plan-period/plan-period";
 import {
   buildBalancedPeriodSlots,
@@ -84,10 +88,29 @@ export function scheduleAcquisitions({
     count: chunks.length,
   });
 
-  return purchasePeriods.map((scheduledPeriod, index) => ({
-    scheduledPeriod,
-    quantity: chunks[index],
-  }));
+  return assignSlotSequences({ periods: purchasePeriods, quantities: chunks });
+}
+
+function assignSlotSequences({
+  periods,
+  quantities,
+}: {
+  periods: PlanPeriod[];
+  quantities: number[];
+}): AcquisitionEvent[] {
+  const sequenceByPeriod = new Map<string, number>();
+
+  return periods.map((scheduledPeriod, index) => {
+    const key = serializePlanPeriodKey({ period: scheduledPeriod });
+    const slotSequence = sequenceByPeriod.get(key) ?? 0;
+    sequenceByPeriod.set(key, slotSequence + 1);
+
+    return {
+      scheduledPeriod,
+      quantity: quantities[index],
+      slotSequence,
+    };
+  });
 }
 
 export function splitIntoPurchaseChunks({
@@ -170,21 +193,15 @@ export function hasConsecutivePurchasesWithoutConsumption({
     return false;
   }
 
-  const sortedAcquisitions = [...acquisitions].sort((a, b) =>
-    comparePlanPeriod({ a: a.scheduledPeriod, b: b.scheduledPeriod }),
-  );
+  const sortedAcquisitions = sortAcquisitions({ acquisitions });
 
   for (let index = 0; index < sortedAcquisitions.length - 1; index += 1) {
     const current = sortedAcquisitions[index];
     const next = sortedAcquisitions[index + 1];
 
-    const hasConsumptionBetween = consumptions.some((event) => {
-      const afterCurrent =
-        comparePlanPeriod({ a: current.scheduledPeriod, b: event.scheduledPeriod }) <= 0;
-      const beforeNext =
-        comparePlanPeriod({ a: event.scheduledPeriod, b: next.scheduledPeriod }) <= 0;
-      return afterCurrent && beforeNext;
-    });
+    const hasConsumptionBetween = consumptions.some((event) =>
+      isConsumptionBetweenAcquisitions({ consumption: event, current, next }),
+    );
 
     if (!hasConsumptionBetween) {
       return true;

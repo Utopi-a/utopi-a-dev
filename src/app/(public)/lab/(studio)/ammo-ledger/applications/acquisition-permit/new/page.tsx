@@ -41,6 +41,8 @@ export default async function AcquisitionPermitApplicationNewPage() {
     <AcquisitionPermitApplicationForm
       ownerName={ownerName}
       ownerAddress={profile?.ownerAddress ?? ""}
+      ownerBirthDate={profile?.ownerBirthDate ?? undefined}
+      ownerPhone={profile?.ownerPhone ?? undefined}
       currentHomeStock={Math.max(0, currentHomeStock)}
       guns={guns}
       rangePickerData={rangePickerData}

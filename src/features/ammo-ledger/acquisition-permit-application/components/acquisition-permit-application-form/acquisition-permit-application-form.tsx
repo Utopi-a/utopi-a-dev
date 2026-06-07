@@ -43,6 +43,8 @@ import { cn } from "@/lib/cn";
 type AcquisitionPermitApplicationFormProps = {
   ownerName: string;
   ownerAddress: string;
+  ownerBirthDate?: string;
+  ownerPhone?: string;
   currentHomeStock: number;
   guns: (typeof ammoGun.$inferSelect)[];
   rangePickerData: MasterPickerData;
@@ -63,6 +65,8 @@ function defaultValidTo({ validFrom }: { validFrom: string }): string {
 export function AcquisitionPermitApplicationForm({
   ownerName,
   ownerAddress,
+  ownerBirthDate = "",
+  ownerPhone = "",
   currentHomeStock,
   guns,
   rangePickerData,
@@ -76,8 +80,8 @@ export function AcquisitionPermitApplicationForm({
   const [name, setName] = useState(ownerName);
   const [furigana, setFurigana] = useState("");
   const [address, setAddress] = useState(ownerAddress);
-  const [birthDate, setBirthDate] = useState("");
-  const [phone, setPhone] = useState("");
+  const [birthDate, setBirthDate] = useState(ownerBirthDate);
+  const [phone, setPhone] = useState(ownerPhone);
   const [ledgerPurpose, setLedgerPurpose] = useState<LedgerPurpose>("shooting");
   const [ammoName, setAmmoName] = useState<AcquisitionPermitName>(defaultAcquisitionPermitName);
   const [permitPurpose, setPermitPurpose] = useState(defaultAcquisitionPermitPurpose);

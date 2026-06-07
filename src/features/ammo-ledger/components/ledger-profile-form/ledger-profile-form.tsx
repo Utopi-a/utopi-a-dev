@@ -12,6 +12,8 @@ type LedgerProfileFormProps = {
   initialValues: {
     ownerName: string;
     ownerAddress?: string | null;
+    ownerBirthDate?: string | null;
+    ownerPhone?: string | null;
   };
   accountName: string;
 };
@@ -20,6 +22,8 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
   const router = useRouter();
   const [ownerName, setOwnerName] = useState(initialValues.ownerName);
   const [ownerAddress, setOwnerAddress] = useState(initialValues.ownerAddress ?? "");
+  const [ownerBirthDate, setOwnerBirthDate] = useState(initialValues.ownerBirthDate ?? "");
+  const [ownerPhone, setOwnerPhone] = useState(initialValues.ownerPhone ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -31,6 +35,8 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
     const result = await upsertLedgerProfileAction({
       ownerName,
       ownerAddress: ownerAddress || undefined,
+      ownerBirthDate: ownerBirthDate || undefined,
+      ownerPhone: ownerPhone || undefined,
     });
 
     if (!result.ok) {
@@ -47,7 +53,8 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <p className="text-sm text-muted-foreground">
-        帳簿の表紙・印刷に使う氏名です。未入力のときはアカウント名（{accountName}）が使われます。
+        帳簿の表紙・印刷や取得許可申請書に使う情報です。氏名を未入力のときはアカウント名（
+        {accountName}）が使われます。
       </p>
 
       <div className="space-y-2">
@@ -67,7 +74,28 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
           id="owner-address"
           value={ownerAddress}
           onChange={(e) => setOwnerAddress(e.target.value)}
-          placeholder="帳簿表紙に記載する場合のみ"
+          placeholder="帳簿表紙・申請書に記載する場合"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="owner-birth-date">生年月日（任意）</Label>
+        <Input
+          id="owner-birth-date"
+          type="date"
+          value={ownerBirthDate}
+          onChange={(e) => setOwnerBirthDate(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="owner-phone">電話番号（任意）</Label>
+        <Input
+          id="owner-phone"
+          type="tel"
+          value={ownerPhone}
+          onChange={(e) => setOwnerPhone(e.target.value)}
+          placeholder="09012345678"
         />
       </div>
 

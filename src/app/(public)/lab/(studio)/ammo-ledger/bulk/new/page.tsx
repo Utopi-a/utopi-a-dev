@@ -1,50 +1,46 @@
 import Link from "next/link";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { buildCounterpartyPickerData } from "@/features/ammo-ledger/catalog/build-counterparty-picker-data/build-counterparty-picker-data";
 import { buildRangePickerData } from "@/features/ammo-ledger/catalog/build-range-picker-data/build-range-picker-data";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
-import { ConsumeForm } from "@/features/ammo-ledger/components/consume-form/consume-form";
+import { BulkEntryForm } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-form";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
-import { getDraftTransaction } from "@/features/ammo-ledger/transactions/get-draft/get-draft";
+import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 
-type PageProps = {
-  searchParams: Promise<{ draft?: string }>;
-};
-
-export default async function ConsumeNewPage({ searchParams }: PageProps) {
+export default async function BulkNewPage() {
   const user = await requireAmmoUser();
-  const { draft: draftId } = await searchParams;
 
-  const [guns, ammoTypes, rangePickerData, draft] = await Promise.all([
+  const [guns, ammoTypes, rangePickerData, counterpartyPickerData] = await Promise.all([
     listGuns({ userId: user.id }),
     listAmmoTypes({ userId: user.id }),
     buildRangePickerData({ userId: user.id }),
-    draftId ? getDraftTransaction({ userId: user.id, draftId }) : Promise.resolve(null),
+    buildCounterpartyPickerData({ userId: user.id }),
   ]);
 
-  const initialValues = draft
-    ? {
-        occurredOn: draft.occurredOn,
-        ammoTypeId: draft.ammoTypeId ?? undefined,
-        boxCount: draft.boxCount,
-        looseRounds: draft.looseRounds,
-      }
-    : undefined;
+  const defaultCounterpartyId =
+    counterpartyPickerData.recent[0]?.id ??
+    counterpartyPickerData.registered[0]?.id ??
+    manualCounterpartyId;
 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">消費した</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">まとめて追加</h1>
         <p className="text-sm text-muted-foreground">
-          箱数・バラで入力できます。帳簿には消費の発数のみ記録されます。
+          消費と譲り受けを混ぜて、日付・弾・銃・用途の違う記録を一度に登録できます。
         </p>
         <p className="text-sm text-muted-foreground">
-          複数の記録を一度に入力する場合は
-          <Link href="/lab/ammo-ledger/bulk/new" className="underline">
-            まとめて追加
+          1件だけ記録する場合は
+          <Link href="/lab/ammo-ledger/consume/new" className="underline">
+            消費した
           </Link>
-          をご利用ください。
+          や
+          <Link href="/lab/ammo-ledger/inflow/new" className="underline">
+            譲り受けた
+          </Link>
+          から入力してください。
         </p>
       </div>
       <AmmoLedgerNav />
@@ -55,15 +51,15 @@ export default async function ConsumeNewPage({ searchParams }: PageProps) {
             <Link href="/lab/ammo-ledger/settings" className="underline">
               設定
             </Link>
-            から登録してください。射撃場は入力時に全国一覧から選べます。
+            から登録してください。
           </p>
         ) : (
-          <ConsumeForm
-            key={draftId ?? "new"}
+          <BulkEntryForm
             guns={guns}
             ammoTypes={ammoTypes}
             rangePickerData={rangePickerData}
-            initialValues={initialValues}
+            counterpartyPickerData={counterpartyPickerData}
+            defaultCounterpartyId={defaultCounterpartyId}
           />
         )}
       </AmmoLedgerPanel>

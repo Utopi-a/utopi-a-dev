@@ -62,6 +62,13 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
         <p className="text-sm text-muted-foreground">
           譲り受けが主な操作です。廃棄・譲渡はタブから切り替えられます。
         </p>
+        <p className="text-sm text-muted-foreground">
+          複数の記録を一度に入力する場合は
+          <Link href="/lab/ammo-ledger/bulk/new" className="underline">
+            まとめて追加
+          </Link>
+          をご利用ください。
+        </p>
       </div>
       <AmmoLedgerNav />
       <AmmoLedgerPanel>

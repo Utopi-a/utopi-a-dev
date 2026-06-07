@@ -29,6 +29,11 @@ export function AmmoLedgerHomeView() {
             description="購入・譲受。廃棄・譲渡もここから"
             variant="primary"
           />
+          <AmmoLedgerActionTile
+            href="/lab/ammo-ledger/bulk/new"
+            label="まとめて追加"
+            description="消費・譲り受けを混ぜて、複数の記録を一度に入力"
+          />
         </div>
       </section>
 

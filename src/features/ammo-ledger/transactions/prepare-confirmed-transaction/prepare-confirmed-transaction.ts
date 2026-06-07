@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { ammoCounterparty, ammoGun, ammoRange, ammoType } from "@/db/schema/ammo-ledger";
 import { resolveCounterparty } from "@/features/ammo-ledger/master/resolve-counterparty/resolve-counterparty";
-import type { TransactionInput } from "@/features/ammo-ledger/schema/transaction-schema";
+import type { LedgerTransactionInput } from "@/features/ammo-ledger/schema/transaction-schema";
 import { isLedgerInputKind } from "@/features/ammo-ledger/schema/transaction-schema";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import type { NormalizedLedgerEntry } from "@/features/ammo-ledger/transactions/normalize-transaction/normalize-transaction";
@@ -10,7 +10,7 @@ import { normalizeTransaction } from "@/features/ammo-ledger/transactions/normal
 import { validateLedgerEntry } from "@/features/ammo-ledger/transactions/validate-ledger-entry/validate-ledger-entry";
 
 export type PreparedConfirmedTransaction = {
-  input: TransactionInput;
+  input: LedgerTransactionInput;
   ammoTypeRow: typeof ammoType.$inferSelect;
   gunRow?: typeof ammoGun.$inferSelect;
   rangeRow?: typeof ammoRange.$inferSelect;
@@ -24,7 +24,7 @@ export async function prepareConfirmedTransaction({
   input,
 }: {
   userId: string;
-  input: TransactionInput;
+  input: LedgerTransactionInput;
 }): Promise<{ ok: true; prepared: PreparedConfirmedTransaction } | { ok: false; error: string }> {
   if (!isLedgerInputKind(input.inputKind)) {
     return { ok: false, error: "この入力種別は保存できません" };

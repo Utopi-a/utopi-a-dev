@@ -1,4 +1,5 @@
 export type FieldAlign = "left" | "center" | "right";
+export type FieldVerticalAlign = "top" | "center" | "bottom";
 export type OverlayFieldVariant = "text" | "checkbox";
 
 export type OverlayFieldDef = {
@@ -10,6 +11,7 @@ export type OverlayFieldDef = {
   height?: number;
   fontSize: number;
   align?: FieldAlign;
+  verticalAlign?: FieldVerticalAlign;
   variant?: OverlayFieldVariant;
   /** false のとき base fontSize のまま。デフォルトは width があるフィールドで自動調整 */
   fitText?: boolean;

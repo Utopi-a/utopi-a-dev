@@ -4,7 +4,7 @@ import {
   shouldAutoFitOverlayField,
 } from "../../fit-text-to-box/resolve-overlay-field-box";
 import type { OverlayFieldDef } from "../../form-template/form-template-types";
-import { buildOverlayMmStyle } from "./build-overlay-mm-style";
+import { buildOverlayMmStyle, buildOverlayVerticalLayoutStyle } from "./build-overlay-mm-style";
 
 type OverlayFieldProps = {
   field: OverlayFieldDef;
@@ -48,10 +48,23 @@ export function OverlayField({ field, value, pageWidthMm, pageHeightMm }: Overla
           heightMm={height}
           baseFontSizeMm={field.fontSize}
           align={field.align}
+          verticalAlign={field.verticalAlign}
           singleLine={singleLine}
         />
       ) : (
-        value
+        <span style={buildOverlayVerticalLayoutStyle({ verticalAlign: field.verticalAlign })}>
+          <span
+            className="block max-h-full w-full shrink-0 overflow-hidden"
+            style={{
+              fontSize: `${field.fontSize}mm`,
+              lineHeight: 1.2,
+              textAlign: field.align ?? "left",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {value}
+          </span>
+        </span>
       )}
     </span>
   );

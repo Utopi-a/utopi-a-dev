@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { FieldAlign } from "../../form-template/form-template-types";
+import type { FieldAlign, FieldVerticalAlign } from "../../form-template/form-template-types";
 
 function mmToWidthPercent({ value, pageWidthMm }: { value: number; pageWidthMm: number }): string {
   return `${(value / pageWidthMm) * 100}%`;
@@ -41,5 +41,23 @@ export function buildOverlayMmStyle({
     height: height ? mmToHeightPercent({ value: height, pageHeightMm }) : undefined,
     fontSize: `${fontSize}mm`,
     textAlign: align ?? "left",
+  };
+}
+
+export function buildOverlayVerticalLayoutStyle({
+  verticalAlign,
+}: {
+  verticalAlign?: FieldVerticalAlign;
+}): CSSProperties {
+  const justifyContent =
+    verticalAlign === "center" ? "center" : verticalAlign === "bottom" ? "flex-end" : "flex-start";
+
+  return {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent,
+    width: "100%",
+    height: "100%",
+    minHeight: 0,
   };
 }

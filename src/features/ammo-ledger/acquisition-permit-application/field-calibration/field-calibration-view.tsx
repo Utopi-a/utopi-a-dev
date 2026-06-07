@@ -55,6 +55,7 @@ import { serializeOverlayFields } from "@/features/ammo-ledger/acquisition-permi
 import { useCalibrationHistory } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/use-calibration-history";
 import type {
   FieldAlign,
+  FieldVerticalAlign,
   OverlayFieldDef,
   OverlayFieldVariant,
 } from "@/features/ammo-ledger/acquisition-permit-application/form-template/form-template-types";
@@ -212,6 +213,34 @@ export function FieldCalibrationView() {
     [replaceFields],
   );
 
+  const updateSelectedFields = useCallback(
+    ({
+      patch,
+      recordHistory = true,
+    }: {
+      patch: Partial<OverlayFieldDef> | ((field: OverlayFieldDef) => Partial<OverlayFieldDef>);
+      recordHistory?: boolean;
+    }) => {
+      const selectedIds = new Set(selectedFieldIdsRef.current);
+      if (selectedIds.size === 0) {
+        return;
+      }
+
+      replaceFields({
+        updater: (current) =>
+          current.map((field) => {
+            if (!selectedIds.has(field.id)) {
+              return field;
+            }
+            const resolvedPatch = typeof patch === "function" ? patch(field) : patch;
+            return { ...field, ...resolvedPatch };
+          }),
+        recordHistory,
+      });
+    },
+    [replaceFields],
+  );
+
   const nudgeField = useCallback(
     ({ id, dx, dy }: { id: string; dx: number; dy: number }) => {
       const moveIds = resolveGroupMoveIds({
@@ -320,13 +349,12 @@ export function FieldCalibrationView() {
     }
 
     if (value === "" && (key === "width" || key === "height")) {
-      updateField({ id: selectedField.id, patch: { [key]: undefined }, recordHistory: false });
+      updateSelectedFields({ patch: { [key]: undefined }, recordHistory: false });
       return;
     }
 
     const parsed = parseNumberInput({ value, fallback: selectedField[key] ?? 0 });
-    updateField({
-      id: selectedField.id,
+    updateSelectedFields({
       patch: { [key]: roundMm({ value: parsed }) },
       recordHistory: false,
     });
@@ -667,7 +695,9 @@ export function FieldCalibrationView() {
             <>
               <p className="break-all text-xs text-muted-foreground">
                 {selectedField.id}
-                {selectedFieldIds.length > 1 ? `（他 ${selectedFieldIds.length - 1} 件）` : ""}
+                {selectedFieldIds.length > 1
+                  ? `（他 ${selectedFieldIds.length - 1} 件 · 変更はすべてに反映）`
+                  : ""}
               </p>
 
               <div className="grid grid-cols-2 gap-1.5">
@@ -696,14 +726,13 @@ export function FieldCalibrationView() {
                     size="sm"
                     className="h-8 px-2"
                     onClick={() =>
-                      updateField({
-                        id: selectedField.id,
-                        patch: {
+                      updateSelectedFields({
+                        patch: (field) => ({
                           fontSize: stepFontSizePt({
-                            fontSizeMm: selectedField.fontSize,
+                            fontSizeMm: field.fontSize,
                             deltaPt: -0.5,
                           }),
-                        },
+                        }),
                       })
                     }
                   >
@@ -721,8 +750,7 @@ export function FieldCalibrationView() {
                         value: event.target.value,
                         fallback: ptFromMm({ mm: selectedField.fontSize }),
                       });
-                      updateField({
-                        id: selectedField.id,
+                      updateSelectedFields({
                         patch: { fontSize: mmFromPt({ pt }) },
                       });
                     }}
@@ -733,14 +761,13 @@ export function FieldCalibrationView() {
                     size="sm"
                     className="h-8 px-2"
                     onClick={() =>
-                      updateField({
-                        id: selectedField.id,
-                        patch: {
+                      updateSelectedFields({
+                        patch: (field) => ({
                           fontSize: stepFontSizePt({
-                            fontSizeMm: selectedField.fontSize,
+                            fontSizeMm: field.fontSize,
                             deltaPt: 0.5,
                           }),
-                        },
+                        }),
                       })
                     }
                   >
@@ -753,21 +780,41 @@ export function FieldCalibrationView() {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="field-align">align</Label>
+                <Label htmlFor="field-align">横位置（align）</Label>
                 <select
                   id="field-align"
                   className="w-full rounded-md border bg-background px-2 py-1.5 text-sm"
                   value={selectedField.align ?? "left"}
                   onChange={(event) =>
-                    updateField({
-                      id: selectedField.id,
+                    updateSelectedFields({
                       patch: { align: event.target.value as FieldAlign },
                     })
                   }
                 >
-                  <option value="left">left</option>
-                  <option value="center">center</option>
-                  <option value="right">right</option>
+                  <option value="left">左</option>
+                  <option value="center">中央</option>
+                  <option value="right">右</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="field-vertical-align">縦位置（verticalAlign）</Label>
+                <select
+                  id="field-vertical-align"
+                  className="w-full rounded-md border bg-background px-2 py-1.5 text-sm"
+                  value={selectedField.verticalAlign ?? "top"}
+                  onChange={(event) => {
+                    const verticalAlign = event.target.value as FieldVerticalAlign;
+                    updateSelectedFields({
+                      patch: {
+                        verticalAlign: verticalAlign === "top" ? undefined : verticalAlign,
+                      },
+                    });
+                  }}
+                >
+                  <option value="top">上</option>
+                  <option value="center">中央</option>
+                  <option value="bottom">下</option>
                 </select>
               </div>
 
@@ -793,8 +840,7 @@ export function FieldCalibrationView() {
                   className="w-full rounded-md border bg-background px-2 py-1.5 text-sm"
                   value={selectedField.fitText === false ? "off" : "on"}
                   onChange={(event) =>
-                    updateField({
-                      id: selectedField.id,
+                    updateSelectedFields({
                       patch: { fitText: event.target.value === "on" },
                     })
                   }
@@ -812,8 +858,7 @@ export function FieldCalibrationView() {
                   value={selectedField.variant ?? "text"}
                   onChange={(event) => {
                     const variant = event.target.value as OverlayFieldVariant;
-                    updateField({
-                      id: selectedField.id,
+                    updateSelectedFields({
                       patch: { variant: variant === "text" ? undefined : variant },
                     });
                   }}

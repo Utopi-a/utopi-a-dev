@@ -22,6 +22,9 @@ function formatField(field: OverlayFieldDef): string {
   if (field.align) {
     parts.push(`align: "${field.align}"`);
   }
+  if (field.verticalAlign) {
+    parts.push(`verticalAlign: "${field.verticalAlign}"`);
+  }
   if (field.variant) {
     parts.push(`variant: "${field.variant}"`);
   }

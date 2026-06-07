@@ -2,7 +2,10 @@
 
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { cn } from "@/lib/cn";
-import { buildOverlayMmStyle } from "../documents/overlay-field/build-overlay-mm-style";
+import {
+  buildOverlayMmStyle,
+  buildOverlayVerticalLayoutStyle,
+} from "../documents/overlay-field/build-overlay-mm-style";
 import { AutoFitOverlayText } from "../fit-text-to-box/auto-fit-overlay-text";
 import {
   resolveOverlayFieldBox,
@@ -172,25 +175,28 @@ export function CalibrationFieldOverlay({
           heightMm={height}
           baseFontSizeMm={field.fontSize}
           align={field.align}
+          verticalAlign={field.verticalAlign}
           singleLine={singleLine}
           className={cn(!value && "text-orange-700/70")}
         />
       ) : (
-        <span
-          className={cn(
-            "pointer-events-none block h-full w-full overflow-hidden text-black",
-            isCheckbox && "flex items-center justify-center leading-none",
-            !value && "text-orange-700/70",
-          )}
-          style={{
-            fontSize: `${field.fontSize}mm`,
-            fontFamily: '"Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif',
-            lineHeight: isCheckbox ? 1 : 1.2,
-            textAlign: field.align ?? "left",
-            whiteSpace: "pre-wrap",
-          }}
-        >
-          {displayValue}
+        <span style={buildOverlayVerticalLayoutStyle({ verticalAlign: field.verticalAlign })}>
+          <span
+            className={cn(
+              "pointer-events-none block max-h-full w-full shrink-0 overflow-hidden text-black",
+              isCheckbox && "flex items-center justify-center leading-none",
+              !value && "text-orange-700/70",
+            )}
+            style={{
+              fontSize: `${field.fontSize}mm`,
+              fontFamily: '"Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif',
+              lineHeight: isCheckbox ? 1 : 1.2,
+              textAlign: field.align ?? "left",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {displayValue}
+          </span>
         </span>
       )}
 

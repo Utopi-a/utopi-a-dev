@@ -39,6 +39,13 @@ export default async function ConsumeNewPage({ searchParams }: PageProps) {
         <p className="text-sm text-muted-foreground">
           箱数・バラで入力できます。帳簿には消費の発数のみ記録されます。
         </p>
+        <p className="text-sm text-muted-foreground">
+          複数の記録を一度に入力する場合は
+          <Link href="/lab/ammo-ledger/bulk/new" className="underline">
+            まとめて追加
+          </Link>
+          をご利用ください。
+        </p>
       </div>
       <AmmoLedgerNav />
       <AmmoLedgerPanel>

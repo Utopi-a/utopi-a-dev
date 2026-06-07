@@ -1,16 +1,19 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/features/auth/auth-client";
 import { toAuthErrorMessage } from "@/features/auth/auth-error-message/auth-error-message";
 import type { SocialProviderId } from "@/features/auth/social-sign-in/social-provider-ui";
+import {
+  SocialBrandIcon,
+  type SocialBrandIconId,
+} from "@/features/portfolio/social-icons/social-brand-icon";
 
 type SocialProviderButtonConfig = {
   id: SocialProviderId;
   label: string;
-  iconSrc?: string;
+  icon?: SocialBrandIconId;
 };
 
 type SocialSignInButtonsProps = {
@@ -53,9 +56,7 @@ export function SocialSignInButtons({ callbackURL, providers }: SocialSignInButt
             disabled={pendingId !== null}
             onClick={() => handleClick({ providerId: provider.id })}
           >
-            {provider.iconSrc ? (
-              <Image src={provider.iconSrc} alt="" width={18} height={18} className="size-4" />
-            ) : null}
+            {provider.icon ? <SocialBrandIcon icon={provider.icon} className="size-4" /> : null}
             {pendingId === provider.id
               ? `${provider.label} に接続中…`
               : `${provider.label} で続ける`}

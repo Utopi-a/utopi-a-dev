@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { socialLinks } from "@/features/portfolio/site-config";
+import { SocialBrandIcon } from "@/features/portfolio/social-icons/social-brand-icon";
 import { cn } from "@/lib/cn";
 
 type SocialLinksProps = {
@@ -15,7 +15,7 @@ export function SocialLinks({ size = "md", className }: SocialLinksProps) {
 
   return (
     <div className={cn("flex items-center gap-2 sm:gap-3", className)}>
-      {socialLinks.map(({ href, label, iconSrc }) => (
+      {socialLinks.map(({ href, label, icon }) => (
         <Link
           key={href}
           href={href}
@@ -28,7 +28,7 @@ export function SocialLinks({ size = "md", className }: SocialLinksProps) {
             buttonClass,
           )}
         >
-          <Image src={iconSrc} alt="" width={24} height={24} className={iconClass} />
+          <SocialBrandIcon icon={icon} className={iconClass} />
         </Link>
       ))}
     </div>

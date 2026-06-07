@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getSession } from "@/features/auth/get-session/get-session";
 import { SignOutButton } from "@/features/auth/sign-out-button/sign-out-button";
 import { cn } from "@/lib/cn";
+import { ThemeToggle } from "@/lib/theme/theme-toggle";
 
 export async function LabStudioShell({
   children,
@@ -29,6 +30,7 @@ export async function LabStudioShell({
               {session.user.email}
             </span>
           ) : null}
+          <ThemeToggle />
           <SignOutButton variant="outline" className="h-8" />
         </div>
       </div>

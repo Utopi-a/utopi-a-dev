@@ -23,7 +23,7 @@ export function AmmoLedgerActionTile({
   const { navigate: navigateClientShell } = useAmmoLedgerClientNav();
 
   const className = cn(
-    "group flex min-h-[4.5rem] flex-col gap-1 rounded-xl border px-4 py-4 transition-colors active:scale-[0.99]",
+    "group flex min-h-[4.5rem] w-full flex-col gap-1 rounded-xl border px-4 py-4 text-left transition-colors active:scale-[0.99]",
     variant === "primary"
       ? "border-primary/25 bg-primary/5 hover:border-primary/40 hover:bg-primary/10"
       : "border-border/60 bg-card/40 hover:border-border hover:bg-muted/30",

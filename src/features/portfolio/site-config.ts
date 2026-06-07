@@ -1,3 +1,5 @@
+import type { SocialBrandIconId } from "@/features/portfolio/social-icons/social-brand-icon";
+
 export const siteProfile = {
   name: "ゆーとぴあ",
   avatarSrc: "/p0zKKXuf_400x400.jpg",
@@ -11,18 +13,22 @@ export const publicNavItems = [
   { href: "/lab", label: "Lab" },
 ] as const;
 
-export const socialLinks = [
+export const socialLinks: ReadonlyArray<{
+  href: string;
+  label: string;
+  icon: SocialBrandIconId;
+}> = [
   {
     href: "https://twitter.com/ITF_biol21",
     label: "X (Twitter)",
-    iconSrc: "/XIcon.png",
+    icon: "x",
   },
   {
     href: "https://github.com/Utopi-a",
     label: "GitHub",
-    iconSrc: "/mark-github.svg",
+    icon: "github",
   },
-] as const;
+];
 
 export const exploreLinks = [
   { href: "/about", label: "About" },

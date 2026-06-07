@@ -3,11 +3,15 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { ammoCounterparty } from "@/db/schema/ammo-ledger";
-import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { counterpartySchema } from "@/features/ammo-ledger/schema/counterparty-schema";
 
 export async function updateCounterpartyAction({ id, input }: { id: string; input: unknown }) {
-  const user = await requireAmmoUser();
+  const userResult = await resolveAmmoUserForMutation();
+  if (!userResult.ok) {
+    return userResult;
+  }
+  const user = userResult.user;
   const parsed = counterpartySchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false as const, error: "入力内容を確認してください" };

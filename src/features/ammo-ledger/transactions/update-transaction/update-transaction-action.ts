@@ -3,7 +3,7 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { ammoLedgerEntry, ammoTransaction } from "@/db/schema/ammo-ledger";
-import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import { mapCategoryToInputKind } from "@/features/ammo-ledger/schema/map-category-to-input-kind";
 import { transactionInputSchema } from "@/features/ammo-ledger/schema/transaction-schema";
@@ -16,7 +16,11 @@ export async function updateTransactionAction({
 }: {
   ledgerEntryId: string;
 } & Record<string, unknown>) {
-  const user = await requireAmmoUser();
+  const userResult = await resolveAmmoUserForMutation();
+  if (!userResult.ok) {
+    return userResult;
+  }
+  const user = userResult.user;
   const parsed = transactionInputSchema.safeParse(input);
 
   if (!parsed.success) {

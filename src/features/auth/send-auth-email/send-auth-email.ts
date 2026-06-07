@@ -10,9 +10,6 @@ export async function sendAuthEmail({ to, subject, text, html }: SendAuthEmailPa
   const from = process.env.RESEND_FROM_EMAIL;
 
   if (!apiKey || !from) {
-    if (process.env.NODE_ENV === "development") {
-      console.info(`[auth-email] ${subject} → ${to}\n${text}`);
-    }
     return;
   }
 

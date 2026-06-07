@@ -3,10 +3,14 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { ammoRange } from "@/db/schema/ammo-ledger";
-import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
 
 export async function deleteRangeAction({ id }: { id: string }) {
-  const user = await requireAmmoUser();
+  const userResult = await resolveAmmoUserForMutation();
+  if (!userResult.ok) {
+    return userResult;
+  }
+  const user = userResult.user;
   const result = await db
     .delete(ammoRange)
     .where(and(eq(ammoRange.id, id), eq(ammoRange.userId, user.id)));

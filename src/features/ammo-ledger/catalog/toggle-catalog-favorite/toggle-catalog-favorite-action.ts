@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { ammoCatalogFavorite } from "@/db/schema/ammo-ledger";
-import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
 import type { CatalogKind } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
 import { catalogKinds } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
 
@@ -19,7 +19,11 @@ export async function toggleCatalogFavoriteAction({
     return { ok: false as const, error: "不正なカタログ種別です" };
   }
 
-  const user = await requireAmmoUser();
+  const userResult = await resolveAmmoUserForMutation();
+  if (!userResult.ok) {
+    return userResult;
+  }
+  const user = userResult.user;
 
   const [existing] = await db
     .select()

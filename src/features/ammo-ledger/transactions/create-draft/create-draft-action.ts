@@ -3,7 +3,7 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { ammoLedgerEntry, ammoTransaction, ammoType } from "@/db/schema/ammo-ledger";
-import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { validateDraftFromDiff } from "@/features/ammo-ledger/inventory/validate-draft-from-diff/validate-draft-from-diff";
 import { computeStockByAmmoType } from "@/features/ammo-ledger/ledger/compute-stock/compute-stock";
 import type { InputKind } from "@/features/ammo-ledger/schema/input-kind";
@@ -21,7 +21,11 @@ export async function createDraftFromDiffAction({
   quantity: number;
   boxCount?: number;
 }) {
-  const user = await requireAmmoUser();
+  const userResult = await resolveAmmoUserForMutation();
+  if (!userResult.ok) {
+    return userResult;
+  }
+  const user = userResult.user;
 
   const [ammoTypeRow] = await db
     .select()

@@ -2,12 +2,16 @@
 
 import { db } from "@/db";
 import { ammoType } from "@/db/schema/ammo-ledger";
-import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { ammoTypeSchema } from "@/features/ammo-ledger/schema/ammo-type-schema";
 import { buildAmmoTypeLabel } from "@/features/ammo-ledger/schema/build-ammo-type-label";
 
 export async function createAmmoTypeAction(input: unknown) {
-  const user = await requireAmmoUser();
+  const userResult = await resolveAmmoUserForMutation();
+  if (!userResult.ok) {
+    return userResult;
+  }
+  const user = userResult.user;
   const parsed = ammoTypeSchema.safeParse(input);
 
   if (!parsed.success) {

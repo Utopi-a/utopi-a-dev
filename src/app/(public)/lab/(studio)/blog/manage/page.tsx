@@ -1,4 +1,7 @@
-export default function LabBlogManagePage() {
+import { requireSession } from "@/features/auth/require-session/require-session";
+
+export default async function LabBlogManagePage() {
+  await requireSession();
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold tracking-tight">ブログ管理</h1>

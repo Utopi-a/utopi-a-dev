@@ -69,6 +69,55 @@ describe("buildLedgerDisplayRows", () => {
     expect(rows[1].kind).toBe("entry");
   });
 
+  it("同日の記録は許可残数失効より前に並べる", () => {
+    const rows = buildLedgerDisplayRows({
+      purpose: "shooting",
+      permits: [permit],
+      permitEvents: [
+        {
+          id: "pe-expiry",
+          userId: "u1",
+          permitId: "permit-1",
+          purpose: "shooting",
+          eventKind: "expiry",
+          occurredOn: "2026-12-31",
+          quantity: 0,
+          memo: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      entries: [
+        {
+          id: "e1",
+          userId: "u1",
+          transactionId: "t1",
+          category: "consume",
+          purpose: "shooting",
+          occurredOn: "2026-12-31",
+          ammoTypeId: "ammo-1",
+          ammoTypeName: "クレー",
+          quantity: 50,
+          location: "射撃場",
+          counterpartyName: null,
+          counterpartyAddress: null,
+          gunId: null,
+          gunName: null,
+          gunNumber: null,
+          gunPermitNumber: null,
+          voidedAt: null,
+          dayOrder: 0,
+          createdAt: new Date("2026-12-31T00:00:00.000Z"),
+          updatedAt: new Date(),
+        },
+      ],
+    });
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0].kind).toBe("entry");
+    expect(rows[1].kind).toBe("permit_expiry");
+  });
+
   it("許可残数失効行を帳簿に含める", () => {
     const rows = buildLedgerDisplayRows({
       purpose: "shooting",

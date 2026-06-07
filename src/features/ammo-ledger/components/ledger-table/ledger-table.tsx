@@ -1,14 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { ammoLedgerEntry } from "@/db/schema/ammo-ledger";
 import { LedgerEntryActionsSheet } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-actions-sheet";
 import { LedgerEntryCard } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-card";
-import { LedgerCategoryBadge } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
+import {
+  LedgerCategoryBadge,
+  PermitCarryoverBadge,
+} from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
+import {
+  buildPermitCarryoverLabel,
+  isDisplayRowSelectable,
+  type LedgerDisplayRow,
+  resolveDisplayRowId,
+  resolveDisplayRowPermitBalance,
+} from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
+import {
+  formatAmmoQuantity,
+  formatPermitBalance,
+  showsAmmoQuantity,
+} from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { cn } from "@/lib/cn";
 
 type LedgerTableProps = {
-  entries: (typeof ammoLedgerEntry.$inferSelect)[];
+  rows: LedgerDisplayRow[];
   permitBalances?: Map<string, number>;
   homeStorageExceededEntryIds?: string[];
   onVoided?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
@@ -27,33 +42,40 @@ const ledgerTableColumnClass = {
 } as const;
 
 export function LedgerTable({
-  entries,
+  rows,
   permitBalances,
   homeStorageExceededEntryIds = [],
   onVoided,
   onVoidFailed,
 }: LedgerTableProps) {
-  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-  const exceededSet = useMemo(
-    () => new Set(homeStorageExceededEntryIds),
-    [homeStorageExceededEntryIds],
+  const [selectedEntry, setSelectedEntry] = useState<typeof ammoLedgerEntry.$inferSelect | null>(
+    null,
   );
-  const selectedEntry = entries.find((entry) => entry.id === selectedEntryId) ?? null;
+  const [selectedPermitBalance, setSelectedPermitBalance] = useState<number | undefined>(undefined);
+  const exceededSet = new Set(homeStorageExceededEntryIds);
 
-  function handleSelectEntry({ ledgerEntryId }: { ledgerEntryId: string }) {
-    setSelectedEntryId(ledgerEntryId);
+  function handleSelectEntry({
+    entry,
+    permitBalance,
+  }: {
+    entry: typeof ammoLedgerEntry.$inferSelect;
+    permitBalance?: number;
+  }) {
+    setSelectedEntry(entry);
+    setSelectedPermitBalance(permitBalance);
   }
 
   function handleSheetOpenChange({ open }: { open: boolean }) {
     if (!open) {
-      setSelectedEntryId(null);
+      setSelectedEntry(null);
+      setSelectedPermitBalance(undefined);
     }
   }
 
-  if (entries.length === 0) {
+  if (rows.length === 0) {
     return (
       <p className="py-10 text-center text-sm text-muted-foreground">
-        まだ記録がありません。消費や譲り受けを入力するとここに表示されます。
+        まだ記録がありません。年初繰越や消費・譲り受けを入力するとここに表示されます。
       </p>
     );
   }
@@ -61,12 +83,12 @@ export function LedgerTable({
   return (
     <>
       <div className="space-y-2 md:hidden">
-        {entries.map((entry) => (
+        {rows.map((row) => (
           <LedgerEntryCard
-            key={entry.id}
-            entry={entry}
-            permitBalance={permitBalances?.get(entry.id)}
-            isHomeStorageExceeded={exceededSet.has(entry.id)}
+            key={resolveDisplayRowId({ row })}
+            row={row}
+            permitBalance={resolveDisplayRowPermitBalance({ row, permitBalances })}
+            isHomeStorageExceeded={row.kind === "entry" ? exceededSet.has(row.entry.id) : false}
             onSelect={handleSelectEntry}
           />
         ))}
@@ -90,99 +112,170 @@ export function LedgerTable({
               </tr>
             </thead>
             <tbody>
-              {entries.map((entry) => (
-                <tr
-                  key={entry.id}
-                  tabIndex={0}
-                  onClick={() => handleSelectEntry({ ledgerEntryId: entry.id })}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      handleSelectEntry({ ledgerEntryId: entry.id });
+              {rows.map((row) => {
+                const permitBalance = resolveDisplayRowPermitBalance({ row, permitBalances });
+                const selectable = isDisplayRowSelectable({ row });
+
+                if (row.kind === "permit_carryover") {
+                  return (
+                    <tr
+                      key={row.id}
+                      className="border-b border-border/25 bg-emerald-500/5 last:border-0"
+                    >
+                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
+                        <span className="whitespace-nowrap tabular-nums">{row.occurredOn}</span>
+                      </td>
+                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.category)}>
+                        <PermitCarryoverBadge />
+                      </td>
+                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.ammoType)}>
+                        <span className="font-medium">{buildPermitCarryoverLabel()}</span>
+                      </td>
+                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.quantity)}>
+                        <span className="block text-muted-foreground">—</span>
+                      </td>
+                      <td
+                        className={cn("px-3 py-3 align-top", ledgerTableColumnClass.permitBalance)}
+                      >
+                        <span className="block font-medium whitespace-nowrap tabular-nums">
+                          {formatPermitBalance({ balance: row.quantity })}
+                        </span>
+                      </td>
+                      <td
+                        className={cn(
+                          "px-3 py-3 align-top text-muted-foreground",
+                          ledgerTableColumnClass.location,
+                        )}
+                      >
+                        —
+                      </td>
+                      <td
+                        className={cn(
+                          "px-3 py-3 align-top text-muted-foreground",
+                          ledgerTableColumnClass.counterparty,
+                        )}
+                      >
+                        —
+                      </td>
+                      <td
+                        className={cn(
+                          "px-3 py-3 align-top text-muted-foreground",
+                          ledgerTableColumnClass.gun,
+                        )}
+                      >
+                        —
+                      </td>
+                    </tr>
+                  );
+                }
+
+                const entry = row.entry;
+
+                return (
+                  <tr
+                    key={entry.id}
+                    tabIndex={selectable ? 0 : -1}
+                    onClick={() =>
+                      selectable ? handleSelectEntry({ entry, permitBalance }) : undefined
                     }
-                  }}
-                  className={cn(
-                    "cursor-pointer border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20",
-                    exceededSet.has(entry.id) && "bg-amber-500/5",
-                  )}
-                >
-                  <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
-                    <span className="whitespace-nowrap tabular-nums">{entry.occurredOn}</span>
-                  </td>
-                  <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.category)}>
-                    <LedgerCategoryBadge category={entry.category} />
-                  </td>
-                  <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.ammoType)}>
-                    <span className="font-medium">{entry.ammoTypeName}</span>
-                  </td>
-                  <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.quantity)}>
-                    <span className="block font-medium whitespace-nowrap tabular-nums">
-                      {entry.quantity}発
-                    </span>
-                  </td>
-                  <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.permitBalance)}>
-                    <span className="block whitespace-nowrap text-muted-foreground tabular-nums">
-                      {permitBalances?.has(entry.id) ? `${permitBalances.get(entry.id)}発` : "—"}
-                    </span>
-                  </td>
-                  <td
+                    onKeyDown={(event) => {
+                      if (!selectable) {
+                        return;
+                      }
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleSelectEntry({ entry, permitBalance });
+                      }
+                    }}
                     className={cn(
-                      "px-3 py-3 align-top text-muted-foreground",
-                      ledgerTableColumnClass.location,
+                      selectable &&
+                        "cursor-pointer border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20",
+                      !selectable && "border-b border-border/25 last:border-0",
+                      exceededSet.has(entry.id) && "bg-amber-500/5",
                     )}
                   >
-                    {entry.location ?? "—"}
-                  </td>
-                  <td
-                    className={cn(
-                      "px-3 py-3 align-top text-muted-foreground",
-                      ledgerTableColumnClass.counterparty,
-                    )}
-                  >
-                    {entry.counterpartyName ? (
-                      <span className="block max-w-[12rem] leading-snug">
-                        {entry.counterpartyName}
-                        {entry.counterpartyAddress ? (
-                          <span className="mt-0.5 block text-xs">{entry.counterpartyAddress}</span>
-                        ) : null}
+                    <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
+                      <span className="whitespace-nowrap tabular-nums">{entry.occurredOn}</span>
+                    </td>
+                    <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.category)}>
+                      <LedgerCategoryBadge category={entry.category} />
+                    </td>
+                    <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.ammoType)}>
+                      <span className="font-medium">{entry.ammoTypeName}</span>
+                    </td>
+                    <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.quantity)}>
+                      <span className="block font-medium whitespace-nowrap tabular-nums">
+                        {showsAmmoQuantity({ row })
+                          ? formatAmmoQuantity({ quantity: entry.quantity })
+                          : "—"}
                       </span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td
-                    className={cn(
-                      "px-3 py-3 align-top text-muted-foreground",
-                      ledgerTableColumnClass.gun,
-                    )}
-                  >
-                    {entry.gunName ? (
-                      <span className="block leading-snug">
-                        {entry.gunName}
-                        {entry.gunPermitNumber ? (
-                          <span className="mt-0.5 block text-xs">{entry.gunPermitNumber}</span>
-                        ) : null}
+                    </td>
+                    <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.permitBalance)}>
+                      <span className="block whitespace-nowrap text-muted-foreground tabular-nums">
+                        {permitBalance !== undefined
+                          ? formatPermitBalance({ balance: permitBalance })
+                          : "—"}
                       </span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td
+                      className={cn(
+                        "px-3 py-3 align-top text-muted-foreground",
+                        ledgerTableColumnClass.location,
+                      )}
+                    >
+                      {entry.location ?? "—"}
+                    </td>
+                    <td
+                      className={cn(
+                        "px-3 py-3 align-top text-muted-foreground",
+                        ledgerTableColumnClass.counterparty,
+                      )}
+                    >
+                      {entry.counterpartyName ? (
+                        <span className="block max-w-[12rem] leading-snug">
+                          {entry.counterpartyName}
+                          {entry.counterpartyAddress ? (
+                            <span className="mt-0.5 block text-xs">
+                              {entry.counterpartyAddress}
+                            </span>
+                          ) : null}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td
+                      className={cn(
+                        "px-3 py-3 align-top text-muted-foreground",
+                        ledgerTableColumnClass.gun,
+                      )}
+                    >
+                      {entry.gunName ? (
+                        <span className="block leading-snug">
+                          {entry.gunName}
+                          {entry.gunPermitNumber ? (
+                            <span className="mt-0.5 block text-xs">{entry.gunPermitNumber}</span>
+                          ) : null}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">行をクリックすると編集・取消ができます</p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          記録行をクリックすると編集・取消ができます。琥珀色の行はその時点で自宅保管の目安（800発）を超えています。薄緑の行は許可残数の繰越です。
+        </p>
       </div>
 
       <LedgerEntryActionsSheet
         entry={selectedEntry}
-        permitBalance={
-          selectedEntry && permitBalances?.has(selectedEntry.id)
-            ? permitBalances.get(selectedEntry.id)
-            : undefined
-        }
-        open={selectedEntryId !== null}
+        permitBalance={selectedPermitBalance}
+        open={selectedEntry !== null}
         onOpenChange={handleSheetOpenChange}
         onVoided={onVoided}
         onVoidFailed={onVoidFailed}

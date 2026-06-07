@@ -27,7 +27,7 @@ export function ActivePermitStatus({
     isPermitActive({ grantedOn: permit.grantedOn, expiresOn: permit.expiresOn, today }),
   );
 
-  if (purposePermits.length === 0) {
+  if (purposePermits.length === 0 && permitBalance <= 0) {
     return (
       <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm">
         <p className="font-medium text-amber-800 dark:text-amber-200">譲受許可が未登録です</p>
@@ -46,16 +46,14 @@ export function ActivePermitStatus({
     <div className="space-y-2">
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
         <span>
-          <span className="text-muted-foreground">許可残数 </span>
-          <span className="text-lg font-semibold tabular-nums">{permitBalance}発</span>
-        </span>
-        {activePermits.length > 0 ? (
-          <span className="text-muted-foreground">
-            有効な許可 {activePermits.length}件（{ledgerPurposeLabels[ledgerPurpose]}）
+          <span className="text-muted-foreground">残り </span>
+          <span className="text-lg font-semibold tabular-nums">
+            {permitBalance.toLocaleString("ja-JP")}発
           </span>
-        ) : (
-          <span className="text-amber-700 dark:text-amber-300">有効な許可はありません</span>
-        )}
+        </span>
+        <span className="text-muted-foreground">
+          有効な許可 {activePermits.length}件（{ledgerPurposeLabels[ledgerPurpose]}）
+        </span>
       </div>
 
       <ul className="flex flex-wrap gap-2">

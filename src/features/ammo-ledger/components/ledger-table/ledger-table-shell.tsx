@@ -1,17 +1,23 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ammoLedgerEntry } from "@/db/schema/ammo-ledger";
+import type { ammoLedgerEntry, ammoPermitEvent } from "@/db/schema/ammo-ledger";
 import { LedgerTable } from "@/features/ammo-ledger/components/ledger-table/ledger-table";
+import { buildLedgerDisplayRows } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
+import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 
 type LedgerTableShellProps = {
   entries: (typeof ammoLedgerEntry.$inferSelect)[];
+  permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
+  purpose: LedgerPurpose;
   permitBalances?: Map<string, number>;
   homeStorageExceededEntryIds?: string[];
 };
 
 export function LedgerTableShell({
   entries,
+  permitEvents,
+  purpose,
   permitBalances,
   homeStorageExceededEntryIds = [],
 }: LedgerTableShellProps) {
@@ -21,6 +27,16 @@ export function LedgerTableShell({
   const visibleEntries = useMemo(
     () => entries.filter((entry) => !voidedIdSet.has(entry.id)),
     [entries, voidedIdSet],
+  );
+
+  const displayRows = useMemo(
+    () =>
+      buildLedgerDisplayRows({
+        entries: visibleEntries,
+        permitEvents,
+        purpose,
+      }),
+    [visibleEntries, permitEvents, purpose],
   );
 
   function handleVoided({ ledgerEntryId }: { ledgerEntryId: string }) {
@@ -35,7 +51,7 @@ export function LedgerTableShell({
 
   return (
     <LedgerTable
-      entries={visibleEntries}
+      rows={displayRows}
       permitBalances={permitBalances}
       homeStorageExceededEntryIds={homeStorageExceededEntryIds}
       onVoided={handleVoided}

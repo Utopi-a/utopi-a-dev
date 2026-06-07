@@ -1,14 +1,16 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ActivePermitStatus } from "@/features/ammo-ledger/components/active-permit-status/active-permit-status";
 import { AmmoLedgerRefreshIndicator } from "@/features/ammo-ledger/components/ammo-ledger-refresh-indicator/ammo-ledger-refresh-indicator";
 import { HomeStorageWarning } from "@/features/ammo-ledger/components/home-storage-warning/home-storage-warning";
 import { LedgerTableShell } from "@/features/ammo-ledger/components/ledger-table/ledger-table-shell";
+import { LedgerYearSelect } from "@/features/ammo-ledger/components/ledger-year-select/ledger-year-select";
 import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/purpose-filter";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { evaluateHomeStorageLimit } from "@/features/ammo-ledger/ledger/compute-running-home-stock/compute-running-home-stock";
+import { buildAvailableYears } from "@/features/ammo-ledger/opening-balance/build-available-years/build-available-years";
 import {
   computeCurrentPermitBalance,
   computeRunningPermitBalance,
@@ -45,8 +47,11 @@ type LedgerViewContentProps = {
 };
 
 function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewContentProps) {
+  const router = useRouter();
   const [purpose, setPurpose] = useState(readPurposeFromUrl);
   const today = new Date().toISOString().slice(0, 10);
+  const currentYear = new Date().getFullYear();
+  const [printYear, setPrintYear] = useState(currentYear);
   const { entries, permitEvents, permits } = workspace;
 
   useEffect(() => {
@@ -120,9 +125,17 @@ function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewCon
     [entries],
   );
 
-  const year = new Date().getFullYear();
-  const printFrom = entries[0]?.occurredOn ?? `${year}-01-01`;
-  const printTo = entries.at(-1)?.occurredOn ?? `${year}-12-31`;
+  const availablePrintYears = useMemo(
+    () =>
+      buildAvailableYears({
+        dates: [
+          ...entries.map((entry) => entry.occurredOn),
+          ...permitEvents.map((event) => event.occurredOn),
+        ],
+        currentYear,
+      }),
+    [entries, permitEvents, currentYear],
+  );
 
   function handlePurposeChange({ nextPurpose }: { nextPurpose: LedgerPurpose }) {
     setPurpose(nextPurpose);
@@ -167,16 +180,30 @@ function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewCon
             </dd>
           </div>
         </dl>
-        <Link
-          href={`/lab/ammo-ledger/ledger/print?from=${printFrom}&to=${printTo}`}
-          className="shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          すべて印刷する →
-        </Link>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+          <div className="w-full max-w-[10rem] sm:w-36">
+            <LedgerYearSelect
+              years={availablePrintYears}
+              value={printYear}
+              onChange={({ year }) => setPrintYear(year)}
+              id="ledger-print-year"
+              label="印刷する年"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push(`/lab/ammo-ledger/ledger/print?year=${printYear}`)}
+            className="shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {printYear}年を印刷する →
+          </button>
+        </div>
       </div>
 
       <LedgerTableShell
         entries={purposeEntries}
+        permitEvents={purposePermitEvents}
+        purpose={purpose}
         permitBalances={permitBalances}
         homeStorageExceededEntryIds={homeStorage.exceededEntryIds}
       />

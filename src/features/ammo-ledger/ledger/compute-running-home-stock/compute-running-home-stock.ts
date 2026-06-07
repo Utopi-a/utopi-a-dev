@@ -8,7 +8,7 @@ type HomeStockEntry = {
   quantity: number;
 };
 
-const increaseCategories: LedgerCategory[] = ["acquire", "manufacture"];
+const increaseCategories: LedgerCategory[] = ["acquire", "manufacture", "carryover"];
 const decreaseCategories: LedgerCategory[] = ["consume", "transfer", "dispose"];
 
 function compareDate({ a, b }: { a: string; b: string }): number {

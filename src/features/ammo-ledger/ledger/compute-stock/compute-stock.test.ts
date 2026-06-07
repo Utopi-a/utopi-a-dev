@@ -26,4 +26,15 @@ describe("computeStockByAmmoType", () => {
 
     expect(result.get("ammo-1")).toBe(225);
   });
+
+  it("繰越も加算する", () => {
+    const result = computeStockByAmmoType({
+      entries: [
+        { ammoTypeId: "ammo-1", category: "carryover", quantity: 80 },
+        { ammoTypeId: "ammo-1", category: "consume", quantity: 30 },
+      ],
+    });
+
+    expect(result.get("ammo-1")).toBe(50);
+  });
 });

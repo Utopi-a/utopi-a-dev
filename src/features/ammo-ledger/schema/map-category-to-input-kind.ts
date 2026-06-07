@@ -16,6 +16,7 @@ export function mapCategoryToInputKind({
     case "transfer":
       return "transfer";
     case "manufacture":
+    case "carryover":
       return null;
   }
 }

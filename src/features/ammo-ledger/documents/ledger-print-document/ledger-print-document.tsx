@@ -2,6 +2,7 @@ import type {
   ammoCounterparty,
   ammoGun,
   ammoLedgerEntry,
+  ammoPermitEvent,
   ammoRange,
 } from "@/db/schema/ammo-ledger";
 import { LedgerPrintAddressList } from "@/features/ammo-ledger/documents/ledger-print-address-list/ledger-print-address-list";
@@ -9,12 +10,14 @@ import { LedgerPrintCover } from "@/features/ammo-ledger/documents/ledger-print-
 import { LedgerPrintGunList } from "@/features/ammo-ledger/documents/ledger-print-gun-list/ledger-print-gun-list";
 import { LedgerPrintStyles } from "@/features/ammo-ledger/documents/ledger-print-styles/ledger-print-styles";
 import { LedgerPrintView } from "@/features/ammo-ledger/documents/ledger-print-view/ledger-print-view";
+import { buildLedgerDisplayRows } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { ledgerPurposes } from "@/features/ammo-ledger/schema/ledger-purpose";
 
 type LedgerPrintPurposeData = {
   purpose: LedgerPurpose;
   entries: (typeof ammoLedgerEntry.$inferSelect)[];
+  permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
   permitBalances?: Map<string, number>;
 };
 
@@ -23,6 +26,7 @@ type LedgerPrintDocumentProps = {
   ownerAddress?: string | null;
   from: string;
   to: string;
+  year: number;
   guns: (typeof ammoGun.$inferSelect)[];
   ranges: (typeof ammoRange.$inferSelect)[];
   counterparties: (typeof ammoCounterparty.$inferSelect)[];
@@ -34,6 +38,7 @@ export function LedgerPrintDocument({
   ownerAddress,
   from,
   to,
+  year,
   guns,
   ranges,
   counterparties,
@@ -42,13 +47,22 @@ export function LedgerPrintDocument({
   const orderedSections = ledgerPurposes
     .map((purpose) => purposeSections.find((section) => section.purpose === purpose))
     .filter((section): section is LedgerPrintPurposeData => section !== undefined)
-    .filter((section) => section.entries.length > 0);
+    .filter((section) => {
+      const rows = buildLedgerDisplayRows({
+        entries: section.entries,
+        permitEvents: section.permitEvents,
+        purpose: section.purpose,
+        from,
+        to,
+      });
+      return rows.length > 0;
+    });
 
   if (orderedSections.length === 0) {
     return (
       <div className="ledger-print">
         <LedgerPrintStyles />
-        <p className="text-sm text-muted-foreground">指定期間に印刷対象の記録がありません。</p>
+        <p className="text-sm text-muted-foreground">{year}年の印刷対象となる記録がありません。</p>
       </div>
     );
   }
@@ -77,8 +91,10 @@ export function LedgerPrintDocument({
         <LedgerPrintView
           key={section.purpose}
           entries={section.entries}
+          permitEvents={section.permitEvents}
           from={from}
           to={to}
+          year={year}
           purpose={section.purpose}
           permitBalances={section.permitBalances}
         />

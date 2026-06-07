@@ -86,6 +86,14 @@ export function LedgerEntryActionsSheet({
             >
               編集
             </Link>
+          ) : entry.category === "carryover" ? (
+            <Link
+              href="/lab/ammo-ledger/settings/opening-balance"
+              className={cn(buttonVariants({ variant: "default" }), "h-11 w-full")}
+              onClick={() => onOpenChange({ open: false })}
+            >
+              年初繰越で変更
+            </Link>
           ) : (
             <p className="text-sm text-muted-foreground">{categoryLabel}記録は編集できません。</p>
           )}

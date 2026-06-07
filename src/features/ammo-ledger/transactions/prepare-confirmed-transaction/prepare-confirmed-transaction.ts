@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { ammoCounterparty, ammoGun, ammoRange, ammoType } from "@/db/schema/ammo-ledger";
+import { ensureManualCounterparty } from "@/features/ammo-ledger/master/ensure-manual-counterparty/ensure-manual-counterparty";
 import { resolveCounterparty } from "@/features/ammo-ledger/master/resolve-counterparty/resolve-counterparty";
 import type { LedgerTransactionInput } from "@/features/ammo-ledger/schema/transaction-schema";
 import { isLedgerInputKind } from "@/features/ammo-ledger/schema/transaction-schema";
@@ -70,6 +71,22 @@ export async function prepareConfirmedTransaction({
       .where(
         and(eq(ammoCounterparty.id, input.counterpartyId), eq(ammoCounterparty.userId, userId)),
       );
+    counterpartyRow = row;
+  } else if (
+    "counterpartyName" in input &&
+    input.counterpartyName &&
+    "counterpartyAddress" in input &&
+    input.counterpartyAddress
+  ) {
+    const ensured = await ensureManualCounterparty({
+      userId,
+      name: input.counterpartyName,
+      address: input.counterpartyAddress,
+    });
+    const [row] = await db
+      .select()
+      .from(ammoCounterparty)
+      .where(and(eq(ammoCounterparty.id, ensured.id), eq(ammoCounterparty.userId, userId)));
     counterpartyRow = row;
   }
 

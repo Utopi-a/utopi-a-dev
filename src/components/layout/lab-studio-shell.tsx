@@ -1,13 +1,20 @@
 import Link from "next/link";
 import { getSession } from "@/features/auth/get-session/get-session";
 import { SignOutButton } from "@/features/auth/sign-out-button/sign-out-button";
+import { cn } from "@/lib/cn";
 
-export async function LabStudioShell({ children }: { children: React.ReactNode }) {
+export async function LabStudioShell({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   const session = await getSession();
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
+    <div className={cn("mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-8", className)}>
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
         <Link href="/lab" className="text-sm text-muted-foreground hover:text-foreground">
           ← Lab に戻る
         </Link>
@@ -20,7 +27,7 @@ export async function LabStudioShell({ children }: { children: React.ReactNode }
           <SignOutButton variant="outline" className="h-8" />
         </div>
       </div>
-      {children}
+      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </div>
   );
 }

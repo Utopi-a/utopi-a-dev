@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
+import { CatalogBrowsePromo } from "@/features/ammo-ledger/components/catalog-browse-promo/catalog-browse-promo";
 import { RangeForm } from "@/features/ammo-ledger/components/range-form/range-form";
 import { RangeRowActions } from "@/features/ammo-ledger/components/range-row-actions/range-row-actions";
 import { listRanges } from "@/features/ammo-ledger/master/list-ranges/list-ranges";
@@ -14,14 +14,15 @@ export default async function RangesSettingsPage() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">射撃場</h1>
-        <p className="text-sm text-muted-foreground">
-          よく使う射撃場のマイリストです。
-          <Link href="/lab/ammo-ledger/settings/ranges/catalog" className="ml-1 underline">
-            全国一覧から探す
-          </Link>
-        </p>
+        <p className="text-sm text-muted-foreground">よく使う射撃場のマイリストです。</p>
       </div>
       <AmmoLedgerNav />
+      <CatalogBrowsePromo
+        href="/lab/ammo-ledger/settings/ranges/catalog"
+        title="全国の射撃場一覧"
+        description="検索・お気に入り登録・マイリストへの追加"
+        countLabel="全国196件"
+      />
       <AmmoLedgerPanel title="マイリスト">
         {ranges.length === 0 ? (
           <p className="text-sm text-muted-foreground">まだ登録がありません。</p>

@@ -19,8 +19,11 @@ import type {
   PickerMasterEntry,
 } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import type { CatalogKind } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
+import { scrollToPrefectureSection } from "@/features/ammo-ledger/catalog/scroll-to-prefecture-section/scroll-to-prefecture-section";
 import { CatalogFavoriteButton } from "@/features/ammo-ledger/components/catalog-favorite-button/catalog-favorite-button";
+import { CatalogScrollPane } from "@/features/ammo-ledger/components/catalog-scroll-pane/catalog-scroll-pane";
 import { PickerEntryRow } from "@/features/ammo-ledger/components/picker-entry-row/picker-entry-row";
+import { PrefectureSectionHeading } from "@/features/ammo-ledger/components/prefecture-section-heading/prefecture-section-heading";
 import { cn } from "@/lib/cn";
 
 type MasterPickerProps = {
@@ -127,8 +130,7 @@ export function MasterPicker({
   }
 
   function scrollToPrefecture({ prefecture }: { prefecture: string }) {
-    const element = catalogScrollRef.current?.querySelector(`[data-prefecture="${prefecture}"]`);
-    element?.scrollIntoView({ behavior: "smooth", block: "start" });
+    scrollToPrefectureSection({ container: catalogScrollRef.current, prefecture });
   }
 
   function renderCatalogEntry({ entry }: { entry: CatalogEntry }) {
@@ -273,15 +275,20 @@ export function MasterPicker({
                 </section>
               ) : null}
 
-              <section className="mb-2">
+              <section className="mb-2 border-t border-border/40">
                 <button
                   type="button"
                   onClick={() => setView("catalog")}
-                  className="flex w-full items-center justify-between rounded-lg border border-dashed border-border/80 px-3 py-3 text-left text-sm transition-colors hover:bg-muted/40"
+                  className="flex w-full items-center justify-between py-3 text-left transition-colors hover:text-primary"
                 >
                   <span className="flex items-center gap-2">
-                    <ListIcon className="size-4 text-muted-foreground" />
-                    全国一覧から選ぶ
+                    <ListIcon className="size-4 text-primary" />
+                    <span>
+                      <span className="block text-sm font-semibold">全国一覧から選ぶ</span>
+                      <span className="block text-xs text-muted-foreground">
+                        都道府県順・お気に入り登録
+                      </span>
+                    </span>
                   </span>
                   <ChevronRightIcon className="size-4 text-muted-foreground" />
                 </button>
@@ -296,40 +303,29 @@ export function MasterPicker({
               {error ? <p className="py-2 text-sm text-destructive">{error}</p> : null}
             </div>
           ) : (
-            <div className="flex min-h-0 flex-1">
-              <div ref={catalogScrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-2">
+            <CatalogScrollPane
+              scrollRef={catalogScrollRef}
+              showPrefectureRail
+              prefectures={pickerData.catalogByPrefecture.map((group) => group.prefecture)}
+              onJumpPrefecture={scrollToPrefecture}
+              className="min-h-0 flex-1"
+            >
+              <div className="px-4 py-2">
                 {pickerData.catalogByPrefecture.map((group) => (
                   <section
                     key={group.prefecture}
                     data-prefecture={group.prefecture}
                     className="mb-4"
                   >
-                    <h3 className="sticky top-0 z-10 border-b border-border/40 bg-background py-2 text-sm font-medium">
-                      {group.prefecture}
-                      <span className="ml-2 text-xs font-normal text-muted-foreground">
-                        {group.entries.length}件
-                      </span>
-                    </h3>
+                    <PrefectureSectionHeading
+                      prefecture={group.prefecture}
+                      count={group.entries.length}
+                    />
                     {group.entries.map((entry) => renderCatalogEntry({ entry }))}
                   </section>
                 ))}
               </div>
-              <nav
-                aria-label="都道府県ジャンプ"
-                className="flex w-9 shrink-0 flex-col items-center gap-0.5 overflow-y-auto border-l border-border/40 py-2 text-[10px] text-muted-foreground"
-              >
-                {pickerData.catalogByPrefecture.map((group) => (
-                  <button
-                    key={group.prefecture}
-                    type="button"
-                    className="w-full px-0.5 py-0.5 hover:text-foreground"
-                    onClick={() => scrollToPrefecture({ prefecture: group.prefecture })}
-                  >
-                    {group.prefecture.replace(/(県|府|道)$/, "").slice(0, 3)}
-                  </button>
-                ))}
-              </nav>
-            </div>
+            </CatalogScrollPane>
           )}
         </SheetContent>
       </Sheet>

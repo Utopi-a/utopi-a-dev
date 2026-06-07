@@ -52,6 +52,7 @@ export function LedgerTableShell({
   return (
     <LedgerTable
       rows={displayRows}
+      purpose={purpose}
       permitBalances={permitBalances}
       homeStorageExceededEntryIds={homeStorageExceededEntryIds}
       onVoided={handleVoided}

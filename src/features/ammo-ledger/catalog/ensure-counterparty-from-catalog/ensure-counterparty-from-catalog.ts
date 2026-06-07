@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { ammoCounterparty } from "@/db/schema/ammo-ledger";
 import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { getGunShopCatalogEntry } from "@/features/ammo-ledger/catalog/load-gun-shop-catalog/load-gun-shop-catalog";
+import { getRangeCatalogEntry } from "@/features/ammo-ledger/catalog/load-range-catalog/load-range-catalog";
 
 export async function ensureCounterpartyFromCatalog({ catalogId }: { catalogId: string }) {
   const userResult = await resolveAmmoUserForMutation();
@@ -23,9 +24,11 @@ export async function ensureCounterpartyFromCatalog({ catalogId }: { catalogId: 
     return { ok: true as const, id: existing.id };
   }
 
-  const entry = getGunShopCatalogEntry({ catalogId });
+  const gunShopEntry = getGunShopCatalogEntry({ catalogId });
+  const rangeEntry = gunShopEntry ? undefined : getRangeCatalogEntry({ catalogId });
+  const entry = gunShopEntry ?? rangeEntry;
   if (!entry) {
-    return { ok: false as const, error: "銃砲店が見つかりません" };
+    return { ok: false as const, error: "購入先が見つかりません" };
   }
 
   const id = crypto.randomUUID();
@@ -35,7 +38,7 @@ export async function ensureCounterpartyFromCatalog({ catalogId }: { catalogId: 
     catalogId,
     name: entry.name,
     address: entry.address,
-    kind: entry.kind ?? "shop",
+    kind: gunShopEntry ? (gunShopEntry.kind ?? "shop") : "range",
   });
 
   return { ok: true as const, id };

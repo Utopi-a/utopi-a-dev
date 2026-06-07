@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { ammoLedgerEntry } from "@/db/schema/ammo-ledger";
 import { LedgerEntryActionsSheet } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-actions-sheet";
 import { LedgerEntryCard } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-card";
 import {
@@ -21,10 +20,12 @@ import {
   formatPermitBalance,
   showsAmmoQuantity,
 } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
+import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
 
 type LedgerTableProps = {
   rows: LedgerDisplayRow[];
+  purpose: LedgerPurpose;
   permitBalances?: Map<string, number>;
   homeStorageExceededEntryIds?: string[];
   onVoided?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
@@ -44,31 +45,30 @@ const ledgerTableColumnClass = {
 
 export function LedgerTable({
   rows,
+  purpose,
   permitBalances,
   homeStorageExceededEntryIds = [],
   onVoided,
   onVoidFailed,
 }: LedgerTableProps) {
-  const [selectedEntry, setSelectedEntry] = useState<typeof ammoLedgerEntry.$inferSelect | null>(
-    null,
-  );
+  const [selectedRow, setSelectedRow] = useState<LedgerDisplayRow | null>(null);
   const [selectedPermitBalance, setSelectedPermitBalance] = useState<number | undefined>(undefined);
   const exceededSet = new Set(homeStorageExceededEntryIds);
 
-  function handleSelectEntry({
-    entry,
+  function handleSelectRow({
+    row,
     permitBalance,
   }: {
-    entry: typeof ammoLedgerEntry.$inferSelect;
+    row: LedgerDisplayRow;
     permitBalance?: number;
   }) {
-    setSelectedEntry(entry);
+    setSelectedRow(row);
     setSelectedPermitBalance(permitBalance);
   }
 
   function handleSheetOpenChange({ open }: { open: boolean }) {
     if (!open) {
-      setSelectedEntry(null);
+      setSelectedRow(null);
       setSelectedPermitBalance(undefined);
     }
   }
@@ -90,7 +90,7 @@ export function LedgerTable({
             row={row}
             permitBalance={resolveDisplayRowPermitBalance({ row, permitBalances })}
             isHomeStorageExceeded={row.kind === "entry" ? exceededSet.has(row.entry.id) : false}
-            onSelect={handleSelectEntry}
+            onSelect={handleSelectRow}
           />
         ))}
       </div>
@@ -119,7 +119,18 @@ export function LedgerTable({
 
                 if (row.kind === "permit_carryover") {
                   return (
-                    <tr key={row.id} className="border-b border-border/25 last:border-0">
+                    <tr
+                      key={row.id}
+                      tabIndex={0}
+                      onClick={() => handleSelectRow({ row, permitBalance })}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          handleSelectRow({ row, permitBalance });
+                        }
+                      }}
+                      className="cursor-pointer border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20"
+                    >
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
                         <span className="whitespace-nowrap tabular-nums">{row.occurredOn}</span>
                       </td>
@@ -174,7 +185,7 @@ export function LedgerTable({
                     key={entry.id}
                     tabIndex={selectable ? 0 : -1}
                     onClick={() =>
-                      selectable ? handleSelectEntry({ entry, permitBalance }) : undefined
+                      selectable ? handleSelectRow({ row, permitBalance }) : undefined
                     }
                     onKeyDown={(event) => {
                       if (!selectable) {
@@ -182,7 +193,7 @@ export function LedgerTable({
                       }
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
-                        handleSelectEntry({ entry, permitBalance });
+                        handleSelectRow({ row, permitBalance });
                       }
                     }}
                     className={cn(
@@ -269,14 +280,15 @@ export function LedgerTable({
           </table>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          記録行をクリックすると編集・取消ができます。琥珀色の行はその時点で自宅保管の目安（800発）を超えています。薄緑の行は弾の繰越です。
+          行をクリックすると編集・取消ができます。琥珀色の行はその時点で自宅保管の目安（800発）を超えています。薄緑の行は弾の繰越です。
         </p>
       </div>
 
       <LedgerEntryActionsSheet
-        entry={selectedEntry}
+        row={selectedRow}
+        purpose={purpose}
         permitBalance={selectedPermitBalance}
-        open={selectedEntry !== null}
+        open={selectedRow !== null}
         onOpenChange={handleSheetOpenChange}
         onVoided={onVoided}
         onVoidFailed={onVoidFailed}

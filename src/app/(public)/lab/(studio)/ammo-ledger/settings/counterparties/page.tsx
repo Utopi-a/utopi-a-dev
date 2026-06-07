@@ -19,9 +19,9 @@ export default async function CounterpartiesSettingsPage() {
       <AmmoLedgerNav />
       <CatalogBrowsePromo
         href="/lab/ammo-ledger/settings/counterparties/catalog"
-        title="全国の銃砲店一覧"
+        title="全国の銃砲店・射撃場一覧"
         description="検索・お気に入り登録・マイリストへの追加"
-        countLabel="全国333件"
+        countLabel="全国500件以上"
       />
       <AmmoLedgerPanel title="マイリスト">
         {counterparties.length === 0 ? (

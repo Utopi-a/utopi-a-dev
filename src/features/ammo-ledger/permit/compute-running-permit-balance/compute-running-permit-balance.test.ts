@@ -5,11 +5,11 @@ import {
 } from "./compute-running-permit-balance";
 
 describe("computeRunningPermitBalance", () => {
-  it("許可取得後の消費で残数が減る", () => {
+  it("許可取得後の譲受で残数が減る", () => {
     const permitEvents = [{ occurredOn: "2026-01-01", eventKind: "grant" as const, quantity: 100 }];
     const ledgerEntries = [
-      { id: "e1", occurredOn: "2026-01-05", category: "consume" as const, quantity: 30 },
-      { id: "e2", occurredOn: "2026-01-10", category: "consume" as const, quantity: 20 },
+      { id: "e1", occurredOn: "2026-01-05", category: "acquire" as const, quantity: 30 },
+      { id: "e2", occurredOn: "2026-01-10", category: "acquire" as const, quantity: 20 },
     ];
 
     const balances = computeRunningPermitBalance({ permitEvents, ledgerEntries });
@@ -26,8 +26,8 @@ describe("computeRunningPermitBalance", () => {
       { occurredOn: "2026-06-15", eventKind: "carryover" as const, quantity: 80 },
     ];
     const ledgerEntries = [
-      { id: "e1", occurredOn: "2026-05-01", category: "consume" as const, quantity: 60 },
-      { id: "e2", occurredOn: "2026-07-01", category: "consume" as const, quantity: 10 },
+      { id: "e1", occurredOn: "2026-05-01", category: "acquire" as const, quantity: 60 },
+      { id: "e2", occurredOn: "2026-07-01", category: "acquire" as const, quantity: 10 },
     ];
 
     const balances = computeRunningPermitBalance({ permitEvents, ledgerEntries });
@@ -36,7 +36,7 @@ describe("computeRunningPermitBalance", () => {
     expect(balances.get("e2")).toBe(70);
   });
 
-  it("譲受は許可残数に影響しない", () => {
+  it("消費は許可残数に影響しない", () => {
     const permitEvents = [{ occurredOn: "2026-01-01", eventKind: "grant" as const, quantity: 50 }];
     const ledgerEntries = [
       { id: "e1", occurredOn: "2026-01-02", category: "acquire" as const, quantity: 25 },
@@ -45,7 +45,7 @@ describe("computeRunningPermitBalance", () => {
 
     const balances = computeRunningPermitBalance({ permitEvents, ledgerEntries });
 
-    expect(balances.get("e1")).toBe(50);
-    expect(balances.get("e2")).toBe(40);
+    expect(balances.get("e1")).toBe(25);
+    expect(balances.get("e2")).toBe(25);
   });
 });

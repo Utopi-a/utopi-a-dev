@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildLedgerDisplayRows } from "./build-ledger-display-rows";
+import { buildLedgerDisplayRows, isDisplayRowSelectable } from "./build-ledger-display-rows";
 
 describe("buildLedgerDisplayRows", () => {
   it("許可繰越行を記録より前に並べる", () => {
@@ -47,6 +47,19 @@ describe("buildLedgerDisplayRows", () => {
     expect(rows).toHaveLength(2);
     expect(rows[0].kind).toBe("permit_carryover");
     expect(rows[1].kind).toBe("entry");
+  });
+
+  it("許可繰越行も選択できる", () => {
+    expect(
+      isDisplayRowSelectable({
+        row: {
+          kind: "permit_carryover",
+          id: "permit-carryover-pe1",
+          occurredOn: "2026-01-01",
+          quantity: 1200,
+        },
+      }),
+    ).toBe(true);
   });
 
   it("印刷期間外の許可繰越は含めない", () => {

@@ -6,7 +6,10 @@ import { CatalogList } from "@/features/ammo-ledger/components/catalog-list/cata
 
 export default async function CounterpartyCatalogPage() {
   const user = await requireAmmoUser();
-  const pickerData = await buildCounterpartyPickerData({ userId: user.id });
+  const pickerData = await buildCounterpartyPickerData({
+    userId: user.id,
+    includeRangeCatalog: true,
+  });
 
   return (
     <>
@@ -20,9 +23,9 @@ export default async function CounterpartyCatalogPage() {
           </Link>
         </p>
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">全国の銃砲店一覧</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">全国の銃砲店・射撃場一覧</h1>
           <p className="text-sm text-muted-foreground">
-            日本ライフル射撃協会の認定販売店リストをもとにしています。
+            銃砲店は日本ライフル射撃協会の認定販売店リスト、射撃場は射撃場協会の一覧をもとにしています。
           </p>
         </div>
         <AmmoLedgerNav />
@@ -32,6 +35,7 @@ export default async function CounterpartyCatalogPage() {
         catalogByPrefecture={pickerData.catalogByPrefecture}
         favoriteCatalogIds={pickerData.favoriteCatalogIds}
         registeredCatalogIds={pickerData.registeredCatalogIds}
+        includesRangeCatalog
       />
     </>
   );

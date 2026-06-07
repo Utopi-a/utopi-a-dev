@@ -35,7 +35,10 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
     listAmmoTypes({ userId: user.id }),
     inputKind === "consume" ? buildRangePickerData({ userId: user.id }) : Promise.resolve(null),
     inputKind === "acquire" || inputKind === "transfer"
-      ? buildCounterpartyPickerData({ userId: user.id })
+      ? buildCounterpartyPickerData({
+          userId: user.id,
+          includeRangeCatalog: inputKind === "acquire",
+        })
       : Promise.resolve(null),
   ]);
 

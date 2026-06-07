@@ -30,11 +30,13 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
   const { tab: tabParam, draft: draftId } = await searchParams;
   const tab = parseTab(tabParam);
 
-  const [ammoTypes, counterpartyPickerData, draft] = await Promise.all([
-    listAmmoTypes({ userId: user.id }),
-    buildCounterpartyPickerData({ userId: user.id }),
-    draftId ? getDraftTransaction({ userId: user.id, draftId }) : Promise.resolve(null),
-  ]);
+  const [ammoTypes, acquireSourcePickerData, transferCounterpartyPickerData, draft] =
+    await Promise.all([
+      listAmmoTypes({ userId: user.id }),
+      buildCounterpartyPickerData({ userId: user.id, includeRangeCatalog: true }),
+      buildCounterpartyPickerData({ userId: user.id }),
+      draftId ? getDraftTransaction({ userId: user.id, draftId }) : Promise.resolve(null),
+    ]);
 
   const initialValues = draft
     ? {
@@ -83,7 +85,7 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
                 <AcquireForm
                   key={tab === "acquire" ? (draftId ?? "new") : "acquire"}
                   ammoTypes={ammoTypes}
-                  counterpartyPickerData={counterpartyPickerData}
+                  counterpartyPickerData={acquireSourcePickerData}
                   initialValues={tab === "acquire" ? initialValues : undefined}
                 />
               }
@@ -98,7 +100,7 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
                 <TransferForm
                   key={tab === "transfer" ? (draftId ?? "new") : "transfer"}
                   ammoTypes={ammoTypes}
-                  counterpartyPickerData={counterpartyPickerData}
+                  counterpartyPickerData={transferCounterpartyPickerData}
                   initialValues={tab === "transfer" ? initialValues : undefined}
                 />
               }

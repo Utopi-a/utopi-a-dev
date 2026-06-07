@@ -2,6 +2,7 @@
 
 import { ChevronLeftIcon, ChevronRightIcon, ListIcon } from "lucide-react";
 import { useMemo, useRef, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -15,6 +16,7 @@ import { ensureCounterpartyFromCatalog } from "@/features/ammo-ledger/catalog/en
 import { ensureRangeFromCatalog } from "@/features/ammo-ledger/catalog/ensure-range-from-catalog/ensure-range-from-catalog";
 import type {
   CatalogEntry,
+  CatalogSource,
   MasterPickerData,
   PickerMasterEntry,
 } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
@@ -89,22 +91,61 @@ export function MasterPicker({
     closePicker();
   }
 
+  function handleSelectRegisteredRange({ master }: { master: PickerMasterEntry }) {
+    if (!master.catalogId) {
+      return;
+    }
+
+    handleSelectCatalog({
+      entry: {
+        catalogId: master.catalogId,
+        name: master.name,
+        address: master.address,
+        prefecture: "",
+        location: master.address,
+        phone: null,
+        catalogSource: "range",
+      },
+    });
+  }
+
+  function resolveCatalogSource({ entry }: { entry: CatalogEntry }): CatalogSource {
+    return entry.catalogSource ?? (catalogKind === "range" ? "range" : "gun_shop");
+  }
+
   function handleSelectCatalog({ entry }: { entry: CatalogEntry }) {
+    const knownCounterpartyId = pickerData.counterpartyIdByCatalogId?.[entry.catalogId];
+    if (knownCounterpartyId) {
+      onChange(knownCounterpartyId);
+      closePicker();
+      return;
+    }
+
     setError(null);
+    closePicker();
+
     startTransition(async () => {
+      const catalogSource = resolveCatalogSource({ entry });
       const result =
-        catalogKind === "range"
+        catalogSource === "range" && catalogKind === "range"
           ? await ensureRangeFromCatalog({ catalogId: entry.catalogId })
           : await ensureCounterpartyFromCatalog({ catalogId: entry.catalogId });
 
       if (!result.ok) {
-        setError(result.error);
+        toast.error(result.error);
         return;
       }
 
+      const createdSubject =
+        catalogKind === "range"
+          ? "射撃場"
+          : catalogSource === "range"
+            ? "購入先（射撃場）"
+            : "購入先";
+
       showAmmoLedgerToast({
         action: "created",
-        subject: catalogKind === "range" ? "射撃場" : "購入先",
+        subject: createdSubject,
       });
 
       const master: PickerMasterEntry = {
@@ -122,7 +163,6 @@ export function MasterPicker({
         current.includes(entry.catalogId) ? current : [...current, entry.catalogId],
       );
       onChange(result.id);
-      closePicker();
     });
   }
 
@@ -141,6 +181,7 @@ export function MasterPicker({
 
   function renderCatalogEntry({ entry }: { entry: CatalogEntry }) {
     const isRegistered = registeredCatalogIds.includes(entry.catalogId);
+    const entryCatalogKind = resolveCatalogSource({ entry });
 
     return (
       <PickerEntryRow
@@ -149,7 +190,7 @@ export function MasterPicker({
         subtitle={entry.location}
         leading={
           <CatalogFavoriteButton
-            catalogKind={catalogKind}
+            catalogKind={entryCatalogKind}
             catalogId={entry.catalogId}
             isFavorite={favoriteIds.includes(entry.catalogId)}
             onFavoriteChange={({ isFavorite }) => {
@@ -186,21 +227,39 @@ export function MasterPicker({
     );
   }
 
-  const favoriteEntries = useMemo(() => {
-    const favoriteSet = new Set(favoriteIds);
-    const fromCatalog = pickerData.catalogByPrefecture
-      .flatMap((group) => group.entries)
-      .filter((entry) => favoriteSet.has(entry.catalogId));
+  const favoriteEntries = useMemo(() => pickerData.favorites, [pickerData.favorites]);
 
-    const seen = new Set<string>();
-    return fromCatalog.filter((entry) => {
-      if (seen.has(entry.catalogId)) {
-        return false;
-      }
-      seen.add(entry.catalogId);
-      return true;
-    });
-  }, [favoriteIds, pickerData.catalogByPrefecture]);
+  const nationalListLabel = pickerData.includesRangeCatalog
+    ? "全国の銃砲店・射撃場から選ぶ"
+    : "全国一覧から選ぶ";
+
+  const nationalListDescription = "都道府県順・お気に入り登録";
+
+  function renderPrefectureCatalogEntries({ entries }: { entries: CatalogEntry[] }) {
+    if (!pickerData.includesRangeCatalog) {
+      return entries.map((entry) => renderCatalogEntry({ entry }));
+    }
+
+    const gunShops = entries.filter((entry) => resolveCatalogSource({ entry }) === "gun_shop");
+    const ranges = entries.filter((entry) => resolveCatalogSource({ entry }) === "range");
+
+    return (
+      <>
+        {gunShops.length > 0 ? (
+          <div className="mb-3">
+            <h4 className="py-1 text-xs font-medium text-muted-foreground">銃砲店</h4>
+            {gunShops.map((entry) => renderCatalogEntry({ entry }))}
+          </div>
+        ) : null}
+        {ranges.length > 0 ? (
+          <div>
+            <h4 className="py-1 text-xs font-medium text-muted-foreground">射撃場</h4>
+            {ranges.map((entry) => renderCatalogEntry({ entry }))}
+          </div>
+        ) : null}
+      </>
+    );
+  }
 
   return (
     <div className="space-y-2">
@@ -259,7 +318,9 @@ export function MasterPicker({
                   <h3 className="sticky top-0 z-10 bg-background py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                     お気に入り
                   </h3>
-                  {favoriteEntries.map((entry) => renderCatalogEntry({ entry }))}
+                  {pickerData.includesRangeCatalog
+                    ? renderPrefectureCatalogEntries({ entries: favoriteEntries })
+                    : favoriteEntries.map((entry) => renderCatalogEntry({ entry }))}
                 </section>
               ) : null}
 
@@ -281,6 +342,23 @@ export function MasterPicker({
                 </section>
               ) : null}
 
+              {(pickerData.registeredRangeMasters?.length ?? 0) > 0 ? (
+                <section className="mb-4">
+                  <h3 className="sticky top-0 z-10 bg-background py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    登録済みの射撃場
+                  </h3>
+                  {pickerData.registeredRangeMasters?.map((master) => (
+                    <PickerEntryRow
+                      key={master.id}
+                      name={master.name}
+                      subtitle={master.address}
+                      onSelect={() => handleSelectRegisteredRange({ master })}
+                      disabled={isPending}
+                    />
+                  ))}
+                </section>
+              ) : null}
+
               <section className="mb-2 border-t border-border/40">
                 <button
                   type="button"
@@ -290,9 +368,9 @@ export function MasterPicker({
                   <span className="flex items-center gap-2">
                     <ListIcon className="size-4 text-primary" />
                     <span>
-                      <span className="block text-sm font-semibold">全国一覧から選ぶ</span>
+                      <span className="block text-sm font-semibold">{nationalListLabel}</span>
                       <span className="block text-xs text-muted-foreground">
-                        都道府県順・お気に入り登録
+                        {nationalListDescription}
                       </span>
                     </span>
                   </span>
@@ -327,7 +405,7 @@ export function MasterPicker({
                       prefecture={group.prefecture}
                       count={group.entries.length}
                     />
-                    {group.entries.map((entry) => renderCatalogEntry({ entry }))}
+                    {renderPrefectureCatalogEntries({ entries: group.entries })}
                   </section>
                 ))}
               </div>

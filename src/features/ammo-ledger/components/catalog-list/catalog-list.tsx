@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ensureCounterpartyFromCatalog } from "@/features/ammo-ledger/catalog/ensure-counterparty-from-catalog/ensure-counterparty-from-catalog";
 import { ensureRangeFromCatalog } from "@/features/ammo-ledger/catalog/ensure-range-from-catalog/ensure-range-from-catalog";
-import type { CatalogPrefectureGroup } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
+import type {
+  CatalogEntry,
+  CatalogPrefectureGroup,
+} from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import type { CatalogKind } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
 import { scrollToPrefectureSection } from "@/features/ammo-ledger/catalog/scroll-to-prefecture-section/scroll-to-prefecture-section";
 import { CatalogFavoriteButton } from "@/features/ammo-ledger/components/catalog-favorite-button/catalog-favorite-button";
@@ -20,14 +23,48 @@ type CatalogListProps = {
   catalogByPrefecture: CatalogPrefectureGroup[];
   favoriteCatalogIds: string[];
   registeredCatalogIds: string[];
+  includesRangeCatalog?: boolean;
   className?: string;
 };
+
+function resolveEntryCatalogKind({
+  entry,
+  catalogKind,
+}: {
+  entry: CatalogEntry;
+  catalogKind: CatalogKind;
+}): CatalogKind {
+  if (entry.catalogSource === "range") {
+    return "range";
+  }
+  if (entry.catalogSource === "gun_shop") {
+    return "gun_shop";
+  }
+  return catalogKind;
+}
+
+function resolveEnsureAction({
+  entry,
+  catalogKind,
+  includesRangeCatalog,
+}: {
+  entry: CatalogEntry;
+  catalogKind: CatalogKind;
+  includesRangeCatalog?: boolean;
+}): "range" | "counterparty" {
+  const entryCatalogKind = resolveEntryCatalogKind({ entry, catalogKind });
+  if (includesRangeCatalog && entryCatalogKind === "range") {
+    return "counterparty";
+  }
+  return entryCatalogKind === "range" ? "range" : "counterparty";
+}
 
 export function CatalogList({
   catalogKind,
   catalogByPrefecture,
   favoriteCatalogIds,
   registeredCatalogIds,
+  includesRangeCatalog = false,
   className,
 }: CatalogListProps) {
   const [query, setQuery] = useState("");
@@ -69,7 +106,8 @@ export function CatalogList({
     scrollToPrefectureSection({ container: scrollRef.current, prefecture });
   }
 
-  function handleAddToMyList({ catalogId }: { catalogId: string }) {
+  function handleAddToMyList({ entry }: { entry: CatalogEntry }) {
+    const { catalogId } = entry;
     setError(null);
     setPendingCatalogId(catalogId);
     setRegisteredIds((current) =>
@@ -77,8 +115,9 @@ export function CatalogList({
     );
 
     startTransition(async () => {
+      const ensureAction = resolveEnsureAction({ entry, catalogKind, includesRangeCatalog });
       const result =
-        catalogKind === "range"
+        ensureAction === "range"
           ? await ensureRangeFromCatalog({ catalogId })
           : await ensureCounterpartyFromCatalog({ catalogId });
 
@@ -90,11 +129,100 @@ export function CatalogList({
         return;
       }
 
+      const entryCatalogKind = resolveEntryCatalogKind({ entry, catalogKind });
       showAmmoLedgerToast({
         action: "created",
-        subject: catalogKind === "range" ? "射撃場" : "購入先",
+        subject:
+          entryCatalogKind === "range" && !includesRangeCatalog
+            ? "射撃場"
+            : entryCatalogKind === "range"
+              ? "購入先（射撃場）"
+              : "購入先",
       });
     });
+  }
+
+  function renderCatalogEntry({ entry }: { entry: CatalogEntry }) {
+    const isRegistered = registeredIds.includes(entry.catalogId);
+    const isAdding = pendingCatalogId === entry.catalogId && isPending;
+    const entryCatalogKind = resolveEntryCatalogKind({ entry, catalogKind });
+
+    return (
+      <li key={entry.catalogId} className="flex items-start gap-2 py-3">
+        <CatalogFavoriteButton
+          catalogKind={entryCatalogKind}
+          catalogId={entry.catalogId}
+          isFavorite={favoriteIds.includes(entry.catalogId)}
+          onFavoriteChange={({ isFavorite }) => {
+            setFavoriteIds((current) => {
+              if (isFavorite) {
+                return current.includes(entry.catalogId) ? current : [...current, entry.catalogId];
+              }
+              return current.filter((id) => id !== entry.catalogId);
+            });
+          }}
+          className="mt-0.5"
+        />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">{entry.name}</p>
+          <p className="text-xs text-muted-foreground">{entry.address}</p>
+          {entry.phone ? <p className="text-xs text-muted-foreground">{entry.phone}</p> : null}
+        </div>
+        <Button
+          type="button"
+          variant={isRegistered ? "secondary" : "outline"}
+          size="xs"
+          disabled={isRegistered || isAdding}
+          onClick={() => handleAddToMyList({ entry })}
+          className="shrink-0"
+        >
+          {isRegistered ? (
+            <>
+              <CheckIcon className="size-3" />
+              追加済
+            </>
+          ) : isAdding ? (
+            "追加中…"
+          ) : (
+            "マイリストに追加"
+          )}
+        </Button>
+      </li>
+    );
+  }
+
+  function renderPrefectureEntries({ entries }: { entries: CatalogEntry[] }) {
+    if (!includesRangeCatalog) {
+      return (
+        <ul className="divide-y divide-border/40">
+          {entries.map((entry) => renderCatalogEntry({ entry }))}
+        </ul>
+      );
+    }
+
+    const gunShops = entries.filter((entry) => entry.catalogSource === "gun_shop");
+    const ranges = entries.filter((entry) => entry.catalogSource === "range");
+
+    return (
+      <>
+        {gunShops.length > 0 ? (
+          <div className="mb-4">
+            <h3 className="mb-1 text-xs font-medium text-muted-foreground">銃砲店</h3>
+            <ul className="divide-y divide-border/40">
+              {gunShops.map((entry) => renderCatalogEntry({ entry }))}
+            </ul>
+          </div>
+        ) : null}
+        {ranges.length > 0 ? (
+          <div>
+            <h3 className="mb-1 text-xs font-medium text-muted-foreground">射撃場</h3>
+            <ul className="divide-y divide-border/40">
+              {ranges.map((entry) => renderCatalogEntry({ entry }))}
+            </ul>
+          </div>
+        ) : null}
+      </>
+    );
   }
 
   return (
@@ -163,59 +291,7 @@ export function CatalogList({
           filteredGroups.map((group) => (
             <section key={group.prefecture} data-prefecture={group.prefecture} className="mb-5">
               <PrefectureSectionHeading prefecture={group.prefecture} />
-              <ul className="divide-y divide-border/40">
-                {group.entries.map((entry) => {
-                  const isRegistered = registeredIds.includes(entry.catalogId);
-                  const isAdding = pendingCatalogId === entry.catalogId && isPending;
-
-                  return (
-                    <li key={entry.catalogId} className="flex items-start gap-2 py-3">
-                      <CatalogFavoriteButton
-                        catalogKind={catalogKind}
-                        catalogId={entry.catalogId}
-                        isFavorite={favoriteIds.includes(entry.catalogId)}
-                        onFavoriteChange={({ isFavorite }) => {
-                          setFavoriteIds((current) => {
-                            if (isFavorite) {
-                              return current.includes(entry.catalogId)
-                                ? current
-                                : [...current, entry.catalogId];
-                            }
-                            return current.filter((id) => id !== entry.catalogId);
-                          });
-                        }}
-                        className="mt-0.5"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium">{entry.name}</p>
-                        <p className="text-xs text-muted-foreground">{entry.address}</p>
-                        {entry.phone ? (
-                          <p className="text-xs text-muted-foreground">{entry.phone}</p>
-                        ) : null}
-                      </div>
-                      <Button
-                        type="button"
-                        variant={isRegistered ? "secondary" : "outline"}
-                        size="xs"
-                        disabled={isRegistered || isAdding}
-                        onClick={() => handleAddToMyList({ catalogId: entry.catalogId })}
-                        className="shrink-0"
-                      >
-                        {isRegistered ? (
-                          <>
-                            <CheckIcon className="size-3" />
-                            追加済
-                          </>
-                        ) : isAdding ? (
-                          "追加中…"
-                        ) : (
-                          "マイリストに追加"
-                        )}
-                      </Button>
-                    </li>
-                  );
-                })}
-              </ul>
+              {renderPrefectureEntries({ entries: group.entries })}
             </section>
           ))
         )}

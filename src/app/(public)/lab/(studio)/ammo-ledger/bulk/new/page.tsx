@@ -3,7 +3,6 @@ import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { buildCounterpartyPickerData } from "@/features/ammo-ledger/catalog/build-counterparty-picker-data/build-counterparty-picker-data";
 import { buildRangePickerData } from "@/features/ammo-ledger/catalog/build-range-picker-data/build-range-picker-data";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
-import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { BulkEntryForm } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-form";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
@@ -44,25 +43,23 @@ export default async function BulkNewPage() {
         </p>
       </div>
       <AmmoLedgerNav />
-      <AmmoLedgerPanel>
-        {guns.length === 0 || ammoTypes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            銃・弾種のマスタを
-            <Link href="/lab/ammo-ledger/settings" className="underline">
-              設定
-            </Link>
-            から登録してください。
-          </p>
-        ) : (
-          <BulkEntryForm
-            guns={guns}
-            ammoTypes={ammoTypes}
-            rangePickerData={rangePickerData}
-            counterpartyPickerData={counterpartyPickerData}
-            defaultCounterpartyId={defaultCounterpartyId}
-          />
-        )}
-      </AmmoLedgerPanel>
+      {guns.length === 0 || ammoTypes.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          銃・弾種のマスタを
+          <Link href="/lab/ammo-ledger/settings" className="underline">
+            設定
+          </Link>
+          から登録してください。
+        </p>
+      ) : (
+        <BulkEntryForm
+          guns={guns}
+          ammoTypes={ammoTypes}
+          rangePickerData={rangePickerData}
+          counterpartyPickerData={counterpartyPickerData}
+          defaultCounterpartyId={defaultCounterpartyId}
+        />
+      )}
     </div>
   );
 }

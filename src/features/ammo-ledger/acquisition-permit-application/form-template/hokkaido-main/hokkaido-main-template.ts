@@ -62,7 +62,16 @@ export const hokkaidoMainTemplate: FormTemplate = {
       verticalAlign: "center",
     },
     { id: "ownerFurigana", page: 0, x: 62.99, y: 69.75, width: 123.74, fontSize: 4.94 },
-    { id: "ownerName", page: 0, x: 62.95, y: 78.48, width: 123.57, height: 18.13, fontSize: 8.47 },
+    {
+      id: "ownerName",
+      page: 0,
+      x: 62.95,
+      y: 78.48,
+      width: 123.57,
+      height: 18.13,
+      fontSize: 8.47,
+      verticalAlign: "center",
+    },
     {
       id: "ownerBirthDateYear",
       page: 0,

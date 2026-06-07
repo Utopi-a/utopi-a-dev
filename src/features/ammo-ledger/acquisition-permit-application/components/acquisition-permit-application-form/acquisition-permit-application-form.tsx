@@ -85,7 +85,7 @@ export function AcquisitionPermitApplicationForm({
   const [homeStock, setHomeStock] = useState(String(currentHomeStock));
   const [validFrom, setValidFrom] = useState(today);
   const [validTo, setValidTo] = useState(defaultValidTo({ validFrom: today }));
-  const [storageLocation, setStorageLocation] = useState(ownerAddress);
+  const [storageLocation, setStorageLocation] = useState("自宅装弾ロッカー");
   const [selectedGunIds, setSelectedGunIds] = useState<string[]>(
     guns.length > 0 ? [guns[0].id] : [],
   );

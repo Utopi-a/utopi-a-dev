@@ -25,7 +25,7 @@ export const calibrationSampleFieldValues: Record<string, string> = {
   validToYear: "2027",
   validToMonth: "3",
   validToDay: "31",
-  storageLocation: "札幌市中央区北1条西2丁目 サンプルマンション101",
+  storageLocation: "自宅装弾ロッカー",
   planPurposeLabel: "標的射撃",
   year: "2026",
   month: "4",

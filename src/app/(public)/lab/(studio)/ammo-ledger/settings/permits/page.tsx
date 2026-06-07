@@ -39,7 +39,7 @@ export default async function AcquisitionPermitsSettingsPage() {
                   </span>
                   <span className="mt-0.5 block text-muted-foreground">
                     {ledgerPurposeLabels[permit.ledgerPurpose as LedgerPurpose]} / 付与{" "}
-                    {permit.grantedOn} / {permit.quantity.toLocaleString("ja-JP")}発 /{" "}
+                    {permit.grantedOn} / {permit.quantity.toLocaleString("ja-JP")}個 /{" "}
                     {formatPermitExpiryLabel({ expiresOn: permit.expiresOn, today })}
                   </span>
                 </span>

@@ -10,7 +10,11 @@ export function formatAmmoQuantity({ quantity }: { quantity: number }): string {
 }
 
 export function formatPermitBalance({ balance }: { balance: number }): string {
-  return `${balance}発`;
+  return `${balance}個`;
+}
+
+export function formatStockQuantity({ quantity }: { quantity: number }): string {
+  return `${quantity.toLocaleString("ja-JP")}個`;
 }
 
 export function formatEntryAmmoQuantityLabel({ category }: { category: LedgerCategory }): string {

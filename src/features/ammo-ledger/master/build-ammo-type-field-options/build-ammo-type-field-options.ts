@@ -11,6 +11,6 @@ export function buildAmmoTypeFieldOptions({
 }) {
   return ammoTypes.map((type) => ({
     value: type.id,
-    label: `${type.name}（${roundsPerBoxLabel}${type.roundsPerBox}発 · 残${stockByAmmoTypeId[type.id] ?? 0}発）`,
+    label: `${type.name}（${roundsPerBoxLabel}${type.roundsPerBox}発 · 残${stockByAmmoTypeId[type.id] ?? 0}個）`,
   }));
 }

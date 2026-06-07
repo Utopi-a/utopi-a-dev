@@ -183,7 +183,9 @@ export function LedgerEntryActionsSheet({
               </div>
               <p className="text-sm text-foreground">
                 {entry.ammoTypeName} · {entry.quantity}発
-                {permitBalance !== undefined ? ` · 許可残 ${permitBalance}発` : ""}
+                {permitBalance !== undefined
+                  ? ` · 許可残 ${formatPermitBalance({ balance: permitBalance })}`
+                  : ""}
               </p>
             </div>
           </SheetDescription>

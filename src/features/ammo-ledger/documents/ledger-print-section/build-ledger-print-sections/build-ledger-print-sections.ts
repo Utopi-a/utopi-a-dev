@@ -99,6 +99,7 @@ export function buildLedgerPrintSections({
   ammoTypes,
   from,
   to,
+  today,
 }: {
   entries: (typeof ammoLedgerEntry.$inferSelect)[];
   permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
@@ -106,6 +107,7 @@ export function buildLedgerPrintSections({
   ammoTypes: (typeof ammoType.$inferSelect)[];
   from: string;
   to: string;
+  today: string;
 }): LedgerPrintSection[] {
   const ammoTypeById = new Map(ammoTypes.map((type) => [type.id, type]));
   const sectionKeys = new Map<string, LedgerPrintSectionKey>();
@@ -206,6 +208,7 @@ export function buildLedgerPrintSections({
         category: entry.category as LedgerCategory,
         quantity: entry.quantity,
       })),
+      today,
     });
 
     return {
@@ -227,6 +230,7 @@ export function buildLedgerPrintSections({
         permitName: section.permitName,
         permitPurpose: section.permitPurpose,
         ledgerPurpose: section.ledgerPurpose,
+        today,
         from,
         to,
       });

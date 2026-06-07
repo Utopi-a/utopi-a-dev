@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { createDraftSuggestionsFromDiff } from "@/features/ammo-ledger/inventory/create-draft-from-diff/create-draft-from-diff";
+import { formatStockQuantity } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { createDraftFromDiffAction } from "@/features/ammo-ledger/transactions/create-draft/create-draft-action";
 
 type StockCheckFormProps = {
@@ -79,7 +80,7 @@ export function StockCheckForm({ items }: StockCheckFormProps) {
         onChange={setAmmoTypeId}
         options={items.map((i) => ({
           value: i.ammoTypeId,
-          label: `${i.ammoTypeName}（帳簿: ${i.bookStock}発）`,
+          label: `${i.ammoTypeName}（帳簿: ${formatStockQuantity({ quantity: i.bookStock })}）`,
         }))}
         required
         placeholder=""
@@ -87,12 +88,12 @@ export function StockCheckForm({ items }: StockCheckFormProps) {
 
       {selected ? (
         <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
-          <p>帳簿上: {selected.bookStock}発</p>
+          <p>帳簿上: {formatStockQuantity({ quantity: selected.bookStock })}</p>
         </div>
       ) : null}
 
       <div className="space-y-2">
-        <Label htmlFor="actual-rounds">実在庫（発）</Label>
+        <Label htmlFor="actual-rounds">実在庫（個）</Label>
         <Input
           id="actual-rounds"
           type="number"
@@ -108,13 +109,13 @@ export function StockCheckForm({ items }: StockCheckFormProps) {
             差分:{" "}
             <span className="font-semibold">
               {diff > 0 ? "+" : ""}
-              {diff}発
+              {diff.toLocaleString("ja-JP")}個
             </span>
           </p>
           <p className="text-sm text-muted-foreground">
             {diff < 0
-              ? `${Math.abs(diff)}発分の未記録がある可能性があります。`
-              : `${diff}発分の帳簿上の不足がある可能性があります。`}
+              ? `${Math.abs(diff).toLocaleString("ja-JP")}個分の未記録がある可能性があります。`
+              : `${diff.toLocaleString("ja-JP")}個分の帳簿上の不足がある可能性があります。`}
           </p>
           <div className="flex flex-col gap-2">
             {suggestions.map((suggestion) => (

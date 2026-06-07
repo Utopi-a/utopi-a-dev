@@ -46,6 +46,7 @@ export function LedgerPrintDocument({
   permits,
   ammoTypes,
 }: LedgerPrintDocumentProps) {
+  const today = new Date().toISOString().slice(0, 10);
   const sections = buildLedgerPrintSections({
     entries,
     permitEvents,
@@ -53,6 +54,7 @@ export function LedgerPrintDocument({
     ammoTypes,
     from,
     to,
+    today,
   });
 
   if (sections.length === 0) {
@@ -94,6 +96,7 @@ export function LedgerPrintDocument({
           from={from}
           to={to}
           year={year}
+          today={today}
         />
       ))}
     </div>

@@ -4,6 +4,7 @@ import type {
   ammoPermitEvent,
 } from "@/db/schema/ammo-ledger";
 import { compareLedgerEntries } from "@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries";
+import { isPermitEventOnOrBeforeToday } from "@/features/ammo-ledger/permit/is-permit-event-on-or-before-today/is-permit-event-on-or-before-today";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 
 export type LedgerPrintDisplayRow =
@@ -105,6 +106,7 @@ export function buildLedgerPrintDisplayRows({
   permitName,
   permitPurpose,
   ledgerPurpose,
+  today,
   from,
   to,
 }: {
@@ -114,6 +116,7 @@ export function buildLedgerPrintDisplayRows({
   permitName: string;
   permitPurpose: string;
   ledgerPurpose: LedgerPurpose;
+  today: string;
   from?: string;
   to?: string;
 }): LedgerPrintDisplayRow[] {
@@ -136,6 +139,7 @@ export function buildLedgerPrintDisplayRows({
         event.occurredOn.endsWith("-01-01") &&
         event.permitId !== null &&
         sectionPermitIds.has(event.permitId) &&
+        isPermitEventOnOrBeforeToday({ occurredOn: event.occurredOn, today }) &&
         isWithinRange({ date: event.occurredOn, from, to }),
     )
     .map((event) => {
@@ -159,6 +163,7 @@ export function buildLedgerPrintDisplayRows({
         event.eventKind === "expiry" &&
         event.permitId !== null &&
         sectionPermitIds.has(event.permitId) &&
+        isPermitEventOnOrBeforeToday({ occurredOn: event.occurredOn, today }) &&
         isWithinRange({ date: event.occurredOn, from, to }),
     )
     .map((event) => {

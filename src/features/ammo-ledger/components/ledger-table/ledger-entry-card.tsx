@@ -141,7 +141,7 @@ export function LedgerEntryCard({
           ) : null}
           {isHomeStorageExceeded ? (
             <p className="text-xs text-amber-700 dark:text-amber-300">
-              この時点で自宅保管の目安（800発）を超えています
+              この時点で自宅保管の目安（800個）を超えています
             </p>
           ) : null}
         </div>

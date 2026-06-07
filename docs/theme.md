@@ -16,7 +16,7 @@
 ## 切り替え
 
 - `next-themes` で `html` に `.dark` クラスを付与
-- 初期値は OS 設定（`system`）。ヘッダーと Lab Studio のトグルでライト / ダークを手動切替
+- 初期値は OS 設定（`system`）。サイトヘッダーのメニュー内トグルでライト / ダークを手動切替
 - 実装: `src/lib/theme/theme-provider.tsx`, `src/lib/theme/theme-toggle.tsx`
 
 ## トークン

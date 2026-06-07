@@ -17,6 +17,7 @@ import {
 import { publicNavItems } from "@/features/portfolio/site-config";
 import { SocialLinks } from "@/features/portfolio/social-links/social-links";
 import { cn } from "@/lib/cn";
+import { ThemeToggle } from "@/lib/theme/theme-toggle";
 
 function NavLink({
   href,
@@ -56,6 +57,7 @@ export function SiteNav() {
         {publicNavItems.map((item) => (
           <NavLink key={item.href} href={item.href} label={item.label} />
         ))}
+        <ThemeToggle />
       </nav>
 
       <Sheet>
@@ -82,8 +84,9 @@ export function SiteNav() {
           </nav>
 
           <SheetFooter className="mt-auto shrink-0 border-t border-border/50 p-0">
-            <div className="w-full px-6 py-6">
+            <div className="flex w-full items-center justify-between gap-4 px-6 py-6">
               <SocialLinks size="sm" />
+              <ThemeToggle />
             </div>
           </SheetFooter>
         </SheetContent>

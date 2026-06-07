@@ -21,37 +21,7 @@ export function LedgerPrintView({
   permitBalances,
 }: LedgerPrintViewProps) {
   return (
-    <div className="ledger-print space-y-4">
-      <style>{`
-        @media print {
-          @page {
-            size: A4 landscape;
-            margin: 10mm;
-          }
-          body * {
-            visibility: hidden;
-          }
-          .ledger-print, .ledger-print * {
-            visibility: visible;
-          }
-          .ledger-print {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          .no-print {
-            display: none !important;
-          }
-        }
-      `}</style>
-
-      <div className="no-print mb-4">
-        <p className="text-sm text-muted-foreground">
-          ブラウザの印刷機能で「PDFに保存」できます。法定項目のみ出力されます。
-        </p>
-      </div>
-
+    <section className="ledger-print-page space-y-4">
       <header className="text-center">
         <h1 className="text-xl font-bold">実包管理帳簿（{ledgerPurposeLabels[purpose]}）</h1>
         <p className="text-sm">
@@ -100,6 +70,6 @@ export function LedgerPrintView({
           ))}
         </tbody>
       </table>
-    </div>
+    </section>
   );
 }

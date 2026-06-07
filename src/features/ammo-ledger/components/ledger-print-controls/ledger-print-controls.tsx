@@ -33,7 +33,7 @@ export function LedgerPrintControls({
         <PrintButton />
       </div>
 
-      <div className="max-w-xs rounded-xl border border-border/60 bg-card/50 px-4 py-4">
+      <div className="max-w-xs">
         <LedgerYearSelect
           years={years}
           value={selectedYear}

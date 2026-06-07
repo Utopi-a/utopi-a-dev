@@ -5,8 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { LedgerYearSelect } from "@/features/ammo-ledger/components/ledger-year-select/ledger-year-select";
+import { OpeningBalanceAmmoTypeAdd } from "@/features/ammo-ledger/components/opening-balance-form/opening-balance-ammo-type-add";
 import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/purpose-filter";
 import type { OpeningBalanceSnapshot } from "@/features/ammo-ledger/opening-balance/get-opening-balance/get-opening-balance";
 import { saveOpeningBalanceAction } from "@/features/ammo-ledger/opening-balance/save-opening-balance/save-opening-balance-action";
@@ -33,6 +33,15 @@ function formatGauge({ gaugeNumber }: { gaugeNumber: string | null }): string {
   return gaugeNumber ? `${gaugeNumber}号` : "—";
 }
 
+function SectionHeading({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="space-y-1">
+      <h2 className="text-sm font-medium">{title}</h2>
+      <p className="text-xs text-muted-foreground">{description}</p>
+    </div>
+  );
+}
+
 export function OpeningBalanceForm({
   years,
   initialYear,
@@ -45,6 +54,7 @@ export function OpeningBalanceForm({
   useEffect(() => {
     setYear(initialYear);
   }, [initialYear]);
+
   const [purpose, setPurpose] = useState<LedgerPurpose>("shooting");
   const [permitBalance, setPermitBalance] = useState("");
   const [stockByAmmoType, setStockByAmmoType] = useState<Record<string, string>>({});
@@ -66,7 +76,6 @@ export function OpeningBalanceForm({
     );
   }, [purpose, ammoTypes, snapshotsByPurpose]);
 
-  const hasAmmoTypes = ammoTypes.length > 0;
   const purposeLabel = ledgerPurposeTabLabels[purpose];
 
   const stockInputs = useMemo(
@@ -117,25 +126,22 @@ export function OpeningBalanceForm({
   }
 
   return (
-    <form className="space-y-5" onSubmit={handleSubmit}>
-      <AmmoLedgerPanel
-        title="対象年"
-        description="各年の1月1日付で繰越を登録します。紙の帳簿から移行するときに使います。"
-      >
-        <div className="max-w-xs">
-          <LedgerYearSelect years={years} value={year} onChange={handleYearChange} />
-        </div>
-      </AmmoLedgerPanel>
+    <form className="space-y-8" onSubmit={handleSubmit}>
+      <div className="max-w-xs">
+        <LedgerYearSelect years={years} value={year} onChange={handleYearChange} label="対象年" />
+        <p className="mt-2 text-xs text-muted-foreground">各年の1月1日付で繰越を登録します。</p>
+      </div>
 
       <PurposeFilter
         current={purpose}
         onPurposeChange={({ nextPurpose }) => setPurpose(nextPurpose)}
       />
 
-      <AmmoLedgerPanel
-        title={`${year}年 ${purposeLabel} — 許可残数`}
-        description="その年の最初に残っている譲り受け許可の残数です。"
-      >
+      <section className="space-y-3">
+        <SectionHeading
+          title={`${year}年 ${purposeLabel} — 許可残数`}
+          description="その年の最初に残っている譲り受け許可の残数です。"
+        />
         <div className="max-w-xs space-y-2">
           <Label htmlFor="permit-balance">許可残数（発）</Label>
           <Input
@@ -151,38 +157,36 @@ export function OpeningBalanceForm({
             空欄または0にすると、{year}年の許可残数繰越を削除します。
           </p>
         </div>
-      </AmmoLedgerPanel>
+      </section>
 
-      <AmmoLedgerPanel
-        title={`${year}年 ${purposeLabel} — 残弾数`}
-        description="弾種ごとに、その年の最初に手元にあった帳簿上の残数を入力します。"
-      >
-        {!hasAmmoTypes ? (
+      <section className="space-y-3">
+        <SectionHeading
+          title={`${year}年 ${purposeLabel} — 残弾数`}
+          description="弾種ごとに、その年の最初に手元にあった帳簿上の残数を入力します。"
+        />
+
+        {ammoTypes.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            弾種が未登録です。先に
-            <a href="/lab/ammo-ledger/settings/ammo-types" className="mx-1 underline">
-              弾種マスタ
-            </a>
-            を登録してください。
+            まだ弾種がありません。下の「弾種を追加」から登録してください。
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-border/50">
+          <div className="overflow-x-auto">
             <table className="w-full min-w-[480px] text-sm">
               <thead>
-                <tr className="border-b border-border/50 bg-muted/20 text-left text-xs text-muted-foreground">
-                  <th className="px-3 py-2 font-medium">弾種</th>
-                  <th className="px-3 py-2 font-medium">号数</th>
-                  <th className="px-3 py-2 text-right font-medium">繰越残数（発）</th>
+                <tr className="border-b border-border/50 text-left text-xs text-muted-foreground">
+                  <th className="px-1 py-2 font-medium">弾種</th>
+                  <th className="px-1 py-2 font-medium">号数</th>
+                  <th className="px-1 py-2 text-right font-medium">繰越残数（発）</th>
                 </tr>
               </thead>
               <tbody>
                 {stockInputs.map(({ type, value }) => (
                   <tr key={type.id} className="border-b border-border/40 last:border-0">
-                    <td className="px-3 py-2 font-medium">{type.name}</td>
-                    <td className="px-3 py-2 text-muted-foreground">
+                    <td className="px-1 py-2 font-medium">{type.name}</td>
+                    <td className="px-1 py-2 text-muted-foreground">
                       {formatGauge({ gaugeNumber: type.gaugeNumber })}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-1 py-2">
                       <Input
                         type="number"
                         min={0}
@@ -201,7 +205,9 @@ export function OpeningBalanceForm({
             </table>
           </div>
         )}
-      </AmmoLedgerPanel>
+
+        <OpeningBalanceAmmoTypeAdd defaultPurpose={purpose} />
+      </section>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 

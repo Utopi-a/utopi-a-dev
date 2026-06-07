@@ -90,6 +90,9 @@ export function CalibrationMarqueeLayer({
       const draggedEnough =
         Math.abs(rect.right - rect.left) > 0.5 || Math.abs(rect.bottom - rect.top) > 0.5;
       if (!draggedEnough) {
+        if (!(moveEvent.metaKey || moveEvent.ctrlKey)) {
+          onSelectFields({ fieldIds: [], additive: false });
+        }
         return;
       }
 

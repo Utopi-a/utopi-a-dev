@@ -41,7 +41,8 @@ export function LedgerPrintControls({
           label="印刷する年"
         />
         <p className="mt-2 text-xs text-muted-foreground">
-          {selectedYear}年1月1日〜12月31日の記録を印刷します。
+          {selectedYear}
+          年1月1日〜12月31日の記録を印刷します。用紙サイズ（A4・B5など）や向きは、印刷ダイアログの設定に従います。
         </p>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { LedgerEntryCard } from "@/features/ammo-ledger/components/ledger-table/
 import {
   LedgerCategoryBadge,
   PermitCarryoverBadge,
+  PermitExpiryBadge,
 } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
 import {
   buildPermitCarryoverLabel,
@@ -137,7 +138,9 @@ export function LedgerTable({
                         <PermitCarryoverBadge />
                       </td>
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.ammoType)}>
-                        <span className="font-medium">{buildPermitCarryoverLabel()}</span>
+                        <span className="font-medium">
+                          {buildPermitCarryoverLabel({ permitName: row.permitName })}
+                        </span>
                       </td>
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.quantity)}>
                         <span className="block text-muted-foreground">—</span>
@@ -147,6 +150,56 @@ export function LedgerTable({
                       >
                         <span className="block font-medium whitespace-nowrap tabular-nums">
                           {formatPermitBalance({ balance: row.quantity })}
+                        </span>
+                      </td>
+                      <td
+                        className={cn(
+                          "px-3 py-3 align-top text-muted-foreground",
+                          ledgerTableColumnClass.location,
+                        )}
+                      >
+                        —
+                      </td>
+                      <td
+                        className={cn(
+                          "px-3 py-3 align-top text-muted-foreground",
+                          ledgerTableColumnClass.counterparty,
+                        )}
+                      >
+                        —
+                      </td>
+                      <td
+                        className={cn(
+                          "px-3 py-3 align-top text-muted-foreground",
+                          ledgerTableColumnClass.gun,
+                        )}
+                      >
+                        —
+                      </td>
+                    </tr>
+                  );
+                }
+
+                if (row.kind === "permit_expiry") {
+                  return (
+                    <tr key={row.id} className="border-b border-border/25 last:border-0">
+                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
+                        <span className="whitespace-nowrap tabular-nums">{row.occurredOn}</span>
+                      </td>
+                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.category)}>
+                        <PermitExpiryBadge />
+                      </td>
+                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.ammoType)}>
+                        <span className="font-medium">{row.permitName}</span>
+                      </td>
+                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.quantity)}>
+                        <span className="block text-muted-foreground">—</span>
+                      </td>
+                      <td
+                        className={cn("px-3 py-3 align-top", ledgerTableColumnClass.permitBalance)}
+                      >
+                        <span className="block font-medium whitespace-nowrap tabular-nums">
+                          {formatPermitBalance({ balance: 0 })}
                         </span>
                       </td>
                       <td

@@ -5,6 +5,7 @@ import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-ent
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { buildAvailableYears } from "@/features/ammo-ledger/opening-balance/build-available-years/build-available-years";
 import { getOpeningBalance } from "@/features/ammo-ledger/opening-balance/get-opening-balance/get-opening-balance";
+import { listAcquisitionPermits } from "@/features/ammo-ledger/permit/list-acquisition-permits/list-acquisition-permits";
 import { listPermitEvents } from "@/features/ammo-ledger/permit/list-permit-events/list-permit-events";
 import { type LedgerPurpose, ledgerPurposes } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { parseLedgerPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
@@ -24,9 +25,10 @@ export default async function OpeningBalanceSettingsPage({ searchParams }: PageP
       : currentYear;
   const selectedPurpose = parseLedgerPurpose({ value: purposeParam }) ?? "shooting";
 
-  const [entries, permitEvents, ammoTypes] = await Promise.all([
+  const [entries, permitEvents, permits, ammoTypes] = await Promise.all([
     listLedgerEntries({ userId: user.id }),
     listPermitEvents({ userId: user.id }),
+    listAcquisitionPermits({ userId: user.id }),
     listAmmoTypes({ userId: user.id }),
   ]);
 
@@ -46,6 +48,7 @@ export default async function OpeningBalanceSettingsPage({ searchParams }: PageP
         purpose: purpose as LedgerPurpose,
         entries,
         permitEvents,
+        permits,
       }),
     ]),
   ) as Record<LedgerPurpose, ReturnType<typeof getOpeningBalance>>;

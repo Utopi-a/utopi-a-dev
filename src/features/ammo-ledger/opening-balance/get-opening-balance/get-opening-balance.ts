@@ -1,29 +1,36 @@
-import type { ammoLedgerEntry, ammoPermitEvent } from "@/db/schema/ammo-ledger";
+import type {
+  ammoAcquisitionPermit,
+  ammoLedgerEntry,
+  ammoPermitEvent,
+} from "@/db/schema/ammo-ledger";
 import { buildYearOpeningDay } from "@/features/ammo-ledger/opening-balance/build-year-day/build-year-day";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 
+export type OpeningBalancePermitCarryover = {
+  permitId: string;
+  name: string;
+  permitPurpose: string;
+  quantity: number;
+  expiresOn: string;
+};
+
 export type OpeningBalanceSnapshot = {
-  permitBalance: number | null;
-  permitExpiresOn: string | null;
+  permitCarryovers: OpeningBalancePermitCarryover[];
   stockByAmmoType: Record<string, number>;
 };
 
-function resolveCarryoverPermitExpiresOn({
-  permitEvent,
-  permitEvents,
+function resolveCarryoverPermit({
+  permitId,
+  permits,
 }: {
-  permitEvent: typeof ammoPermitEvent.$inferSelect | undefined;
-  permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
-}): string | null {
-  if (!permitEvent?.permitId) {
+  permitId: string | null;
+  permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
+}): typeof ammoAcquisitionPermit.$inferSelect | null {
+  if (!permitId) {
     return null;
   }
 
-  const expiryEvent = permitEvents.find(
-    (event) => event.permitId === permitEvent.permitId && event.eventKind === "expiry",
-  );
-
-  return expiryEvent?.occurredOn ?? null;
+  return permits.find((permit) => permit.id === permitId) ?? null;
 }
 
 export function getOpeningBalance({
@@ -31,21 +38,35 @@ export function getOpeningBalance({
   purpose,
   entries,
   permitEvents,
+  permits,
 }: {
   year: number;
   purpose: LedgerPurpose;
   entries: (typeof ammoLedgerEntry.$inferSelect)[];
   permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
+  permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
 }): OpeningBalanceSnapshot {
   const openingDay = buildYearOpeningDay({ year });
 
-  const permitEvent = permitEvents.find(
-    (event) =>
-      event.purpose === purpose &&
-      event.eventKind === "carryover" &&
-      event.occurredOn === openingDay,
-  );
+  const permitCarryovers = permitEvents
+    .filter(
+      (event) =>
+        event.purpose === purpose &&
+        event.eventKind === "carryover" &&
+        event.occurredOn === openingDay &&
+        event.permitId !== null,
+    )
+    .map((event) => {
+      const permit = resolveCarryoverPermit({ permitId: event.permitId, permits });
 
+      return {
+        permitId: event.permitId as string,
+        name: permit?.name ?? "その他",
+        permitPurpose: permit?.permitPurpose ?? "",
+        quantity: event.quantity,
+        expiresOn: permit?.expiresOn ?? openingDay,
+      };
+    });
   const stockByAmmoType: Record<string, number> = {};
 
   for (const entry of entries) {
@@ -60,8 +81,7 @@ export function getOpeningBalance({
   }
 
   return {
-    permitBalance: permitEvent?.quantity ?? null,
-    permitExpiresOn: resolveCarryoverPermitExpiresOn({ permitEvent, permitEvents }),
+    permitCarryovers,
     stockByAmmoType,
   };
 }

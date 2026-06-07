@@ -1,25 +1,21 @@
 import type {
+  ammoAcquisitionPermit,
   ammoCounterparty,
   ammoGun,
   ammoLedgerEntry,
   ammoPermitEvent,
   ammoRange,
+  ammoType,
 } from "@/db/schema/ammo-ledger";
 import { LedgerPrintAddressList } from "@/features/ammo-ledger/documents/ledger-print-address-list/ledger-print-address-list";
 import { LedgerPrintCover } from "@/features/ammo-ledger/documents/ledger-print-cover/ledger-print-cover";
 import { LedgerPrintGunList } from "@/features/ammo-ledger/documents/ledger-print-gun-list/ledger-print-gun-list";
+import {
+  buildLedgerPrintSections,
+  formatLedgerPrintSectionLabel,
+} from "@/features/ammo-ledger/documents/ledger-print-section/build-ledger-print-sections/build-ledger-print-sections";
 import { LedgerPrintStyles } from "@/features/ammo-ledger/documents/ledger-print-styles/ledger-print-styles";
 import { LedgerPrintView } from "@/features/ammo-ledger/documents/ledger-print-view/ledger-print-view";
-import { buildLedgerDisplayRows } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
-import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
-import { ledgerPurposes } from "@/features/ammo-ledger/schema/ledger-purpose";
-
-type LedgerPrintPurposeData = {
-  purpose: LedgerPurpose;
-  entries: (typeof ammoLedgerEntry.$inferSelect)[];
-  permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
-  permitBalances?: Map<string, number>;
-};
 
 type LedgerPrintDocumentProps = {
   ownerName: string;
@@ -30,7 +26,10 @@ type LedgerPrintDocumentProps = {
   guns: (typeof ammoGun.$inferSelect)[];
   ranges: (typeof ammoRange.$inferSelect)[];
   counterparties: (typeof ammoCounterparty.$inferSelect)[];
-  purposeSections: LedgerPrintPurposeData[];
+  entries: (typeof ammoLedgerEntry.$inferSelect)[];
+  permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
+  permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
+  ammoTypes: (typeof ammoType.$inferSelect)[];
 };
 
 export function LedgerPrintDocument({
@@ -42,23 +41,21 @@ export function LedgerPrintDocument({
   guns,
   ranges,
   counterparties,
-  purposeSections,
+  entries,
+  permitEvents,
+  permits,
+  ammoTypes,
 }: LedgerPrintDocumentProps) {
-  const orderedSections = ledgerPurposes
-    .map((purpose) => purposeSections.find((section) => section.purpose === purpose))
-    .filter((section): section is LedgerPrintPurposeData => section !== undefined)
-    .filter((section) => {
-      const rows = buildLedgerDisplayRows({
-        entries: section.entries,
-        permitEvents: section.permitEvents,
-        purpose: section.purpose,
-        from,
-        to,
-      });
-      return rows.length > 0;
-    });
+  const sections = buildLedgerPrintSections({
+    entries,
+    permitEvents,
+    permits,
+    ammoTypes,
+    from,
+    to,
+  });
 
-  if (orderedSections.length === 0) {
+  if (sections.length === 0) {
     return (
       <div className="ledger-print">
         <LedgerPrintStyles />
@@ -73,30 +70,30 @@ export function LedgerPrintDocument({
 
       <div className="no-print mb-4">
         <p className="text-sm text-muted-foreground">
-          ブラウザの印刷機能で「PDFに保存」できます。表紙・別紙のあと、記録がある用途の帳簿本体が順に出力されます。
+          ブラウザの印刷機能で「PDFに保存」できます。用紙サイズや向きは印刷ダイアログで選べます。表紙・別紙のあと、許可種別ごとの帳簿本体が順に出力されます。
         </p>
       </div>
 
       <LedgerPrintCover
         ownerName={ownerName}
         ownerAddress={ownerAddress}
-        purposes={orderedSections.map((section) => section.purpose)}
+        sectionLabels={sections.map((section) => formatLedgerPrintSectionLabel({ section }))}
         from={from}
         to={to}
       />
       <LedgerPrintGunList guns={guns} />
       <LedgerPrintAddressList ranges={ranges} counterparties={counterparties} />
 
-      {orderedSections.map((section) => (
+      {sections.map((section) => (
         <LedgerPrintView
-          key={section.purpose}
+          key={section.key}
+          section={section}
           entries={section.entries}
           permitEvents={section.permitEvents}
+          permits={permits}
           from={from}
           to={to}
           year={year}
-          purpose={section.purpose}
-          permitBalances={section.permitBalances}
         />
       ))}
     </div>

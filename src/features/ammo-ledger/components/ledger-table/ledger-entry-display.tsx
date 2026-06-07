@@ -22,6 +22,14 @@ export function PermitCarryoverBadge() {
   );
 }
 
+export function PermitExpiryBadge() {
+  return (
+    <span className="inline-flex min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+      許可残数失効
+    </span>
+  );
+}
+
 export function isAmmoCarryoverEntry({ category }: { category: string }): boolean {
   return category === "carryover";
 }

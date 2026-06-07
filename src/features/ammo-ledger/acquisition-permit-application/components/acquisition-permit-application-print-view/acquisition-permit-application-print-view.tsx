@@ -8,8 +8,8 @@ import type { BuiltApplicationFieldValues } from "@/features/ammo-ledger/acquisi
 import { buildApplicationFieldValues } from "@/features/ammo-ledger/acquisition-permit-application/build-application-field-values/build-application-field-values";
 import { ApplicationPrintButtons } from "@/features/ammo-ledger/acquisition-permit-application/components/application-print-buttons/application-print-buttons";
 import { AcquisitionPermitApplicationDocument } from "@/features/ammo-ledger/acquisition-permit-application/documents/acquisition-permit-application-document/acquisition-permit-application-document";
-import { isFieldCalibrationEnabled } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/is-field-calibration-enabled";
 import { cn } from "@/lib/cn";
+import { isDevelopmentEnvironment } from "@/lib/is-development-environment";
 
 export function AcquisitionPermitApplicationPrintView() {
   const [fieldValues, setFieldValues] = useState<BuiltApplicationFieldValues | null>(null);
@@ -50,7 +50,7 @@ export function AcquisitionPermitApplicationPrintView() {
           >
             ← 入力に戻る
           </Link>
-          {isFieldCalibrationEnabled() ? (
+          {isDevelopmentEnvironment() ? (
             <Link
               href="/lab/ammo-ledger/applications/acquisition-permit/calibration"
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}

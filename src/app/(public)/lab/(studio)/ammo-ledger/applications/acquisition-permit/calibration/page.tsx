@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { FieldCalibrationView } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/field-calibration-view";
-import { isFieldCalibrationEnabled } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/is-field-calibration-enabled";
+import { isDevelopmentEnvironment } from "@/lib/is-development-environment";
 
 export default function AcquisitionPermitFieldCalibrationPage() {
-  if (!isFieldCalibrationEnabled()) {
+  if (!isDevelopmentEnvironment()) {
     notFound();
   }
 

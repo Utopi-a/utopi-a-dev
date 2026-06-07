@@ -5,6 +5,7 @@ import type {
   OverlayFieldDef,
   RepeatingRowMap,
 } from "@/features/ammo-ledger/acquisition-permit-application/form-template/form-template-types";
+import { isDevelopmentEnvironment } from "@/lib/is-development-environment";
 
 type ApplyTemplateRequest = {
   templateId: string;
@@ -13,7 +14,7 @@ type ApplyTemplateRequest = {
 };
 
 export async function POST(request: Request) {
-  if (process.env.NODE_ENV !== "development") {
+  if (!isDevelopmentEnvironment()) {
     return NextResponse.json({ error: "development 環境でのみ利用できます" }, { status: 403 });
   }
 

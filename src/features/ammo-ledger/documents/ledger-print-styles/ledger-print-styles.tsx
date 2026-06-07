@@ -3,6 +3,7 @@ export function LedgerPrintStyles() {
     <style>{`
       .ledger-print-table {
         width: 100%;
+        max-width: 100%;
         table-layout: fixed;
         border-collapse: collapse;
         font-size: 10px;
@@ -16,36 +17,37 @@ export function LedgerPrintStyles() {
         break-inside: avoid;
       }
 
+      /* 左側のコンパクト列は em で最低幅を確保し、右側は % で用紙幅に追従 */
       .ledger-print-col-date {
-        width: 24mm;
+        width: 6.8em;
       }
 
       .ledger-print-col-category {
-        width: 22mm;
+        width: 6em;
       }
 
       .ledger-print-col-permit-name {
-        width: 28mm;
+        width: 7em;
       }
 
       .ledger-print-col-quantity {
-        width: 16mm;
+        width: 4.5em;
       }
 
       .ledger-print-col-permit-balance {
-        width: 20mm;
+        width: 5.5em;
       }
 
       .ledger-print-col-location {
-        width: 55mm;
+        width: 22%;
       }
 
       .ledger-print-col-counterparty {
-        width: 55mm;
+        width: 22%;
       }
 
       .ledger-print-col-gun {
-        width: 57mm;
+        width: 21%;
       }
 
       .ledger-print-cell {
@@ -73,7 +75,6 @@ export function LedgerPrintStyles() {
 
       @media print {
         @page {
-          size: A4 landscape;
           margin: 10mm;
         }
         body * {
@@ -93,16 +94,17 @@ export function LedgerPrintStyles() {
         }
         .ledger-print-page {
           page-break-after: always;
+          min-height: auto;
+          padding-bottom: 0;
         }
         .ledger-print-page:last-child {
           page-break-after: auto;
         }
         .ledger-print-table {
-          width: 277mm;
+          width: 100%;
         }
       }
       .ledger-print-page {
-        min-height: 180mm;
         padding-bottom: 8mm;
       }
     `}</style>

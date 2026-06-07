@@ -70,7 +70,7 @@ export function LedgerPrintDocument({
 
       <div className="no-print mb-4">
         <p className="text-sm text-muted-foreground">
-          ブラウザの印刷機能で「PDFに保存」できます。表紙・別紙のあと、許可種別ごとの帳簿本体が順に出力されます。
+          ブラウザの印刷機能で「PDFに保存」できます。用紙サイズや向きは印刷ダイアログで選べます。表紙・別紙のあと、許可種別ごとの帳簿本体が順に出力されます。
         </p>
       </div>
 

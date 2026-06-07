@@ -11,7 +11,7 @@ export const ledgerPrintColClass = {
 
 export const ledgerPrintCellClass = {
   date: ledgerPrintColClass.date,
-  category: ledgerPrintColClass.category,
+  category: `${ledgerPrintColClass.category} ledger-print-cell-category`,
   permitName: ledgerPrintColClass.permitName,
   quantity: `${ledgerPrintColClass.quantity} ledger-print-cell-right`,
   permitBalance: `${ledgerPrintColClass.permitBalance} ledger-print-cell-right`,

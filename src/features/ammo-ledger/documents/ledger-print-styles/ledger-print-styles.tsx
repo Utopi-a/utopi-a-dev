@@ -23,7 +23,11 @@ export function LedgerPrintStyles() {
       }
 
       .ledger-print-col-category {
-        width: 6em;
+        width: 10em;
+      }
+
+      .ledger-print-cell-category {
+        white-space: nowrap;
       }
 
       .ledger-print-col-permit-name {

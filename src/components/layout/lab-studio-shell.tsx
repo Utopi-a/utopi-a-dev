@@ -13,7 +13,12 @@ export async function LabStudioShell({
   const session = await getSession();
 
   return (
-    <div className={cn("mx-auto flex w-full max-w-3xl flex-col gap-4", className)}>
+    <div
+      className={cn(
+        "mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 sm:px-6 sm:pb-8",
+        className,
+      )}
+    >
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
         <Link href="/lab" className="text-sm text-muted-foreground hover:text-foreground">
           ← Lab に戻る

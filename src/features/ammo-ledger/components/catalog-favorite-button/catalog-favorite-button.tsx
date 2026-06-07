@@ -29,9 +29,16 @@ export function CatalogFavoriteButton({
     event.preventDefault();
     event.stopPropagation();
 
+    const previousFavorite = favorite;
+    const nextFavorite = !favorite;
+    setFavorite(nextFavorite);
+    onFavoriteChange?.({ isFavorite: nextFavorite });
+
     startTransition(async () => {
       const result = await toggleCatalogFavoriteAction({ catalogKind, catalogId });
       if (!result.ok) {
+        setFavorite(previousFavorite);
+        onFavoriteChange?.({ isFavorite: previousFavorite });
         return;
       }
 

@@ -40,7 +40,7 @@ export function AmmoLedgerNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex-1 rounded-md px-3 py-2 text-center text-sm font-medium transition-colors",
+              "flex-1 rounded-md px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm",
               isActive
                 ? "bg-background text-foreground shadow-none"
                 : "text-muted-foreground hover:text-foreground",

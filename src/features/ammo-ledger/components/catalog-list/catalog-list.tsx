@@ -71,6 +71,9 @@ export function CatalogList({
   function handleAddToMyList({ catalogId }: { catalogId: string }) {
     setError(null);
     setPendingCatalogId(catalogId);
+    setRegisteredIds((current) =>
+      current.includes(catalogId) ? current : [...current, catalogId],
+    );
 
     startTransition(async () => {
       const result =
@@ -81,13 +84,9 @@ export function CatalogList({
       setPendingCatalogId(null);
 
       if (!result.ok) {
+        setRegisteredIds((current) => current.filter((id) => id !== catalogId));
         setError(result.error);
-        return;
       }
-
-      setRegisteredIds((current) =>
-        current.includes(catalogId) ? current : [...current, catalogId],
-      );
     });
   }
 

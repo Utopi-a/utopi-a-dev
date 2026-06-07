@@ -7,9 +7,15 @@ import { voidLedgerEntryAction } from "@/features/ammo-ledger/transactions/void-
 
 type VoidLedgerEntryButtonProps = {
   ledgerEntryId: string;
+  onVoided?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
+  onVoidFailed?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
 };
 
-export function VoidLedgerEntryButton({ ledgerEntryId }: VoidLedgerEntryButtonProps) {
+export function VoidLedgerEntryButton({
+  ledgerEntryId,
+  onVoided,
+  onVoidFailed,
+}: VoidLedgerEntryButtonProps) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,16 +27,19 @@ export function VoidLedgerEntryButton({ ledgerEntryId }: VoidLedgerEntryButtonPr
 
     setIsPending(true);
     setError(null);
+    onVoided?.({ ledgerEntryId });
 
     const result = await voidLedgerEntryAction({ ledgerEntryId });
 
     if (!result.ok) {
+      onVoidFailed?.({ ledgerEntryId });
       setError(result.error);
       setIsPending(false);
       return;
     }
 
     router.refresh();
+    setIsPending(false);
   }
 
   return (

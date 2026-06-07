@@ -3,7 +3,7 @@ import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { ActivePermitStatus } from "@/features/ammo-ledger/components/active-permit-status/active-permit-status";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { HomeStorageWarning } from "@/features/ammo-ledger/components/home-storage-warning/home-storage-warning";
-import { LedgerTable } from "@/features/ammo-ledger/components/ledger-table/ledger-table";
+import { LedgerTableShell } from "@/features/ammo-ledger/components/ledger-table/ledger-table-shell";
 import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/purpose-filter";
 import { evaluateHomeStorageLimit } from "@/features/ammo-ledger/ledger/compute-running-home-stock/compute-running-home-stock";
 import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-entries/list-ledger-entries";
@@ -125,7 +125,7 @@ export default async function LedgerPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
-      <LedgerTable
+      <LedgerTableShell
         entries={entries}
         permitBalances={permitBalances}
         homeStorageExceededEntryIds={homeStorage.exceededEntryIds}

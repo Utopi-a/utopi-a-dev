@@ -10,6 +10,8 @@ type LedgerTableProps = {
   entries: (typeof ammoLedgerEntry.$inferSelect)[];
   permitBalances?: Map<string, number>;
   homeStorageExceededEntryIds?: string[];
+  onVoided?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
+  onVoidFailed?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
 };
 
 const categoryTone: Record<LedgerCategory, string> = {
@@ -35,6 +37,8 @@ export function LedgerTable({
   entries,
   permitBalances,
   homeStorageExceededEntryIds = [],
+  onVoided,
+  onVoidFailed,
 }: LedgerTableProps) {
   const exceededSet = new Set(homeStorageExceededEntryIds);
   if (entries.length === 0) {
@@ -46,7 +50,8 @@ export function LedgerTable({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <p className="mb-2 text-xs text-muted-foreground sm:hidden">表は横にスクロールできます</p>
       <table className="w-full min-w-[720px] text-sm">
         <thead>
           <tr className="border-b border-border/40 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
@@ -115,7 +120,11 @@ export function LedgerTable({
                 )}
               </td>
               <td className="px-3 py-3 align-top">
-                <VoidLedgerEntryButton ledgerEntryId={entry.id} />
+                <VoidLedgerEntryButton
+                  ledgerEntryId={entry.id}
+                  onVoided={onVoided}
+                  onVoidFailed={onVoidFailed}
+                />
               </td>
             </tr>
           ))}

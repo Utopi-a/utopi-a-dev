@@ -15,6 +15,20 @@ const permit = {
   updatedAt: new Date(),
 };
 
+const permit2 = {
+  id: "permit-2",
+  userId: "u1",
+  ledgerPurpose: "shooting",
+  name: "12番",
+  permitPurpose: "標的射撃",
+  grantedOn: "2026-01-01",
+  expiresOn: "2026-09-30",
+  quantity: 800,
+  memo: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
 describe("buildLedgerDisplayRows", () => {
   const today = "2026-06-07";
 
@@ -70,6 +84,48 @@ describe("buildLedgerDisplayRows", () => {
       expect(rows[0].expiresOn).toBe("2026-12-31");
     }
     expect(rows[1].kind).toBe("entry");
+  });
+
+  it("同じ許可種別×目的の許可繰越行は1行にまとめる", () => {
+    const rows = buildLedgerDisplayRows({
+      purpose: "shooting",
+      today,
+      permits: [permit, permit2],
+      permitEvents: [
+        {
+          id: "pe1",
+          userId: "u1",
+          permitId: "permit-1",
+          purpose: "shooting",
+          eventKind: "carryover",
+          occurredOn: "2026-01-01",
+          quantity: 1200,
+          memo: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "pe2",
+          userId: "u1",
+          permitId: "permit-2",
+          purpose: "shooting",
+          eventKind: "carryover",
+          occurredOn: "2026-01-01",
+          quantity: 800,
+          memo: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      entries: [],
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].kind).toBe("permit_carryover");
+    if (rows[0].kind === "permit_carryover") {
+      expect(rows[0].permitName).toBe("12番");
+      expect(rows[0].quantity).toBe(2000);
+    }
   });
 
   it("同日の記録は許可残数失効より前に並べる", () => {

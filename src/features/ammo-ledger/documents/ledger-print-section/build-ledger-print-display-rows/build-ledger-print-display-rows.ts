@@ -4,6 +4,7 @@ import type {
   ammoPermitEvent,
 } from "@/db/schema/ammo-ledger";
 import { compareLedgerEntries } from "@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries";
+import { mergePermitCarryoverDisplayRows } from "@/features/ammo-ledger/ledger/merge-permit-carryover-display-rows/merge-permit-carryover-display-rows";
 import { isPermitEventOnOrBeforeToday } from "@/features/ammo-ledger/permit/is-permit-event-on-or-before-today/is-permit-event-on-or-before-today";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 
@@ -131,30 +132,32 @@ export function buildLedgerPrintDisplayRows({
       .map((permit) => permit.id),
   );
 
-  const permitCarryovers = permitEvents
-    .filter(
-      (event) =>
-        event.purpose === ledgerPurpose &&
-        event.eventKind === "carryover" &&
-        event.occurredOn.endsWith("-01-01") &&
-        event.permitId !== null &&
-        sectionPermitIds.has(event.permitId) &&
-        isPermitEventOnOrBeforeToday({ occurredOn: event.occurredOn, today }) &&
-        isWithinRange({ date: event.occurredOn, from, to }),
-    )
-    .map((event) => {
-      const permit = resolvePermitById({ permitId: event.permitId, permits });
+  const permitCarryovers = mergePermitCarryoverDisplayRows({
+    rows: permitEvents
+      .filter(
+        (event) =>
+          event.purpose === ledgerPurpose &&
+          event.eventKind === "carryover" &&
+          event.occurredOn.endsWith("-01-01") &&
+          event.permitId !== null &&
+          sectionPermitIds.has(event.permitId) &&
+          isPermitEventOnOrBeforeToday({ occurredOn: event.occurredOn, today }) &&
+          isWithinRange({ date: event.occurredOn, from, to }),
+      )
+      .map((event) => {
+        const permit = resolvePermitById({ permitId: event.permitId, permits });
 
-      return {
-        kind: "permit_carryover" as const,
-        id: `permit-carryover-${event.id}`,
-        occurredOn: event.occurredOn,
-        quantity: event.quantity,
-        expiresOn: permit?.expiresOn ?? null,
-        permitName: permit?.name ?? permitName,
-        permitPurpose: permit?.permitPurpose ?? permitPurpose,
-      };
-    });
+        return {
+          kind: "permit_carryover" as const,
+          id: `permit-carryover-${event.id}`,
+          occurredOn: event.occurredOn,
+          quantity: event.quantity,
+          expiresOn: permit?.expiresOn ?? null,
+          permitName: permit?.name ?? permitName,
+          permitPurpose: permit?.permitPurpose ?? permitPurpose,
+        };
+      }),
+  });
 
   const permitExpiries = permitEvents
     .filter(

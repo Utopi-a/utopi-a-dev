@@ -93,7 +93,7 @@ export async function loadVisionModel({
       dataUrl:
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
     });
-    const inputs = await processor("warmup", image);
+    const inputs = await processor(image, "warmup");
     await model.generate({ ...inputs, max_new_tokens: 1 });
 
     loadedPipeline = {
@@ -167,7 +167,7 @@ async function generateMoondream({ messages }: { messages: InferenceMessage[] })
   }
 
   const image = await loadImageFromDataUrl({ dataUrl: imageAttachment.dataUrl });
-  const inputs = await loadedPipeline.processor(message.content, image);
+  const inputs = await loadedPipeline.processor(image, message.content);
 
   let startTime: number | undefined;
   let numTokens = 0;

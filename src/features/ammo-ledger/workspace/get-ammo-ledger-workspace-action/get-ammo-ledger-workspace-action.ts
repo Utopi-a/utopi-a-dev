@@ -1,22 +1,21 @@
 "use server";
 
-import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
-import { resolveOwnerName } from "@/features/ammo-ledger/profile/resolve-owner-name/resolve-owner-name";
-import type { AmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-types";
-import { loadAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/load-ammo-ledger-workspace/load-ammo-ledger-workspace";
+import type { AmmoLedgerWorkspacePayload } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-payload/ammo-ledger-workspace-payload";
+import { loadAmmoLedgerWorkspacePayloadForSession } from "@/features/ammo-ledger/workspace/load-ammo-ledger-workspace-payload/load-ammo-ledger-workspace-payload";
 
-export type AmmoLedgerWorkspacePayload = {
-  workspace: AmmoLedgerWorkspace;
-  ownerName: string;
-};
+export type { AmmoLedgerWorkspacePayload };
 
 export async function getAmmoLedgerWorkspaceAction(): Promise<AmmoLedgerWorkspacePayload> {
-  const user = await requireAmmoUser({ rateLimit: "read" });
-  const workspace = await loadAmmoLedgerWorkspace({ userId: user.id });
-  const ownerName = resolveOwnerName({
-    profileOwnerName: workspace.profile?.ownerName,
-    accountName: user.name,
-  });
+  if (typeof performance !== "undefined") {
+    performance.mark("workspace:fetch:start");
+  }
 
-  return { workspace, ownerName };
+  const payload = await loadAmmoLedgerWorkspacePayloadForSession();
+
+  if (typeof performance !== "undefined") {
+    performance.mark("workspace:fetch:end");
+    performance.measure("workspace:fetch", "workspace:fetch:start", "workspace:fetch:end");
+  }
+
+  return payload;
 }

@@ -4,18 +4,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useTransition } from "react";
 import { useAmmoLedgerOptimisticNav } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { matchesNavTarget } from "@/features/ammo-ledger/workspace/matches-nav-target/matches-nav-target";
-import {
-  isClientShellNavPath,
-  isWorkspaceShellRoute,
-  resolveShellRoute,
-} from "@/features/ammo-ledger/workspace/resolve-shell-route/resolve-shell-route";
-import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+import { isClientShellNavPath } from "@/features/ammo-ledger/workspace/resolve-shell-route/resolve-shell-route";
 
 export function useAmmoLedgerClientNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { setActivePath } = useAmmoLedgerOptimisticNav();
-  const requestWorkspaceRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const [, startTransition] = useTransition();
 
   const navigate = useCallback(
@@ -24,15 +18,11 @@ export function useAmmoLedgerClientNav() {
         return false;
       }
 
-      const shellRoute = resolveShellRoute({ path: href });
       if (process.env.NODE_ENV === "development") {
         performance.mark(`ammo-ledger:nav:${href}:start`);
       }
 
       setActivePath({ path: href });
-      if (shellRoute && isWorkspaceShellRoute({ route: shellRoute })) {
-        requestWorkspaceRevalidation();
-      }
       window.history.pushState(window.history.state, "", href);
 
       if (!matchesNavTarget({ target: href, current: pathname })) {
@@ -52,7 +42,7 @@ export function useAmmoLedgerClientNav() {
 
       return true;
     },
-    [pathname, requestWorkspaceRevalidation, router, setActivePath],
+    [pathname, router, setActivePath],
   );
 
   return { navigate };

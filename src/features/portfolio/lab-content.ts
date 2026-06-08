@@ -29,7 +29,7 @@ export const labEntries: LabEntry[] = [
   {
     id: "local-llm",
     title: "ローカル LLM チャット",
-    description: "WebGPU + Transformers.js で LFM2.5-1.2B-JP をブラウザ内推論。ログイン不要。",
+    description: "WebGPU + Transformers.js で複数モデルをブラウザ内推論。ログイン不要。",
     status: "active",
     href: "/lab/local-llm",
   },

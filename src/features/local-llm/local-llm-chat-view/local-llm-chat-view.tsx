@@ -1,95 +1,88 @@
 "use client";
 
-import { Loader2Icon, SendIcon, SquareIcon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import type {
-  LfmChatMessage,
-  LfmChatPhase,
-  LfmDownloadProgress,
-  LfmWorkerEvent,
-} from "@/features/local-llm/lfm-inference-worker/lfm-worker-messages";
-import {
-  LFM_JP_CHAT_EXAMPLES,
-  LFM_JP_MODEL_LABEL,
-} from "@/features/local-llm/lfm-model-config/lfm-model-config";
+  DownloadProgress,
+  InferenceWorkerEvent,
+  LocalLlmChatPhase,
+} from "@/features/local-llm/inference-worker/inference-worker-messages";
+import { ChatComposer } from "@/features/local-llm/local-llm-chat-view/chat-composer";
+import { ChatMessageList } from "@/features/local-llm/local-llm-chat-view/chat-message-list";
+import type { ChatMessage } from "@/features/local-llm/local-llm-chat-view/chat-message-types";
+import { ModelAttribution } from "@/features/local-llm/local-llm-chat-view/model-attribution";
 import { ModelDownloadProgress } from "@/features/local-llm/local-llm-chat-view/model-download-progress";
+import { ModelSelector } from "@/features/local-llm/local-llm-chat-view/model-selector";
+import {
+  DEFAULT_LOCAL_LLM_MODEL_ID,
+  getLocalLlmModelById,
+  modelSupportsImages,
+} from "@/features/local-llm/model-registry/local-llm-models";
 import { PageHeader } from "@/features/portfolio/page-header/page-header";
-import { cn } from "@/lib/cn";
 
 const IS_WEBGPU_AVAILABLE = typeof navigator !== "undefined" && "gpu" in navigator;
 const STICKY_SCROLL_THRESHOLD = 120;
+const SELECTED_MODEL_STORAGE_KEY = "local-llm:selected-model";
+
+function readStoredModelId() {
+  if (typeof window === "undefined") {
+    return DEFAULT_LOCAL_LLM_MODEL_ID;
+  }
+
+  return window.sessionStorage.getItem(SELECTED_MODEL_STORAGE_KEY) ?? DEFAULT_LOCAL_LLM_MODEL_ID;
+}
 
 export function LocalLlmChatView() {
   const workerRef = useRef<Worker | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const [phase, setPhase] = useState<LfmChatPhase>("idle");
+  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_LOCAL_LLM_MODEL_ID);
+  const [loadedModelId, setLoadedModelId] = useState<string | null>(null);
+  const [phase, setPhase] = useState<LocalLlmChatPhase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState("");
-  const [progressItems, setProgressItems] = useState<LfmDownloadProgress[]>([]);
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<LfmChatMessage[]>([]);
+  const [progressItems, setProgressItems] = useState<DownloadProgress[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [tps, setTps] = useState<number | null>(null);
   const [numTokens, setNumTokens] = useState<number | null>(null);
 
-  function submitMessage({ message }: { message: string }) {
-    const trimmed = message.trim();
-    if (!trimmed || isGenerating || phase !== "ready") {
-      return;
-    }
+  const selectedModel =
+    getLocalLlmModelById({ modelId: selectedModelId }) ??
+    getLocalLlmModelById({ modelId: DEFAULT_LOCAL_LLM_MODEL_ID });
+  const activeModel =
+    getLocalLlmModelById({ modelId: loadedModelId ?? selectedModelId }) ?? selectedModel;
 
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "user", content: trimmed }]);
-    setTps(null);
-    setIsGenerating(true);
-    setInput("");
-  }
+  const terminateWorker = useCallback(() => {
+    workerRef.current?.terminate();
+    workerRef.current = null;
+  }, []);
 
-  function interruptGeneration() {
-    workerRef.current?.postMessage({ type: "interrupt" });
-  }
-
-  function resetConversation() {
-    workerRef.current?.postMessage({ type: "reset" });
-    setMessages([]);
-    setTps(null);
-    setNumTokens(null);
-  }
-
-  function loadModel() {
-    workerRef.current?.postMessage({ type: "load" });
-    setPhase("loading");
-    setError(null);
-  }
-
-  function resizeTextarea() {
-    if (!textareaRef.current) {
-      return;
-    }
-
-    const target = textareaRef.current;
-    target.style.height = "auto";
-    const newHeight = Math.min(Math.max(target.scrollHeight, 24), 200);
-    target.style.height = `${newHeight}px`;
-  }
+  const createWorker = useCallback(() => {
+    terminateWorker();
+    const worker = new Worker(new URL("../inference-worker/inference-worker.ts", import.meta.url), {
+      type: "module",
+    });
+    workerRef.current = worker;
+    worker.postMessage({ type: "check" });
+    return worker;
+  }, [terminateWorker]);
 
   useEffect(() => {
-    if (!IS_WEBGPU_AVAILABLE) {
+    setSelectedModelId(readStoredModelId());
+  }, []);
+
+  useEffect(() => {
+    if (!IS_WEBGPU_AVAILABLE || !getLocalLlmModelById({ modelId: selectedModelId })) {
       return;
     }
 
-    workerRef.current = new Worker(
-      new URL("../lfm-inference-worker/lfm-inference-worker.ts", import.meta.url),
-      { type: "module" },
-    );
-    workerRef.current.postMessage({ type: "check" });
+    const worker = createWorker();
 
-    const onMessageReceived = (event: MessageEvent<LfmWorkerEvent>) => {
+    const onMessageReceived = (event: MessageEvent<InferenceWorkerEvent>) => {
       const payload = event.data;
 
       if (payload.status === "loading") {
@@ -116,6 +109,7 @@ export function LocalLlmChatView() {
       }
 
       if (payload.status === "ready") {
+        setLoadedModelId(payload.modelId);
         setPhase("ready");
         return;
       }
@@ -156,6 +150,7 @@ export function LocalLlmChatView() {
         setError(payload.data);
         setPhase("idle");
         setIsGenerating(false);
+        setLoadedModelId(null);
       }
     };
 
@@ -163,9 +158,9 @@ export function LocalLlmChatView() {
       setError(event.message);
       setPhase("idle");
       setIsGenerating(false);
+      setLoadedModelId(null);
     };
 
-    const worker = workerRef.current;
     worker.addEventListener("message", onMessageReceived);
     worker.addEventListener("error", onErrorReceived);
 
@@ -175,7 +170,7 @@ export function LocalLlmChatView() {
       worker.terminate();
       workerRef.current = null;
     };
-  }, []);
+  }, [createWorker, selectedModelId]);
 
   useEffect(() => {
     if (messages.filter((message) => message.role === "user").length === 0) {
@@ -189,7 +184,11 @@ export function LocalLlmChatView() {
     setTps(null);
     workerRef.current?.postMessage({
       type: "generate",
-      data: messages.map(({ role, content }) => ({ role, content })),
+      data: messages.map(({ role, content, images }) => ({
+        role,
+        content,
+        images: images?.map(({ dataUrl, name, mimeType }) => ({ dataUrl, name, mimeType })),
+      })),
     });
   }, [messages]);
 
@@ -204,6 +203,86 @@ export function LocalLlmChatView() {
       element.scrollTop = element.scrollHeight;
     }
   }, [messages, isGenerating]);
+
+  function handleSelectModel({ modelId }: { modelId: string }) {
+    setSelectedModelId(modelId);
+    window.sessionStorage.setItem(SELECTED_MODEL_STORAGE_KEY, modelId);
+    setError(null);
+    setMessages([]);
+    setTps(null);
+    setNumTokens(null);
+    setLoadedModelId(null);
+    setPhase("idle");
+  }
+
+  function loadModel() {
+    if (!selectedModel) {
+      return;
+    }
+
+    setError(null);
+    setPhase("loading");
+    setProgressItems([]);
+    workerRef.current?.postMessage({
+      type: "load",
+      model: {
+        huggingFaceModelId: selectedModel.huggingFaceModelId,
+        kind: selectedModel.kind,
+        dtype: selectedModel.dtype,
+      },
+    });
+  }
+
+  function submitMessage({ message, images }: { message: string; images: ChatMessage["images"] }) {
+    if (!selectedModel || isGenerating || phase !== "ready") {
+      return;
+    }
+
+    const trimmed = message.trim();
+    const hasImages = (images?.length ?? 0) > 0;
+    if (!trimmed && !hasImages) {
+      return;
+    }
+
+    if (modelSupportsImages({ model: selectedModel })) {
+      const hasPreviousImage = messages.some((entry) => (entry.images?.length ?? 0) > 0);
+      if (!hasImages && !hasPreviousImage) {
+        setError("このモデルでは最初のメッセージに画像の添付が必要です。");
+        return;
+      }
+    } else if (hasImages) {
+      setError("選択中のモデルは画像入力に対応していません。");
+      return;
+    }
+
+    setError(null);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: trimmed || "この画像について教えてください。",
+        images,
+      },
+    ]);
+    setTps(null);
+    setIsGenerating(true);
+  }
+
+  function resetConversation() {
+    workerRef.current?.postMessage({ type: "reset" });
+    setMessages([]);
+    setTps(null);
+    setNumTokens(null);
+    setError(null);
+  }
+
+  function changeModel() {
+    resetConversation();
+    setLoadedModelId(null);
+    setPhase("idle");
+    setProgressItems([]);
+  }
 
   if (!IS_WEBGPU_AVAILABLE) {
     return (
@@ -220,12 +299,16 @@ export function LocalLlmChatView() {
     );
   }
 
+  if (!selectedModel || !activeModel) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
         eyebrow="Lab"
         title="ローカル LLM チャット"
-        description="LiquidAI LFM2.5-1.2B-JP をブラウザ内で動かす実験です。推論は端末上で完結し、サーバーには送信されません。"
+        description="WebGPU + Transformers.js で端末内推論する実験です。会話内容はサーバーに送信されません。"
       />
 
       {phase === "idle" && messages.length === 0 ? (
@@ -234,24 +317,20 @@ export function LocalLlmChatView() {
             <CardTitle className="text-base">モデルを読み込む</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm leading-relaxed text-muted-foreground">
+            <ModelSelector selectedModelId={selectedModelId} onSelectModel={handleSelectModel} />
+            <p>{selectedModel.description}</p>
             <p>
-              <span className="font-medium text-foreground">{LFM_JP_MODEL_LABEL}</span>
-              （約 1.2B パラメータ・日本語特化）をダウンロードして、WebGPU
-              で推論します。初回のみ数百 MB 程度の取得が発生しますが、2
-              回目以降はブラウザキャッシュから読み込まれます。
+              初回のみ{" "}
+              <span className="font-medium text-foreground">{selectedModel.estimatedDownload}</span>
+              程度のダウンロードが発生します。2 回目以降はブラウザキャッシュから読み込まれます。
             </p>
-            <p>
-              Transformers.js と ONNX Runtime Web
-              を使っています。モデル取得後はオフラインでも会話できます。
-            </p>
+            <ModelAttribution model={selectedModel} />
             {error ? (
               <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-destructive">
                 {error}
               </p>
             ) : null}
-            <Button onClick={loadModel} disabled={error !== null}>
-              モデルを読み込む
-            </Button>
+            <Button onClick={loadModel}>モデルを読み込む</Button>
           </CardContent>
         </Card>
       ) : null}
@@ -261,7 +340,7 @@ export function LocalLlmChatView() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Loader2Icon className="size-4 animate-spin" />
-              読み込み中
+              {selectedModel.label} を読み込み中
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -273,45 +352,50 @@ export function LocalLlmChatView() {
 
       {phase === "ready" || phase === "generating" ? (
         <div className="flex min-h-[32rem] flex-col gap-4">
-          <div
-            ref={chatContainerRef}
-            className="flex-1 space-y-4 overflow-y-auto rounded-xl border border-border/70 bg-card/50 p-4 sm:p-6"
-          >
-            {messages.length === 0 ? (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">例文をクリックして試せます。</p>
-                <ul className="flex flex-col gap-2">
-                  {LFM_JP_CHAT_EXAMPLES.map((example) => (
-                    <li key={example}>
-                      <button
-                        type="button"
-                        className="w-full rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
-                        onClick={() => submitMessage({ message: example })}
-                        disabled={isGenerating}
-                      >
-                        {example}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={cn(
-                    "max-w-[90%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap",
-                    message.role === "user"
-                      ? "ml-auto bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground",
-                  )}
-                >
-                  {message.content ||
-                    (isGenerating && message.id === messages.at(-1)?.id ? "…" : "")}
-                </div>
-              ))
-            )}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              使用中: <span className="font-medium text-foreground">{activeModel.label}</span>
+            </p>
+            <Button type="button" variant="outline" size="sm" onClick={changeModel}>
+              モデルを変更
+            </Button>
           </div>
+
+          {messages.length === 0 ? (
+            <div className="rounded-xl border border-border/70 bg-card/50 p-4 sm:p-6">
+              <p className="mb-3 text-sm text-muted-foreground">例文をクリックして試せます。</p>
+              <ul className="flex flex-col gap-2">
+                {activeModel.examples.map((example) => (
+                  <li key={example}>
+                    <button
+                      type="button"
+                      className="w-full rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+                      onClick={() =>
+                        submitMessage({
+                          message: example,
+                          images: undefined,
+                        })
+                      }
+                      disabled={isGenerating || modelSupportsImages({ model: activeModel })}
+                    >
+                      {example}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {modelSupportsImages({ model: activeModel }) ? (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  画像入力モデルは、画像を添付して質問してください。
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <ChatMessageList
+              messages={messages}
+              isGenerating={isGenerating}
+              containerRef={chatContainerRef}
+            />
+          )}
 
           {tps !== null && numTokens !== null && messages.length > 0 ? (
             <p className="text-xs text-muted-foreground">
@@ -337,48 +421,21 @@ export function LocalLlmChatView() {
             </p>
           ) : null}
 
-          <div className="flex items-end gap-2 rounded-xl border border-border/70 bg-card/70 p-3">
-            <Textarea
-              ref={textareaRef}
-              value={input}
-              rows={1}
-              placeholder="メッセージを入力…"
-              className="min-h-6 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0"
-              disabled={isGenerating}
-              onChange={(event) => {
-                setInput(event.target.value);
-                resizeTextarea();
-              }}
-              onKeyDown={(event) => {
-                if (input.length > 0 && !isGenerating && event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  submitMessage({ message: input });
-                }
-              }}
-            />
-            {isGenerating ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                aria-label="生成を停止"
-                onClick={interruptGeneration}
-              >
-                <SquareIcon className="size-4" />
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                size="icon"
-                aria-label="送信"
-                disabled={input.trim().length === 0}
-                onClick={() => submitMessage({ message: input })}
-              >
-                <SendIcon className="size-4" />
-              </Button>
-            )}
-          </div>
+          {error ? (
+            <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          ) : null}
 
+          <ChatComposer
+            disabled={phase !== "ready"}
+            isGenerating={isGenerating}
+            supportsImages={modelSupportsImages({ model: activeModel })}
+            onSubmit={submitMessage}
+            onInterrupt={() => workerRef.current?.postMessage({ type: "interrupt" })}
+          />
+
+          <ModelAttribution model={activeModel} />
           <p className="text-xs text-muted-foreground">免責: 生成内容は不正確な場合があります。</p>
         </div>
       ) : null}

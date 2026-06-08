@@ -30,6 +30,18 @@
       "tailwindDirectives": true
     }
   },
+  "overrides": [
+    {
+      "includes": ["**/local-llm/local-llm-chat-view/chat-image-preview.tsx"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noImgElement": "off"
+          }
+        }
+      }
+    }
+  ],
   "files": {
     "includes": [
       "src/**",

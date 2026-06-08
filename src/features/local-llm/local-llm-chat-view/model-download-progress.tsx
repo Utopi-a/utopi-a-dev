@@ -1,8 +1,8 @@
-import type { LfmDownloadProgress } from "@/features/local-llm/lfm-inference-worker/lfm-worker-messages";
+import type { DownloadProgress } from "@/features/local-llm/inference-worker/inference-worker-messages";
 import { cn } from "@/lib/cn";
 
 type ModelDownloadProgressProps = {
-  items: LfmDownloadProgress[];
+  items: DownloadProgress[];
   className?: string;
 };
 

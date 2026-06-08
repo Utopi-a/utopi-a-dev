@@ -12,11 +12,14 @@ import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-p
 import { cn } from "@/lib/cn";
 import { saveGunPermitApplicationPayload } from "../../application-session/application-session";
 import type {
+  CohabitantEntry,
   GunApplicationGunEntry,
   GunPermitApplicationKind,
   GunPermitApplicationPayload,
   GunPermitGunCategory,
   GunPermitPurpose,
+  ResumeAddressEntry,
+  ResumeWorkEntry,
 } from "../../gun-possession-permit-application-types";
 import { buildRequiredDocuments } from "../../required-documents/build-required-documents/build-required-documents";
 import { RequiredDocumentsChecklist } from "../required-documents-checklist/required-documents-checklist";
@@ -43,6 +46,9 @@ const purposeOptions: Array<{ value: GunPermitPurpose; label: string }> = [
 ];
 
 type GunEntryDraft = GunApplicationGunEntry & { entryId: string };
+type WorkHistoryDraft = ResumeWorkEntry & { rowId: string };
+type AddressHistoryDraft = ResumeAddressEntry & { rowId: string };
+type CohabitantDraft = CohabitantEntry & { rowId: string };
 
 function createEmptyGunEntry(): GunEntryDraft {
   return {
@@ -100,6 +106,15 @@ export function GunPermitApplicationForm({
   const [pledgeDisqualification, setPledgeDisqualification] = useState(true);
   const [pledgeHuntingDisqualification, setPledgeHuntingDisqualification] = useState(true);
   const [gunEntries, setGunEntries] = useState<GunEntryDraft[]>([createEmptyGunEntry()]);
+  const [workHistory, setWorkHistory] = useState<WorkHistoryDraft[]>([
+    { rowId: crypto.randomUUID(), from: "", to: "", employer: "" },
+  ]);
+  const [addressHistory, setAddressHistory] = useState<AddressHistoryDraft[]>([
+    { rowId: crypto.randomUUID(), from: "", to: "", address: ownerAddress },
+  ]);
+  const [hasCriminalRecord, setHasCriminalRecord] = useState(false);
+  const [hasTreatmentHistory, setHasTreatmentHistory] = useState(false);
+  const [cohabitants, setCohabitants] = useState<CohabitantDraft[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const requiredDocuments = useMemo(
@@ -195,6 +210,20 @@ export function GunPermitApplicationForm({
       omitResume,
       pledgeDisqualification,
       pledgeHuntingDisqualification,
+      resume: {
+        workHistory: workHistory
+          .filter((entry) => entry.employer.trim())
+          .map(({ rowId: _rowId, ...entry }) => entry),
+        addressHistory: addressHistory
+          .filter((entry) => entry.address.trim())
+          .map(({ rowId: _rowId, ...entry }) => entry),
+        gunHistory: [],
+        hasCriminalRecord,
+        hasTreatmentHistory,
+      },
+      cohabitants: cohabitants
+        .filter((entry) => entry.name.trim())
+        .map(({ rowId: _rowId, ...entry }) => entry),
     };
 
     saveGunPermitApplicationPayload({ payload });
@@ -331,7 +360,13 @@ export function GunPermitApplicationForm({
             <input
               type="checkbox"
               checked={hasCohabitants}
-              onChange={(event) => setHasCohabitants(event.target.checked)}
+              onChange={(event) => {
+                const checked = event.target.checked;
+                setHasCohabitants(checked);
+                if (checked && cohabitants.length === 0) {
+                  setCohabitants([{ rowId: crypto.randomUUID(), name: "", relationship: "" }]);
+                }
+              }}
             />
             同居人がいる
           </label>
@@ -548,6 +583,183 @@ export function GunPermitApplicationForm({
           申請銃を追加
         </Button>
       </AmmoLedgerPanel>
+
+      <AmmoLedgerPanel title="経歴書（任意）">
+        <div className="space-y-4 text-sm">
+          <div className="space-y-2">
+            <h3 className="font-medium">職歴</h3>
+            {workHistory.map((entry, index) => (
+              <div key={entry.rowId} className="grid gap-2 sm:grid-cols-3">
+                <Input
+                  placeholder="開始 YYYY-MM"
+                  value={entry.from}
+                  onChange={(event) =>
+                    setWorkHistory((current) =>
+                      current.map((row, rowIndex) =>
+                        rowIndex === index ? { ...row, from: event.target.value } : row,
+                      ),
+                    )
+                  }
+                />
+                <Input
+                  placeholder="終了 YYYY-MM"
+                  value={entry.to}
+                  onChange={(event) =>
+                    setWorkHistory((current) =>
+                      current.map((row, rowIndex) =>
+                        rowIndex === index ? { ...row, to: event.target.value } : row,
+                      ),
+                    )
+                  }
+                />
+                <Input
+                  placeholder="勤務先・職務"
+                  value={entry.employer}
+                  onChange={(event) =>
+                    setWorkHistory((current) =>
+                      current.map((row, rowIndex) =>
+                        rowIndex === index ? { ...row, employer: event.target.value } : row,
+                      ),
+                    )
+                  }
+                />
+              </div>
+            ))}
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                setWorkHistory((current) => [
+                  ...current,
+                  { rowId: crypto.randomUUID(), from: "", to: "", employer: "" },
+                ])
+              }
+            >
+              職歴行を追加
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="font-medium">住所歴</h3>
+            {addressHistory.map((entry, index) => (
+              <div key={entry.rowId} className="grid gap-2 sm:grid-cols-3">
+                <Input
+                  placeholder="開始 YYYY-MM"
+                  value={entry.from}
+                  onChange={(event) =>
+                    setAddressHistory((current) =>
+                      current.map((row, rowIndex) =>
+                        rowIndex === index ? { ...row, from: event.target.value } : row,
+                      ),
+                    )
+                  }
+                />
+                <Input
+                  placeholder="終了 YYYY-MM"
+                  value={entry.to}
+                  onChange={(event) =>
+                    setAddressHistory((current) =>
+                      current.map((row, rowIndex) =>
+                        rowIndex === index ? { ...row, to: event.target.value } : row,
+                      ),
+                    )
+                  }
+                />
+                <Input
+                  placeholder="住所"
+                  value={entry.address}
+                  onChange={(event) =>
+                    setAddressHistory((current) =>
+                      current.map((row, rowIndex) =>
+                        rowIndex === index ? { ...row, address: event.target.value } : row,
+                      ),
+                    )
+                  }
+                />
+              </div>
+            ))}
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                setAddressHistory((current) => [
+                  ...current,
+                  { rowId: crypto.randomUUID(), from: "", to: "", address: "" },
+                ])
+              }
+            >
+              住所歴行を追加
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={hasCriminalRecord}
+                onChange={(event) => setHasCriminalRecord(event.target.checked)}
+              />
+              犯歴あり
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={hasTreatmentHistory}
+                onChange={(event) => setHasTreatmentHistory(event.target.checked)}
+              />
+              治療歴あり
+            </label>
+          </div>
+        </div>
+      </AmmoLedgerPanel>
+
+      {hasCohabitants ? (
+        <AmmoLedgerPanel title="同居親族書（任意）">
+          <div className="space-y-3">
+            {cohabitants.map((entry, index) => (
+              <div key={entry.rowId} className="grid gap-2 sm:grid-cols-2">
+                <Input
+                  placeholder="氏名"
+                  value={entry.name}
+                  onChange={(event) =>
+                    setCohabitants((current) =>
+                      current.map((row, rowIndex) =>
+                        rowIndex === index ? { ...row, name: event.target.value } : row,
+                      ),
+                    )
+                  }
+                />
+                <Input
+                  placeholder="続柄"
+                  value={entry.relationship}
+                  onChange={(event) =>
+                    setCohabitants((current) =>
+                      current.map((row, rowIndex) =>
+                        rowIndex === index ? { ...row, relationship: event.target.value } : row,
+                      ),
+                    )
+                  }
+                />
+              </div>
+            ))}
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                setCohabitants((current) => [
+                  ...current,
+                  { rowId: crypto.randomUUID(), name: "", relationship: "" },
+                ])
+              }
+            >
+              同居親族を追加
+            </Button>
+          </div>
+        </AmmoLedgerPanel>
+      ) : null}
 
       <AmmoLedgerPanel title="誓約">
         <div className="grid gap-2">

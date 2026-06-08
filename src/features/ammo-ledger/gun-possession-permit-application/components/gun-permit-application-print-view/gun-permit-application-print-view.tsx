@@ -10,22 +10,30 @@ import {
   type BuiltGunPermitFieldValues,
   buildGunPermitFieldValues,
 } from "../../build-field-values/build-field-values";
+import {
+  type BuiltSupplementaryFieldValues,
+  buildSupplementaryFieldValues,
+} from "../../build-supplementary-field-values/build-supplementary-field-values";
 import { GunPermitApplicationDocument } from "../../documents/gun-permit-application-document/gun-permit-application-document";
+import { GunPermitSupplementaryDocument } from "../../documents/gun-permit-supplementary-document/gun-permit-supplementary-document";
 import type { GunPermitApplicationKind } from "../../gun-possession-permit-application-types";
 
 export function GunPermitApplicationPrintView() {
   const [kind, setKind] = useState<GunPermitApplicationKind>("new");
   const [fieldValues, setFieldValues] = useState<BuiltGunPermitFieldValues | null>(null);
+  const [supplementary, setSupplementary] = useState<BuiltSupplementaryFieldValues | null>(null);
 
   useEffect(() => {
     const payload = loadGunPermitApplicationPayload();
     if (!payload) {
       setFieldValues(null);
+      setSupplementary(null);
       return;
     }
 
     setKind(payload.kind);
     setFieldValues(buildGunPermitFieldValues({ input: payload }));
+    setSupplementary(buildSupplementaryFieldValues({ input: payload }));
   }, []);
 
   if (!fieldValues) {
@@ -70,6 +78,15 @@ export function GunPermitApplicationPrintView() {
       </div>
 
       <GunPermitApplicationDocument kind={kind} fieldValues={fieldValues} />
+
+      {supplementary ? (
+        <>
+          <div className="no-print mt-6 text-sm text-muted-foreground">
+            <p>以下は経歴書・同居親族書などの付随書類です。</p>
+          </div>
+          <GunPermitSupplementaryDocument supplementary={supplementary} />
+        </>
+      ) : null}
     </div>
   );
 }

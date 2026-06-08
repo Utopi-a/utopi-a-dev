@@ -1,9 +1,24 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { AmmoLedgerActionTile } from "@/features/ammo-ledger/components/ammo-ledger-action-tile/ammo-ledger-action-tile";
 import { AmmoLedgerPwaInstallBanner } from "@/features/ammo-ledger/components/ammo-ledger-pwa-install/ammo-ledger-pwa-install-banner";
 
+const formEntryPaths = [
+  "/lab/ammo-ledger/consume/new",
+  "/lab/ammo-ledger/inflow/new",
+  "/lab/ammo-ledger/bulk/new",
+] as const;
+
 export function AmmoLedgerHomeView() {
+  const router = useRouter();
+
+  useEffect(() => {
+    for (const href of formEntryPaths) {
+      router.prefetch(href);
+    }
+  }, [router]);
   return (
     <div className="space-y-6">
       <div className="space-y-2">

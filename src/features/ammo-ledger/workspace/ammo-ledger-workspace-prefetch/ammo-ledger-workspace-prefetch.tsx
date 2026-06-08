@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { resolveShellRoute } from "@/features/ammo-ledger/workspace/resolve-shell-route/resolve-shell-route";
+import { ammoLedgerPwaConfig } from "@/features/ammo-ledger/pwa/ammo-ledger-pwa-config";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 function AmmoLedgerWorkspacePrefetchInner() {
@@ -11,7 +11,7 @@ function AmmoLedgerWorkspacePrefetchInner() {
 
 export function AmmoLedgerWorkspacePrefetch() {
   const pathname = usePathname();
-  const shouldPrefetch = resolveShellRoute({ path: pathname }) !== null;
+  const shouldPrefetch = pathname !== ammoLedgerPwaConfig.offlinePath;
 
   if (!shouldPrefetch) {
     return null;

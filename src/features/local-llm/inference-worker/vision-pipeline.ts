@@ -43,6 +43,10 @@ async function loadImageFromDataUrl({ dataUrl }: { dataUrl: string }) {
   return RawImage.fromBlob(blob);
 }
 
+function buildMoondreamPrompt({ question }: { question: string }) {
+  return `<image>\n\nQuestion: ${question}\n\nAnswer:`;
+}
+
 function getLatestUserTurn({ messages }: { messages: InferenceMessage[] }) {
   const lastUserIndex = messages.findLastIndex((message) => message.role === "user");
   if (lastUserIndex === -1) {
@@ -93,8 +97,9 @@ export async function loadVisionModel({
       dataUrl:
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
     });
-    const inputs = await processor(image, "warmup");
-    await model.generate({ ...inputs, max_new_tokens: 1 });
+    const textInputs = tokenizer(buildMoondreamPrompt({ question: "warmup" }));
+    const visionInputs = await processor(image);
+    await model.generate({ ...textInputs, ...visionInputs, max_new_tokens: 1 });
 
     loadedPipeline = {
       kind: "moondream",
@@ -167,7 +172,8 @@ async function generateMoondream({ messages }: { messages: InferenceMessage[] })
   }
 
   const image = await loadImageFromDataUrl({ dataUrl: imageAttachment.dataUrl });
-  const inputs = await loadedPipeline.processor(image, message.content);
+  const textInputs = loadedPipeline.tokenizer(buildMoondreamPrompt({ question: message.content }));
+  const visionInputs = await loadedPipeline.processor(image);
 
   let startTime: number | undefined;
   let numTokens = 0;
@@ -190,11 +196,13 @@ async function generateMoondream({ messages }: { messages: InferenceMessage[] })
   postMessage({ status: "start" });
 
   await loadedPipeline.model.generate({
-    ...(inputs as Record<string, unknown>),
+    ...textInputs,
+    ...visionInputs,
+    do_sample: false,
     max_new_tokens: 512,
     streamer,
     stopping_criteria: stoppingCriteria,
-  } as Record<string, unknown>);
+  });
 
   postMessage({ status: "complete" });
 }

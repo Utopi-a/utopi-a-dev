@@ -1,7 +1,9 @@
 import {
+  AutoImageProcessor,
   AutoProcessor,
   AutoTokenizer,
   InterruptableStoppingCriteria,
+  LlavaProcessor,
   Moondream1ForConditionalGeneration,
   Qwen3VLForConditionalGeneration,
   RawImage,
@@ -47,6 +49,34 @@ function buildMoondreamPrompt({ question }: { question: string }) {
   return `<image>\n\nQuestion: ${question}\n\nAnswer:`;
 }
 
+async function createMoondreamProcessor({
+  modelId,
+  progressCallback,
+}: {
+  modelId: string;
+  progressCallback?: (event: Record<string, unknown>) => void;
+}) {
+  const processorOptions = { progress_callback: progressCallback };
+  const [imageProcessor, tokenizer] = await Promise.all([
+    AutoImageProcessor.from_pretrained(modelId, processorOptions),
+    AutoTokenizer.from_pretrained(modelId, processorOptions),
+  ]);
+
+  // Xenova/moondream2 has no processor_config.json; AutoProcessor only runs the image path.
+  // LlavaProcessor expands <image> placeholders to match vision encoder patch features.
+  const processor = new LlavaProcessor(
+    {
+      image_token: "<image>",
+      patch_size: 14,
+      num_additional_image_tokens: 0,
+    },
+    { image_processor: imageProcessor, tokenizer },
+    "",
+  );
+
+  return { processor, tokenizer };
+}
+
 function getLatestUserTurn({ messages }: { messages: InferenceMessage[] }) {
   const lastUserIndex = messages.findLastIndex((message) => message.role === "user");
   if (lastUserIndex === -1) {
@@ -72,13 +102,10 @@ export async function loadVisionModel({
 
   unloadVisionPipeline();
 
-  const processor = await AutoProcessor.from_pretrained(modelConfig.huggingFaceModelId, {
-    progress_callback: progressCallback,
-  });
-
   if (modelConfig.kind === "moondream") {
-    const tokenizer = await AutoTokenizer.from_pretrained(modelConfig.huggingFaceModelId, {
-      progress_callback: progressCallback,
+    const { processor, tokenizer } = await createMoondreamProcessor({
+      modelId: modelConfig.huggingFaceModelId,
+      progressCallback,
     });
     const model = await Moondream1ForConditionalGeneration.from_pretrained(
       modelConfig.huggingFaceModelId,
@@ -97,9 +124,8 @@ export async function loadVisionModel({
       dataUrl:
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
     });
-    const textInputs = tokenizer(buildMoondreamPrompt({ question: "warmup" }));
-    const visionInputs = await processor(image);
-    await model.generate({ ...textInputs, ...visionInputs, max_new_tokens: 1 });
+    const warmupInputs = await processor(image, buildMoondreamPrompt({ question: "warmup" }));
+    await model.generate({ ...warmupInputs, max_new_tokens: 1 });
 
     loadedPipeline = {
       kind: "moondream",
@@ -111,6 +137,9 @@ export async function loadVisionModel({
     return modelConfig.huggingFaceModelId;
   }
 
+  const processor = await AutoProcessor.from_pretrained(modelConfig.huggingFaceModelId, {
+    progress_callback: progressCallback,
+  });
   const model = await Qwen3VLForConditionalGeneration.from_pretrained(
     modelConfig.huggingFaceModelId,
     {
@@ -172,8 +201,10 @@ async function generateMoondream({ messages }: { messages: InferenceMessage[] })
   }
 
   const image = await loadImageFromDataUrl({ dataUrl: imageAttachment.dataUrl });
-  const textInputs = loadedPipeline.tokenizer(buildMoondreamPrompt({ question: message.content }));
-  const visionInputs = await loadedPipeline.processor(image);
+  const inputs = await loadedPipeline.processor(
+    image,
+    buildMoondreamPrompt({ question: message.content }),
+  );
 
   let startTime: number | undefined;
   let numTokens = 0;
@@ -196,8 +227,7 @@ async function generateMoondream({ messages }: { messages: InferenceMessage[] })
   postMessage({ status: "start" });
 
   await loadedPipeline.model.generate({
-    ...textInputs,
-    ...visionInputs,
+    ...inputs,
     do_sample: false,
     max_new_tokens: 512,
     streamer,

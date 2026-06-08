@@ -188,7 +188,6 @@ export function LedgerPrintView({
                 <LedgerPrintCell className={ledgerPrintCellClass.gun}>
                   {formatLedgerGunLabel({
                     gunName: entry.gunName,
-                    gunNumber: entry.gunNumber,
                     gunPermitNumber: entry.gunPermitNumber,
                   })}
                 </LedgerPrintCell>

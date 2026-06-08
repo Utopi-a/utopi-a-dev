@@ -14,6 +14,7 @@ import {
   ledgerPrintCellClass,
   ledgerPrintColClass,
 } from "@/features/ammo-ledger/documents/ledger-print-table/ledger-print-table-column-classes";
+import { formatLedgerGunLabel } from "@/features/ammo-ledger/ledger/format-ledger-gun-label/format-ledger-gun-label";
 import {
   formatAmmoQuantity,
   formatPermitBalance,
@@ -185,7 +186,11 @@ export function LedgerPrintView({
                   {entry.counterpartyName ?? ""}
                 </LedgerPrintCell>
                 <LedgerPrintCell className={ledgerPrintCellClass.gun}>
-                  {entry.gunName ?? ""}
+                  {formatLedgerGunLabel({
+                    gunName: entry.gunName,
+                    gunNumber: entry.gunNumber,
+                    gunPermitNumber: entry.gunPermitNumber,
+                  })}
                 </LedgerPrintCell>
               </tr>
             );

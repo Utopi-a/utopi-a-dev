@@ -9,6 +9,7 @@ import { listAcquisitionPermits } from "@/features/ammo-ledger/permit/list-acqui
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
+import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 
 export default async function AcquisitionPermitsSettingsPage() {
   const user = await requireAmmoUser();
@@ -49,7 +50,8 @@ export default async function AcquisitionPermitsSettingsPage() {
                   </span>
                   <span className="mt-0.5 block text-muted-foreground">
                     {ledgerPurposeLabels[permit.ledgerPurpose as LedgerPurpose]} / 付与{" "}
-                    {permit.grantedOn} / {permit.quantity.toLocaleString("ja-JP")}個 /{" "}
+                    {formatIsoDateForDisplay({ value: permit.grantedOn })} /{" "}
+                    {permit.quantity.toLocaleString("ja-JP")}個 /{" "}
                     {formatPermitExpiryLabel({ expiresOn: permit.expiresOn, today })}
                   </span>
                 </span>

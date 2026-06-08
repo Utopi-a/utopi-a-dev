@@ -33,6 +33,7 @@ import {
 } from "@/features/ammo-ledger/schema/ledger-category";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
+import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 
 type LedgerEntryActionsSheetProps = {
   row: LedgerDisplayRow | null;
@@ -84,7 +85,7 @@ export function LedgerEntryActionsSheet({
               <div className="space-y-2 pt-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium text-foreground tabular-nums">
-                    {row.occurredOn}
+                    {formatIsoDateForDisplay({ value: row.occurredOn })}
                   </span>
                   <PermitCarryoverBadge />
                 </div>
@@ -131,7 +132,7 @@ export function LedgerEntryActionsSheet({
               <div className="space-y-2 pt-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium text-foreground tabular-nums">
-                    {row.occurredOn}
+                    {formatIsoDateForDisplay({ value: row.occurredOn })}
                   </span>
                   <PermitExpiryBadge />
                 </div>
@@ -177,7 +178,7 @@ export function LedgerEntryActionsSheet({
             <div className="space-y-2 pt-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm font-medium text-foreground tabular-nums">
-                  {entry.occurredOn}
+                  {formatIsoDateForDisplay({ value: entry.occurredOn })}
                 </span>
                 <LedgerCategoryBadge category={entry.category} />
               </div>

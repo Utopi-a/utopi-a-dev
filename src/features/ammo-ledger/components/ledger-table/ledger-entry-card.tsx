@@ -17,6 +17,7 @@ import {
 import { formatPermitExpiryLabel } from "@/features/ammo-ledger/permit/compute-permit-expiry/compute-permit-expiry";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import { cn } from "@/lib/cn";
+import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 
 type LedgerEntryCardProps = {
   row: LedgerDisplayRow;
@@ -53,7 +54,9 @@ export function LedgerEntryCard({
       >
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium tabular-nums">{row.occurredOn}</span>
+            <span className="text-sm font-medium tabular-nums">
+              {formatIsoDateForDisplay({ value: row.occurredOn })}
+            </span>
             <PermitCarryoverBadge />
           </div>
           <p className="font-medium leading-snug">
@@ -77,7 +80,9 @@ export function LedgerEntryCard({
       <div className="flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5">
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium tabular-nums">{row.occurredOn}</span>
+            <span className="text-sm font-medium tabular-nums">
+              {formatIsoDateForDisplay({ value: row.occurredOn })}
+            </span>
             <PermitExpiryBadge />
           </div>
           <p className="font-medium leading-snug">{row.permitName}</p>
@@ -103,7 +108,9 @@ export function LedgerEntryCard({
     >
       <div className="min-w-0 flex-1 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium tabular-nums">{entry.occurredOn}</span>
+          <span className="text-sm font-medium tabular-nums">
+            {formatIsoDateForDisplay({ value: entry.occurredOn })}
+          </span>
           <LedgerCategoryBadge category={entry.category} />
         </div>
         <p className="font-medium leading-snug">{entry.ammoTypeName}</p>

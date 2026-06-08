@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
@@ -107,23 +108,21 @@ export function AcquisitionPermitForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="granted-on">付与日</Label>
-          <Input
+          <IsoDateInput
             id="granted-on"
-            type="date"
             required
             value={grantedOn}
-            onChange={(e) => handleGrantedOnChange(e.target.value)}
+            onChange={({ value }) => handleGrantedOnChange(value)}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="expires-on">有効期限</Label>
-          <Input
+          <IsoDateInput
             id="expires-on"
-            type="date"
             required
             value={expiresOn}
             min={grantedOn}
-            onChange={(e) => setExpiresOn(e.target.value)}
+            onChange={({ value }) => setExpiresOn(value)}
           />
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoType } from "@/db/schema/ammo-ledger";
 import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
@@ -138,12 +139,11 @@ export function AcquireForm({ ammoTypes, ledgerEntryId, initialValues }: Acquire
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2">
         <Label htmlFor="occurred-on">日付</Label>
-        <Input
+        <IsoDateInput
           id="occurred-on"
-          type="date"
           required
           value={occurredOn}
-          onChange={(e) => setOccurredOn(e.target.value)}
+          onChange={({ value }) => setOccurredOn(value)}
         />
       </div>
 

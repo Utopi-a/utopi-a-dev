@@ -21,6 +21,7 @@ import {
 import { ledgerCategoryLabels } from "@/features/ammo-ledger/schema/ledger-category";
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
+import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 
 type LedgerPrintViewProps = {
   section: LedgerPrintSection;
@@ -119,7 +120,7 @@ export function LedgerPrintView({
               return (
                 <tr key={row.id}>
                   <LedgerPrintCell className={ledgerPrintCellClass.date}>
-                    {row.occurredOn}
+                    {formatIsoDateForDisplay({ value: row.occurredOn })}
                   </LedgerPrintCell>
                   <LedgerPrintCell className={ledgerPrintCellClass.category}>繰越</LedgerPrintCell>
                   <LedgerPrintCell className={ledgerPrintCellClass.permitName}>
@@ -138,7 +139,7 @@ export function LedgerPrintView({
               return (
                 <tr key={row.id}>
                   <LedgerPrintCell className={ledgerPrintCellClass.date}>
-                    {row.occurredOn}
+                    {formatIsoDateForDisplay({ value: row.occurredOn })}
                   </LedgerPrintCell>
                   <LedgerPrintCell className={ledgerPrintCellClass.category}>
                     許可残数失効
@@ -160,7 +161,7 @@ export function LedgerPrintView({
             return (
               <tr key={entry.id}>
                 <LedgerPrintCell className={ledgerPrintCellClass.date}>
-                  {entry.occurredOn}
+                  {formatIsoDateForDisplay({ value: entry.occurredOn })}
                 </LedgerPrintCell>
                 <LedgerPrintCell className={ledgerPrintCellClass.category}>
                   {ledgerCategoryLabels[entry.category as keyof typeof ledgerCategoryLabels] ??

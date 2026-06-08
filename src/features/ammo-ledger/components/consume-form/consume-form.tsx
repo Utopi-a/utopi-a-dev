@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
@@ -125,12 +126,11 @@ export function ConsumeForm({
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2">
         <Label htmlFor="occurred-on">日付</Label>
-        <Input
+        <IsoDateInput
           id="occurred-on"
-          type="date"
           required
           value={occurredOn}
-          onChange={(e) => setOccurredOn(e.target.value)}
+          onChange={({ value }) => setOccurredOn(value)}
         />
       </div>
 

@@ -1,33 +1,21 @@
 import Link from "next/link";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
-import { buildCounterpartyPickerData } from "@/features/ammo-ledger/catalog/build-counterparty-picker-data/build-counterparty-picker-data";
-import { buildRangePickerData } from "@/features/ammo-ledger/catalog/build-range-picker-data/build-range-picker-data";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
-import { BulkEntryForm } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-form";
+import { BulkEntryFormLazy } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-form.lazy";
 import { getInventorySummary } from "@/features/ammo-ledger/ledger/get-inventory-summary/get-inventory-summary";
 import { buildStockByAmmoTypeId } from "@/features/ammo-ledger/master/build-stock-by-ammo-type-id/build-stock-by-ammo-type-id";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
-import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 
 export default async function BulkNewPage() {
   const user = await requireAmmoUser();
 
-  const [guns, ammoTypes, rangePickerData, counterpartyPickerData, inventoryItems] =
-    await Promise.all([
-      listGuns({ userId: user.id }),
-      listAmmoTypes({ userId: user.id }),
-      buildRangePickerData({ userId: user.id }),
-      buildCounterpartyPickerData({ userId: user.id, includeRangeCatalog: true }),
-      getInventorySummary({ userId: user.id }),
-    ]);
+  const [guns, ammoTypes, inventoryItems] = await Promise.all([
+    listGuns({ userId: user.id }),
+    listAmmoTypes({ userId: user.id }),
+    getInventorySummary({ userId: user.id }),
+  ]);
 
   const stockByAmmoTypeId = buildStockByAmmoTypeId({ inventoryItems });
-
-  const defaultCounterpartyId =
-    counterpartyPickerData.recent[0]?.id ??
-    counterpartyPickerData.registered[0]?.id ??
-    manualCounterpartyId;
 
   return (
     <div className="space-y-6">
@@ -48,7 +36,6 @@ export default async function BulkNewPage() {
           から入力してください。
         </p>
       </div>
-      <AmmoLedgerNav />
       {guns.length === 0 || ammoTypes.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           銃・弾種のマスタを
@@ -58,13 +45,10 @@ export default async function BulkNewPage() {
           から登録してください。
         </p>
       ) : (
-        <BulkEntryForm
+        <BulkEntryFormLazy
           guns={guns}
           ammoTypes={ammoTypes}
           stockByAmmoTypeId={stockByAmmoTypeId}
-          rangePickerData={rangePickerData}
-          counterpartyPickerData={counterpartyPickerData}
-          defaultCounterpartyId={defaultCounterpartyId}
         />
       )}
     </div>

@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
-import { buildRangePickerData } from "@/features/ammo-ledger/catalog/build-range-picker-data/build-range-picker-data";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
-import { ConsumeForm } from "@/features/ammo-ledger/components/consume-form/consume-form";
+import { ConsumeFormLazy } from "@/features/ammo-ledger/components/consume-form/consume-form.lazy";
 import { getInventorySummary } from "@/features/ammo-ledger/ledger/get-inventory-summary/get-inventory-summary";
 import { buildStockByAmmoTypeId } from "@/features/ammo-ledger/master/build-stock-by-ammo-type-id/build-stock-by-ammo-type-id";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
@@ -18,10 +16,9 @@ export default async function ConsumeNewPage({ searchParams }: PageProps) {
   const user = await requireAmmoUser();
   const { draft: draftId } = await searchParams;
 
-  const [guns, ammoTypes, rangePickerData, inventoryItems, draft] = await Promise.all([
+  const [guns, ammoTypes, inventoryItems, draft] = await Promise.all([
     listGuns({ userId: user.id }),
     listAmmoTypes({ userId: user.id }),
-    buildRangePickerData({ userId: user.id }),
     getInventorySummary({ userId: user.id }),
     draftId ? getDraftTransaction({ userId: user.id, draftId }) : Promise.resolve(null),
   ]);
@@ -52,7 +49,6 @@ export default async function ConsumeNewPage({ searchParams }: PageProps) {
           をご利用ください。
         </p>
       </div>
-      <AmmoLedgerNav />
       <AmmoLedgerPanel>
         {guns.length === 0 || ammoTypes.length === 0 ? (
           <p className="text-sm text-muted-foreground">
@@ -63,12 +59,11 @@ export default async function ConsumeNewPage({ searchParams }: PageProps) {
             から登録してください。射撃場は入力時に全国一覧から選べます。
           </p>
         ) : (
-          <ConsumeForm
+          <ConsumeFormLazy
             key={draftId ?? "new"}
             guns={guns}
             ammoTypes={ammoTypes}
             stockByAmmoTypeId={stockByAmmoTypeId}
-            rangePickerData={rangePickerData}
             initialValues={initialValues}
           />
         )}

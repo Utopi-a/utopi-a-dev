@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { buildCounterpartyPickerData } from "@/features/ammo-ledger/catalog/build-counterparty-picker-data/build-counterparty-picker-data";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { CatalogList } from "@/features/ammo-ledger/components/catalog-list/catalog-list";
 
 export default async function CounterpartyCatalogPage() {
@@ -28,7 +27,6 @@ export default async function CounterpartyCatalogPage() {
             銃砲店は日本ライフル射撃協会の認定販売店リスト、射撃場は射撃場協会の一覧をもとにしています。
           </p>
         </div>
-        <AmmoLedgerNav />
       </div>
       <CatalogList
         catalogKind="gun_shop"

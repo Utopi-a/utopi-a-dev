@@ -1,5 +1,4 @@
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { OpeningBalanceForm } from "@/features/ammo-ledger/components/opening-balance-form/opening-balance-form";
 import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-entries/list-ledger-entries";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
@@ -61,7 +60,6 @@ export default async function OpeningBalanceSettingsPage({ searchParams }: PageP
           紙の帳簿から移行するとき、各年の1月1日時点の残弾数と譲り受け許可残数（有効期限付き）を登録できます。
         </p>
       </div>
-      <AmmoLedgerNav />
 
       <OpeningBalanceForm
         years={years}

@@ -1,5 +1,4 @@
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { GunForm } from "@/features/ammo-ledger/components/gun-form/gun-form";
 import { GunRowActions } from "@/features/ammo-ledger/components/gun-row-actions/gun-row-actions";
@@ -12,7 +11,6 @@ export default async function GunsSettingsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">銃</h1>
-      <AmmoLedgerNav />
       <AmmoLedgerPanel title="登録済み">
         {guns.length === 0 ? (
           <p className="text-sm text-muted-foreground">まだ登録がありません。</p>

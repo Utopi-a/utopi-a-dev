@@ -3,7 +3,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AcquisitionPermitForm } from "@/features/ammo-ledger/components/acquisition-permit-form/acquisition-permit-form";
 import { AcquisitionPermitRowActions } from "@/features/ammo-ledger/components/acquisition-permit-row-actions/acquisition-permit-row-actions";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { formatPermitExpiryLabel } from "@/features/ammo-ledger/permit/compute-permit-expiry/compute-permit-expiry";
 import { listAcquisitionPermits } from "@/features/ammo-ledger/permit/list-acquisition-permits/list-acquisition-permits";
@@ -24,7 +23,6 @@ export default async function AcquisitionPermitsSettingsPage() {
           警察から交付された譲受許可を登録します。帳簿の許可残数計算に使われます。
         </p>
       </div>
-      <AmmoLedgerNav />
 
       <div className="no-print">
         <Link

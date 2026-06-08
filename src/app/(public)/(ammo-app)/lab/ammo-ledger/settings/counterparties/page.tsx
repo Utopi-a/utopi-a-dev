@@ -1,5 +1,4 @@
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { CatalogBrowsePromo } from "@/features/ammo-ledger/components/catalog-browse-promo/catalog-browse-promo";
 import { CounterpartyForm } from "@/features/ammo-ledger/components/counterparty-form/counterparty-form";
@@ -16,7 +15,6 @@ export default async function CounterpartiesSettingsPage() {
         <h1 className="text-2xl font-semibold tracking-tight">購入先・譲渡先</h1>
         <p className="text-sm text-muted-foreground">よく使う購入先・譲渡先のマイリストです。</p>
       </div>
-      <AmmoLedgerNav />
       <CatalogBrowsePromo
         href="/lab/ammo-ledger/settings/counterparties/catalog"
         title="全国の銃砲店・射撃場一覧"

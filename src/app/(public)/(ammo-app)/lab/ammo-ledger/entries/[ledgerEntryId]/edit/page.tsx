@@ -1,12 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
-import { buildCounterpartyPickerData } from "@/features/ammo-ledger/catalog/build-counterparty-picker-data/build-counterparty-picker-data";
-import { buildRangePickerData } from "@/features/ammo-ledger/catalog/build-range-picker-data/build-range-picker-data";
 import { AcquireForm } from "@/features/ammo-ledger/components/acquire-form/acquire-form";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
-import { ConsumeForm } from "@/features/ammo-ledger/components/consume-form/consume-form";
+import { ConsumeFormLazy } from "@/features/ammo-ledger/components/consume-form/consume-form.lazy";
 import { DisposeForm } from "@/features/ammo-ledger/components/dispose-form/dispose-form";
 import { TransferForm } from "@/features/ammo-ledger/components/transfer-form/transfer-form";
 import { getInventorySummary } from "@/features/ammo-ledger/ledger/get-inventory-summary/get-inventory-summary";
@@ -32,19 +29,11 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
   const { inputKind, category, initialValues } = editData;
   const categoryLabel = ledgerCategoryLabels[category];
 
-  const [guns, ammoTypes, rangePickerData, counterpartyPickerData, inventoryItems] =
-    await Promise.all([
-      inputKind === "consume" ? listGuns({ userId: user.id }) : Promise.resolve([]),
-      listAmmoTypes({ userId: user.id }),
-      inputKind === "consume" ? buildRangePickerData({ userId: user.id }) : Promise.resolve(null),
-      inputKind === "acquire" || inputKind === "transfer"
-        ? buildCounterpartyPickerData({
-            userId: user.id,
-            includeRangeCatalog: inputKind === "acquire",
-          })
-        : Promise.resolve(null),
-      inputKind === "consume" ? getInventorySummary({ userId: user.id }) : Promise.resolve([]),
-    ]);
+  const [guns, ammoTypes, inventoryItems] = await Promise.all([
+    inputKind === "consume" ? listGuns({ userId: user.id }) : Promise.resolve([]),
+    listAmmoTypes({ userId: user.id }),
+    inputKind === "consume" ? getInventorySummary({ userId: user.id }) : Promise.resolve([]),
+  ]);
 
   const stockByAmmoTypeId =
     inputKind === "consume" ? buildStockByAmmoTypeId({ inventoryItems }) : {};
@@ -52,7 +41,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
   function renderForm() {
     switch (inputKind) {
       case "consume":
-        if (guns.length === 0 || ammoTypes.length === 0 || !rangePickerData) {
+        if (guns.length === 0 || ammoTypes.length === 0) {
           return (
             <p className="text-sm text-muted-foreground">
               銃・弾種のマスタを
@@ -64,18 +53,17 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
           );
         }
         return (
-          <ConsumeForm
+          <ConsumeFormLazy
             key={ledgerEntryId}
             ledgerEntryId={ledgerEntryId}
             guns={guns}
             ammoTypes={ammoTypes}
             stockByAmmoTypeId={stockByAmmoTypeId}
-            rangePickerData={rangePickerData}
             initialValues={initialValues}
           />
         );
       case "acquire":
-        if (ammoTypes.length === 0 || !counterpartyPickerData) {
+        if (ammoTypes.length === 0) {
           return (
             <p className="text-sm text-muted-foreground">
               弾種マスタを
@@ -91,7 +79,6 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
             key={ledgerEntryId}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
-            counterpartyPickerData={counterpartyPickerData}
             initialValues={initialValues}
           />
         );
@@ -116,7 +103,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
           />
         );
       case "transfer":
-        if (ammoTypes.length === 0 || !counterpartyPickerData) {
+        if (ammoTypes.length === 0) {
           return (
             <p className="text-sm text-muted-foreground">
               弾種マスタを
@@ -132,7 +119,6 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
             key={ledgerEntryId}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
-            counterpartyPickerData={counterpartyPickerData}
             initialValues={initialValues}
           />
         );
@@ -147,7 +133,6 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
           内容を直して更新できます。区分（{categoryLabel}）は変えられません。
         </p>
       </div>
-      <AmmoLedgerNav />
       <AmmoLedgerPanel>{renderForm()}</AmmoLedgerPanel>
     </div>
   );

@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
-import { buildCounterpartyPickerData } from "@/features/ammo-ledger/catalog/build-counterparty-picker-data/build-counterparty-picker-data";
 import { AcquireForm } from "@/features/ammo-ledger/components/acquire-form/acquire-form";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { DisposeForm } from "@/features/ammo-ledger/components/dispose-form/dispose-form";
 import {
@@ -30,13 +28,10 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
   const { tab: tabParam, draft: draftId } = await searchParams;
   const tab = parseTab(tabParam);
 
-  const [ammoTypes, acquireSourcePickerData, transferCounterpartyPickerData, draft] =
-    await Promise.all([
-      listAmmoTypes({ userId: user.id }),
-      buildCounterpartyPickerData({ userId: user.id, includeRangeCatalog: true }),
-      buildCounterpartyPickerData({ userId: user.id }),
-      draftId ? getDraftTransaction({ userId: user.id, draftId }) : Promise.resolve(null),
-    ]);
+  const [ammoTypes, draft] = await Promise.all([
+    listAmmoTypes({ userId: user.id }),
+    draftId ? getDraftTransaction({ userId: user.id, draftId }) : Promise.resolve(null),
+  ]);
 
   const initialValues = draft
     ? {
@@ -72,7 +67,6 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
           をご利用ください。
         </p>
       </div>
-      <AmmoLedgerNav />
       <AmmoLedgerPanel>
         {ammoTypes.length === 0 ? (
           emptyMasters
@@ -85,7 +79,6 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
                 <AcquireForm
                   key={tab === "acquire" ? (draftId ?? "new") : "acquire"}
                   ammoTypes={ammoTypes}
-                  counterpartyPickerData={acquireSourcePickerData}
                   initialValues={tab === "acquire" ? initialValues : undefined}
                 />
               }
@@ -100,7 +93,6 @@ export default async function InflowNewPage({ searchParams }: PageProps) {
                 <TransferForm
                   key={tab === "transfer" ? (draftId ?? "new") : "transfer"}
                   ammoTypes={ammoTypes}
-                  counterpartyPickerData={transferCounterpartyPickerData}
                   initialValues={tab === "transfer" ? initialValues : undefined}
                 />
               }

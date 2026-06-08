@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { buildRangePickerData } from "@/features/ammo-ledger/catalog/build-range-picker-data/build-range-picker-data";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { CatalogList } from "@/features/ammo-ledger/components/catalog-list/catalog-list";
 
 export default async function RangeCatalogPage() {
@@ -22,7 +21,6 @@ export default async function RangeCatalogPage() {
             全国指定射撃場協会のデータをもとにしています。
           </p>
         </div>
-        <AmmoLedgerNav />
       </div>
       <CatalogList
         catalogKind="range"

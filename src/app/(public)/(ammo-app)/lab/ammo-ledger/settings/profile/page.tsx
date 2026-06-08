@@ -1,5 +1,4 @@
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { LedgerProfileForm } from "@/features/ammo-ledger/components/ledger-profile-form/ledger-profile-form";
 import { getLedgerProfile } from "@/features/ammo-ledger/profile/get-ledger-profile/get-ledger-profile";
@@ -17,7 +16,6 @@ export default async function LedgerProfileSettingsPage() {
           帳簿の表紙・印刷や取得許可申請書に使う氏名・住所・生年月日・電話番号を設定します。
         </p>
       </div>
-      <AmmoLedgerNav />
       <AmmoLedgerPanel
         title={`表示名: ${resolveOwnerName({ profileOwnerName: profile?.ownerName, accountName: user.name })}`}
       >

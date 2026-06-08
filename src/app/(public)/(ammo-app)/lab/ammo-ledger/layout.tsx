@@ -6,12 +6,14 @@ import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { shouldGuardAmmoLedgerLayout } from "@/features/ammo-ledger/auth/should-guard-ammo-ledger-layout/should-guard-ammo-ledger-layout";
 import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { AmmoLedgerShell } from "@/features/ammo-ledger/components/ammo-ledger-shell/ammo-ledger-shell";
+import { AmmoLedgerSubpageChrome } from "@/features/ammo-ledger/components/ammo-ledger-subpage-chrome/ammo-ledger-subpage-chrome";
 import {
   ammoLedgerPwaConfig,
   ammoLedgerPwaIcons,
 } from "@/features/ammo-ledger/pwa/ammo-ledger-pwa-config";
 import { AmmoLedgerSwrProvider } from "@/features/ammo-ledger/workspace/ammo-ledger-swr-provider/ammo-ledger-swr-provider";
 import { AmmoLedgerWorkspacePrefetch } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-prefetch/ammo-ledger-workspace-prefetch";
+import { loadInitialAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/load-initial-ammo-ledger-workspace/load-initial-ammo-ledger-workspace";
 import "@/features/ammo-ledger/ammo-ledger-styles.css";
 import { labFontClassName } from "@/lib/theme/lab-fonts";
 
@@ -57,7 +59,9 @@ export const viewport: Viewport = {
 
 export default async function AmmoLedgerLayout({ children }: { children: React.ReactNode }) {
   const pathname = (await headers()).get("x-pathname");
-  if (shouldGuardAmmoLedgerLayout({ pathname })) {
+  const initialWorkspace = await loadInitialAmmoLedgerWorkspace({ pathname });
+
+  if (shouldGuardAmmoLedgerLayout({ pathname }) && !initialWorkspace) {
     await requireAmmoUser();
   }
 
@@ -66,10 +70,12 @@ export default async function AmmoLedgerLayout({ children }: { children: React.R
       className={`${labFontClassName} mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 pb-6 sm:px-6 sm:pb-8`}
     >
       <SerwistProvider swUrl="/serwist/sw.js">
-        <AmmoLedgerSwrProvider>
+        <AmmoLedgerSwrProvider initialWorkspace={initialWorkspace}>
           <AmmoLedgerOptimisticNavProvider>
             <AmmoLedgerWorkspacePrefetch />
-            <AmmoLedgerShell>{children}</AmmoLedgerShell>
+            <AmmoLedgerShell>
+              <AmmoLedgerSubpageChrome>{children}</AmmoLedgerSubpageChrome>
+            </AmmoLedgerShell>
           </AmmoLedgerOptimisticNavProvider>
         </AmmoLedgerSwrProvider>
       </SerwistProvider>

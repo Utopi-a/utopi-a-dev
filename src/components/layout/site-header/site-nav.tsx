@@ -36,6 +36,7 @@ function NavLink({
   return (
     <Link
       href={href}
+      prefetch={false}
       onClick={onClick}
       className={cn(
         "rounded-lg text-sm transition-colors",

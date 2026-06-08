@@ -25,6 +25,8 @@ export function HomeView() {
               width={400}
               height={400}
               priority
+              fetchPriority="high"
+              sizes="(max-width: 1024px) 288px, 384px"
               className="aspect-square w-full rounded-[1.25rem] object-cover"
             />
           </div>

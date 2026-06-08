@@ -10,6 +10,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6">
         <Link
           href="/"
+          prefetch={false}
           className="group flex min-w-0 items-center gap-2.5 rounded-xl py-1 pr-2 transition-colors hover:text-primary"
         >
           <span className="relative size-8 shrink-0 overflow-hidden rounded-lg border border-border/70 shadow-sm sm:size-9">

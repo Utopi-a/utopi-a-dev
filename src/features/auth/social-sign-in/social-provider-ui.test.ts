@@ -25,7 +25,6 @@ describe("listEnabledSocialProviderUi", () => {
   it("有効 ID に対応する UI 定義だけ返す", () => {
     const items = listEnabledSocialProviderUi({ enabledIds: ["github", "unknown"] });
     expect(items).toHaveLength(1);
-    expect(items[0]?.id).toBe("github");
-    expect(items[0]?.icon).toBe("github");
+    expect(items[0]).toMatchObject({ id: "github", icon: "github" });
   });
 });

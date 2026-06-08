@@ -1,7 +1,15 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { resolveShellRoute } from "@/features/ammo-ledger/workspace/resolve-shell-route/resolve-shell-route";
 
 type AmmoLedgerOptimisticNavContextValue = {
@@ -17,9 +25,9 @@ export function AmmoLedgerOptimisticNavProvider({ children }: { children: ReactN
   const pathname = usePathname();
   const [activePath, setActivePathState] = useState<string | null>(null);
 
-  function setActivePath({ path }: { path: string | null }) {
+  const setActivePath = useCallback(({ path }: { path: string | null }) => {
     setActivePathState(path);
-  }
+  }, []);
 
   useEffect(() => {
     if (!activePath) {
@@ -54,8 +62,16 @@ export function AmmoLedgerOptimisticNavProvider({ children }: { children: ReactN
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
+  const value = useMemo(
+    () => ({
+      activePath,
+      setActivePath,
+    }),
+    [activePath, setActivePath],
+  );
+
   return (
-    <AmmoLedgerOptimisticNavContext.Provider value={{ activePath, setActivePath }}>
+    <AmmoLedgerOptimisticNavContext.Provider value={value}>
       {children}
     </AmmoLedgerOptimisticNavContext.Provider>
   );

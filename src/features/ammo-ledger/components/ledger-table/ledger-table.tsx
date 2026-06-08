@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { LedgerEntryActionsSheet } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-actions-sheet";
 import { LedgerEntryCard } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-card";
 import {
@@ -53,7 +53,10 @@ export function LedgerTable({
 }: LedgerTableProps) {
   const [selectedRow, setSelectedRow] = useState<LedgerDisplayRow | null>(null);
   const [selectedPermitBalance, setSelectedPermitBalance] = useState<number | undefined>(undefined);
-  const exceededSet = new Set(homeStorageExceededEntryIds);
+  const exceededSet = useMemo(
+    () => new Set(homeStorageExceededEntryIds),
+    [homeStorageExceededEntryIds],
+  );
 
   function handleSelectRow({
     row,

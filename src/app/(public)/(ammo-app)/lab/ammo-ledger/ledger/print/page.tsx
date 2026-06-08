@@ -1,6 +1,6 @@
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { LedgerPrintControls } from "@/features/ammo-ledger/components/ledger-print-controls/ledger-print-controls";
-import { LedgerPrintDocument } from "@/features/ammo-ledger/documents/ledger-print-document/ledger-print-document";
+import { LedgerPrintDocumentLazy } from "@/features/ammo-ledger/documents/ledger-print-document/ledger-print-document.lazy";
 import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-entries/list-ledger-entries";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { listCounterparties } from "@/features/ammo-ledger/master/list-counterparties/list-counterparties";
@@ -92,7 +92,7 @@ export default async function LedgerPrintPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-4">
       <LedgerPrintControls years={availableYears} selectedYear={selectedYear} />
-      <LedgerPrintDocument
+      <LedgerPrintDocumentLazy
         ownerName={ownerName}
         ownerAddress={profile?.ownerAddress}
         from={from}

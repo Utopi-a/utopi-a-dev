@@ -23,29 +23,20 @@ export type RangeAllocationRowState = {
 type ConsumptionPlanRangeAllocationListProps = {
   rows: RangeAllocationRowState[];
   onRowsChange: (rows: RangeAllocationRowState[]) => void;
-  rangePickerData: MasterPickerData;
 };
 
 export function ConsumptionPlanRangeAllocationList({
   rows,
   onRowsChange,
-  rangePickerData,
 }: ConsumptionPlanRangeAllocationListProps) {
   function updateRow({ rowId, patch }: { rowId: string; patch: Partial<RangeAllocationRowState> }) {
     onRowsChange(rows.map((row) => (row.id === rowId ? { ...row, ...patch } : row)));
   }
 
   function handleRangeIdChange({ rowId, rangeId }: { rowId: string; rangeId: string }) {
-    const found = findPickerMaster({ masterId: rangeId, pickerData: rangePickerData });
     updateRow({
       rowId,
-      patch: found
-        ? {
-            rangeId,
-            rangeName: found.name,
-            rangeAddress: found.address,
-          }
-        : { rangeId },
+      patch: { rangeId },
     });
   }
 
@@ -112,7 +103,6 @@ export function ConsumptionPlanRangeAllocationList({
             onChange={(rangeId) => handleRangeIdChange({ rowId: row.id, rangeId })}
             onMasterSelect={(master) => handleRangeMasterSelect({ rowId: row.id, master })}
             catalogKind="range"
-            pickerData={rangePickerData}
             sheetTitle="射撃場を選ぶ"
             required
           />
@@ -193,22 +183,4 @@ export function createInitialRangeAllocationRows({
       weight: "1",
     },
   ];
-}
-
-function findPickerMaster({
-  masterId,
-  pickerData,
-}: {
-  masterId: string;
-  pickerData: MasterPickerData;
-}): PickerMasterEntry | null {
-  if (!masterId) {
-    return null;
-  }
-
-  return (
-    pickerData.recent.find((item) => item.id === masterId) ??
-    pickerData.registered.find((item) => item.id === masterId) ??
-    null
-  );
 }

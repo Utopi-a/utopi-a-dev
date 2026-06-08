@@ -25,6 +25,7 @@
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:install": "playwright install chromium",
     "typecheck": "tsc --noEmit",
+    "analyze": "ANALYZE=true pnpm build",
     "db:generate": "doppler run -- drizzle-kit generate",
     "db:migrate": "doppler run -- drizzle-kit migrate",
     "db:studio": "doppler run -- drizzle-kit studio",
@@ -63,6 +64,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",
+    "@next/bundle-analyzer": "^16.2.7",
     "@playwright/test": "^1.60.0",
     "@serwist/turbopack": "^9.5.11",
     "@tailwindcss/postcss": "^4",
@@ -76,11 +78,11 @@
     "@vitejs/plugin-react": "^6.0.2",
     "drizzle-kit": "^0.31.10",
     "esbuild": "^0.28.0",
-    "sharp": "^0.34.5",
     "jsdom": "^29.1.1",
     "lefthook": "^2.1.9",
     "pdf-parse": "^1.1.1",
     "serwist": "^9.5.11",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.8"

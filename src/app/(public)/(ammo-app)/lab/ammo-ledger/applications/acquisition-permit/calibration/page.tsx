@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { FieldCalibrationView } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/field-calibration-view";
+import { FieldCalibrationViewLazy } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/field-calibration-view.lazy";
 import { isDevelopmentEnvironment } from "@/lib/is-development-environment";
 
 export default function AcquisitionPermitFieldCalibrationPage() {
@@ -13,7 +13,7 @@ export default function AcquisitionPermitFieldCalibrationPage() {
         <h1 className="text-base font-semibold">申請書フィールド座標調整</h1>
         <p className="text-xs text-muted-foreground">開発用 · フル幅編集モード</p>
       </div>
-      <FieldCalibrationView />
+      <FieldCalibrationViewLazy />
     </div>
   );
 }

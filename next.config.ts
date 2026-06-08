@@ -1,6 +1,11 @@
+import bundleAnalyzer from "@next/bundle-analyzer";
 import { withSerwist } from "@serwist/turbopack";
 import type { NextConfig } from "next";
 import { buildSecurityHeaderRoutes } from "./src/security-headers/security-headers";
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["better-auth", "postgres"],
@@ -14,4 +19,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSerwist(nextConfig);
+export default withBundleAnalyzer(withSerwist(nextConfig));

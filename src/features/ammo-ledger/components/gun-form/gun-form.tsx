@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { createGunAction } from "@/features/ammo-ledger/master/create-gun/create-gun-action";
 import { updateGunAction } from "@/features/ammo-ledger/master/update-gun/update-gun-action";
+import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type GunFormProps = {
   recordId?: string;
@@ -24,6 +25,7 @@ type GunFormProps = {
 
 export function GunForm({ recordId, initialValues }: GunFormProps = {}) {
   const router = useRouter();
+  const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
   const isEdit = Boolean(recordId);
   const [name, setName] = useState(initialValues?.name ?? "");
   const [gunNumber, setGunNumber] = useState(initialValues?.gunNumber ?? "");
@@ -64,6 +66,7 @@ export function GunForm({ recordId, initialValues }: GunFormProps = {}) {
       action: isEdit ? "updated" : "created",
       subject: "銃",
     });
+    await invalidateWorkspace();
 
     if (isEdit) {
       router.push("/lab/ammo-ledger/settings/guns");

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
+import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { cn } from "@/lib/cn";
 
 export type MasterDeleteResult = { ok: true } | { ok: false; error?: string };
@@ -23,6 +24,7 @@ export function MasterRowActions({
   deleteAction,
 }: MasterRowActionsProps) {
   const router = useRouter();
+  const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +42,7 @@ export function MasterRowActions({
     }
 
     showAmmoLedgerToast({ action: "deleted", subject: deletedSubject });
+    await invalidateWorkspace();
     router.refresh();
     setIsPending(false);
   }

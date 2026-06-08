@@ -18,6 +18,7 @@ import {
 } from "@/features/ammo-ledger/schema/shot-gauge-options";
 import type { ShotType } from "@/features/ammo-ledger/schema/shot-type";
 import { shotTypeLabels, shotTypes } from "@/features/ammo-ledger/schema/shot-type";
+import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type AmmoTypeFormProps = {
   recordId?: string;
@@ -34,6 +35,7 @@ type AmmoTypeFormProps = {
 
 export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}) {
   const router = useRouter();
+  const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
   const isEdit = Boolean(recordId);
   const [name, setName] = useState(initialValues?.name ?? "");
   const [caliber, setCaliber] = useState(initialValues?.caliber ?? "12番");
@@ -95,6 +97,7 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
       action: isEdit ? "updated" : "created",
       subject: "弾種",
     });
+    await invalidateWorkspace();
 
     if (isEdit) {
       router.push("/lab/ammo-ledger/settings/ammo-types");

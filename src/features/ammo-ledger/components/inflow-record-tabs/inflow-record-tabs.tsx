@@ -59,13 +59,13 @@ export function InflowRecordTabs({
         ))}
       </TabsList>
       <TabsContent value="acquire" className="mt-4">
-        {acquireContent}
+        {activeTab === "acquire" ? acquireContent : null}
       </TabsContent>
       <TabsContent value="dispose" className="mt-4">
-        {disposeContent}
+        {activeTab === "dispose" ? disposeContent : null}
       </TabsContent>
       <TabsContent value="transfer" className="mt-4">
-        {transferContent}
+        {activeTab === "transfer" ? transferContent : null}
       </TabsContent>
     </Tabs>
   );

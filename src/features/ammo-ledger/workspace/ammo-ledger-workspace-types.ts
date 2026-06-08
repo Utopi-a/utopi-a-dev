@@ -1,5 +1,6 @@
 import type {
   ammoAcquisitionPermit,
+  ammoGun,
   ammoLedgerEntry,
   ammoLedgerProfile,
   ammoPermitEvent,
@@ -17,4 +18,5 @@ export type AmmoLedgerWorkspace = {
   permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
   profile: typeof ammoLedgerProfile.$inferSelect | null;
   inventoryItems: AmmoLedgerInventoryItem[];
+  guns: (typeof ammoGun.$inferSelect)[];
 };

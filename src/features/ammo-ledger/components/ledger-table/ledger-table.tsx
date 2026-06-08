@@ -22,6 +22,7 @@ import {
 } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
+import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 
 type LedgerTableProps = {
   rows: LedgerDisplayRow[];
@@ -135,7 +136,9 @@ export function LedgerTable({
                       className="cursor-pointer border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20"
                     >
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
-                        <span className="whitespace-nowrap tabular-nums">{row.occurredOn}</span>
+                        <span className="whitespace-nowrap tabular-nums">
+                          {formatIsoDateForDisplay({ value: row.occurredOn })}
+                        </span>
                       </td>
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.category)}>
                         <PermitCarryoverBadge />
@@ -187,7 +190,9 @@ export function LedgerTable({
                   return (
                     <tr key={row.id} className="border-b border-border/25 last:border-0">
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
-                        <span className="whitespace-nowrap tabular-nums">{row.occurredOn}</span>
+                        <span className="whitespace-nowrap tabular-nums">
+                          {formatIsoDateForDisplay({ value: row.occurredOn })}
+                        </span>
                       </td>
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.category)}>
                         <PermitExpiryBadge />
@@ -259,7 +264,9 @@ export function LedgerTable({
                     )}
                   >
                     <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
-                      <span className="whitespace-nowrap tabular-nums">{entry.occurredOn}</span>
+                      <span className="whitespace-nowrap tabular-nums">
+                        {formatIsoDateForDisplay({ value: entry.occurredOn })}
+                      </span>
                     </td>
                     <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.category)}>
                       <LedgerCategoryBadge category={entry.category} />

@@ -3,6 +3,7 @@
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { defaultCarryoverExpiresOn } from "@/features/ammo-ledger/opening-balance/default-carryover-expires-on/default-carryover-expires-on";
@@ -158,16 +159,15 @@ export function OpeningBalancePermitCarryoverList({
               </div>
               <div className="space-y-2">
                 <Label htmlFor={`permit-expires-on-${row.clientKey}`}>有効期限</Label>
-                <Input
+                <IsoDateInput
                   id={`permit-expires-on-${row.clientKey}`}
-                  type="date"
                   required
                   min={openingDay}
                   value={row.expiresOn}
-                  onChange={(event) =>
+                  onChange={({ value }) =>
                     updateRow({
                       clientKey: row.clientKey,
-                      patch: { expiresOn: event.target.value },
+                      patch: { expiresOn: value },
                     })
                   }
                 />

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { upsertLedgerProfileAction } from "@/features/ammo-ledger/profile/upsert-ledger-profile/upsert-ledger-profile-action";
@@ -80,11 +81,10 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
 
       <div className="space-y-2">
         <Label htmlFor="owner-birth-date">生年月日（任意）</Label>
-        <Input
+        <IsoDateInput
           id="owner-birth-date"
-          type="date"
           value={ownerBirthDate}
-          onChange={(e) => setOwnerBirthDate(e.target.value)}
+          onChange={({ value }) => setOwnerBirthDate(value)}
         />
       </div>
 

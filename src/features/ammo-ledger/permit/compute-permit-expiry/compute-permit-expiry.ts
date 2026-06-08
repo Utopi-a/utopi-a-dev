@@ -1,3 +1,5 @@
+import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
+
 export function computeDaysUntilExpiry({
   expiresOn,
   today,
@@ -29,7 +31,7 @@ export function formatPermitExpiryLabel({
   if (days <= 30) {
     return `あと${days}日`;
   }
-  return `あと${days}日（${expiresOn}まで）`;
+  return `あと${days}日（${formatIsoDateForDisplay({ value: expiresOn })}まで）`;
 }
 
 export function isPermitActive({

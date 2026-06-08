@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun } from "@/db/schema/ammo-ledger";
 import type { AcquisitionPermitApplicationPayload } from "@/features/ammo-ledger/acquisition-permit-application/acquisition-permit-application-types";
@@ -252,11 +253,10 @@ export function AcquisitionPermitApplicationForm({
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="application-date">申請日</Label>
-            <Input
+            <IsoDateInput
               id="application-date"
-              type="date"
               value={applicationDate}
-              onChange={(event) => setApplicationDate(event.target.value)}
+              onChange={({ value }) => setApplicationDate(value)}
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
@@ -281,11 +281,10 @@ export function AcquisitionPermitApplicationForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="owner-birth-date">生年月日</Label>
-            <Input
+            <IsoDateInput
               id="owner-birth-date"
-              type="date"
               value={birthDate}
-              onChange={(event) => setBirthDate(event.target.value)}
+              onChange={({ value }) => setBirthDate(value)}
             />
           </div>
           <div className="space-y-2">
@@ -356,21 +355,19 @@ export function AcquisitionPermitApplicationForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="valid-from">譲受期間（開始）</Label>
-              <Input
+              <IsoDateInput
                 id="valid-from"
-                type="date"
                 value={validFrom}
-                onChange={(event) => handleValidFromChange(event.target.value)}
+                onChange={({ value }) => handleValidFromChange(value)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="valid-to">譲受期間（終了）</Label>
-              <Input
+              <IsoDateInput
                 id="valid-to"
-                type="date"
                 value={validTo}
                 min={validFrom}
-                onChange={(event) => setValidTo(event.target.value)}
+                onChange={({ value }) => setValidTo(value)}
               />
             </div>
           </div>

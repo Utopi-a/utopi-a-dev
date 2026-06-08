@@ -2,6 +2,7 @@
 
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
 import { BulkEntryCopyActions } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-copy-actions";
@@ -142,12 +143,11 @@ export function BulkEntryRowCard({
 
         <div className="space-y-2">
           <Label htmlFor={`occurred-on-${row.clientId}`}>日付</Label>
-          <Input
+          <IsoDateInput
             id={`occurred-on-${row.clientId}`}
-            type="date"
             required
             value={row.occurredOn}
-            onChange={(event) => updateRow({ patch: { occurredOn: event.target.value } })}
+            onChange={({ value }) => updateRow({ patch: { occurredOn: value } })}
           />
         </div>
       </div>

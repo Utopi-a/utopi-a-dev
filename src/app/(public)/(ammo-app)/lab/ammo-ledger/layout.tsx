@@ -67,7 +67,7 @@ export default async function AmmoLedgerLayout({ children }: { children: React.R
 
   return (
     <div
-      className={`${labFontClassName} mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 pb-6 sm:px-6 sm:pb-8`}
+      className={`${labFontClassName} mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 pt-5 pb-6 sm:px-6 sm:pt-6 sm:pb-8`}
     >
       <SerwistProvider swUrl="/serwist/sw.js">
         <AmmoLedgerSwrProvider initialWorkspace={initialWorkspace}>

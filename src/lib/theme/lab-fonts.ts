@@ -8,4 +8,4 @@ export const geistMono = Geist_Mono({
   preload: false,
 });
 
-export const labFontClassName = [zenKakuGothicNew.variable, geistMono.variable].join(" ");
+export const labFontClassName = [zenKakuGothicNew.className, geistMono.variable].join(" ");

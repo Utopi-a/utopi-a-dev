@@ -8,4 +8,8 @@ export const dmSans = DM_Sans({
   display: "swap",
 });
 
-export const portfolioFontClassName = [zenKakuGothicNew.variable, dmSans.variable].join(" ");
+export const portfolioFontClassName = [
+  zenKakuGothicNew.variable,
+  dmSans.variable,
+  "font-sans",
+].join(" ");

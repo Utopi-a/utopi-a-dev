@@ -225,11 +225,15 @@ function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewCon
 export function LedgerView() {
   const { workspace, ownerName, isLoading, isRefreshing } = useAmmoLedgerWorkspace();
 
-  if (isLoading || !workspace || !ownerName) {
+  if (isLoading || !workspace) {
     return <WorkspaceViewLoader />;
   }
 
   return (
-    <LedgerViewContent workspace={workspace} ownerName={ownerName} isRefreshing={isRefreshing} />
+    <LedgerViewContent
+      workspace={workspace}
+      ownerName={ownerName || "（未設定）"}
+      isRefreshing={isRefreshing}
+    />
   );
 }

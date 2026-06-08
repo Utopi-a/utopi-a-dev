@@ -9,7 +9,6 @@ import { workspaceStaleMs } from "@/features/ammo-ledger/workspace/workspace-sta
 const workspaceSwrOptions = {
   keepPreviousData: true,
   revalidateOnFocus: false,
-  revalidateOnMount: false,
   dedupingInterval: workspaceStaleMs,
 } as const;
 

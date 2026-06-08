@@ -84,6 +84,11 @@ export function AmmoLedgerHomeView() {
             description="別記様式第2号を入力して印刷"
           />
           <AmmoLedgerActionTile
+            href="/lab/ammo-ledger/applications/gun-possession-permit/new"
+            label="銃所持許可申請書を作る"
+            description="新規・追加・更新と必要書類チェックリスト"
+          />
+          <AmmoLedgerActionTile
             href="/lab/ammo-ledger/settings/permits"
             label="譲受許可を登録"
             description="警察交付の許可を登録すると、帳簿に許可残数が出ます"

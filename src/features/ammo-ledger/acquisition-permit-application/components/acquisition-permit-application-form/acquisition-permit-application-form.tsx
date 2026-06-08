@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,7 @@ import type {
   MasterPickerData,
   PickerMasterEntry,
 } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
-import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
+import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
@@ -47,8 +47,6 @@ type AcquisitionPermitApplicationFormProps = {
   ownerPhone?: string;
   currentHomeStock: number;
   guns: (typeof ammoGun.$inferSelect)[];
-  rangePickerData: MasterPickerData;
-  counterpartyPickerData: MasterPickerData;
 };
 
 function defaultValidTo({ validFrom }: { validFrom: string }): string {
@@ -69,11 +67,18 @@ export function AcquisitionPermitApplicationForm({
   ownerPhone = "",
   currentHomeStock,
   guns,
-  rangePickerData,
-  counterpartyPickerData,
 }: AcquisitionPermitApplicationFormProps) {
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
+  const { pickerData: rangePickerData } = useMasterPickerData({
+    catalogKind: "range",
+    enabled: true,
+  });
+  const { pickerData: counterpartyPickerData } = useMasterPickerData({
+    catalogKind: "gun_shop",
+    enabled: true,
+  });
+  const defaultsApplied = useRef(false);
 
   const [prefectureName, setPrefectureName] = useState("茨城県");
   const [applicationDate, setApplicationDate] = useState(today);
@@ -93,19 +98,27 @@ export function AcquisitionPermitApplicationForm({
   const [selectedGunIds, setSelectedGunIds] = useState<string[]>(
     guns.length > 0 ? [guns[0].id] : [],
   );
-  const initialCounterpartyId =
-    counterpartyPickerData.recent[0]?.id ?? counterpartyPickerData.registered[0]?.id ?? "";
+  const [counterpartyId, setCounterpartyId] = useState("");
+  const [selectedCounterparty, setSelectedCounterparty] = useState<PickerMasterEntry | null>(null);
+  const [rangeAllocationRows, setRangeAllocationRows] = useState<RangeAllocationRowState[]>([]);
 
-  const [counterpartyId, setCounterpartyId] = useState(initialCounterpartyId);
-  const [selectedCounterparty, setSelectedCounterparty] = useState<PickerMasterEntry | null>(() =>
-    findPickerMaster({
-      masterId: initialCounterpartyId,
-      pickerData: counterpartyPickerData,
-    }),
-  );
-  const [rangeAllocationRows, setRangeAllocationRows] = useState<RangeAllocationRowState[]>(() =>
-    createInitialRangeAllocationRows({ rangePickerData }),
-  );
+  useEffect(() => {
+    if (!counterpartyPickerData || !rangePickerData || defaultsApplied.current) {
+      return;
+    }
+
+    const initialCounterpartyId =
+      counterpartyPickerData.recent[0]?.id ?? counterpartyPickerData.registered[0]?.id ?? "";
+    setCounterpartyId(initialCounterpartyId);
+    setSelectedCounterparty(
+      findPickerMaster({
+        masterId: initialCounterpartyId,
+        pickerData: counterpartyPickerData,
+      }),
+    );
+    setRangeAllocationRows(createInitialRangeAllocationRows({ rangePickerData }));
+    defaultsApplied.current = true;
+  }, [counterpartyPickerData, rangePickerData]);
   const [consumptionPlan, setConsumptionPlan] = useState<ConsumptionPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -128,6 +141,10 @@ export function AcquisitionPermitApplicationForm({
 
   function handleCounterpartyChange({ nextCounterpartyId }: { nextCounterpartyId: string }) {
     setCounterpartyId(nextCounterpartyId);
+    if (!counterpartyPickerData) {
+      return;
+    }
+
     const found = findPickerMaster({
       masterId: nextCounterpartyId,
       pickerData: counterpartyPickerData,
@@ -218,8 +235,6 @@ export function AcquisitionPermitApplicationForm({
           別記様式第2号（全国共通様式・北海道警察掲載版）に入力値を重ねて印刷します。提出先の都道府県名を入力してください。
         </p>
       </div>
-
-      <AmmoLedgerNav />
 
       <AmmoLedgerPanel title="申請者">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -418,7 +433,6 @@ export function AcquisitionPermitApplicationForm({
           onChange={(nextCounterpartyId) => handleCounterpartyChange({ nextCounterpartyId })}
           onMasterSelect={setSelectedCounterparty}
           catalogKind="gun_shop"
-          pickerData={counterpartyPickerData}
           sheetTitle="購入先を選ぶ"
           required
         />
@@ -433,7 +447,6 @@ export function AcquisitionPermitApplicationForm({
           <ConsumptionPlanRangeAllocationList
             rows={rangeAllocationRows}
             onRowsChange={setRangeAllocationRows}
-            rangePickerData={rangePickerData}
           />
 
           <Button type="button" variant="outline" onClick={handleGeneratePlan}>

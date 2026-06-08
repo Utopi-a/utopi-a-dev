@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
-import type { MasterPickerData } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
+import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { BulkEntryRowCard } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-row-card";
 import {
   type BulkEntryCopyField,
@@ -20,6 +20,7 @@ import {
 import { moveBulkEntryRow } from "@/features/ammo-ledger/components/bulk-entry-form/move-bulk-entry-row/move-bulk-entry-row";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { buildAmmoTypeFieldOptions } from "@/features/ammo-ledger/master/build-ammo-type-field-options/build-ammo-type-field-options";
+import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 import { createBulkTransactionsAction } from "@/features/ammo-ledger/transactions/create-bulk-transactions/create-bulk-transactions-action";
 import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
@@ -27,30 +28,45 @@ type BulkEntryFormProps = {
   guns: (typeof ammoGun.$inferSelect)[];
   ammoTypes: (typeof ammoType.$inferSelect)[];
   stockByAmmoTypeId: Record<string, number>;
-  rangePickerData: MasterPickerData;
-  counterpartyPickerData: MasterPickerData;
-  defaultCounterpartyId: string;
 };
 
-export function BulkEntryForm({
-  guns,
-  ammoTypes,
-  stockByAmmoTypeId,
-  rangePickerData,
-  counterpartyPickerData,
-  defaultCounterpartyId,
-}: BulkEntryFormProps) {
+export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryFormProps) {
   const router = useRouter();
   const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
   const today = new Date().toISOString().slice(0, 10);
+  const { pickerData: counterpartyPickerData } = useMasterPickerData({
+    catalogKind: "gun_shop",
+    includeRangeCatalog: true,
+    enabled: true,
+  });
 
-  const [rows, setRows] = useState<BulkEntryRowState[]>(() => [
-    createBulkEntryRow({
-      inputKind: "consume",
-      occurredOn: today,
-      defaultCounterpartyId,
-    }),
-  ]);
+  const [defaultCounterpartyId, setDefaultCounterpartyId] = useState(manualCounterpartyId);
+  const [rows, setRows] = useState<BulkEntryRowState[]>([]);
+  const rowsInitialized = useRef(false);
+
+  useEffect(() => {
+    if (!counterpartyPickerData) {
+      return;
+    }
+
+    const nextDefaultCounterpartyId =
+      counterpartyPickerData.recent[0]?.id ??
+      counterpartyPickerData.registered[0]?.id ??
+      manualCounterpartyId;
+    setDefaultCounterpartyId(nextDefaultCounterpartyId);
+
+    if (!rowsInitialized.current) {
+      setRows([
+        createBulkEntryRow({
+          inputKind: "consume",
+          occurredOn: today,
+          defaultCounterpartyId: nextDefaultCounterpartyId,
+        }),
+      ]);
+      rowsInitialized.current = true;
+    }
+  }, [counterpartyPickerData, today]);
+
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -164,6 +180,10 @@ export function BulkEntryForm({
     setIsPending(false);
   }
 
+  if (rows.length === 0) {
+    return <p className="text-sm text-muted-foreground">読み込み中…</p>;
+  }
+
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       <div className="space-y-4">
@@ -175,8 +195,6 @@ export function BulkEntryForm({
             guns={guns}
             ammoTypes={ammoTypes}
             ammoTypeOptions={ammoTypeOptions}
-            rangePickerData={rangePickerData}
-            counterpartyPickerData={counterpartyPickerData}
             canRemove={rows.length > 1}
             canMoveUp={rowIndex > 0}
             canMoveDown={rowIndex < rows.length - 1}

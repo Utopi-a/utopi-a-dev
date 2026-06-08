@@ -11,6 +11,7 @@ export function ExploreLinkCard({ href, label }: ExploreLinkCardProps) {
   return (
     <Link
       href={href}
+      prefetch={false}
       className={cn(
         "group flex items-center justify-between gap-4 rounded-2xl border border-border/70",
         "bg-card/60 px-5 py-4 shadow-sm backdrop-blur-sm transition-all sm:px-6 sm:py-5",

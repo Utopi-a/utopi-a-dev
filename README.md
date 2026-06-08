@@ -84,6 +84,18 @@ pnpm db:migrate
 pnpm dev
 ```
 
+`pnpm dev` はオンデマンドコンパイルのため、本番より **2〜5 倍遅く感じる** ことがあります。パフォーマンスの体感確認は次を使ってください。
+
+```bash
+pnpm build:local && pnpm start:local
+```
+
+JS バンドルサイズの可視化:
+
+```bash
+pnpm analyze
+```
+
 ブラウザで [http://localhost:3000](http://localhost:3000) を開きます。
 
 Doppler を使わず Next だけ起動する場合（UI の確認など、シークレット不要なとき）:

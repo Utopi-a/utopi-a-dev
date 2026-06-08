@@ -4,7 +4,6 @@ import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
-import type { MasterPickerData } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import { BulkEntryCopyActions } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-copy-actions";
 import {
   applyAmmoTypeToRow,
@@ -30,8 +29,6 @@ type BulkEntryRowCardProps = {
   guns: (typeof ammoGun.$inferSelect)[];
   ammoTypes: (typeof ammoType.$inferSelect)[];
   ammoTypeOptions: { value: string; label: string }[];
-  rangePickerData: MasterPickerData;
-  counterpartyPickerData: MasterPickerData;
   canRemove: boolean;
   canMoveUp: boolean;
   canMoveDown: boolean;
@@ -54,8 +51,6 @@ export function BulkEntryRowCard({
   guns,
   ammoTypes,
   ammoTypeOptions,
-  rangePickerData,
-  counterpartyPickerData,
   canRemove,
   canMoveUp,
   canMoveDown,
@@ -209,7 +204,6 @@ export function BulkEntryRowCard({
             value={row.rangeId}
             onChange={(value) => updateRow({ patch: { rangeId: value } })}
             catalogKind="range"
-            pickerData={rangePickerData}
             sheetTitle="射撃場を選ぶ"
             required
           />
@@ -234,7 +228,7 @@ export function BulkEntryRowCard({
             value={row.counterpartyId}
             onChange={(value) => updateRow({ patch: { counterpartyId: value } })}
             catalogKind="gun_shop"
-            pickerData={counterpartyPickerData}
+            includeRangeCatalog
             sheetTitle="購入先を選ぶ"
             manualOption={{ value: manualCounterpartyId, label: "手入力する" }}
             required

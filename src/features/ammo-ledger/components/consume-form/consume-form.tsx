@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
-import type { MasterPickerData } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
@@ -24,7 +23,6 @@ type ConsumeFormProps = {
   guns: (typeof ammoGun.$inferSelect)[];
   ammoTypes: (typeof ammoType.$inferSelect)[];
   stockByAmmoTypeId: Record<string, number>;
-  rangePickerData: MasterPickerData;
   ledgerEntryId?: string;
   initialValues?: {
     occurredOn?: string;
@@ -43,7 +41,6 @@ export function ConsumeForm({
   guns,
   ammoTypes,
   stockByAmmoTypeId,
-  rangePickerData,
   ledgerEntryId,
   initialValues,
 }: ConsumeFormProps) {
@@ -143,7 +140,6 @@ export function ConsumeForm({
         value={rangeId}
         onChange={setRangeId}
         catalogKind="range"
-        pickerData={rangePickerData}
         sheetTitle="射撃場を選ぶ"
         required
       />

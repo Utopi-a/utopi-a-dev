@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useTransition } from "react";
+import { memo, useEffect, useTransition } from "react";
 import { useAmmoLedgerOptimisticNav } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { useAmmoLedgerClientNav } from "@/features/ammo-ledger/navigation/use-ammo-ledger-client-nav/use-ammo-ledger-client-nav";
 import { isClientShellNavPath } from "@/features/ammo-ledger/workspace/resolve-shell-route/resolve-shell-route";
@@ -30,7 +30,7 @@ const navItems = [
   },
 ] as const;
 
-export function AmmoLedgerNav() {
+export const AmmoLedgerNav = memo(function AmmoLedgerNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { activePath } = useAmmoLedgerOptimisticNav();
@@ -82,4 +82,4 @@ export function AmmoLedgerNav() {
       })}
     </nav>
   );
-}
+});

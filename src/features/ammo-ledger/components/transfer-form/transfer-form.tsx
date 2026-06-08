@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoType } from "@/db/schema/ammo-ledger";
-import type { MasterPickerData } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
+import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
@@ -21,7 +21,6 @@ import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspa
 
 type TransferFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
-  counterpartyPickerData: MasterPickerData;
   ledgerEntryId?: string;
   initialValues?: {
     occurredOn?: string;
@@ -36,25 +35,35 @@ type TransferFormProps = {
   };
 };
 
-export function TransferForm({
-  ammoTypes,
-  counterpartyPickerData,
-  ledgerEntryId,
-  initialValues,
-}: TransferFormProps) {
+export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: TransferFormProps) {
   const router = useRouter();
   const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
   const today = new Date().toISOString().slice(0, 10);
+  const { pickerData: counterpartyPickerData } = useMasterPickerData({
+    catalogKind: "gun_shop",
+    enabled: true,
+  });
+  const defaultCounterpartyApplied = useRef(!!initialValues?.counterpartyId);
 
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
   const [purpose, setPurpose] = useState<LedgerPurpose>(initialValues?.purpose ?? "shooting");
   const [counterpartyId, setCounterpartyId] = useState(
-    initialValues?.counterpartyId ??
+    initialValues?.counterpartyId ?? manualCounterpartyId,
+  );
+
+  useEffect(() => {
+    if (!counterpartyPickerData || defaultCounterpartyApplied.current) {
+      return;
+    }
+
+    const defaultCounterpartyId =
       counterpartyPickerData.recent[0]?.id ??
       counterpartyPickerData.registered[0]?.id ??
-      manualCounterpartyId,
-  );
+      manualCounterpartyId;
+    setCounterpartyId(defaultCounterpartyId);
+    defaultCounterpartyApplied.current = true;
+  }, [counterpartyPickerData]);
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
   const [counterpartyName, setCounterpartyName] = useState(initialValues?.counterpartyName ?? "");
@@ -180,7 +189,6 @@ export function TransferForm({
         value={counterpartyId}
         onChange={setCounterpartyId}
         catalogKind="gun_shop"
-        pickerData={counterpartyPickerData}
         sheetTitle="譲渡先を選ぶ"
         manualOption={{ value: manualCounterpartyId, label: "手入力" }}
         required

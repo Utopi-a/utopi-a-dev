@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeftIcon, ChevronRightIcon, ListIcon } from "lucide-react";
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,10 +22,12 @@ import type {
 } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import type { CatalogKind } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
 import { scrollToPrefectureSection } from "@/features/ammo-ledger/catalog/scroll-to-prefecture-section/scroll-to-prefecture-section";
+import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { CatalogFavoriteButton } from "@/features/ammo-ledger/components/catalog-favorite-button/catalog-favorite-button";
 import { CatalogScrollPane } from "@/features/ammo-ledger/components/catalog-scroll-pane/catalog-scroll-pane";
 import { PickerEntryRow } from "@/features/ammo-ledger/components/picker-entry-row/picker-entry-row";
 import { PrefectureSectionHeading } from "@/features/ammo-ledger/components/prefecture-section-heading/prefecture-section-heading";
+import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { cn } from "@/lib/cn";
 
@@ -37,7 +39,8 @@ type MasterPickerProps = {
   onChange: (value: string) => void;
   onMasterSelect?: (master: PickerMasterEntry) => void;
   catalogKind: CatalogKind;
-  pickerData: MasterPickerData;
+  pickerData?: MasterPickerData;
+  includeRangeCatalog?: boolean;
   sheetTitle: string;
   manualOption?: { value: string; label: string };
 };
@@ -52,26 +55,45 @@ export function MasterPicker({
   onChange,
   onMasterSelect,
   catalogKind,
-  pickerData,
+  pickerData: pickerDataProp,
+  includeRangeCatalog = false,
   sheetTitle,
   manualOption,
 }: MasterPickerProps) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<PickerView>("quick");
-  const [favoriteIds, setFavoriteIds] = useState(pickerData.favoriteCatalogIds);
-  const [registeredCatalogIds, setRegisteredCatalogIds] = useState(pickerData.registeredCatalogIds);
+  const { pickerData: loadedPickerData, isLoading: isPickerDataLoading } = useMasterPickerData({
+    catalogKind,
+    includeRangeCatalog,
+    enabled: open && pickerDataProp === undefined,
+  });
+  const pickerData = pickerDataProp ?? loadedPickerData;
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [registeredCatalogIds, setRegisteredCatalogIds] = useState<string[]>([]);
   const [resolvedMasters, setResolvedMasters] = useState<PickerMasterEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const catalogScrollRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (!pickerData) {
+      return;
+    }
+    setFavoriteIds(pickerData.favoriteCatalogIds);
+    setRegisteredCatalogIds(pickerData.registeredCatalogIds);
+  }, [pickerData]);
+
   const allMasters = useMemo(() => {
+    if (!pickerData) {
+      return new Map<string, PickerMasterEntry>();
+    }
+
     const byId = new Map<string, PickerMasterEntry>();
     for (const item of [...pickerData.recent, ...pickerData.registered, ...resolvedMasters]) {
       byId.set(item.id, item);
     }
     return byId;
-  }, [pickerData.recent, pickerData.registered, resolvedMasters]);
+  }, [pickerData, resolvedMasters]);
 
   const selectedLabel = useMemo(() => {
     if (manualOption && value === manualOption.value) {
@@ -117,6 +139,10 @@ export function MasterPicker({
   }
 
   function handleSelectCatalog({ entry }: { entry: CatalogEntry }) {
+    if (!pickerData) {
+      return;
+    }
+
     const knownCounterpartyId = pickerData.counterpartyIdByCatalogId?.[entry.catalogId];
     if (knownCounterpartyId) {
       const master = allMasters.get(knownCounterpartyId) ?? {
@@ -238,16 +264,16 @@ export function MasterPicker({
     );
   }
 
-  const favoriteEntries = useMemo(() => pickerData.favorites, [pickerData.favorites]);
+  const favoriteEntries = pickerData?.favorites ?? [];
 
-  const nationalListLabel = pickerData.includesRangeCatalog
+  const nationalListLabel = pickerData?.includesRangeCatalog
     ? "全国の銃砲店・射撃場から選ぶ"
     : "全国一覧から選ぶ";
 
   const nationalListDescription = "都道府県順・お気に入り登録";
 
   function renderPrefectureCatalogEntries({ entries }: { entries: CatalogEntry[] }) {
-    if (!pickerData.includesRangeCatalog) {
+    if (!pickerData?.includesRangeCatalog) {
       return entries.map((entry) => renderCatalogEntry({ entry }));
     }
 
@@ -324,80 +350,88 @@ export function MasterPicker({
 
           {view === "quick" ? (
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2">
-              {favoriteEntries.length > 0 ? (
-                <section className="mb-4">
-                  <h3 className="sticky top-0 z-10 bg-background py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    お気に入り
-                  </h3>
-                  {pickerData.includesRangeCatalog
-                    ? renderPrefectureCatalogEntries({ entries: favoriteEntries })
-                    : favoriteEntries.map((entry) => renderCatalogEntry({ entry }))}
-                </section>
-              ) : null}
+              {!pickerData && isPickerDataLoading ? (
+                <WorkspaceViewLoader />
+              ) : !pickerData ? (
+                <p className="py-4 text-sm text-muted-foreground">データを読み込めませんでした。</p>
+              ) : (
+                <>
+                  {favoriteEntries.length > 0 ? (
+                    <section className="mb-4">
+                      <h3 className="sticky top-0 z-10 bg-background py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                        お気に入り
+                      </h3>
+                      {pickerData.includesRangeCatalog
+                        ? renderPrefectureCatalogEntries({ entries: favoriteEntries })
+                        : favoriteEntries.map((entry) => renderCatalogEntry({ entry }))}
+                    </section>
+                  ) : null}
 
-              {pickerData.recent.length > 0 ? (
-                <section className="mb-4">
-                  <h3 className="sticky top-0 z-10 bg-background py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    最近使った
-                  </h3>
-                  {pickerData.recent.map((master) => renderMasterEntry({ master }))}
-                </section>
-              ) : null}
+                  {pickerData.recent.length > 0 ? (
+                    <section className="mb-4">
+                      <h3 className="sticky top-0 z-10 bg-background py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                        最近使った
+                      </h3>
+                      {pickerData.recent.map((master) => renderMasterEntry({ master }))}
+                    </section>
+                  ) : null}
 
-              {pickerData.registered.length > 0 ? (
-                <section className="mb-4">
-                  <h3 className="sticky top-0 z-10 bg-background py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    登録済み
-                  </h3>
-                  {pickerData.registered.map((master) => renderMasterEntry({ master }))}
-                </section>
-              ) : null}
+                  {pickerData.registered.length > 0 ? (
+                    <section className="mb-4">
+                      <h3 className="sticky top-0 z-10 bg-background py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                        登録済み
+                      </h3>
+                      {pickerData.registered.map((master) => renderMasterEntry({ master }))}
+                    </section>
+                  ) : null}
 
-              {(pickerData.registeredRangeMasters?.length ?? 0) > 0 ? (
-                <section className="mb-4">
-                  <h3 className="sticky top-0 z-10 bg-background py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    登録済みの射撃場
-                  </h3>
-                  {pickerData.registeredRangeMasters?.map((master) => (
-                    <PickerEntryRow
-                      key={master.id}
-                      name={master.name}
-                      subtitle={master.address}
-                      onSelect={() => handleSelectRegisteredRange({ master })}
-                      disabled={isPending}
-                    />
-                  ))}
-                </section>
-              ) : null}
+                  {(pickerData.registeredRangeMasters?.length ?? 0) > 0 ? (
+                    <section className="mb-4">
+                      <h3 className="sticky top-0 z-10 bg-background py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                        登録済みの射撃場
+                      </h3>
+                      {pickerData.registeredRangeMasters?.map((master) => (
+                        <PickerEntryRow
+                          key={master.id}
+                          name={master.name}
+                          subtitle={master.address}
+                          onSelect={() => handleSelectRegisteredRange({ master })}
+                          disabled={isPending}
+                        />
+                      ))}
+                    </section>
+                  ) : null}
 
-              <section className="mb-2 border-t border-border/40">
-                <button
-                  type="button"
-                  onClick={() => setView("catalog")}
-                  className="flex w-full items-center justify-between py-3 text-left transition-colors hover:text-primary"
-                >
-                  <span className="flex items-center gap-2">
-                    <ListIcon className="size-4 text-primary" />
-                    <span>
-                      <span className="block text-sm font-semibold">{nationalListLabel}</span>
-                      <span className="block text-xs text-muted-foreground">
-                        {nationalListDescription}
+                  <section className="mb-2 border-t border-border/40">
+                    <button
+                      type="button"
+                      onClick={() => setView("catalog")}
+                      className="flex w-full items-center justify-between py-3 text-left transition-colors hover:text-primary"
+                    >
+                      <span className="flex items-center gap-2">
+                        <ListIcon className="size-4 text-primary" />
+                        <span>
+                          <span className="block text-sm font-semibold">{nationalListLabel}</span>
+                          <span className="block text-xs text-muted-foreground">
+                            {nationalListDescription}
+                          </span>
+                        </span>
                       </span>
-                    </span>
-                  </span>
-                  <ChevronRightIcon className="size-4 text-muted-foreground" />
-                </button>
-              </section>
+                      <ChevronRightIcon className="size-4 text-muted-foreground" />
+                    </button>
+                  </section>
 
-              {manualOption ? (
-                <section>
-                  <PickerEntryRow name={manualOption.label} onSelect={handleManualSelect} />
-                </section>
-              ) : null}
+                  {manualOption ? (
+                    <section>
+                      <PickerEntryRow name={manualOption.label} onSelect={handleManualSelect} />
+                    </section>
+                  ) : null}
 
-              {error ? <p className="py-2 text-sm text-destructive">{error}</p> : null}
+                  {error ? <p className="py-2 text-sm text-destructive">{error}</p> : null}
+                </>
+              )}
             </div>
-          ) : (
+          ) : pickerData ? (
             <CatalogScrollPane
               scrollRef={catalogScrollRef}
               showPrefectureRail
@@ -421,6 +455,10 @@ export function MasterPicker({
                 ))}
               </div>
             </CatalogScrollPane>
+          ) : (
+            <div className="flex flex-1 items-center justify-center p-6">
+              <WorkspaceViewLoader />
+            </div>
           )}
         </SheetContent>
       </Sheet>

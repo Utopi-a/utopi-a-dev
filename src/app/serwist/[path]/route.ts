@@ -14,5 +14,11 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
     ],
     swSrc: "src/sw.ts",
     useNativeEsbuild: true,
+    globIgnores: [
+      "**/node_modules/**/*",
+      "public/forms/**",
+      "public/opengraph-image.jpg",
+      "public/screenshots/**",
+    ],
   },
 );

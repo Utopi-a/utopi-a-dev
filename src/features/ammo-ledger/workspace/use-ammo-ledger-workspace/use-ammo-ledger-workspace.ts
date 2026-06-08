@@ -4,12 +4,13 @@ import { useCallback } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { ammoLedgerWorkspaceQueryKey } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-query-key/ammo-ledger-workspace-query-key";
 import { getAmmoLedgerWorkspaceAction } from "@/features/ammo-ledger/workspace/get-ammo-ledger-workspace-action/get-ammo-ledger-workspace-action";
+import { workspaceStaleMs } from "@/features/ammo-ledger/workspace/workspace-stale-ms/workspace-stale-ms";
 
 const workspaceSwrOptions = {
   keepPreviousData: true,
   revalidateOnFocus: false,
   revalidateOnMount: false,
-  dedupingInterval: 3_000,
+  dedupingInterval: workspaceStaleMs,
 } as const;
 
 export function useAmmoLedgerWorkspace() {
@@ -45,3 +46,5 @@ export function useInvalidateAmmoLedgerWorkspace() {
     await mutate(ammoLedgerWorkspaceQueryKey);
   }, [mutate]);
 }
+
+export { workspaceStaleMs };

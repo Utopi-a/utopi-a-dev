@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoType } from "@/db/schema/ammo-ledger";
-import type { MasterPickerData } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
+import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
@@ -22,7 +22,6 @@ import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspa
 
 type AcquireFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
-  counterpartyPickerData: MasterPickerData;
   ledgerEntryId?: string;
   initialValues?: {
     occurredOn?: string;
@@ -38,24 +37,35 @@ type AcquireFormProps = {
   };
 };
 
-export function AcquireForm({
-  ammoTypes,
-  counterpartyPickerData,
-  ledgerEntryId,
-  initialValues,
-}: AcquireFormProps) {
+export function AcquireForm({ ammoTypes, ledgerEntryId, initialValues }: AcquireFormProps) {
   const router = useRouter();
   const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
   const today = new Date().toISOString().slice(0, 10);
+  const { pickerData: counterpartyPickerData } = useMasterPickerData({
+    catalogKind: "gun_shop",
+    includeRangeCatalog: true,
+    enabled: true,
+  });
+  const defaultCounterpartyApplied = useRef(!!initialValues?.counterpartyId);
 
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
   const [counterpartyId, setCounterpartyId] = useState(
-    initialValues?.counterpartyId ??
+    initialValues?.counterpartyId ?? manualCounterpartyId,
+  );
+
+  useEffect(() => {
+    if (!counterpartyPickerData || defaultCounterpartyApplied.current) {
+      return;
+    }
+
+    const defaultCounterpartyId =
       counterpartyPickerData.recent[0]?.id ??
       counterpartyPickerData.registered[0]?.id ??
-      manualCounterpartyId,
-  );
+      manualCounterpartyId;
+    setCounterpartyId(defaultCounterpartyId);
+    defaultCounterpartyApplied.current = true;
+  }, [counterpartyPickerData]);
   const [outerBoxCount, setOuterBoxCount] = useState(String(initialValues?.outerBoxCount ?? 0));
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
@@ -171,7 +181,7 @@ export function AcquireForm({
         value={counterpartyId}
         onChange={setCounterpartyId}
         catalogKind="gun_shop"
-        pickerData={counterpartyPickerData}
+        includeRangeCatalog
         sheetTitle="購入先を選ぶ"
         manualOption={{ value: manualCounterpartyId, label: "手入力する" }}
         required

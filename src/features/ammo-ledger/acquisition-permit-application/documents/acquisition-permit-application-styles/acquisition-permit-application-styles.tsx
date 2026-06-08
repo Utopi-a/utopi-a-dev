@@ -108,6 +108,10 @@ export function AcquisitionPermitApplicationStyles() {
           display: none !important;
         }
 
+        html.printing-application-duplex-bundle .application-form-cohabitants {
+          display: none !important;
+        }
+
         .application-form-page {
           width: 210mm !important;
           height: 297mm !important;

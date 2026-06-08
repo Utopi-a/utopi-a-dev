@@ -135,9 +135,7 @@ function ChecklistRow({
       ) : null}
       {showPrintHints && item.printSection && readiness === "ready" ? (
         <p className="mt-1 text-xs text-muted-foreground">
-          印刷ボタン「
-          {resolvePrintButtonLabel({ printSection: item.printSection })}
-          」から出力
+          {resolvePrintHint({ printSection: item.printSection })}
         </p>
       ) : null}
     </li>
@@ -174,19 +172,14 @@ function ChecklistItemHeader({ item }: { item: SubmissionChecklistItem }) {
   );
 }
 
-function resolvePrintButtonLabel({
+function resolvePrintHint({
   printSection,
 }: {
   printSection: NonNullable<SubmissionChecklistItem["printSection"]>;
 }): string {
-  switch (printSection) {
-    case "main":
-      return "申請書を印刷";
-    case "supplement":
-      return "別紙を印刷";
-    case "resume":
-      return "経歴書を印刷";
-    case "cohabitants":
-      return "同居親族書を印刷";
+  if (printSection === "cohabitants") {
+    return "「同居親族書を印刷（片面）」から出力";
   }
+
+  return "「まとめて印刷」ボタンに含まれます（個別印刷は折りたたみ内）";
 }

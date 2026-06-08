@@ -21,7 +21,6 @@ import type {
   ResumeAddressEntry,
   ResumeWorkEntry,
 } from "../../gun-possession-permit-application-types";
-import { buildRequiredDocuments } from "../../required-documents/build-required-documents/build-required-documents";
 import { RequiredDocumentsChecklist } from "../required-documents-checklist/required-documents-checklist";
 
 type GunPermitApplicationFormProps = {
@@ -117,29 +116,72 @@ export function GunPermitApplicationForm({
   const [cohabitants, setCohabitants] = useState<CohabitantDraft[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const requiredDocuments = useMemo(
-    () =>
-      buildRequiredDocuments({
-        input: {
-          kind,
-          hasExistingPermit,
-          existingPermitSubmittedToSamePrefecture,
-          issuesNewPermitCard,
-          isAge75OrOlder,
-          omitCohabitantForm,
-          omitResidentRecord,
-          omitResume,
-        },
-      }),
-    [
+  const checklistInput = useMemo(
+    (): GunPermitApplicationPayload => ({
       kind,
+      prefectureName,
+      applicationDate,
+      ownerName: name,
+      ownerFurigana: furigana.trim() || undefined,
+      ownerRegisteredDomicile: registeredDomicile.trim() || undefined,
+      ownerAddress: address,
+      ownerBirthDate: birthDate || undefined,
+      ownerPhone: phone.trim() || undefined,
+      applicationCount: gunEntries.length,
+      guns: gunEntries.map(({ entryId: _entryId, ...gun }) => gun),
       hasExistingPermit,
       existingPermitSubmittedToSamePrefecture,
       issuesNewPermitCard,
       isAge75OrOlder,
+      hasCohabitants,
+      cohabitantCount: hasCohabitants ? Number(cohabitantCount) : undefined,
       omitCohabitantForm,
       omitResidentRecord,
       omitResume,
+      pledgeDisqualification,
+      pledgeHuntingDisqualification,
+      resume: {
+        workHistory: workHistory
+          .filter((entry) => entry.employer.trim())
+          .map(({ rowId: _rowId, ...entry }) => entry),
+        addressHistory: addressHistory
+          .filter((entry) => entry.address.trim())
+          .map(({ rowId: _rowId, ...entry }) => entry),
+        gunHistory: [],
+        hasCriminalRecord,
+        hasTreatmentHistory,
+      },
+      cohabitants: cohabitants
+        .filter((entry) => entry.name.trim())
+        .map(({ rowId: _rowId, ...entry }) => entry),
+    }),
+    [
+      kind,
+      prefectureName,
+      applicationDate,
+      name,
+      furigana,
+      registeredDomicile,
+      address,
+      birthDate,
+      phone,
+      gunEntries,
+      hasExistingPermit,
+      existingPermitSubmittedToSamePrefecture,
+      issuesNewPermitCard,
+      isAge75OrOlder,
+      hasCohabitants,
+      cohabitantCount,
+      omitCohabitantForm,
+      omitResidentRecord,
+      omitResume,
+      pledgeDisqualification,
+      pledgeHuntingDisqualification,
+      workHistory,
+      addressHistory,
+      hasCriminalRecord,
+      hasTreatmentHistory,
+      cohabitants,
     ],
   );
 
@@ -542,6 +584,19 @@ export function GunPermitApplicationForm({
                   </>
                 ) : (
                   <>
+                    <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                      <input
+                        type="checkbox"
+                        checked={gun.sameAsTransferConsent ?? false}
+                        onChange={(event) =>
+                          updateGunEntry({
+                            index,
+                            patch: { sameAsTransferConsent: event.target.checked },
+                          })
+                        }
+                      />
+                      別紙に「譲渡等承諾書の通り」と記載（第12号の別添を省略）
+                    </label>
                     <div className="space-y-2 sm:col-span-2">
                       <Label>譲渡人住所</Label>
                       <Input
@@ -782,8 +837,8 @@ export function GunPermitApplicationForm({
         </div>
       </AmmoLedgerPanel>
 
-      <AmmoLedgerPanel title="必要書類">
-        <RequiredDocumentsChecklist items={requiredDocuments} />
+      <AmmoLedgerPanel title="提出書類の進捗">
+        <RequiredDocumentsChecklist input={checklistInput} />
       </AmmoLedgerPanel>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}

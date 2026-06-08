@@ -1,5 +1,4 @@
 import { AcquisitionPermitApplicationPage } from "@/features/ammo-ledger/acquisition-permit-application/documents/acquisition-permit-application-page/acquisition-permit-application-page";
-import { AcquisitionPermitApplicationStyles } from "@/features/ammo-ledger/acquisition-permit-application/documents/acquisition-permit-application-styles/acquisition-permit-application-styles";
 import type { BuiltGunPermitFieldValues } from "../../build-field-values/build-field-values";
 import { hokkaidoForm6MainTemplate } from "../../form-template/hokkaido-form6-main/hokkaido-form6-main-template";
 import { hokkaidoForm6SupplementTemplate } from "../../form-template/hokkaido-form6-supplement/hokkaido-form6-supplement-template";
@@ -20,9 +19,7 @@ export function GunPermitApplicationDocument({
   const mainTemplate = isRenewal ? hokkaidoForm9MainTemplate : hokkaidoForm6MainTemplate;
 
   return (
-    <div className="application-form-print">
-      <AcquisitionPermitApplicationStyles />
-
+    <>
       <div className="no-print mb-4 space-y-2 text-sm text-muted-foreground">
         <p>
           {isRenewal
@@ -31,9 +28,9 @@ export function GunPermitApplicationDocument({
         </p>
         <p>署名・押印欄は手書きで記入してください。座標はキャリブレーション前の初期値です。</p>
         {!isRenewal ? (
-          <p>別紙 {fieldValues.supplementGunPages.length} セット（申請銃ごとに表裏）。</p>
+          <p>別紙 {fieldValues.supplementGunPages.length} セット（申請銃ごとに表裏・両面印刷）。</p>
         ) : (
-          <p>別紙 更新対象銃 {fieldValues.renewalSupplementRows.length} 件。</p>
+          <p>別紙 更新対象銃 {fieldValues.renewalSupplementRows.length} 件（片面1枚）。</p>
         )}
       </div>
 
@@ -74,6 +71,6 @@ export function GunPermitApplicationDocument({
           ))
         )}
       </div>
-    </div>
+    </>
   );
 }

@@ -38,4 +38,35 @@ describe("buildGunPermitFieldValues", () => {
     expect(result.supplementGunPages[0]?.frontFields.gunNumber).toBe("12345");
     expect(result.supplementGunPages[0]?.frontFields.purposeHunting).toBe("✓");
   });
+
+  it("譲渡等承諾書の通りチェックを別紙に反映する", () => {
+    const result = buildGunPermitFieldValues({
+      input: {
+        kind: "new",
+        prefectureName: "北海道",
+        applicationDate: "2026-06-09",
+        ownerName: "山田太郎",
+        ownerAddress: "札幌市中央区",
+        applicationCount: 1,
+        guns: [
+          {
+            gunCategory: "shotgun",
+            gunType: "散弾銃",
+            model: "単身ボルト式",
+            gunNumber: "12345",
+            purpose: "hunting",
+            sameAsTransferConsent: true,
+          },
+        ],
+        hasExistingPermit: false,
+        existingPermitSubmittedToSamePrefecture: false,
+        issuesNewPermitCard: true,
+        isAge75OrOlder: false,
+        hasCohabitants: false,
+        pledgeDisqualification: true,
+      },
+    });
+
+    expect(result.supplementGunPages[0]?.frontFields.sameAsTransferConsent).toBe("✓");
+  });
 });

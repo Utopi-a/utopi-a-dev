@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
-import { ApplicationPrintButtons } from "@/features/ammo-ledger/acquisition-permit-application/components/application-print-buttons/application-print-buttons";
+import { AcquisitionPermitApplicationStyles } from "@/features/ammo-ledger/acquisition-permit-application/documents/acquisition-permit-application-styles/acquisition-permit-application-styles";
 import { cn } from "@/lib/cn";
 import { loadGunPermitApplicationPayload } from "../../application-session/application-session";
 import {
@@ -16,27 +16,30 @@ import {
 } from "../../build-supplementary-field-values/build-supplementary-field-values";
 import { GunPermitApplicationDocument } from "../../documents/gun-permit-application-document/gun-permit-application-document";
 import { GunPermitSupplementaryDocument } from "../../documents/gun-permit-supplementary-document/gun-permit-supplementary-document";
-import type { GunPermitApplicationKind } from "../../gun-possession-permit-application-types";
+import type { GunPermitApplicationPayload } from "../../gun-possession-permit-application-types";
+import { GunPermitApplicationPrintButtons } from "../gun-permit-application-print-buttons/gun-permit-application-print-buttons";
+import { RequiredDocumentsChecklist } from "../required-documents-checklist/required-documents-checklist";
 
 export function GunPermitApplicationPrintView() {
-  const [kind, setKind] = useState<GunPermitApplicationKind>("new");
+  const [payload, setPayload] = useState<GunPermitApplicationPayload | null>(null);
   const [fieldValues, setFieldValues] = useState<BuiltGunPermitFieldValues | null>(null);
   const [supplementary, setSupplementary] = useState<BuiltSupplementaryFieldValues | null>(null);
 
   useEffect(() => {
-    const payload = loadGunPermitApplicationPayload();
-    if (!payload) {
+    const loaded = loadGunPermitApplicationPayload();
+    if (!loaded) {
+      setPayload(null);
       setFieldValues(null);
       setSupplementary(null);
       return;
     }
 
-    setKind(payload.kind);
-    setFieldValues(buildGunPermitFieldValues({ input: payload }));
-    setSupplementary(buildSupplementaryFieldValues({ input: payload }));
+    setPayload(loaded);
+    setFieldValues(buildGunPermitFieldValues({ input: loaded }));
+    setSupplementary(buildSupplementaryFieldValues({ input: loaded }));
   }, []);
 
-  if (!fieldValues) {
+  if (!fieldValues || !payload) {
     return (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
@@ -52,7 +55,11 @@ export function GunPermitApplicationPrintView() {
     );
   }
 
-  const supplementPageCount = kind === "renewal" ? 1 : fieldValues.supplementGunPages.length * 2;
+  const hasResume =
+    (supplementary?.resumeWorkRows.length ?? 0) > 0 ||
+    (supplementary?.resumeAddressRows.length ?? 0) > 0;
+  const hasCohabitants = (supplementary?.cohabitantRows.length ?? 0) > 0;
+  const supplementSetCount = payload.kind === "renewal" ? 1 : fieldValues.supplementGunPages.length;
 
   return (
     <div className="space-y-4">
@@ -65,28 +72,26 @@ export function GunPermitApplicationPrintView() {
             ← 入力に戻る
           </Link>
         </div>
-        <ApplicationPrintButtons supplementPageCount={supplementPageCount} />
-        <div className="space-y-1 text-sm text-muted-foreground">
-          <p>
-            <strong>申請書:</strong> 倍率 100%・余白なし・A4 白無地。表裏がある様式は両面印刷。
-          </p>
-          <p>
-            <strong>別紙:</strong>{" "}
-            片面印刷。座標は初期値のため、提出前に実機で位置を確認してください。
-          </p>
-        </div>
+        <GunPermitApplicationPrintButtons
+          kind={payload.kind}
+          supplementSetCount={supplementSetCount}
+          hasResume={hasResume}
+          hasCohabitants={hasCohabitants}
+        />
+        <p className="text-sm text-muted-foreground">
+          署名・押印欄は手書きで記入してください。座標はキャリブレーション前の初期値です。
+        </p>
       </div>
 
-      <GunPermitApplicationDocument kind={kind} fieldValues={fieldValues} />
+      <div className="application-form-print">
+        <AcquisitionPermitApplicationStyles />
+        <GunPermitApplicationDocument kind={payload.kind} fieldValues={fieldValues} />
+        {supplementary ? <GunPermitSupplementaryDocument supplementary={supplementary} /> : null}
+      </div>
 
-      {supplementary ? (
-        <>
-          <div className="no-print mt-6 text-sm text-muted-foreground">
-            <p>以下は経歴書・同居親族書などの付随書類です。</p>
-          </div>
-          <GunPermitSupplementaryDocument supplementary={supplementary} />
-        </>
-      ) : null}
+      <div className="no-print mt-6">
+        <RequiredDocumentsChecklist input={payload} showPrintHints />
+      </div>
     </div>
   );
 }

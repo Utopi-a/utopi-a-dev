@@ -3,6 +3,7 @@ export type LabEntry = {
   title: string;
   description: string;
   status: "active" | "planned";
+  href?: string;
 };
 
 export const labEntries: LabEntry[] = [
@@ -21,8 +22,16 @@ export const labEntries: LabEntry[] = [
   {
     id: "ammo-ledger",
     title: "実包管理帳簿",
-    description: "猟銃実包の消費・譲受記録と法定帳簿出力。/lab/ammo-ledger",
+    description: "猟銃実包の消費・譲受記録と法定帳簿出力。",
     status: "active",
+    href: "/lab/ammo-ledger",
+  },
+  {
+    id: "local-llm",
+    title: "ローカル LLM チャット",
+    description: "WebGPU + Transformers.js で LFM2.5-1.2B-JP をブラウザ内推論。ログイン不要。",
+    status: "active",
+    href: "/lab/local-llm",
   },
   {
     id: "blog-engine",

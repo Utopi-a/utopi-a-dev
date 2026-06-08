@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LabStudioPanel } from "@/features/auth/lab-studio-panel/lab-studio-panel";
@@ -22,9 +23,14 @@ export function LabView() {
       <LabStudioPanel />
 
       <ul className="grid gap-4 sm:grid-cols-2">
-        {labEntries.map((entry) => (
-          <li key={entry.id}>
-            <Card className="h-full gap-4 border-border/70 bg-card/70 py-5 shadow-sm">
+        {labEntries.map((entry) => {
+          const card = (
+            <Card
+              className={cn(
+                "h-full gap-4 border-border/70 bg-card/70 py-5 shadow-sm",
+                entry.href && "transition-colors hover:border-primary/40 hover:bg-card",
+              )}
+            >
               <CardHeader className="flex-row items-start justify-between gap-3 space-y-0 px-5 pb-0">
                 <CardTitle className="text-base leading-snug">{entry.title}</CardTitle>
                 <Badge
@@ -38,8 +44,23 @@ export function LabView() {
                 <p className="text-sm leading-relaxed text-muted-foreground">{entry.description}</p>
               </CardContent>
             </Card>
-          </li>
-        ))}
+          );
+
+          return (
+            <li key={entry.id}>
+              {entry.href ? (
+                <Link
+                  href={entry.href}
+                  className="block h-full rounded-xl focus-visible:outline-none"
+                >
+                  {card}
+                </Link>
+              ) : (
+                card
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

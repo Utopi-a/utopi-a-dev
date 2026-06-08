@@ -13,4 +13,4 @@
 | `form74-front.png` / `form74-back.png` | 第74号 使用実績報告書 | [06/16.pdf](https://www.police.pref.hokkaido.lg.jp/down_load/06/16.pdf) |
 | `form12-front.png` / `form12-back.png` | 第12号 譲渡等承諾書 | [06/07.pdf](https://www.police.pref.hokkaido.lg.jp/down_load/06/07.pdf) |
 
-座標は dev のキャリブレーションで微調整してください。提出先の都道府県名は `prefectureName` フィールドでオーバーレイします。
+座標は dev のキャリブレーション（`/lab/ammo-ledger/applications/gun-possession-permit/calibration`）で微調整してください。提出先の都道府県名は `prefectureName` フィールドでオーバーレイします。

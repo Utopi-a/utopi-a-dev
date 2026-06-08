@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import type { ammoGun } from "@/db/schema/ammo-ledger";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { cn } from "@/lib/cn";
+import { isDevelopmentEnvironment } from "@/lib/is-development-environment";
 import { saveGunPermitApplicationPayload } from "../../application-session/application-session";
 import type {
   CohabitantEntry,
@@ -853,6 +854,14 @@ export function GunPermitApplicationForm({
         >
           銃マスタを編集
         </Link>
+        {isDevelopmentEnvironment() ? (
+          <Link
+            href="/lab/ammo-ledger/applications/gun-possession-permit/calibration"
+            className={cn(buttonVariants({ variant: "outline", size: "default" }))}
+          >
+            座標調整（開発用）
+          </Link>
+        ) : null}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { AcquisitionPermitApplicationStyles } from "@/features/ammo-ledger/acquisition-permit-application/documents/acquisition-permit-application-styles/acquisition-permit-application-styles";
 import { cn } from "@/lib/cn";
+import { isDevelopmentEnvironment } from "@/lib/is-development-environment";
 import { loadGunPermitApplicationPayload } from "../../application-session/application-session";
 import {
   type BuiltGunPermitFieldValues,
@@ -71,6 +72,14 @@ export function GunPermitApplicationPrintView() {
           >
             ← 入力に戻る
           </Link>
+          {isDevelopmentEnvironment() ? (
+            <Link
+              href="/lab/ammo-ledger/applications/gun-possession-permit/calibration"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              座標調整
+            </Link>
+          ) : null}
         </div>
         <GunPermitApplicationPrintButtons
           kind={payload.kind}

@@ -13,6 +13,11 @@ export const settingsHubGroups = [
         description: "別記様式第2号を入力して印刷",
       },
       {
+        href: "/lab/ammo-ledger/applications/gun-possession-permit/new",
+        label: "銃所持許可申請書",
+        description: "様式第6号・第9号と必要書類チェックリスト",
+      },
+      {
         href: "/lab/ammo-ledger/settings/permits",
         label: "譲受許可",
         description: "付与日・名称・数量・目的・有効期限",

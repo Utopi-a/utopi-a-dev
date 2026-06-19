@@ -7,6 +7,7 @@ import {
 } from "@huggingface/transformers";
 import type {
   InferenceMessage,
+  InferenceWorkerEventSender,
   WorkerModelConfig,
 } from "@/features/local-llm/inference-worker/inference-worker-messages";
 
@@ -16,10 +17,6 @@ let loadedModelId: string | undefined;
 
 const stoppingCriteria = new InterruptableStoppingCriteria();
 let pastKeyValuesCache: DynamicCache | null = null;
-
-function postMessage(event: Record<string, unknown>) {
-  self.postMessage(event);
-}
 
 export async function loadTextModel({
   modelConfig,
@@ -51,7 +48,13 @@ export async function loadTextModel({
   return modelConfig.huggingFaceModelId;
 }
 
-export async function generateText({ messages }: { messages: InferenceMessage[] }) {
+export async function generateText({
+  messages,
+  postEvent,
+}: {
+  messages: InferenceMessage[];
+  postEvent: InferenceWorkerEventSender;
+}) {
   if (!tokenizer || !model) {
     throw new Error("Text model is not loaded");
   }
@@ -71,7 +74,7 @@ export async function generateText({ messages }: { messages: InferenceMessage[] 
     skip_prompt: true,
     skip_special_tokens: true,
     callback_function: (output: string) => {
-      postMessage({ status: "update", output, tps, numTokens });
+      postEvent({ status: "update", output, tps, numTokens });
     },
     token_callback_function: () => {
       startTime ??= performance.now();
@@ -81,7 +84,7 @@ export async function generateText({ messages }: { messages: InferenceMessage[] 
     },
   });
 
-  postMessage({ status: "start" });
+  postEvent({ status: "start" });
 
   const result = await model.generate({
     ...inputs,
@@ -99,7 +102,7 @@ export async function generateText({ messages }: { messages: InferenceMessage[] 
     pastKeyValuesCache = result.past_key_values as DynamicCache;
   }
 
-  postMessage({ status: "complete" });
+  postEvent({ status: "complete" });
 }
 
 export function resetTextGenerationState() {

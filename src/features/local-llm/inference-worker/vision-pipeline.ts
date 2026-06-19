@@ -11,6 +11,7 @@ import {
 } from "@huggingface/transformers";
 import type {
   InferenceMessage,
+  InferenceWorkerEventSender,
   WorkerModelConfig,
 } from "@/features/local-llm/inference-worker/inference-worker-messages";
 import type { LocalLlmModelKind } from "@/features/local-llm/model-registry/local-llm-models";
@@ -34,10 +35,6 @@ type LoadedVisionPipeline =
 
 let loadedPipeline: LoadedVisionPipeline | undefined;
 const stoppingCriteria = new InterruptableStoppingCriteria();
-
-function postMessage(event: Record<string, unknown>) {
-  self.postMessage(event);
-}
 
 async function loadImageFromDataUrl({ dataUrl }: { dataUrl: string }) {
   const response = await fetch(dataUrl);
@@ -182,7 +179,13 @@ export async function loadVisionModel({
   return modelConfig.huggingFaceModelId;
 }
 
-async function generateMoondream({ messages }: { messages: InferenceMessage[] }) {
+async function generateMoondream({
+  messages,
+  postEvent,
+}: {
+  messages: InferenceMessage[];
+  postEvent: InferenceWorkerEventSender;
+}) {
   if (loadedPipeline?.kind !== "moondream") {
     throw new Error("Moondream model is not loaded");
   }
@@ -214,7 +217,7 @@ async function generateMoondream({ messages }: { messages: InferenceMessage[] })
     skip_prompt: true,
     skip_special_tokens: true,
     callback_function: (output: string) => {
-      postMessage({ status: "update", output, tps, numTokens });
+      postEvent({ status: "update", output, tps, numTokens });
     },
     token_callback_function: () => {
       startTime ??= performance.now();
@@ -224,7 +227,7 @@ async function generateMoondream({ messages }: { messages: InferenceMessage[] })
     },
   });
 
-  postMessage({ status: "start" });
+  postEvent({ status: "start" });
 
   await loadedPipeline.model.generate({
     ...inputs,
@@ -234,10 +237,16 @@ async function generateMoondream({ messages }: { messages: InferenceMessage[] })
     stopping_criteria: stoppingCriteria,
   });
 
-  postMessage({ status: "complete" });
+  postEvent({ status: "complete" });
 }
 
-async function generateQwen3Vl({ messages }: { messages: InferenceMessage[] }) {
+async function generateQwen3Vl({
+  messages,
+  postEvent,
+}: {
+  messages: InferenceMessage[];
+  postEvent: InferenceWorkerEventSender;
+}) {
   if (loadedPipeline?.kind !== "qwen3-vl") {
     throw new Error("Qwen3-VL model is not loaded");
   }
@@ -283,7 +292,7 @@ async function generateQwen3Vl({ messages }: { messages: InferenceMessage[] }) {
     skip_prompt: true,
     skip_special_tokens: true,
     callback_function: (output: string) => {
-      postMessage({ status: "update", output, tps, numTokens });
+      postEvent({ status: "update", output, tps, numTokens });
     },
     token_callback_function: () => {
       startTime ??= performance.now();
@@ -293,7 +302,7 @@ async function generateQwen3Vl({ messages }: { messages: InferenceMessage[] }) {
     },
   });
 
-  postMessage({ status: "start" });
+  postEvent({ status: "start" });
 
   await loadedPipeline.model.generate({
     ...inputs,
@@ -302,22 +311,24 @@ async function generateQwen3Vl({ messages }: { messages: InferenceMessage[] }) {
     stopping_criteria: stoppingCriteria,
   } as Record<string, unknown>);
 
-  postMessage({ status: "complete" });
+  postEvent({ status: "complete" });
 }
 
 export async function generateVision({
   messages,
   kind,
+  postEvent,
 }: {
   messages: InferenceMessage[];
   kind: VisionKind;
+  postEvent: InferenceWorkerEventSender;
 }) {
   if (kind === "moondream") {
-    await generateMoondream({ messages });
+    await generateMoondream({ messages, postEvent });
     return;
   }
 
-  await generateQwen3Vl({ messages });
+  await generateQwen3Vl({ messages, postEvent });
 }
 
 export function resetVisionGenerationState() {

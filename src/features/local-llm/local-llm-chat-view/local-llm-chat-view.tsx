@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { BrowserInferenceClient } from "@/features/local-llm/browser-inference-client/browser-inference-client";
 import type {
   DownloadProgress,
   InferenceWorkerEvent,
@@ -23,9 +24,9 @@ import {
 } from "@/features/local-llm/model-registry/local-llm-models";
 import { PageHeader } from "@/features/portfolio/page-header/page-header";
 
-const IS_WEBGPU_AVAILABLE = typeof navigator !== "undefined" && "gpu" in navigator;
 const STICKY_SCROLL_THRESHOLD = 120;
 const SELECTED_MODEL_STORAGE_KEY = "local-llm:selected-model";
+type WebGpuAvailability = "checking" | "available" | "unavailable";
 
 function readStoredModelId() {
   if (typeof window === "undefined") {
@@ -36,12 +37,14 @@ function readStoredModelId() {
 }
 
 export function LocalLlmChatView() {
-  const workerRef = useRef<Worker | null>(null);
+  const inferenceClientRef = useRef<BrowserInferenceClient | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [selectedModelId, setSelectedModelId] = useState(DEFAULT_LOCAL_LLM_MODEL_ID);
   const [loadedModelId, setLoadedModelId] = useState<string | null>(null);
   const [phase, setPhase] = useState<LocalLlmChatPhase>("idle");
+  const [webGpuAvailability, setWebGpuAvailability] = useState<WebGpuAvailability>("checking");
+  const [isInferenceClientReady, setIsInferenceClientReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [progressItems, setProgressItems] = useState<DownloadProgress[]>([]);
@@ -56,31 +59,26 @@ export function LocalLlmChatView() {
   const activeModel =
     getLocalLlmModelById({ modelId: loadedModelId ?? selectedModelId }) ?? selectedModel;
 
-  const terminateWorker = useCallback(() => {
-    workerRef.current?.terminate();
-    workerRef.current = null;
+  const terminateInferenceClient = useCallback(() => {
+    inferenceClientRef.current?.terminate();
+    inferenceClientRef.current = null;
+    setIsInferenceClientReady(false);
   }, []);
-
-  const createWorker = useCallback(() => {
-    terminateWorker();
-    const worker = new Worker(new URL("../inference-worker/inference-worker.ts", import.meta.url), {
-      type: "module",
-    });
-    workerRef.current = worker;
-    worker.postMessage({ type: "check" });
-    return worker;
-  }, [terminateWorker]);
 
   useEffect(() => {
     setSelectedModelId(readStoredModelId());
   }, []);
 
   useEffect(() => {
-    if (!IS_WEBGPU_AVAILABLE || !getLocalLlmModelById({ modelId: selectedModelId })) {
+    setWebGpuAvailability("gpu" in navigator ? "available" : "unavailable");
+  }, []);
+
+  useEffect(() => {
+    if (webGpuAvailability !== "available" || !getLocalLlmModelById({ modelId: selectedModelId })) {
       return;
     }
 
-    const worker = createWorker();
+    let isActive = true;
 
     const onMessageReceived = (event: MessageEvent<InferenceWorkerEvent>) => {
       const payload = event.data;
@@ -161,16 +159,39 @@ export function LocalLlmChatView() {
       setLoadedModelId(null);
     };
 
-    worker.addEventListener("message", onMessageReceived);
-    worker.addEventListener("error", onErrorReceived);
+    terminateInferenceClient();
+
+    void import("@/features/local-llm/browser-inference-client/browser-inference-client")
+      .then(({ createBrowserInferenceClient }) => {
+        if (!isActive) {
+          return;
+        }
+
+        const client = createBrowserInferenceClient({
+          onError: onErrorReceived,
+          onMessage: onMessageReceived,
+        });
+        inferenceClientRef.current = client;
+        setIsInferenceClientReady(true);
+        client.postMessage({ type: "check" });
+      })
+      .catch((error: unknown) => {
+        if (!isActive) {
+          return;
+        }
+
+        onErrorReceived(
+          new ErrorEvent("error", {
+            message: error instanceof Error ? error.message : String(error),
+          }),
+        );
+      });
 
     return () => {
-      worker.removeEventListener("message", onMessageReceived);
-      worker.removeEventListener("error", onErrorReceived);
-      worker.terminate();
-      workerRef.current = null;
+      isActive = false;
+      terminateInferenceClient();
     };
-  }, [createWorker, selectedModelId]);
+  }, [selectedModelId, terminateInferenceClient, webGpuAvailability]);
 
   useEffect(() => {
     if (messages.filter((message) => message.role === "user").length === 0) {
@@ -182,7 +203,7 @@ export function LocalLlmChatView() {
     }
 
     setTps(null);
-    workerRef.current?.postMessage({
+    inferenceClientRef.current?.postMessage({
       type: "generate",
       data: messages.map(({ role, content, images }) => ({
         role,
@@ -223,7 +244,7 @@ export function LocalLlmChatView() {
     setError(null);
     setPhase("loading");
     setProgressItems([]);
-    workerRef.current?.postMessage({
+    inferenceClientRef.current?.postMessage({
       type: "load",
       model: {
         huggingFaceModelId: selectedModel.huggingFaceModelId,
@@ -270,7 +291,7 @@ export function LocalLlmChatView() {
   }
 
   function resetConversation() {
-    workerRef.current?.postMessage({ type: "reset" });
+    inferenceClientRef.current?.postMessage({ type: "reset" });
     setMessages([]);
     setTps(null);
     setNumTokens(null);
@@ -284,7 +305,22 @@ export function LocalLlmChatView() {
     setProgressItems([]);
   }
 
-  if (!IS_WEBGPU_AVAILABLE) {
+  if (webGpuAvailability === "checking") {
+    return (
+      <div className="flex flex-col gap-8">
+        <PageHeader
+          eyebrow="Lab"
+          title="ローカル LLM チャット"
+          description="WebGPU の利用可否を確認しています。"
+        />
+        <Button render={<Link href="/lab" />} variant="outline" nativeButton={false}>
+          Lab に戻る
+        </Button>
+      </div>
+    );
+  }
+
+  if (webGpuAvailability === "unavailable") {
     return (
       <div className="flex flex-col gap-8">
         <PageHeader
@@ -330,7 +366,9 @@ export function LocalLlmChatView() {
                 {error}
               </p>
             ) : null}
-            <Button onClick={loadModel}>モデルを読み込む</Button>
+            <Button onClick={loadModel} disabled={!isInferenceClientReady}>
+              モデルを読み込む
+            </Button>
           </CardContent>
         </Card>
       ) : null}
@@ -432,7 +470,7 @@ export function LocalLlmChatView() {
             isGenerating={isGenerating}
             supportsImages={modelSupportsImages({ model: activeModel })}
             onSubmit={submitMessage}
-            onInterrupt={() => workerRef.current?.postMessage({ type: "interrupt" })}
+            onInterrupt={() => inferenceClientRef.current?.postMessage({ type: "interrupt" })}
           />
 
           <ModelAttribution model={activeModel} />

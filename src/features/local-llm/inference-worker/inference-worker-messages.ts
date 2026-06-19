@@ -46,4 +46,6 @@ export type InferenceWorkerEvent =
   | { status: "complete" }
   | { status: "error"; data: string };
 
+export type InferenceWorkerEventSender = (event: InferenceWorkerEvent) => void;
+
 export type LocalLlmChatPhase = "idle" | "loading" | "ready" | "generating";

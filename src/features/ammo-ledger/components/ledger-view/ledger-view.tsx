@@ -71,6 +71,14 @@ function LedgerViewContent({
   const currentYear = new Date().getFullYear();
   const [printYear, setPrintYear] = useState(currentYear);
   const { entries, permitEvents, permits } = workspace;
+  const entryCounts = useMemo(
+    () => ({
+      shooting: entries.filter((entry) => entry.purpose === "shooting").length,
+      hunting: entries.filter((entry) => entry.purpose === "hunting").length,
+      pest_control: entries.filter((entry) => entry.purpose === "pest_control").length,
+    }),
+    [entries],
+  );
   const highlightedEntryExists = highlightedEntryId
     ? entries.some((entry) => entry.id === highlightedEntryId)
     : false;
@@ -182,7 +190,11 @@ function LedgerViewContent({
         <p className="text-sm text-muted-foreground">{ledgerPurposeTabLabels[purpose]}の法定記録</p>
       </div>
 
-      <PurposeFilter current={purpose} onPurposeChange={handlePurposeChange} />
+      <PurposeFilter
+        current={purpose}
+        entryCounts={entryCounts}
+        onPurposeChange={handlePurposeChange}
+      />
 
       <ActivePermitStatus
         permits={permits}

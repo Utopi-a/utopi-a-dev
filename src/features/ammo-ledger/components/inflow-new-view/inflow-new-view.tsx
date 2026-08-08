@@ -80,6 +80,7 @@ export function InflowNewView() {
               <AcquireForm
                 key={tab === "acquire" ? (draftId ?? "new") : "acquire"}
                 ammoTypes={ammoTypes}
+                permits={workspace.permits}
                 initialValues={tab === "acquire" ? initialValues : undefined}
               />
             }

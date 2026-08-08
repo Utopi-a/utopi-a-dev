@@ -15,6 +15,7 @@ SET
 	"updated_at" = now()
 FROM unique_manual_counterparty AS "counterparty"
 WHERE "transaction"."counterparty_id" IS NULL
+	AND "transaction"."status" = 'confirmed'
 	AND "transaction"."counterparty_name" = "counterparty"."name"
 	AND "transaction"."counterparty_address" = "counterparty"."address"
 	AND "transaction"."user_id" = "counterparty"."user_id";

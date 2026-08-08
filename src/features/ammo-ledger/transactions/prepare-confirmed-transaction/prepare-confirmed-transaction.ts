@@ -3,6 +3,9 @@ import { db } from "@/db";
 import { ammoCounterparty, ammoGun, ammoRange, ammoType } from "@/db/schema/ammo-ledger";
 import { ensureManualCounterparty } from "@/features/ammo-ledger/master/ensure-manual-counterparty/ensure-manual-counterparty";
 import { resolveCounterparty } from "@/features/ammo-ledger/master/resolve-counterparty/resolve-counterparty";
+import { hasActiveAcquisitionPermit } from "@/features/ammo-ledger/permit/has-active-acquisition-permit/has-active-acquisition-permit";
+import { listAcquisitionPermits } from "@/features/ammo-ledger/permit/list-acquisition-permits/list-acquisition-permits";
+import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
 import type { LedgerTransactionInput } from "@/features/ammo-ledger/schema/transaction-schema";
 import { isLedgerInputKind } from "@/features/ammo-ledger/schema/transaction-schema";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
@@ -38,6 +41,22 @@ export async function prepareConfirmedTransaction({
 
   if (!ammoTypeRow) {
     return { ok: false, error: "弾種が見つかりません" };
+  }
+
+  if (input.inputKind === "acquire") {
+    const permits = await listAcquisitionPermits({ userId });
+    if (
+      !hasActiveAcquisitionPermit({
+        permits,
+        purpose: input.purpose,
+        occurredOn: input.occurredOn,
+      })
+    ) {
+      return {
+        ok: false,
+        error: `譲受日に有効な${ledgerPurposeLabels[input.purpose]}の譲受許可がありません`,
+      };
+    }
   }
 
   let gunRow: typeof ammoGun.$inferSelect | undefined;

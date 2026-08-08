@@ -10,6 +10,7 @@ import { getInventorySummary } from "@/features/ammo-ledger/ledger/get-inventory
 import { buildStockByAmmoTypeId } from "@/features/ammo-ledger/master/build-stock-by-ammo-type-id/build-stock-by-ammo-type-id";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
+import { listAcquisitionPermits } from "@/features/ammo-ledger/permit/list-acquisition-permits/list-acquisition-permits";
 import { ledgerCategoryLabels } from "@/features/ammo-ledger/schema/ledger-category";
 import { getLedgerEntryForEdit } from "@/features/ammo-ledger/transactions/get-ledger-entry-for-edit/get-ledger-entry-for-edit";
 
@@ -29,10 +30,11 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
   const { inputKind, category, initialValues } = editData;
   const categoryLabel = ledgerCategoryLabels[category];
 
-  const [guns, ammoTypes, inventoryItems] = await Promise.all([
+  const [guns, ammoTypes, inventoryItems, permits] = await Promise.all([
     inputKind === "consume" ? listGuns({ userId: user.id }) : Promise.resolve([]),
     listAmmoTypes({ userId: user.id }),
     inputKind === "consume" ? getInventorySummary({ userId: user.id }) : Promise.resolve([]),
+    inputKind === "acquire" ? listAcquisitionPermits({ userId: user.id }) : Promise.resolve([]),
   ]);
 
   const stockByAmmoTypeId =
@@ -79,6 +81,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
             key={ledgerEntryId}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
+            permits={permits}
             initialValues={initialValues}
           />
         );

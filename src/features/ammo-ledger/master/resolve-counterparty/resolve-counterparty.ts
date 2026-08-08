@@ -1,15 +1,13 @@
 export function resolveCounterparty({
-  counterpartyId,
   counterpartyName,
   counterpartyAddress,
   master,
 }: {
-  counterpartyId?: string;
   counterpartyName?: string;
   counterpartyAddress?: string;
   master?: { id: string; name: string; address: string } | null;
 }): { name: string; address: string; counterpartyId: string | null } | null {
-  if (counterpartyId && master) {
+  if (master) {
     return {
       name: master.name,
       address: master.address,

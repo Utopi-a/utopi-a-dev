@@ -6,14 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
-import type { ammoType } from "@/db/schema/ammo-ledger";
+import type { ammoAcquisitionPermit, ammoType } from "@/db/schema/ammo-ledger";
 import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
+import { hasActiveAcquisitionPermit } from "@/features/ammo-ledger/permit/has-active-acquisition-permit/has-active-acquisition-permit";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
+import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
@@ -23,6 +25,7 @@ import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspa
 
 type AcquireFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
+  permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
   ledgerEntryId?: string;
   initialValues?: {
     occurredOn?: string;
@@ -38,7 +41,12 @@ type AcquireFormProps = {
   };
 };
 
-export function AcquireForm({ ammoTypes, ledgerEntryId, initialValues }: AcquireFormProps) {
+export function AcquireForm({
+  permits,
+  ammoTypes,
+  ledgerEntryId,
+  initialValues,
+}: AcquireFormProps) {
   const router = useRouter();
   const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
   const today = new Date().toISOString().slice(0, 10);
@@ -99,6 +107,7 @@ export function AcquireForm({ ammoTypes, ledgerEntryId, initialValues }: Acquire
       roundsPerBox: selectedAmmoType.roundsPerBox,
     });
   }, [selectedAmmoType, outerBoxCount, boxCount, looseRounds]);
+  const hasValidPermit = hasActiveAcquisitionPermit({ permits, purpose, occurredOn });
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -126,8 +135,13 @@ export function AcquireForm({ ammoTypes, ledgerEntryId, initialValues }: Acquire
         action: ledgerEntryId ? "updated" : "created",
         subject: "取得記録",
       });
-      await invalidateWorkspace();
-      router.push(result.redirectPath);
+      if (ledgerEntryId) {
+        await invalidateWorkspace();
+        router.push(result.redirectPath);
+      } else {
+        router.push(result.redirectPath);
+        void invalidateWorkspace();
+      }
       return;
     }
 
@@ -147,8 +161,6 @@ export function AcquireForm({ ammoTypes, ledgerEntryId, initialValues }: Acquire
         />
       </div>
 
-      <PurposeSelect value={purpose} onChange={setPurpose} />
-
       <FieldSelect
         id="ammo-type"
         label="弾"
@@ -160,6 +172,15 @@ export function AcquireForm({ ammoTypes, ledgerEntryId, initialValues }: Acquire
         }))}
         required
       />
+
+      <PurposeSelect value={purpose} onChange={setPurpose} />
+
+      {!hasValidPermit ? (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+          この譲受日に有効な{ledgerPurposeLabels[purpose]}
+          の譲受許可がありません。用途または許可期間を確認してください。
+        </p>
+      ) : null}
 
       <PackagingFields
         outerBoxCount={outerBoxCount}
@@ -217,7 +238,7 @@ export function AcquireForm({ ammoTypes, ledgerEntryId, initialValues }: Acquire
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-      <Button type="submit" disabled={isPending || computedRounds <= 0}>
+      <Button type="submit" disabled={isPending || computedRounds <= 0 || !hasValidPermit}>
         {isPending ? "保存中…" : ledgerEntryId ? "更新" : "保存"}
       </Button>
     </form>

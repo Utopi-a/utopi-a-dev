@@ -5,7 +5,6 @@ describe("resolveCounterparty", () => {
   it("マスタ選択時はマスタの氏名住所を使う", () => {
     expect(
       resolveCounterparty({
-        counterpartyId: "shop-1",
         master: { id: "shop-1", name: "○○銃砲店", address: "東京都" },
       }),
     ).toEqual({
@@ -15,16 +14,17 @@ describe("resolveCounterparty", () => {
     });
   });
 
-  it("手入力時は入力値を使う", () => {
+  it("手入力から作成したマスタのIDと入力値を使う", () => {
     expect(
       resolveCounterparty({
         counterpartyName: "山田太郎",
         counterpartyAddress: "茨城県",
+        master: { id: "manual-1", name: "山田太郎", address: "茨城県" },
       }),
     ).toEqual({
       name: "山田太郎",
       address: "茨城県",
-      counterpartyId: null,
+      counterpartyId: "manual-1",
     });
   });
 });

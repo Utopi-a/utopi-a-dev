@@ -5,6 +5,7 @@ import { ammoLedgerEntry, ammoTransaction } from "@/db/schema/ammo-ledger";
 import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { resolveNextDayOrder } from "@/features/ammo-ledger/ledger/resolve-day-orders-for-new-entries/resolve-day-orders-for-new-entries";
 import { transactionInputSchema } from "@/features/ammo-ledger/schema/transaction-schema";
+import { buildLedgerEntryRedirectPath } from "@/features/ammo-ledger/transactions/build-ledger-entry-redirect-path/build-ledger-entry-redirect-path";
 import { prepareConfirmedTransaction } from "@/features/ammo-ledger/transactions/prepare-confirmed-transaction/prepare-confirmed-transaction";
 
 export async function createTransactionAction(input: unknown) {
@@ -94,6 +95,10 @@ export async function createTransactionAction(input: unknown) {
 
   return {
     ok: true as const,
-    redirectPath: `/lab/ammo-ledger/ledger?purpose=${data.purpose}`,
+    ledgerEntryId,
+    redirectPath: buildLedgerEntryRedirectPath({
+      purpose: data.purpose,
+      ledgerEntryId,
+    }),
   };
 }

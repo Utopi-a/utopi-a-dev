@@ -93,7 +93,6 @@ export async function prepareConfirmedTransaction({
   const counterparty =
     "counterpartyId" in input || "counterpartyName" in input
       ? resolveCounterparty({
-          counterpartyId: "counterpartyId" in input ? input.counterpartyId : undefined,
           counterpartyName: "counterpartyName" in input ? input.counterpartyName : undefined,
           counterpartyAddress:
             "counterpartyAddress" in input ? input.counterpartyAddress : undefined,

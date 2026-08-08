@@ -126,8 +126,13 @@ export function AcquireForm({ ammoTypes, ledgerEntryId, initialValues }: Acquire
         action: ledgerEntryId ? "updated" : "created",
         subject: "取得記録",
       });
-      await invalidateWorkspace();
-      router.push(result.redirectPath);
+      if (ledgerEntryId) {
+        await invalidateWorkspace();
+        router.push(result.redirectPath);
+      } else {
+        router.push(result.redirectPath);
+        void invalidateWorkspace();
+      }
       return;
     }
 

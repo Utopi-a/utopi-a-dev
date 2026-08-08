@@ -25,7 +25,10 @@ import {
 import type { PermitEventKind } from "@/features/ammo-ledger/schema/permit-event-kind";
 import { parseLedgerPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import type { AmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-types";
-import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+import {
+  useAmmoLedgerWorkspace,
+  useRequestAmmoLedgerWorkspaceRevalidation,
+} from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 function readPurposeFromUrl(): LedgerPurpose {
   if (typeof window === "undefined") {
@@ -41,19 +44,42 @@ function syncPurposeToUrl({ purpose }: { purpose: LedgerPurpose }) {
   window.history.replaceState(window.history.state, "", url);
 }
 
+function readHighlightedEntryIdFromUrl(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return new URLSearchParams(window.location.search).get("entry");
+}
+
 type LedgerViewContentProps = {
   workspace: AmmoLedgerWorkspace;
   ownerName: string;
   isRefreshing: boolean;
+  highlightedEntryId: string | null;
 };
 
-function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewContentProps) {
+function LedgerViewContent({
+  workspace,
+  ownerName,
+  isRefreshing,
+  highlightedEntryId,
+}: LedgerViewContentProps) {
   const router = useRouter();
+  const requestWorkspaceRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const [purpose, setPurpose] = useState(readPurposeFromUrl);
   const today = new Date().toISOString().slice(0, 10);
   const currentYear = new Date().getFullYear();
   const [printYear, setPrintYear] = useState(currentYear);
   const { entries, permitEvents, permits } = workspace;
+  const highlightedEntryExists = highlightedEntryId
+    ? entries.some((entry) => entry.id === highlightedEntryId)
+    : false;
+
+  useEffect(() => {
+    if (highlightedEntryId && !highlightedEntryExists) {
+      requestWorkspaceRevalidation();
+    }
+  }, [highlightedEntryExists, highlightedEntryId, requestWorkspaceRevalidation]);
 
   useEffect(() => {
     function handlePopState() {
@@ -207,6 +233,17 @@ function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewCon
         </div>
       </div>
 
+      {highlightedEntryId ? (
+        <p
+          className="rounded-lg border border-primary/25 bg-primary/5 px-3 py-2 text-sm text-foreground"
+          aria-live="polite"
+        >
+          {highlightedEntryExists
+            ? "追加した記録を強調表示しています。"
+            : "記録は保存済みです。帳簿の表示を更新しています…"}
+        </p>
+      ) : null}
+
       <LedgerTableShell
         entries={purposeEntries}
         permitEvents={purposePermitEvents}
@@ -215,6 +252,7 @@ function LedgerViewContent({ workspace, ownerName, isRefreshing }: LedgerViewCon
         today={today}
         permitBalances={permitBalances}
         homeStorageExceededEntryIds={homeStorage.exceededEntryIds}
+        highlightedEntryId={highlightedEntryId}
       />
 
       <AmmoLedgerRefreshIndicator visible={isRefreshing} />
@@ -234,6 +272,7 @@ export function LedgerView() {
       workspace={workspace}
       ownerName={ownerName || "（未設定）"}
       isRefreshing={isRefreshing}
+      highlightedEntryId={readHighlightedEntryIdFromUrl()}
     />
   );
 }

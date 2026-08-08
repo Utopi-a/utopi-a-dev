@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LedgerEntryActionsSheet } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-actions-sheet";
 import { LedgerEntryCard } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-card";
 import {
@@ -29,6 +29,7 @@ type LedgerTableProps = {
   purpose: LedgerPurpose;
   permitBalances?: Map<string, number>;
   homeStorageExceededEntryIds?: string[];
+  highlightedEntryId?: string | null;
   onVoided?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
   onVoidFailed?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
 };
@@ -49,15 +50,32 @@ export function LedgerTable({
   purpose,
   permitBalances,
   homeStorageExceededEntryIds = [],
+  highlightedEntryId,
   onVoided,
   onVoidFailed,
 }: LedgerTableProps) {
   const [selectedRow, setSelectedRow] = useState<LedgerDisplayRow | null>(null);
   const [selectedPermitBalance, setSelectedPermitBalance] = useState<number | undefined>(undefined);
+  const mobileHighlightedEntryRef = useRef<HTMLDivElement | null>(null);
+  const desktopHighlightedEntryRef = useRef<HTMLTableRowElement | null>(null);
   const exceededSet = useMemo(
     () => new Set(homeStorageExceededEntryIds),
     [homeStorageExceededEntryIds],
   );
+  const highlightedEntryExists = rows.some(
+    (row) => row.kind === "entry" && row.entry.id === highlightedEntryId,
+  );
+
+  useEffect(() => {
+    if (!highlightedEntryId || !highlightedEntryExists) {
+      return;
+    }
+    const highlightedEntry =
+      window.innerWidth >= 768
+        ? desktopHighlightedEntryRef.current
+        : mobileHighlightedEntryRef.current;
+    highlightedEntry?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [highlightedEntryExists, highlightedEntryId]);
 
   function handleSelectRow({
     row,
@@ -88,15 +106,28 @@ export function LedgerTable({
   return (
     <>
       <div className="space-y-2 md:hidden">
-        {rows.map((row) => (
-          <LedgerEntryCard
-            key={resolveDisplayRowId({ row })}
-            row={row}
-            permitBalance={resolveDisplayRowPermitBalance({ row, permitBalances })}
-            isHomeStorageExceeded={row.kind === "entry" ? exceededSet.has(row.entry.id) : false}
-            onSelect={handleSelectRow}
-          />
-        ))}
+        {rows.map((row) => {
+          const rowId = resolveDisplayRowId({ row });
+          const isHighlighted = row.kind === "entry" && row.entry.id === highlightedEntryId;
+          return (
+            <div
+              key={rowId}
+              ref={isHighlighted ? mobileHighlightedEntryRef : undefined}
+              data-ledger-entry-id={row.kind === "entry" ? row.entry.id : undefined}
+              className={cn(
+                isHighlighted &&
+                  "rounded-xl ring-2 ring-primary ring-offset-2 ring-offset-background",
+              )}
+            >
+              <LedgerEntryCard
+                row={row}
+                permitBalance={resolveDisplayRowPermitBalance({ row, permitBalances })}
+                isHomeStorageExceeded={row.kind === "entry" ? exceededSet.has(row.entry.id) : false}
+                onSelect={handleSelectRow}
+              />
+            </div>
+          );
+        })}
       </div>
 
       <div className="hidden md:block">
@@ -243,6 +274,8 @@ export function LedgerTable({
                 return (
                   <tr
                     key={entry.id}
+                    ref={entry.id === highlightedEntryId ? desktopHighlightedEntryRef : undefined}
+                    data-ledger-entry-id={entry.id}
                     tabIndex={selectable ? 0 : -1}
                     onClick={() =>
                       selectable ? handleSelectRow({ row, permitBalance }) : undefined
@@ -261,6 +294,8 @@ export function LedgerTable({
                         "cursor-pointer border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20",
                       !selectable && "border-b border-border/25 last:border-0",
                       exceededSet.has(entry.id) && "bg-amber-500/5",
+                      entry.id === highlightedEntryId &&
+                        "bg-primary/10 ring-2 ring-inset ring-primary",
                     )}
                   >
                     <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>

@@ -18,6 +18,7 @@ type LedgerTableShellProps = {
   today: string;
   permitBalances?: Map<string, number>;
   homeStorageExceededEntryIds?: string[];
+  highlightedEntryId?: string | null;
 };
 
 export function LedgerTableShell({
@@ -28,6 +29,7 @@ export function LedgerTableShell({
   today,
   permitBalances,
   homeStorageExceededEntryIds = [],
+  highlightedEntryId,
 }: LedgerTableShellProps) {
   const [voidedEntryIds, setVoidedEntryIds] = useState<string[]>([]);
   const voidedIdSet = useMemo(() => new Set(voidedEntryIds), [voidedEntryIds]);
@@ -65,6 +67,7 @@ export function LedgerTableShell({
       purpose={purpose}
       permitBalances={permitBalances}
       homeStorageExceededEntryIds={homeStorageExceededEntryIds}
+      highlightedEntryId={highlightedEntryId}
       onVoided={handleVoided}
       onVoidFailed={handleVoidFailed}
     />

@@ -10,6 +10,7 @@ import {
   fetchMaxDayOrderByDate,
 } from "@/features/ammo-ledger/ledger/resolve-day-orders-for-new-entries/resolve-day-orders-for-new-entries";
 import { bulkTransactionsInputSchema } from "@/features/ammo-ledger/schema/bulk-transaction-schema";
+import { checkStockBeforeSave } from "@/features/ammo-ledger/transactions/check-stock-before-save/check-stock-before-save";
 import {
   type PreparedConfirmedTransaction,
   prepareConfirmedTransaction,
@@ -55,6 +56,15 @@ export async function createBulkTransactionsAction(input: unknown) {
     });
     if (!lockCheck.ok) {
       return { ok: false as const, error: lockCheck.error };
+    }
+
+    const stockCheck = await checkStockBeforeSave({
+      tx,
+      userId: user.id,
+      changes: preparedTransactions.map((prepared) => prepared.normalized),
+    });
+    if (!stockCheck.ok) {
+      return stockCheck;
     }
 
     const occurredOnDates = preparedTransactions.map((prepared) => prepared.normalized.occurredOn);

@@ -8,6 +8,7 @@ import { assertDatesNotLocked } from "@/features/ammo-ledger/ledger/lock/assert-
 import { resolveNextDayOrder } from "@/features/ammo-ledger/ledger/resolve-day-orders-for-new-entries/resolve-day-orders-for-new-entries";
 import { transactionInputSchema } from "@/features/ammo-ledger/schema/transaction-schema";
 import { buildLedgerEntryRedirectPath } from "@/features/ammo-ledger/transactions/build-ledger-entry-redirect-path/build-ledger-entry-redirect-path";
+import { checkStockBeforeSave } from "@/features/ammo-ledger/transactions/check-stock-before-save/check-stock-before-save";
 import { prepareConfirmedTransaction } from "@/features/ammo-ledger/transactions/prepare-confirmed-transaction/prepare-confirmed-transaction";
 
 export async function createTransactionAction(input: unknown) {
@@ -58,6 +59,15 @@ export async function createTransactionAction(input: unknown) {
     });
     if (!lockCheck.ok) {
       return { ok: false as const, error: lockCheck.error };
+    }
+
+    const stockCheck = await checkStockBeforeSave({
+      tx,
+      userId: user.id,
+      changes: [normalized],
+    });
+    if (!stockCheck.ok) {
+      return stockCheck;
     }
 
     const dayOrder = await resolveNextDayOrder({

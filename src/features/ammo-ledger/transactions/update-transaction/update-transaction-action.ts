@@ -10,6 +10,7 @@ import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-catego
 import { mapCategoryToInputKind } from "@/features/ammo-ledger/schema/map-category-to-input-kind";
 import { transactionInputSchema } from "@/features/ammo-ledger/schema/transaction-schema";
 import { canEditLedgerEntry } from "@/features/ammo-ledger/transactions/can-edit-ledger-entry/can-edit-ledger-entry";
+import { checkStockBeforeSave } from "@/features/ammo-ledger/transactions/check-stock-before-save/check-stock-before-save";
 import { prepareConfirmedTransaction } from "@/features/ammo-ledger/transactions/prepare-confirmed-transaction/prepare-confirmed-transaction";
 
 export async function updateTransactionAction({
@@ -110,6 +111,16 @@ export async function updateTransactionAction({
     });
     if (!lockCheck.ok) {
       return { ok: false as const, error: lockCheck.error };
+    }
+
+    const stockCheck = await checkStockBeforeSave({
+      tx,
+      userId: user.id,
+      changes: [normalized],
+      excludedLedgerEntryId: ledgerEntryId,
+    });
+    if (!stockCheck.ok) {
+      return stockCheck;
     }
 
     await tx

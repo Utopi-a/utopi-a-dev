@@ -8,6 +8,7 @@ import type {
 } from "@/db/schema/ammo-ledger";
 import { LedgerTable } from "@/features/ammo-ledger/components/ledger-table/ledger-table";
 import { buildLedgerDisplayRows } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
+import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 
 type LedgerTableShellProps = {
@@ -19,6 +20,7 @@ type LedgerTableShellProps = {
   permitBalances?: Map<string, number>;
   homeStorageExceededEntryIds?: string[];
   highlightedEntryId?: string | null;
+  lockState?: LedgerLockState;
 };
 
 export function LedgerTableShell({
@@ -30,6 +32,7 @@ export function LedgerTableShell({
   permitBalances,
   homeStorageExceededEntryIds = [],
   highlightedEntryId,
+  lockState,
 }: LedgerTableShellProps) {
   const [voidedEntryIds, setVoidedEntryIds] = useState<string[]>([]);
   const voidedIdSet = useMemo(() => new Set(voidedEntryIds), [voidedEntryIds]);
@@ -68,6 +71,7 @@ export function LedgerTableShell({
       permitBalances={permitBalances}
       homeStorageExceededEntryIds={homeStorageExceededEntryIds}
       highlightedEntryId={highlightedEntryId}
+      lockState={lockState}
       onVoided={handleVoided}
       onVoidFailed={handleVoidFailed}
     />

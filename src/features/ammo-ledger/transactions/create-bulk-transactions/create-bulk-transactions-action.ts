@@ -3,11 +3,14 @@
 import { db } from "@/db";
 import { ammoLedgerEntry, ammoTransaction } from "@/db/schema/ammo-ledger";
 import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { acquireLedgerAdvisoryLock } from "@/features/ammo-ledger/ledger/lock/acquire-ledger-advisory-lock/acquire-ledger-advisory-lock";
+import { assertDatesNotLocked } from "@/features/ammo-ledger/ledger/lock/assert-dates-not-locked/assert-dates-not-locked";
 import {
   assignDayOrdersForNewEntries,
   fetchMaxDayOrderByDate,
 } from "@/features/ammo-ledger/ledger/resolve-day-orders-for-new-entries/resolve-day-orders-for-new-entries";
 import { bulkTransactionsInputSchema } from "@/features/ammo-ledger/schema/bulk-transaction-schema";
+import { checkStockBeforeSave } from "@/features/ammo-ledger/transactions/check-stock-before-save/check-stock-before-save";
 import {
   type PreparedConfirmedTransaction,
   prepareConfirmedTransaction,
@@ -43,7 +46,22 @@ export async function createBulkTransactionsAction(input: unknown) {
     preparedTransactions.push(preparedResult.prepared);
   }
 
-  await db.transaction(async (tx) => {
+  const transactionIds = preparedTransactions.map(() => crypto.randomUUID());
+  const ledgerEntryIds = preparedTransactions.map(() => crypto.randomUUID());
+  const createdAt = new Date();
+
+  const transactionResult = await db.transaction(async (tx) => {
+    await acquireLedgerAdvisoryLock({ tx, userId: user.id });
+
+    const lockCheck = await assertDatesNotLocked({
+      userId: user.id,
+      dates: preparedTransactions.map((p) => p.normalized.occurredOn),
+      executor: tx,
+    });
+    if (!lockCheck.ok) {
+      return { ok: false as const, error: lockCheck.error };
+    }
+
     const occurredOnDates = preparedTransactions.map((prepared) => prepared.normalized.occurredOn);
     const maxDayOrderByDate = await fetchMaxDayOrderByDate({
       tx,
@@ -55,11 +73,26 @@ export async function createBulkTransactionsAction(input: unknown) {
       maxDayOrderByDate,
     });
 
+    const stockCheck = await checkStockBeforeSave({
+      tx,
+      userId: user.id,
+      changes: preparedTransactions.map((prepared, index) => ({
+        ...prepared.normalized,
+        id: ledgerEntryIds[index],
+        purpose: prepared.input.purpose,
+        dayOrder: dayOrders[index],
+        createdAt,
+      })),
+    });
+    if (!stockCheck.ok) {
+      return stockCheck;
+    }
+
     for (const [index, prepared] of preparedTransactions.entries()) {
       const { input: data, gunRow, rangeRow, counterparty, computedRounds, normalized } = prepared;
 
-      const transactionId = crypto.randomUUID();
-      const ledgerEntryId = crypto.randomUUID();
+      const transactionId = transactionIds[index];
+      const ledgerEntryId = ledgerEntryIds[index];
 
       await tx.insert(ammoTransaction).values({
         id: transactionId,
@@ -91,6 +124,10 @@ export async function createBulkTransactionsAction(input: unknown) {
         dayOrder: dayOrders[index],
         ammoTypeId: normalized.ammoTypeId,
         ammoTypeName: normalized.ammoTypeName,
+        ammoCartridgeType: prepared.ammoTypeRow.cartridgeType,
+        ammoCaliber: prepared.ammoTypeRow.caliber,
+        ammoGaugeNumber: prepared.ammoTypeRow.gaugeNumber,
+        ledgerNote: data.ledgerNote ?? null,
         quantity: normalized.quantity,
         location: normalized.location,
         counterpartyName: normalized.counterpartyName,
@@ -99,9 +136,16 @@ export async function createBulkTransactionsAction(input: unknown) {
         gunName: normalized.gunName,
         gunNumber: normalized.gunNumber,
         gunPermitNumber: normalized.gunPermitNumber,
+        createdAt,
       });
     }
+
+    return { ok: true as const };
   });
+
+  if (!transactionResult.ok) {
+    return transactionResult;
+  }
 
   const redirectPurpose = parsed.data.entries[0]?.purpose ?? "shooting";
 

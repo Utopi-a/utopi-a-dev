@@ -34,6 +34,7 @@ type NormalizeTransactionInput = {
   rangeId?: string;
   rangeName?: string;
   rangeAddress?: string;
+  location?: string;
   counterpartyName?: string;
   counterpartyAddress?: string;
 };
@@ -58,9 +59,10 @@ export function normalizeTransaction(
   }
 
   const location =
-    input.rangeName && input.rangeAddress
+    input.location ??
+    (input.rangeName && input.rangeAddress
       ? `${input.rangeName} ${input.rangeAddress}`
-      : (input.rangeName ?? input.rangeAddress ?? null);
+      : (input.rangeName ?? input.rangeAddress ?? null));
 
   return {
     category,

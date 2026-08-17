@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { inputKinds } from "./input-kind";
+import type { InputKind, inputKinds } from "./input-kind";
 import { ledgerPurposes } from "./ledger-purpose";
 
 export const transactionStatuses = ["draft", "confirmed", "voided"] as const;
@@ -13,6 +13,7 @@ const baseTransactionSchema = z.object({
   boxCount: z.number().int().min(0).default(0),
   looseRounds: z.number().int().default(0),
   memo: z.string().max(500).optional(),
+  ledgerNote: z.string().max(500).optional(),
 });
 
 const counterpartyFieldsSchema = z.object({
@@ -30,11 +31,26 @@ function hasCounterparty(
   return Boolean(data.counterpartyName && data.counterpartyAddress);
 }
 
-export const consumeTransactionSchema = baseTransactionSchema.extend({
-  inputKind: z.literal("consume"),
-  gunId: z.string().min(1),
-  rangeId: z.string().min(1),
-});
+export const consumeTransactionSchema = z.discriminatedUnion("purpose", [
+  baseTransactionSchema.extend({
+    inputKind: z.literal("consume"),
+    purpose: z.literal("shooting"),
+    gunId: z.string().min(1),
+    rangeId: z.string().min(1),
+  }),
+  baseTransactionSchema.extend({
+    inputKind: z.literal("consume"),
+    purpose: z.literal("hunting"),
+    gunId: z.string().min(1),
+    location: z.string().min(1).max(300),
+  }),
+  baseTransactionSchema.extend({
+    inputKind: z.literal("consume"),
+    purpose: z.literal("pest_control"),
+    gunId: z.string().min(1),
+    location: z.string().min(1).max(300),
+  }),
+]);
 
 export const acquireTransactionSchema = baseTransactionSchema
   .extend({
@@ -58,6 +74,28 @@ export const transferTransactionSchema = baseTransactionSchema
     message: "譲渡先を選択するか、氏名と住所を入力してください",
   });
 
+export const manufactureTransactionSchema = baseTransactionSchema.extend({
+  inputKind: z.literal("manufacture"),
+});
+
+export const issueTransactionSchema = baseTransactionSchema
+  .extend({
+    inputKind: z.literal("issue"),
+  })
+  .merge(counterpartyFieldsSchema)
+  .refine(hasCounterparty, {
+    message: "交付先を選択するか、氏名と住所を入力してください",
+  });
+
+export const receiveTransactionSchema = baseTransactionSchema
+  .extend({
+    inputKind: z.literal("receive"),
+  })
+  .merge(counterpartyFieldsSchema)
+  .refine(hasCounterparty, {
+    message: "交付元を選択するか、氏名と住所を入力してください",
+  });
+
 export const stockCheckSchema = z.object({
   inputKind: z.literal("stock_check"),
   ammoTypeId: z.string().min(1),
@@ -69,6 +107,9 @@ export const transactionInputSchema = z.discriminatedUnion("inputKind", [
   acquireTransactionSchema,
   disposeTransactionSchema,
   transferTransactionSchema,
+  manufactureTransactionSchema,
+  issueTransactionSchema,
+  receiveTransactionSchema,
   stockCheckSchema,
 ]);
 
@@ -78,6 +119,6 @@ export type LedgerTransactionInput = Exclude<TransactionInput, { inputKind: "sto
 
 export function isLedgerInputKind(
   inputKind: (typeof inputKinds)[number],
-): inputKind is "consume" | "acquire" | "dispose" | "transfer" {
+): inputKind is Exclude<InputKind, "stock_check"> {
   return inputKind !== "stock_check";
 }

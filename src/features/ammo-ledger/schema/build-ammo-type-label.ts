@@ -1,32 +1,39 @@
+import type { CartridgeType } from "./cartridge-type";
+import { cartridgeTypeLabels } from "./cartridge-type";
 import { formatGaugeNumberForDisplay } from "./shot-gauge-options";
-import type { ShotType } from "./shot-type";
-import { shotTypeLabels } from "./shot-type";
 
 export function buildAmmoTypeLabel({
   name,
   caliber,
-  shotType,
+  cartridgeType,
   gaugeNumber,
 }: {
   name?: string;
   caliber: string;
-  shotType: ShotType;
+  cartridgeType: CartridgeType;
   gaugeNumber?: string;
 }): string {
-  const displayGauge = formatGaugeNumberForDisplay({ gaugeNumber });
-  const gaugeSuffix = displayGauge ? `${displayGauge}号` : null;
-
   if (name?.trim()) {
     const base = name.trim();
-    if (gaugeSuffix) {
-      return `${base} ${gaugeSuffix}`;
+    if (cartridgeType === "shotgun_shot") {
+      const displayGauge = formatGaugeNumberForDisplay({ gaugeNumber });
+      if (displayGauge && !base.endsWith(`${displayGauge}号`)) {
+        return `${base} ${displayGauge}号`;
+      }
     }
     return base;
   }
 
-  const parts = [caliber, shotTypeLabels[shotType]];
-  if (gaugeSuffix) {
-    parts.push(gaugeSuffix);
+  if (cartridgeType === "rifle") {
+    return caliber;
+  }
+
+  const parts = [caliber, cartridgeTypeLabels[cartridgeType]];
+  if (cartridgeType === "shotgun_shot") {
+    const displayGauge = formatGaugeNumberForDisplay({ gaugeNumber });
+    if (displayGauge) {
+      parts.push(`${displayGauge}号`);
+    }
   }
   return parts.join(" ");
 }

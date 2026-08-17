@@ -22,7 +22,7 @@ export async function createAmmoTypeAction(input: unknown) {
   const resolvedName = buildAmmoTypeLabel({
     name,
     caliber: rest.caliber,
-    shotType: rest.shotType,
+    cartridgeType: rest.cartridgeType,
     gaugeNumber: rest.gaugeNumber,
   });
 
@@ -32,6 +32,7 @@ export async function createAmmoTypeAction(input: unknown) {
     userId: user.id,
     name: resolvedName,
     ...rest,
+    classificationConfirmedAt: new Date(),
   });
 
   return { ok: true as const, id };

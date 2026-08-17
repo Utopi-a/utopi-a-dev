@@ -16,7 +16,16 @@ export function mapCategoryToInputKind({
     case "transfer":
       return "transfer";
     case "manufacture":
+      return "manufacture";
+    case "issue":
+      return "issue";
+    case "receive":
+      return "receive";
     case "carryover":
       return null;
+    default: {
+      const _exhaustive: never = category;
+      return _exhaustive;
+    }
   }
 }

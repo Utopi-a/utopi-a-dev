@@ -29,6 +29,7 @@ type DisposeFormProps = {
     boxCount?: number;
     looseRounds?: number;
     memo?: string;
+    ledgerNote?: string;
   };
 };
 
@@ -44,6 +45,7 @@ export function DisposeForm({ ammoTypes, ledgerEntryId, initialValues }: Dispose
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
   const [purpose, setPurpose] = useState<LedgerPurpose>(initialValues?.purpose ?? "shooting");
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
+  const [ledgerNote, setLedgerNote] = useState(initialValues?.ledgerNote ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -81,6 +83,7 @@ export function DisposeForm({ ammoTypes, ledgerEntryId, initialValues }: Dispose
       boxCount: Number(boxCount) || 0,
       looseRounds: Number(looseRounds) || 0,
       memo: memo || undefined,
+      ledgerNote: ledgerNote || undefined,
     };
 
     const result = ledgerEntryId
@@ -139,6 +142,16 @@ export function DisposeForm({ ammoTypes, ledgerEntryId, initialValues }: Dispose
       <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
         <p className="text-muted-foreground">廃棄数量（法定出力）</p>
         <p className="text-lg font-semibold">{computedRounds}発</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="ledger-note">帳簿摘要の補足（任意）</Label>
+        <Input
+          id="ledger-note"
+          maxLength={500}
+          value={ledgerNote}
+          onChange={(e) => setLedgerNote(e.target.value)}
+        />
       </div>
 
       <div className="space-y-2">

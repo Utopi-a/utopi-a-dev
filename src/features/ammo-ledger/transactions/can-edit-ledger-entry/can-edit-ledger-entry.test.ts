@@ -26,13 +26,49 @@ describe("canEditLedgerEntry", () => {
     ).toBe(false);
   });
 
-  it("製造区分は編集できない", () => {
+  it("製造区分は編集できる", () => {
     expect(
       canEditLedgerEntry({
         entryUserId: "user-1",
         requestUserId: "user-1",
         voidedAt: null,
         category: "manufacture",
+        transactionStatus: "confirmed",
+      }),
+    ).toBe(true);
+  });
+
+  it("交付区分は編集できる", () => {
+    expect(
+      canEditLedgerEntry({
+        entryUserId: "user-1",
+        requestUserId: "user-1",
+        voidedAt: null,
+        category: "issue",
+        transactionStatus: "confirmed",
+      }),
+    ).toBe(true);
+  });
+
+  it("被交付区分は編集できる", () => {
+    expect(
+      canEditLedgerEntry({
+        entryUserId: "user-1",
+        requestUserId: "user-1",
+        voidedAt: null,
+        category: "receive",
+        transactionStatus: "confirmed",
+      }),
+    ).toBe(true);
+  });
+
+  it("繰越区分は編集できない", () => {
+    expect(
+      canEditLedgerEntry({
+        entryUserId: "user-1",
+        requestUserId: "user-1",
+        voidedAt: null,
+        category: "carryover",
         transactionStatus: "confirmed",
       }),
     ).toBe(false);

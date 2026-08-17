@@ -33,6 +33,7 @@ type TransferFormProps = {
     boxCount?: number;
     looseRounds?: number;
     memo?: string;
+    ledgerNote?: string;
   };
 };
 
@@ -72,6 +73,7 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
     initialValues?.counterpartyAddress ?? "",
   );
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
+  const [ledgerNote, setLedgerNote] = useState(initialValues?.ledgerNote ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -109,6 +111,7 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
       looseRounds: Number(looseRounds) || 0,
       ...(isManualCounterparty ? { counterpartyName, counterpartyAddress } : { counterpartyId }),
       memo: memo || undefined,
+      ledgerNote: ledgerNote || undefined,
     };
 
     const result = ledgerEntryId
@@ -216,6 +219,16 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
           </div>
         </>
       ) : null}
+
+      <div className="space-y-2">
+        <Label htmlFor="ledger-note">帳簿摘要の補足（任意）</Label>
+        <Input
+          id="ledger-note"
+          maxLength={500}
+          value={ledgerNote}
+          onChange={(e) => setLedgerNote(e.target.value)}
+        />
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="memo">メモ（帳簿には出ません）</Label>

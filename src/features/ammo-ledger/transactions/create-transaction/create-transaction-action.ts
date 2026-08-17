@@ -3,9 +3,12 @@
 import { db } from "@/db";
 import { ammoLedgerEntry, ammoTransaction } from "@/db/schema/ammo-ledger";
 import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { acquireLedgerAdvisoryLock } from "@/features/ammo-ledger/ledger/lock/acquire-ledger-advisory-lock/acquire-ledger-advisory-lock";
+import { assertDatesNotLocked } from "@/features/ammo-ledger/ledger/lock/assert-dates-not-locked/assert-dates-not-locked";
 import { resolveNextDayOrder } from "@/features/ammo-ledger/ledger/resolve-day-orders-for-new-entries/resolve-day-orders-for-new-entries";
 import { transactionInputSchema } from "@/features/ammo-ledger/schema/transaction-schema";
 import { buildLedgerEntryRedirectPath } from "@/features/ammo-ledger/transactions/build-ledger-entry-redirect-path/build-ledger-entry-redirect-path";
+import { checkStockBeforeSave } from "@/features/ammo-ledger/transactions/check-stock-before-save/check-stock-before-save";
 import { prepareConfirmedTransaction } from "@/features/ammo-ledger/transactions/prepare-confirmed-transaction/prepare-confirmed-transaction";
 
 export async function createTransactionAction(input: unknown) {
@@ -35,6 +38,7 @@ export async function createTransactionAction(input: unknown) {
 
   const {
     input: data,
+    ammoTypeRow,
     gunRow,
     rangeRow,
     counterparty,
@@ -44,13 +48,42 @@ export async function createTransactionAction(input: unknown) {
 
   const transactionId = crypto.randomUUID();
   const ledgerEntryId = crypto.randomUUID();
+  const createdAt = new Date();
 
-  await db.transaction(async (tx) => {
+  const transactionResult = await db.transaction(async (tx) => {
+    await acquireLedgerAdvisoryLock({ tx, userId: user.id });
+
+    const lockCheck = await assertDatesNotLocked({
+      userId: user.id,
+      dates: [normalized.occurredOn],
+      executor: tx,
+    });
+    if (!lockCheck.ok) {
+      return { ok: false as const, error: lockCheck.error };
+    }
+
     const dayOrder = await resolveNextDayOrder({
       tx,
       userId: user.id,
       occurredOn: normalized.occurredOn,
     });
+
+    const stockCheck = await checkStockBeforeSave({
+      tx,
+      userId: user.id,
+      changes: [
+        {
+          ...normalized,
+          id: ledgerEntryId,
+          purpose: data.purpose,
+          dayOrder,
+          createdAt,
+        },
+      ],
+    });
+    if (!stockCheck.ok) {
+      return stockCheck;
+    }
 
     await tx.insert(ammoTransaction).values({
       id: transactionId,
@@ -59,7 +92,7 @@ export async function createTransactionAction(input: unknown) {
       inputKind: data.inputKind,
       purpose: data.purpose,
       occurredOn: data.occurredOn,
-      ammoTypeId: preparedResult.prepared.ammoTypeRow.id,
+      ammoTypeId: ammoTypeRow.id,
       gunId: gunRow?.id ?? null,
       rangeId: rangeRow?.id ?? null,
       counterpartyId: counterparty?.counterpartyId ?? null,
@@ -82,6 +115,10 @@ export async function createTransactionAction(input: unknown) {
       dayOrder,
       ammoTypeId: normalized.ammoTypeId,
       ammoTypeName: normalized.ammoTypeName,
+      ammoCartridgeType: ammoTypeRow.cartridgeType,
+      ammoCaliber: ammoTypeRow.caliber,
+      ammoGaugeNumber: ammoTypeRow.gaugeNumber,
+      ledgerNote: data.ledgerNote ?? null,
       quantity: normalized.quantity,
       location: normalized.location,
       counterpartyName: normalized.counterpartyName,
@@ -90,8 +127,15 @@ export async function createTransactionAction(input: unknown) {
       gunName: normalized.gunName,
       gunNumber: normalized.gunNumber,
       gunPermitNumber: normalized.gunPermitNumber,
+      createdAt,
     });
+
+    return { ok: true as const };
   });
+
+  if (!transactionResult.ok) {
+    return transactionResult;
+  }
 
   return {
     ok: true as const,

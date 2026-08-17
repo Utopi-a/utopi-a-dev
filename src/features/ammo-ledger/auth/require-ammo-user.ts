@@ -1,3 +1,5 @@
+import { isDevAmmoAuthBypassEnabled } from "@/features/ammo-ledger/auth/dev-auth-bypass";
+import { resolveDevAmmoUser } from "@/features/ammo-ledger/auth/resolve-dev-ammo-user";
 import type { ServerActionRateLimitKind } from "@/features/ammo-ledger/auth/server-action-rate-limit/consume-server-action-rate-limit";
 import { assertServerActionRateLimit } from "@/features/ammo-ledger/auth/server-action-rate-limit/consume-server-action-rate-limit";
 import {
@@ -12,13 +14,21 @@ type RequireAmmoUserOptions = {
 };
 
 export async function requireAmmoUser({ rateLimit }: RequireAmmoUserOptions = {}) {
-  const session = await requireSession({ redirectTo: "/login?next=/lab/ammo-ledger" });
+  const devEmail = process.env.AMMO_LEDGER_DEV_USER_EMAIL?.trim();
+  const ammoUser =
+    isDevAmmoAuthBypassEnabled() && devEmail
+      ? await resolveDevAmmoUser({ email: devEmail })
+      : (
+          await requireSession({
+            redirectTo: "/login?next=/lab/ammo-ledger",
+          })
+        ).user;
 
   if (rateLimit) {
-    assertServerActionRateLimit({ userId: session.user.id, kind: rateLimit });
+    assertServerActionRateLimit({ userId: ammoUser.id, kind: rateLimit });
   }
 
-  return session.user;
+  return ammoUser;
 }
 
 export async function resolveAmmoUserForMutation() {

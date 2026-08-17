@@ -1,4 +1,5 @@
 import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-entries/list-ledger-entries";
+import { getLatestLockState } from "@/features/ammo-ledger/ledger/lock/get-latest-lock-state/get-latest-lock-state";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 import { listAcquisitionPermits } from "@/features/ammo-ledger/permit/list-acquisition-permits/list-acquisition-permits";
@@ -12,13 +13,14 @@ export async function loadAmmoLedgerWorkspace({
 }: {
   userId: string;
 }): Promise<AmmoLedgerWorkspace> {
-  const [entries, permitEvents, permits, profile, ammoTypes, guns] = await Promise.all([
+  const [entries, permitEvents, permits, profile, ammoTypes, guns, lockState] = await Promise.all([
     listLedgerEntries({ userId }),
     listPermitEvents({ userId }),
     listAcquisitionPermits({ userId }),
     getLedgerProfile({ userId }),
     listAmmoTypes({ userId }),
     listGuns({ userId }),
+    getLatestLockState({ userId }),
   ]);
 
   return {
@@ -28,5 +30,6 @@ export async function loadAmmoLedgerWorkspace({
     profile,
     inventoryItems: computeInventoryItems({ entries, ammoTypes }),
     guns,
+    lockState,
   };
 }

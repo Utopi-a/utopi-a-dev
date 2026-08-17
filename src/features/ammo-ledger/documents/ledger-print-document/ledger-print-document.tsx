@@ -1,21 +1,12 @@
-import type {
-  ammoAcquisitionPermit,
-  ammoCounterparty,
-  ammoGun,
-  ammoLedgerEntry,
-  ammoPermitEvent,
-  ammoRange,
-  ammoType,
-} from "@/db/schema/ammo-ledger";
+import type { ammoGun, ammoLedgerEntry, ammoRange } from "@/db/schema/ammo-ledger";
+import { buildCounterpartyReferences } from "@/features/ammo-ledger/documents/build-counterparty-references/build-counterparty-references";
 import { LedgerPrintAddressList } from "@/features/ammo-ledger/documents/ledger-print-address-list/ledger-print-address-list";
+import { LedgerPrintBody } from "@/features/ammo-ledger/documents/ledger-print-body/ledger-print-body";
 import { LedgerPrintCover } from "@/features/ammo-ledger/documents/ledger-print-cover/ledger-print-cover";
 import { LedgerPrintGunList } from "@/features/ammo-ledger/documents/ledger-print-gun-list/ledger-print-gun-list";
-import {
-  buildLedgerPrintSections,
-  formatLedgerPrintSectionLabel,
-} from "@/features/ammo-ledger/documents/ledger-print-section/build-ledger-print-sections/build-ledger-print-sections";
 import { LedgerPrintStyles } from "@/features/ammo-ledger/documents/ledger-print-styles/ledger-print-styles";
-import { LedgerPrintView } from "@/features/ammo-ledger/documents/ledger-print-view/ledger-print-view";
+import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
+import { ledgerPurposeLabels, ledgerPurposes } from "@/features/ammo-ledger/schema/ledger-purpose";
 
 type LedgerPrintDocumentProps = {
   ownerName: string;
@@ -25,12 +16,29 @@ type LedgerPrintDocumentProps = {
   year: number;
   guns: (typeof ammoGun.$inferSelect)[];
   ranges: (typeof ammoRange.$inferSelect)[];
-  counterparties: (typeof ammoCounterparty.$inferSelect)[];
   entries: (typeof ammoLedgerEntry.$inferSelect)[];
-  permitEvents: (typeof ammoPermitEvent.$inferSelect)[];
-  permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
-  ammoTypes: (typeof ammoType.$inferSelect)[];
+  isPreview?: boolean;
 };
+
+function groupEntriesByPurpose({
+  entries,
+}: {
+  entries: (typeof ammoLedgerEntry.$inferSelect)[];
+}): Map<LedgerPurpose, (typeof ammoLedgerEntry.$inferSelect)[]> {
+  const grouped = new Map<LedgerPurpose, (typeof ammoLedgerEntry.$inferSelect)[]>();
+
+  for (const entry of entries) {
+    const purpose = entry.purpose as LedgerPurpose;
+    const list = grouped.get(purpose);
+    if (list) {
+      list.push(entry);
+    } else {
+      grouped.set(purpose, [entry]);
+    }
+  }
+
+  return grouped;
+}
 
 export function LedgerPrintDocument({
   ownerName,
@@ -40,24 +48,17 @@ export function LedgerPrintDocument({
   year,
   guns,
   ranges,
-  counterparties,
   entries,
-  permitEvents,
-  permits,
-  ammoTypes,
+  isPreview = false,
 }: LedgerPrintDocumentProps) {
-  const today = new Date().toISOString().slice(0, 10);
-  const sections = buildLedgerPrintSections({
-    entries,
-    permitEvents,
-    permits,
-    ammoTypes,
-    from,
-    to,
-    today,
-  });
+  const entriesByPurpose = groupEntriesByPurpose({ entries });
+  const activePurposes = ledgerPurposes.filter(
+    (purpose) => (entriesByPurpose.get(purpose)?.length ?? 0) > 0,
+  );
 
-  if (sections.length === 0) {
+  const counterpartyReferences = buildCounterpartyReferences({ entries });
+
+  if (activePurposes.length === 0) {
     return (
       <div className="ledger-print">
         <LedgerPrintStyles />
@@ -69,34 +70,38 @@ export function LedgerPrintDocument({
   return (
     <div className="ledger-print space-y-4">
       <LedgerPrintStyles />
+      {isPreview ? (
+        <div className="ledger-print-preview-watermark" aria-hidden="true">
+          未確定プレビュー
+        </div>
+      ) : null}
 
       <div className="no-print mb-4">
         <p className="text-sm text-muted-foreground">
-          ブラウザの印刷機能で「PDFに保存」できます。用紙サイズや向きは印刷ダイアログで選べます。表紙・別紙のあと、許可種別ごとの帳簿本体が順に出力されます。
+          A4横で出力されます。印刷時は「ヘッダーとフッター」をオフにしてください。
         </p>
       </div>
 
       <LedgerPrintCover
         ownerName={ownerName}
         ownerAddress={ownerAddress}
-        sectionLabels={sections.map((section) => formatLedgerPrintSectionLabel({ section }))}
+        purposeLabels={activePurposes.map((p) => ledgerPurposeLabels[p])}
         from={from}
         to={to}
       />
       <LedgerPrintGunList guns={guns} />
-      <LedgerPrintAddressList ranges={ranges} counterparties={counterparties} />
+      <LedgerPrintAddressList ranges={ranges} counterpartyReferences={counterpartyReferences} />
 
-      {sections.map((section) => (
-        <LedgerPrintView
-          key={section.key}
-          section={section}
-          entries={section.entries}
-          permitEvents={section.permitEvents}
-          permits={permits}
+      {activePurposes.map((purpose) => (
+        <LedgerPrintBody
+          key={purpose}
+          ownerName={ownerName}
+          ownerAddress={ownerAddress}
+          ledgerPurpose={purpose}
+          entries={entriesByPurpose.get(purpose) ?? []}
+          year={year}
           from={from}
           to={to}
-          year={year}
-          today={today}
         />
       ))}
     </div>

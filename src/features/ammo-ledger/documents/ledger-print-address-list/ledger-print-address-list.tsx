@@ -1,38 +1,42 @@
-import type { ammoCounterparty, ammoRange } from "@/db/schema/ammo-ledger";
+import type { ammoRange } from "@/db/schema/ammo-ledger";
+import type { CounterpartyReference } from "@/features/ammo-ledger/documents/build-counterparty-references/build-counterparty-references";
 
 type LedgerPrintAddressListProps = {
   ranges: (typeof ammoRange.$inferSelect)[];
-  counterparties: (typeof ammoCounterparty.$inferSelect)[];
+  counterpartyReferences: CounterpartyReference[];
 };
 
-export function LedgerPrintAddressList({ ranges, counterparties }: LedgerPrintAddressListProps) {
+export function LedgerPrintAddressList({
+  ranges,
+  counterpartyReferences,
+}: LedgerPrintAddressListProps) {
   return (
     <section className="ledger-print-page space-y-6">
       <header className="text-center">
-        <h2 className="text-lg font-bold">別紙2　射撃場・銃砲火薬店等の一覧</h2>
+        <h2 className="text-sm font-bold">別紙2　相手方住所・射撃場一覧</h2>
       </header>
 
       <div className="space-y-2">
-        <h3 className="text-sm font-semibold">射撃場</h3>
-        <table className="w-full border-collapse text-xs">
+        <h3 className="text-xs font-semibold">相手方住所</h3>
+        <table className="ledger-print-section-table w-full">
           <thead>
             <tr>
-              <th className="border border-black px-2 py-1">名称</th>
-              <th className="border border-black px-2 py-1">所在地</th>
+              <th>名称</th>
+              <th>住所</th>
             </tr>
           </thead>
           <tbody>
-            {ranges.length === 0 ? (
+            {counterpartyReferences.length === 0 ? (
               <tr>
-                <td colSpan={2} className="border border-black px-2 py-2 text-center">
-                  登録なし
+                <td colSpan={2} className="text-center py-2">
+                  該当なし
                 </td>
               </tr>
             ) : (
-              ranges.map((range) => (
-                <tr key={range.id}>
-                  <td className="border border-black px-2 py-1">{range.name}</td>
-                  <td className="border border-black px-2 py-1">{range.address}</td>
+              counterpartyReferences.map((ref) => (
+                <tr key={`${ref.name}\0${ref.address ?? ""}`}>
+                  <td>{ref.name}</td>
+                  <td>{ref.address ?? ""}</td>
                 </tr>
               ))
             )}
@@ -41,26 +45,26 @@ export function LedgerPrintAddressList({ ranges, counterparties }: LedgerPrintAd
       </div>
 
       <div className="space-y-2">
-        <h3 className="text-sm font-semibold">銃砲火薬店・譲渡相手</h3>
-        <table className="w-full border-collapse text-xs">
+        <h3 className="text-xs font-semibold">射撃場</h3>
+        <table className="ledger-print-section-table w-full">
           <thead>
             <tr>
-              <th className="border border-black px-2 py-1">名称</th>
-              <th className="border border-black px-2 py-1">所在地</th>
+              <th>名称</th>
+              <th>所在地</th>
             </tr>
           </thead>
           <tbody>
-            {counterparties.length === 0 ? (
+            {ranges.length === 0 ? (
               <tr>
-                <td colSpan={2} className="border border-black px-2 py-2 text-center">
+                <td colSpan={2} className="text-center py-2">
                   登録なし
                 </td>
               </tr>
             ) : (
-              counterparties.map((item) => (
-                <tr key={item.id}>
-                  <td className="border border-black px-2 py-1">{item.name}</td>
-                  <td className="border border-black px-2 py-1">{item.address}</td>
+              ranges.map((range) => (
+                <tr key={range.id}>
+                  <td>{range.name}</td>
+                  <td>{range.address}</td>
                 </tr>
               ))
             )}

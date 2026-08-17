@@ -35,7 +35,7 @@ export default async function EditAmmoTypePage({ params }: PageProps) {
             initialValues={{
               name: ammoType.name,
               caliber: ammoType.caliber,
-              shotType: ammoType.shotType,
+              cartridgeType: ammoType.cartridgeType,
               gaugeNumber: ammoType.gaugeNumber,
               roundsPerBox: ammoType.roundsPerBox,
               defaultPurpose: ammoType.defaultPurpose,

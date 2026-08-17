@@ -6,8 +6,45 @@ type StockEntry = {
   quantity: number;
 };
 
-const increaseCategories: LedgerCategory[] = ["acquire", "manufacture", "carryover"];
-const decreaseCategories: LedgerCategory[] = ["consume", "transfer", "dispose"];
+export function isStockDecreaseCategory({ category }: { category: LedgerCategory }): boolean {
+  return (
+    category === "consume" ||
+    category === "transfer" ||
+    category === "issue" ||
+    category === "dispose"
+  );
+}
+
+export function applyStockEntry({
+  stock,
+  entry,
+}: {
+  stock: Map<string, number>;
+  entry: StockEntry;
+}) {
+  const current = stock.get(entry.ammoTypeId) ?? 0;
+
+  switch (entry.category) {
+    case "acquire":
+    case "receive":
+    case "manufacture":
+      stock.set(entry.ammoTypeId, current + entry.quantity);
+      return;
+    case "consume":
+    case "transfer":
+    case "issue":
+    case "dispose":
+      stock.set(entry.ammoTypeId, current - entry.quantity);
+      return;
+    case "carryover":
+      stock.set(entry.ammoTypeId, entry.quantity);
+      return;
+    default: {
+      const exhaustiveCheck: never = entry.category;
+      return exhaustiveCheck;
+    }
+  }
+}
 
 export function computeStockByAmmoType({
   entries,
@@ -17,12 +54,7 @@ export function computeStockByAmmoType({
   const stock = new Map<string, number>();
 
   for (const entry of entries) {
-    const current = stock.get(entry.ammoTypeId) ?? 0;
-    if (increaseCategories.includes(entry.category)) {
-      stock.set(entry.ammoTypeId, current + entry.quantity);
-    } else if (decreaseCategories.includes(entry.category)) {
-      stock.set(entry.ammoTypeId, current - entry.quantity);
-    }
+    applyStockEntry({ stock, entry });
   }
 
   return stock;

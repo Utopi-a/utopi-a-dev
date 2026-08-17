@@ -10,22 +10,27 @@ import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-l
 import { createAmmoTypeAction } from "@/features/ammo-ledger/master/create-ammo-type/create-ammo-type-action";
 import { updateAmmoTypeAction } from "@/features/ammo-ledger/master/update-ammo-type/update-ammo-type-action";
 import { buildAmmoTypeLabel } from "@/features/ammo-ledger/schema/build-ammo-type-label";
+import type { CartridgeType } from "@/features/ammo-ledger/schema/cartridge-type";
 import { ledgerPurposeLabels, ledgerPurposes } from "@/features/ammo-ledger/schema/ledger-purpose";
 import {
   isShotGaugeAllowed,
   listShotGaugeSelectOptions,
   normalizeGaugeNumberForSelect,
 } from "@/features/ammo-ledger/schema/shot-gauge-options";
-import type { ShotType } from "@/features/ammo-ledger/schema/shot-type";
-import { shotTypeLabels, shotTypes } from "@/features/ammo-ledger/schema/shot-type";
 import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+
+const cartridgeTypeFormOptions: { value: CartridgeType; label: string }[] = [
+  { value: "rifle", label: "ライフル実包" },
+  { value: "shotgun_slug", label: "散弾銃用単弾" },
+  { value: "shotgun_shot", label: "散弾" },
+];
 
 type AmmoTypeFormProps = {
   recordId?: string;
   initialValues?: {
     name: string;
     caliber: string;
-    shotType: string;
+    cartridgeType: string;
     gaugeNumber?: string | null;
     roundsPerBox: number;
     defaultPurpose?: string | null;
@@ -39,7 +44,9 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
   const isEdit = Boolean(recordId);
   const [name, setName] = useState(initialValues?.name ?? "");
   const [caliber, setCaliber] = useState(initialValues?.caliber ?? "12番");
-  const [shotType, setShotType] = useState<string>(initialValues?.shotType ?? shotTypes[1]);
+  const [cartridgeType, setCartridgeType] = useState<string>(
+    initialValues?.cartridgeType ?? "shotgun_shot",
+  );
   const [gaugeNumber, setGaugeNumber] = useState(
     normalizeGaugeNumberForSelect({ gaugeNumber: initialValues?.gaugeNumber }),
   );
@@ -54,6 +61,13 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
     [defaultPurpose],
   );
 
+  function handleCartridgeTypeChange({ nextCartridgeType }: { nextCartridgeType: string }) {
+    setCartridgeType(nextCartridgeType);
+    if (nextCartridgeType !== "shotgun_shot") {
+      setGaugeNumber("");
+    }
+  }
+
   function handleDefaultPurposeChange({ nextPurpose }: { nextPurpose: string }) {
     setDefaultPurpose(nextPurpose);
     if (gaugeNumber && !isShotGaugeAllowed({ gaugeNumber, defaultPurpose: nextPurpose || null })) {
@@ -64,8 +78,8 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
   const previewLabel = buildAmmoTypeLabel({
     name: name || undefined,
     caliber,
-    shotType: shotType as ShotType,
-    gaugeNumber: gaugeNumber || undefined,
+    cartridgeType: cartridgeType as CartridgeType,
+    gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber || undefined : undefined,
   });
 
   async function handleSubmit(event: React.FormEvent) {
@@ -76,15 +90,15 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
     const payload = {
       name: name || undefined,
       caliber,
-      shotType,
-      gaugeNumber: gaugeNumber || undefined,
+      cartridgeType,
+      gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber || undefined : undefined,
       roundsPerBox: Number(roundsPerBox),
       defaultPurpose: defaultPurpose || undefined,
       memo: memo || undefined,
     };
 
-    const result = isEdit
-      ? await updateAmmoTypeAction({ id: recordId!, input: payload })
+    const result = recordId
+      ? await updateAmmoTypeAction({ id: recordId, input: payload })
       : await createAmmoTypeAction(payload);
 
     if (!result.ok) {
@@ -117,7 +131,10 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
       <div className="space-y-4">
         <p className="text-sm font-medium">基本</p>
         <div className="space-y-2">
-          <Label htmlFor="caliber">番径</Label>
+          <Label htmlFor="caliber">実包名称・番径</Label>
+          <p className="text-xs text-muted-foreground">
+            ライフルは口径（例: .308WIN）、ショットガンは番径（例: 12番）を入力します。
+          </p>
           <Input
             id="caliber"
             required
@@ -126,11 +143,11 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
           />
         </div>
         <FieldSelect
-          id="shot-type"
-          label="単弾 / 散弾"
-          value={shotType}
-          onChange={setShotType}
-          options={shotTypes.map((t) => ({ value: t, label: shotTypeLabels[t] }))}
+          id="cartridge-type"
+          label="実包区分"
+          value={cartridgeType}
+          onChange={(value) => handleCartridgeTypeChange({ nextCartridgeType: value })}
+          options={cartridgeTypeFormOptions}
           required
           placeholder=""
         />
@@ -149,14 +166,16 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
 
       <div className="space-y-4 rounded-lg border border-border/70 px-4 py-4">
         <p className="text-sm font-medium">詳細（任意）</p>
-        <FieldSelect
-          id="gauge-number"
-          label="号数（散弾のみ）"
-          value={gaugeNumber}
-          onChange={setGaugeNumber}
-          options={gaugeSelectOptions}
-          placeholder="未選択"
-        />
+        {cartridgeType === "shotgun_shot" ? (
+          <FieldSelect
+            id="gauge-number"
+            label="号数（散弾のみ）"
+            value={gaugeNumber}
+            onChange={setGaugeNumber}
+            options={gaugeSelectOptions}
+            placeholder="未選択"
+          />
+        ) : null}
         <div className="space-y-2">
           <Label htmlFor="ammo-name">名称</Label>
           <Input

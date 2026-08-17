@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { transactionInputSchema } from "./transaction-schema";
 
 describe("transactionInputSchema", () => {
-  it("消費入力を受け付ける", () => {
+  it("射撃消費入力を受け付ける", () => {
     const result = transactionInputSchema.safeParse({
       inputKind: "consume",
       purpose: "shooting",
@@ -14,6 +14,46 @@ describe("transactionInputSchema", () => {
       looseRounds: -2,
     });
     expect(result.success).toBe(true);
+  });
+
+  it("狩猟消費は location があれば受け付ける", () => {
+    const result = transactionInputSchema.safeParse({
+      inputKind: "consume",
+      purpose: "hunting",
+      occurredOn: "2026-06-07",
+      ammoTypeId: "ammo-1",
+      gunId: "gun-1",
+      location: "〇〇狩場",
+      boxCount: 1,
+      looseRounds: 0,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("狩猟消費で location がなければ拒否する", () => {
+    const result = transactionInputSchema.safeParse({
+      inputKind: "consume",
+      purpose: "hunting",
+      occurredOn: "2026-06-07",
+      ammoTypeId: "ammo-1",
+      gunId: "gun-1",
+      boxCount: 1,
+      looseRounds: 0,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("射撃消費で rangeId がなければ拒否する", () => {
+    const result = transactionInputSchema.safeParse({
+      inputKind: "consume",
+      purpose: "shooting",
+      occurredOn: "2026-06-07",
+      ammoTypeId: "ammo-1",
+      gunId: "gun-1",
+      boxCount: 1,
+      looseRounds: 0,
+    });
+    expect(result.success).toBe(false);
   });
 
   it("譲受で相手方が未入力なら拒否する", () => {
@@ -38,6 +78,44 @@ describe("transactionInputSchema", () => {
       counterpartyId: "shop-1",
       outerBoxCount: 1,
       boxCount: 0,
+      looseRounds: 0,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("製造入力を受け付ける", () => {
+    const result = transactionInputSchema.safeParse({
+      inputKind: "manufacture",
+      purpose: "shooting",
+      occurredOn: "2026-06-07",
+      ammoTypeId: "ammo-1",
+      boxCount: 2,
+      looseRounds: 0,
+      ledgerNote: "自製",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("交付で相手方が未入力なら拒否する", () => {
+    const result = transactionInputSchema.safeParse({
+      inputKind: "issue",
+      purpose: "shooting",
+      occurredOn: "2026-06-07",
+      ammoTypeId: "ammo-1",
+      boxCount: 1,
+      looseRounds: 0,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("被交付で相手方IDがあれば受け付ける", () => {
+    const result = transactionInputSchema.safeParse({
+      inputKind: "receive",
+      purpose: "hunting",
+      occurredOn: "2026-06-07",
+      ammoTypeId: "ammo-1",
+      counterpartyId: "org-1",
+      boxCount: 1,
       looseRounds: 0,
     });
     expect(result.success).toBe(true);

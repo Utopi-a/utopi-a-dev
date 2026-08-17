@@ -11,12 +11,22 @@ describe("formatLedgerGunLabel", () => {
     ).toBe("ベレッタ（12345）");
   });
 
-  it("銃名がないときは空文字を返す", () => {
+  it("銃名がなくても許可番号を表示する", () => {
     expect(
       formatLedgerGunLabel({
         gunName: null,
         gunPermitNumber: "12345",
       }),
-    ).toBe("");
+    ).toBe("12345");
+  });
+
+  it("許可番号がないときは銃番号を表示する", () => {
+    expect(
+      formatLedgerGunLabel({
+        gunName: "ベレッタ",
+        gunPermitNumber: null,
+        gunNumber: "G-001",
+      }),
+    ).toBe("ベレッタ（G-001）");
   });
 });

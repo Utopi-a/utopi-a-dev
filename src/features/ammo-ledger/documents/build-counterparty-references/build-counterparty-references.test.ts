@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  buildCounterpartyReferences,
-  resolveCounterpartySymbol,
-} from "./build-counterparty-references";
+import { buildCounterpartyReferences } from "./build-counterparty-references";
 
 function makeEntry(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -35,7 +32,7 @@ function makeEntry(overrides: Partial<Record<string, unknown>> = {}) {
 }
 
 describe("buildCounterpartyReferences", () => {
-  it("相手方取引から一意な(名前,住所)ペアにA,B,...を割り当てる", () => {
+  it("相手方取引から一意な名称と住所の組を作る", () => {
     const entries = [
       makeEntry({
         id: "e1",
@@ -57,20 +54,12 @@ describe("buildCounterpartyReferences", () => {
       }),
     ];
 
-    const { references, referenceByKey } = buildCounterpartyReferences({ entries });
+    const references = buildCounterpartyReferences({ entries });
 
-    expect(references).toHaveLength(2);
-    expect(references[0].symbol).toBe("A");
-    expect(references[0].name).toBe("○○銃砲店");
-    expect(references[1].symbol).toBe("B");
-    expect(references[1].name).toBe("△△商店");
-
-    const symbolA = resolveCounterpartySymbol({
-      counterpartyName: "○○銃砲店",
-      counterpartyAddress: "東京都新宿区1-1",
-      referenceByKey,
-    });
-    expect(symbolA).toBe("A");
+    expect(references).toEqual([
+      { name: "○○銃砲店", address: "東京都新宿区1-1" },
+      { name: "△△商店", address: "大阪市中央区2-2" },
+    ]);
   });
 
   it("消費など相手方取引でないカテゴリは無視する", () => {
@@ -83,7 +72,7 @@ describe("buildCounterpartyReferences", () => {
       }),
     ];
 
-    const { references } = buildCounterpartyReferences({ entries });
+    const references = buildCounterpartyReferences({ entries });
     expect(references).toHaveLength(0);
   });
 
@@ -96,11 +85,11 @@ describe("buildCounterpartyReferences", () => {
       }),
     ];
 
-    const { references } = buildCounterpartyReferences({ entries });
+    const references = buildCounterpartyReferences({ entries });
     expect(references).toHaveLength(0);
   });
 
-  it("同じ名前でも住所が異なれば別参照になる", () => {
+  it("同じ名称でも住所が異なれば別の行にする", () => {
     const entries = [
       makeEntry({
         id: "e1",
@@ -116,10 +105,11 @@ describe("buildCounterpartyReferences", () => {
       }),
     ];
 
-    const { references } = buildCounterpartyReferences({ entries });
-    expect(references).toHaveLength(2);
-    expect(references[0].symbol).toBe("A");
-    expect(references[1].symbol).toBe("B");
+    const references = buildCounterpartyReferences({ entries });
+    expect(references).toEqual([
+      { name: "○○銃砲店", address: "東京都" },
+      { name: "○○銃砲店", address: "大阪府" },
+    ]);
   });
 
   it("住所がnullでも別紙に載る", () => {
@@ -132,28 +122,8 @@ describe("buildCounterpartyReferences", () => {
       }),
     ];
 
-    const { references } = buildCounterpartyReferences({ entries });
+    const references = buildCounterpartyReferences({ entries });
     expect(references).toHaveLength(1);
     expect(references[0].address).toBeNull();
-  });
-});
-
-describe("resolveCounterpartySymbol", () => {
-  it("参照マップにない場合はnullを返す", () => {
-    const symbol = resolveCounterpartySymbol({
-      counterpartyName: "不明",
-      counterpartyAddress: null,
-      referenceByKey: new Map(),
-    });
-    expect(symbol).toBeNull();
-  });
-
-  it("counterpartyNameがnullの場合はnullを返す", () => {
-    const symbol = resolveCounterpartySymbol({
-      counterpartyName: null,
-      counterpartyAddress: null,
-      referenceByKey: new Map(),
-    });
-    expect(symbol).toBeNull();
   });
 });

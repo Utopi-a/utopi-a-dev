@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import type { ammoLedgerEntry } from "@/db/schema/ammo-ledger";
-import { resolveCounterpartySymbol } from "@/features/ammo-ledger/documents/build-counterparty-references/build-counterparty-references";
 import { buildLedgerBodyRows } from "@/features/ammo-ledger/documents/build-ledger-body-rows/build-ledger-body-rows";
 import { formatAmmoTypeLabel } from "@/features/ammo-ledger/documents/format-ammo-type-label/format-ammo-type-label";
 import { formatLedgerRemarks } from "@/features/ammo-ledger/documents/format-ledger-remarks/format-ledger-remarks";
@@ -20,7 +19,6 @@ type LedgerPrintBodyProps = {
   ownerAddress?: string | null;
   ledgerPurpose: LedgerPurpose;
   entries: (typeof ammoLedgerEntry.$inferSelect)[];
-  counterpartyReferenceByKey: Map<string, string>;
   year: number;
   from: string;
   to: string;
@@ -35,7 +33,6 @@ export function LedgerPrintBody({
   ownerAddress,
   ledgerPurpose,
   entries,
-  counterpartyReferenceByKey,
   year,
   from,
   to,
@@ -92,17 +89,11 @@ export function LedgerPrintBody({
           {rows.map((row) => {
             const { entry, flow } = row;
             const absQuantity = Math.abs(entry.quantity);
-            const counterpartySymbol = resolveCounterpartySymbol({
-              counterpartyName: entry.counterpartyName,
-              counterpartyAddress: entry.counterpartyAddress,
-              referenceByKey: counterpartyReferenceByKey,
-            });
             const remarks = formatLedgerRemarks({
               category: entry.category,
               location: entry.location,
               ledgerNote: entry.ledgerNote,
               counterpartyName: entry.counterpartyName,
-              counterpartySymbol,
             });
             const gunLabel =
               entry.category === "consume"

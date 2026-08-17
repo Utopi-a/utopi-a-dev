@@ -9,7 +9,6 @@ describe("formatLedgerRemarks", () => {
         location: "射撃場A",
         ledgerNote: "練習",
         counterpartyName: null,
-        counterpartySymbol: null,
       }),
     ).toBe("射撃場A 練習");
   });
@@ -21,7 +20,6 @@ describe("formatLedgerRemarks", () => {
         location: "射撃場A",
         ledgerNote: null,
         counterpartyName: null,
-        counterpartySymbol: null,
       }),
     ).toBe("射撃場A");
   });
@@ -33,7 +31,6 @@ describe("formatLedgerRemarks", () => {
         location: null,
         ledgerNote: "大会用",
         counterpartyName: null,
-        counterpartySymbol: null,
       }),
     ).toBe("大会用");
   });
@@ -45,7 +42,6 @@ describe("formatLedgerRemarks", () => {
         location: null,
         ledgerNote: null,
         counterpartyName: null,
-        counterpartySymbol: null,
       }),
     ).toBe("");
   });
@@ -57,33 +53,30 @@ describe("formatLedgerRemarks", () => {
         location: "射撃場A",
         ledgerNote: "射撃場A",
         counterpartyName: null,
-        counterpartySymbol: null,
       }),
     ).toBe("射撃場A");
   });
 
-  it("acquire: 相手方名（参照付き）+ ledgerNote", () => {
+  it("acquire: 相手方名 + ledgerNote", () => {
     expect(
       formatLedgerRemarks({
         category: "acquire",
         location: null,
         ledgerNote: "追加購入",
         counterpartyName: "○○銃砲店",
-        counterpartySymbol: "A",
       }),
-    ).toBe("○○銃砲店（相手方A） 追加購入");
+    ).toBe("○○銃砲店 追加購入");
   });
 
-  it("transfer: 相手方名（参照付き）のみ", () => {
+  it("transfer: 相手方名のみ", () => {
     expect(
       formatLedgerRemarks({
         category: "transfer",
         location: null,
         ledgerNote: null,
         counterpartyName: "△△商店",
-        counterpartySymbol: "B",
       }),
-    ).toBe("△△商店（相手方B）");
+    ).toBe("△△商店");
   });
 
   it("acquire: 相手方名なしでledgerNoteのみ", () => {
@@ -93,19 +86,17 @@ describe("formatLedgerRemarks", () => {
         location: null,
         ledgerNote: "知人より",
         counterpartyName: null,
-        counterpartySymbol: null,
       }),
     ).toBe("知人より");
   });
 
-  it("acquire: 参照記号なしの相手方名", () => {
+  it("acquire: 相手方名のみ", () => {
     expect(
       formatLedgerRemarks({
         category: "acquire",
         location: null,
         ledgerNote: null,
         counterpartyName: "○○銃砲店",
-        counterpartySymbol: null,
       }),
     ).toBe("○○銃砲店");
   });
@@ -117,7 +108,6 @@ describe("formatLedgerRemarks", () => {
         location: null,
         ledgerNote: "自製",
         counterpartyName: null,
-        counterpartySymbol: null,
       }),
     ).toBe("自製");
   });
@@ -129,7 +119,6 @@ describe("formatLedgerRemarks", () => {
         location: null,
         ledgerNote: null,
         counterpartyName: null,
-        counterpartySymbol: null,
       }),
     ).toBe("");
   });

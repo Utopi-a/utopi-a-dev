@@ -56,8 +56,7 @@ export function LedgerPrintDocument({
     (purpose) => (entriesByPurpose.get(purpose)?.length ?? 0) > 0,
   );
 
-  const { references: counterpartyReferences, referenceByKey: counterpartyReferenceByKey } =
-    buildCounterpartyReferences({ entries });
+  const counterpartyReferences = buildCounterpartyReferences({ entries });
 
   if (activePurposes.length === 0) {
     return (
@@ -100,7 +99,6 @@ export function LedgerPrintDocument({
           ownerAddress={ownerAddress}
           ledgerPurpose={purpose}
           entries={entriesByPurpose.get(purpose) ?? []}
-          counterpartyReferenceByKey={counterpartyReferenceByKey}
           year={year}
           from={from}
           to={to}

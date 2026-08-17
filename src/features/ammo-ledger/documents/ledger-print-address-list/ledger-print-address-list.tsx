@@ -21,7 +21,6 @@ export function LedgerPrintAddressList({
         <table className="ledger-print-section-table w-full">
           <thead>
             <tr>
-              <th style={{ width: "4em" }}>参照</th>
               <th>名称</th>
               <th>住所</th>
             </tr>
@@ -29,14 +28,13 @@ export function LedgerPrintAddressList({
           <tbody>
             {counterpartyReferences.length === 0 ? (
               <tr>
-                <td colSpan={3} className="text-center py-2">
+                <td colSpan={2} className="text-center py-2">
                   該当なし
                 </td>
               </tr>
             ) : (
               counterpartyReferences.map((ref) => (
-                <tr key={`cp-${ref.symbol}`}>
-                  <td>相手方{ref.symbol}</td>
+                <tr key={`${ref.name}\0${ref.address ?? ""}`}>
                   <td>{ref.name}</td>
                   <td>{ref.address ?? ""}</td>
                 </tr>

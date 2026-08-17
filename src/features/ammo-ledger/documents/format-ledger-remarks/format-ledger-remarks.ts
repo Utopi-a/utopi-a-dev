@@ -13,26 +13,18 @@ export function formatLedgerRemarks({
   location,
   ledgerNote,
   counterpartyName,
-  counterpartySymbol,
 }: {
   category: string;
   location: string | null | undefined;
   ledgerNote: string | null | undefined;
   counterpartyName: string | null | undefined;
-  counterpartySymbol: string | null | undefined;
 }): string {
   if (category === "consume") {
     return joinNonEmpty({ parts: [location, ledgerNote] });
   }
 
   if (isCounterpartyCategory({ category })) {
-    const nameWithRef = counterpartyName
-      ? counterpartySymbol
-        ? `${counterpartyName}（相手方${counterpartySymbol}）`
-        : counterpartyName
-      : null;
-
-    return joinNonEmpty({ parts: [nameWithRef, ledgerNote] });
+    return joinNonEmpty({ parts: [counterpartyName, ledgerNote] });
   }
 
   return joinNonEmpty({ parts: [ledgerNote] });

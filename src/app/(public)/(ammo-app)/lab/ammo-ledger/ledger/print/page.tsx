@@ -4,6 +4,7 @@ import { LedgerPrintDocumentLazy } from "@/features/ammo-ledger/documents/ledger
 import { validateLedgerForLock } from "@/features/ammo-ledger/documents/validate-ledger-for-lock/validate-ledger-for-lock";
 import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-entries/list-ledger-entries";
 import { getLatestLockState } from "@/features/ammo-ledger/ledger/lock/get-latest-lock-state/get-latest-lock-state";
+import { countClassificationReviewStatus } from "@/features/ammo-ledger/master/ammo-type-classification-review/count-classification-review-status";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 import { listRanges } from "@/features/ammo-ledger/master/list-ranges/list-ranges";
 import {
@@ -69,13 +70,15 @@ export default async function LedgerPrintPage({ searchParams }: PageProps) {
 
   const targetDate = resolveTargetDate({ year: selectedYear, today });
 
-  const [allEntries, guns, ranges, profile, lockState] = await Promise.all([
-    listLedgerEntries({ userId: user.id }),
-    listGuns({ userId: user.id }),
-    listRanges({ userId: user.id }),
-    getLedgerProfile({ userId: user.id }),
-    getLatestLockState({ userId: user.id }),
-  ]);
+  const [allEntries, guns, ranges, profile, lockState, classificationReviewStatus] =
+    await Promise.all([
+      listLedgerEntries({ userId: user.id }),
+      listGuns({ userId: user.id }),
+      listRanges({ userId: user.id }),
+      getLedgerProfile({ userId: user.id }),
+      getLatestLockState({ userId: user.id }),
+      countClassificationReviewStatus({ userId: user.id }),
+    ]);
 
   const availableYears = buildAvailableYears({
     dates: allEntries.map((entry) => entry.occurredOn),
@@ -94,11 +97,22 @@ export default async function LedgerPrintPage({ searchParams }: PageProps) {
   const officialTo = isTargetLocked ? (lockedThrough < to ? lockedThrough : to) : to;
 
   const yearEntries = await listLedgerEntries({ userId: user.id, from, to: targetDate });
-  const lockIssues = validateLedgerForLock({
-    entries: yearEntries,
-    from,
-    to: targetDate,
-  });
+  const lockIssues = [
+    ...validateLedgerForLock({
+      entries: yearEntries,
+      from,
+      to: targetDate,
+    }),
+    ...(classificationReviewStatus.unconfirmedCount > 0
+      ? [
+          {
+            entryId: "classification-review",
+            occurredOn: targetDate,
+            message: `未確認の弾種が${classificationReviewStatus.unconfirmedCount}件あります`,
+          },
+        ]
+      : []),
+  ];
   const canPrintOfficially = isTargetLocked && lockIssues.length === 0;
   const isPreview = previewParam === "1" && !canPrintOfficially;
   const printTo = isTargetLocked ? officialTo : to;

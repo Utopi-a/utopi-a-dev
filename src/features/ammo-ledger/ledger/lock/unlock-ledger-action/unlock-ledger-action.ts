@@ -32,6 +32,9 @@ export async function unlockLedgerAction(input: unknown) {
     if (firstError?.path[0] === "reason") {
       return { ok: false as const, error: firstError.message };
     }
+    if (firstError?.path[0] === "lockedThrough") {
+      return { ok: false as const, error: "ロック対象日を入力してください" };
+    }
     return { ok: false as const, error: "入力内容を確認してください" };
   }
 

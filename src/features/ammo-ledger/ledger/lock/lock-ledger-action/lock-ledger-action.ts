@@ -3,7 +3,7 @@
 import { and, eq, gte, isNull, lte } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { ammoLedgerEntry, ammoLedgerLockEvent } from "@/db/schema/ammo-ledger";
+import { ammoLedgerEntry, ammoLedgerLockEvent, ammoType } from "@/db/schema/ammo-ledger";
 import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { validateLedgerForLock } from "@/features/ammo-ledger/documents/validate-ledger-for-lock/validate-ledger-for-lock";
 import { acquireLedgerAdvisoryLock } from "@/features/ammo-ledger/ledger/lock/acquire-ledger-advisory-lock/acquire-ledger-advisory-lock";
@@ -48,6 +48,18 @@ export async function lockLedgerAction(input: unknown) {
           error: "現在のロック日より後の日付を指定してください",
         };
       }
+    }
+
+    const [unconfirmedAmmoType] = await tx
+      .select({ id: ammoType.id })
+      .from(ammoType)
+      .where(and(eq(ammoType.userId, user.id), isNull(ammoType.classificationConfirmedAt)))
+      .limit(1);
+    if (unconfirmedAmmoType) {
+      return {
+        ok: false as const,
+        error: "弾種分類の確認が完了していないため、帳簿を確定できません",
+      };
     }
 
     const year = lockedThrough.slice(0, 4);

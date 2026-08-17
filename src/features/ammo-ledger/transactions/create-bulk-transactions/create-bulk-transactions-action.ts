@@ -46,6 +46,10 @@ export async function createBulkTransactionsAction(input: unknown) {
     preparedTransactions.push(preparedResult.prepared);
   }
 
+  const transactionIds = preparedTransactions.map(() => crypto.randomUUID());
+  const ledgerEntryIds = preparedTransactions.map(() => crypto.randomUUID());
+  const createdAt = new Date();
+
   const transactionResult = await db.transaction(async (tx) => {
     await acquireLedgerAdvisoryLock({ tx, userId: user.id });
 
@@ -56,15 +60,6 @@ export async function createBulkTransactionsAction(input: unknown) {
     });
     if (!lockCheck.ok) {
       return { ok: false as const, error: lockCheck.error };
-    }
-
-    const stockCheck = await checkStockBeforeSave({
-      tx,
-      userId: user.id,
-      changes: preparedTransactions.map((prepared) => prepared.normalized),
-    });
-    if (!stockCheck.ok) {
-      return stockCheck;
     }
 
     const occurredOnDates = preparedTransactions.map((prepared) => prepared.normalized.occurredOn);
@@ -78,11 +73,26 @@ export async function createBulkTransactionsAction(input: unknown) {
       maxDayOrderByDate,
     });
 
+    const stockCheck = await checkStockBeforeSave({
+      tx,
+      userId: user.id,
+      changes: preparedTransactions.map((prepared, index) => ({
+        ...prepared.normalized,
+        id: ledgerEntryIds[index],
+        purpose: prepared.input.purpose,
+        dayOrder: dayOrders[index],
+        createdAt,
+      })),
+    });
+    if (!stockCheck.ok) {
+      return stockCheck;
+    }
+
     for (const [index, prepared] of preparedTransactions.entries()) {
       const { input: data, gunRow, rangeRow, counterparty, computedRounds, normalized } = prepared;
 
-      const transactionId = crypto.randomUUID();
-      const ledgerEntryId = crypto.randomUUID();
+      const transactionId = transactionIds[index];
+      const ledgerEntryId = ledgerEntryIds[index];
 
       await tx.insert(ammoTransaction).values({
         id: transactionId,
@@ -126,6 +136,7 @@ export async function createBulkTransactionsAction(input: unknown) {
         gunName: normalized.gunName,
         gunNumber: normalized.gunNumber,
         gunPermitNumber: normalized.gunPermitNumber,
+        createdAt,
       });
     }
 

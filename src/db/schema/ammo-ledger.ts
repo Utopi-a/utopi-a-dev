@@ -137,7 +137,7 @@ export const ammoTransaction = pgTable("ammo_transaction", {
   inputKind: text("input_kind").notNull(),
   purpose: text("purpose").notNull().default("shooting"),
   occurredOn: text("occurred_on").notNull(),
-  ammoTypeId: text("ammo_type_id").references(() => ammoType.id, { onDelete: "set null" }),
+  ammoTypeId: text("ammo_type_id").references(() => ammoType.id, { onDelete: "restrict" }),
   gunId: text("gun_id").references(() => ammoGun.id, { onDelete: "set null" }),
   rangeId: text("range_id").references(() => ammoRange.id, { onDelete: "set null" }),
   counterpartyId: text("counterparty_id").references(() => ammoCounterparty.id, {
@@ -177,7 +177,7 @@ export const ammoLedgerEntry = pgTable("ammo_ledger_entry", {
   category: text("category").notNull(),
   purpose: text("purpose").notNull().default("shooting"),
   occurredOn: text("occurred_on").notNull(),
-  ammoTypeId: text("ammo_type_id").references(() => ammoType.id, { onDelete: "set null" }),
+  ammoTypeId: text("ammo_type_id").references(() => ammoType.id, { onDelete: "restrict" }),
   ammoTypeName: text("ammo_type_name").notNull(),
   ammoCartridgeType: text("ammo_cartridge_type"),
   ammoCaliber: text("ammo_caliber"),

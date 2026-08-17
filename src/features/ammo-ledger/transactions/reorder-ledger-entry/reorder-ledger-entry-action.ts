@@ -8,6 +8,8 @@ import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-
 import { computeSwappedDayOrders } from "@/features/ammo-ledger/ledger/compute-swapped-day-orders/compute-swapped-day-orders";
 import { acquireLedgerAdvisoryLock } from "@/features/ammo-ledger/ledger/lock/acquire-ledger-advisory-lock/acquire-ledger-advisory-lock";
 import { assertDatesNotLocked } from "@/features/ammo-ledger/ledger/lock/assert-dates-not-locked/assert-dates-not-locked";
+import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
+import { checkStockBeforeSave } from "@/features/ammo-ledger/transactions/check-stock-before-save/check-stock-before-save";
 
 const reorderLedgerEntryInputSchema = z.object({
   ledgerEntryId: z.string().min(1),
@@ -77,6 +79,33 @@ export async function reorderLedgerEntryAction(input: unknown) {
 
     if (!nextDayOrders) {
       return { ok: false as const, error: "この方向には移動できません" };
+    }
+
+    const reorderedEntries = siblings.filter((entry) => nextDayOrders.has(entry.id));
+    const stockCheck = await checkStockBeforeSave({
+      tx,
+      userId: user.id,
+      excludedLedgerEntryIds: reorderedEntries.map((entry) => entry.id),
+      changes: reorderedEntries.flatMap((entry) =>
+        entry.ammoTypeId
+          ? [
+              {
+                id: entry.id,
+                ammoTypeId: entry.ammoTypeId,
+                ammoTypeName: entry.ammoTypeName,
+                purpose: entry.purpose,
+                category: entry.category as LedgerCategory,
+                quantity: entry.quantity,
+                occurredOn: entry.occurredOn,
+                dayOrder: nextDayOrders.get(entry.id) ?? entry.dayOrder,
+                createdAt: entry.createdAt,
+              },
+            ]
+          : [],
+      ),
+    });
+    if (!stockCheck.ok) {
+      return stockCheck;
     }
 
     for (const [entryId, dayOrder] of nextDayOrders) {

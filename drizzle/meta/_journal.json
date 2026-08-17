@@ -92,6 +92,13 @@
       "when": 1786948444093,
       "tag": "0012_dusty_mercury",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1786953000264,
+      "tag": "0013_prevent_ammo_type_deletion",
+      "breakpoints": true
     }
   ]
 }

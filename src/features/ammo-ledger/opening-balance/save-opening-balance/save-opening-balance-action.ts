@@ -20,6 +20,7 @@ import {
   type OpeningBalancePermitCarryoverInput,
   openingBalanceInputSchema,
 } from "@/features/ammo-ledger/schema/opening-balance-schema";
+import { checkStockBeforeSave } from "@/features/ammo-ledger/transactions/check-stock-before-save/check-stock-before-save";
 
 type SaveOpeningBalanceTx = AmmoLedgerMutationTx;
 
@@ -222,11 +223,67 @@ export async function saveOpeningBalanceAction(input: unknown) {
         .filter((event) => event.permitId !== null)
         .map((event) => [event.permitId as string, event]),
     );
-    const existingStockByAmmoTypeId = new Map(
-      existingStockEntries
-        .filter((entry) => entry.ammoTypeId !== null)
-        .map((entry) => [entry.ammoTypeId as string, entry]),
+    const existingStockEntriesByAmmoTypeId = new Map<
+      string,
+      (typeof existingStockEntries)[number][]
+    >();
+    for (const entry of existingStockEntries) {
+      if (!entry.ammoTypeId) {
+        continue;
+      }
+      const entries = existingStockEntriesByAmmoTypeId.get(entry.ammoTypeId);
+      if (entries) {
+        entries.push(entry);
+      } else {
+        existingStockEntriesByAmmoTypeId.set(entry.ammoTypeId, [entry]);
+      }
+    }
+
+    const openingEntryIdentityByAmmoTypeId = new Map(
+      Object.entries(stockByAmmoType).flatMap(([ammoTypeId, quantity]) => {
+        if (quantity <= 0) {
+          return [];
+        }
+        const existingEntry = existingStockEntriesByAmmoTypeId.get(ammoTypeId)?.[0];
+        return [
+          [
+            ammoTypeId,
+            {
+              id: existingEntry?.id ?? crypto.randomUUID(),
+              createdAt: existingEntry?.createdAt ?? new Date(),
+            },
+          ] as const,
+        ];
+      }),
     );
+
+    const stockCheck = await checkStockBeforeSave({
+      tx,
+      userId: user.id,
+      excludedLedgerEntryIds: existingStockEntries.map((entry) => entry.id),
+      changes: Object.entries(stockByAmmoType).flatMap(([ammoTypeId, quantity]) => {
+        const ammoTypeRow = ammoTypeById.get(ammoTypeId);
+        if (!ammoTypeRow || quantity <= 0) {
+          return [];
+        }
+        return [
+          {
+            id: openingEntryIdentityByAmmoTypeId.get(ammoTypeId)?.id ?? crypto.randomUUID(),
+            ammoTypeId,
+            ammoTypeName: ammoTypeRow.name,
+            purpose,
+            category: "carryover" as const,
+            quantity,
+            occurredOn: openingDay,
+            dayOrder: existingStockEntriesByAmmoTypeId.get(ammoTypeId)?.[0]?.dayOrder ?? 0,
+            createdAt: openingEntryIdentityByAmmoTypeId.get(ammoTypeId)?.createdAt ?? new Date(),
+          },
+        ];
+      }),
+    });
+    if (!stockCheck.ok) {
+      return stockCheck;
+    }
 
     for (const existingEvent of existingPermitEvents) {
       if (!existingEvent.permitId) {
@@ -257,16 +314,24 @@ export async function saveOpeningBalanceAction(input: unknown) {
 
     const ammoTypeIds = new Set([
       ...Object.keys(stockByAmmoType),
-      ...existingStockByAmmoTypeId.keys(),
+      ...existingStockEntriesByAmmoTypeId.keys(),
     ]);
 
     for (const ammoTypeId of ammoTypeIds) {
       const quantity = stockByAmmoType[ammoTypeId] ?? 0;
-      const existingEntry = existingStockByAmmoTypeId.get(ammoTypeId);
+      const existingEntries = existingStockEntriesByAmmoTypeId.get(ammoTypeId) ?? [];
+      const existingEntry = existingEntries[0];
       const ammoTypeRow = ammoTypeById.get(ammoTypeId);
 
       if (!ammoTypeRow) {
         continue;
+      }
+
+      for (const duplicateEntry of existingEntries.slice(1)) {
+        await tx
+          .update(ammoLedgerEntry)
+          .set({ voidedAt: new Date(), updatedAt: new Date() })
+          .where(eq(ammoLedgerEntry.id, duplicateEntry.id));
       }
 
       if (quantity > 0) {
@@ -276,12 +341,16 @@ export async function saveOpeningBalanceAction(input: unknown) {
             .set({
               quantity,
               ammoTypeName: ammoTypeRow.name,
+              ammoCartridgeType: ammoTypeRow.cartridgeType,
+              ammoCaliber: ammoTypeRow.caliber,
+              ammoGaugeNumber: ammoTypeRow.gaugeNumber,
               updatedAt: new Date(),
             })
             .where(eq(ammoLedgerEntry.id, existingEntry.id));
         } else {
+          const identity = openingEntryIdentityByAmmoTypeId.get(ammoTypeId);
           await tx.insert(ammoLedgerEntry).values({
-            id: crypto.randomUUID(),
+            id: identity?.id ?? crypto.randomUUID(),
             userId: user.id,
             transactionId: null,
             category: "carryover",
@@ -289,6 +358,9 @@ export async function saveOpeningBalanceAction(input: unknown) {
             occurredOn: openingDay,
             ammoTypeId: ammoTypeRow.id,
             ammoTypeName: ammoTypeRow.name,
+            ammoCartridgeType: ammoTypeRow.cartridgeType,
+            ammoCaliber: ammoTypeRow.caliber,
+            ammoGaugeNumber: ammoTypeRow.gaugeNumber,
             quantity,
             location: null,
             counterpartyName: null,
@@ -297,6 +369,7 @@ export async function saveOpeningBalanceAction(input: unknown) {
             gunName: null,
             gunNumber: null,
             gunPermitNumber: null,
+            createdAt: identity?.createdAt ?? new Date(),
           });
         }
         continue;

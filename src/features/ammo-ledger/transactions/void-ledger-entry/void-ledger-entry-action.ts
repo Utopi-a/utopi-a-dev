@@ -6,6 +6,7 @@ import { ammoLedgerEntry, ammoTransaction } from "@/db/schema/ammo-ledger";
 import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { acquireLedgerAdvisoryLock } from "@/features/ammo-ledger/ledger/lock/acquire-ledger-advisory-lock/acquire-ledger-advisory-lock";
 import { assertDatesNotLocked } from "@/features/ammo-ledger/ledger/lock/assert-dates-not-locked/assert-dates-not-locked";
+import { checkStockBeforeSave } from "@/features/ammo-ledger/transactions/check-stock-before-save/check-stock-before-save";
 import { canVoidLedgerEntry } from "@/features/ammo-ledger/transactions/void-ledger-entry/can-void-ledger-entry";
 
 export async function voidLedgerEntryAction({ ledgerEntryId }: { ledgerEntryId: string }) {
@@ -52,6 +53,16 @@ export async function voidLedgerEntryAction({ ledgerEntryId }: { ledgerEntryId: 
     });
     if (!lockCheck.ok) {
       return { ok: false as const, error: lockCheck.error };
+    }
+
+    const stockCheck = await checkStockBeforeSave({
+      tx,
+      userId: user.id,
+      changes: [],
+      excludedLedgerEntryIds: [ledgerEntryId],
+    });
+    if (!stockCheck.ok) {
+      return stockCheck;
     }
 
     await tx

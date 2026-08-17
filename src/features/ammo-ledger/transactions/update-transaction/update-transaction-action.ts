@@ -116,8 +116,16 @@ export async function updateTransactionAction({
     const stockCheck = await checkStockBeforeSave({
       tx,
       userId: user.id,
-      changes: [normalized],
-      excludedLedgerEntryId: ledgerEntryId,
+      changes: [
+        {
+          ...normalized,
+          id: currentEntry.id,
+          purpose: data.purpose,
+          dayOrder: currentEntry.dayOrder,
+          createdAt: currentEntry.createdAt,
+        },
+      ],
+      excludedLedgerEntryIds: [ledgerEntryId],
     });
     if (!stockCheck.ok) {
       return stockCheck;

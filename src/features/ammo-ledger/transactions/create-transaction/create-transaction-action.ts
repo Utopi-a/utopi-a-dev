@@ -48,6 +48,7 @@ export async function createTransactionAction(input: unknown) {
 
   const transactionId = crypto.randomUUID();
   const ledgerEntryId = crypto.randomUUID();
+  const createdAt = new Date();
 
   const transactionResult = await db.transaction(async (tx) => {
     await acquireLedgerAdvisoryLock({ tx, userId: user.id });
@@ -61,20 +62,28 @@ export async function createTransactionAction(input: unknown) {
       return { ok: false as const, error: lockCheck.error };
     }
 
-    const stockCheck = await checkStockBeforeSave({
-      tx,
-      userId: user.id,
-      changes: [normalized],
-    });
-    if (!stockCheck.ok) {
-      return stockCheck;
-    }
-
     const dayOrder = await resolveNextDayOrder({
       tx,
       userId: user.id,
       occurredOn: normalized.occurredOn,
     });
+
+    const stockCheck = await checkStockBeforeSave({
+      tx,
+      userId: user.id,
+      changes: [
+        {
+          ...normalized,
+          id: ledgerEntryId,
+          purpose: data.purpose,
+          dayOrder,
+          createdAt,
+        },
+      ],
+    });
+    if (!stockCheck.ok) {
+      return stockCheck;
+    }
 
     await tx.insert(ammoTransaction).values({
       id: transactionId,
@@ -118,6 +127,7 @@ export async function createTransactionAction(input: unknown) {
       gunName: normalized.gunName,
       gunNumber: normalized.gunNumber,
       gunPermitNumber: normalized.gunPermitNumber,
+      createdAt,
     });
 
     return { ok: true as const };

@@ -67,19 +67,23 @@ export async function prepareConfirmedTransaction({
       .select()
       .from(ammoGun)
       .where(and(eq(ammoGun.id, input.gunId), eq(ammoGun.userId, userId)));
-    const [range] = await db
-      .select()
-      .from(ammoRange)
-      .where(and(eq(ammoRange.id, input.rangeId), eq(ammoRange.userId, userId)));
 
     if (!gun) {
       return { ok: false, error: "銃が見つかりません" };
     }
-    if (!range) {
-      return { ok: false, error: "射撃場が見つかりません" };
-    }
     gunRow = gun;
-    rangeRow = range;
+
+    if (input.purpose === "shooting") {
+      const [range] = await db
+        .select()
+        .from(ammoRange)
+        .where(and(eq(ammoRange.id, input.rangeId), eq(ammoRange.userId, userId)));
+
+      if (!range) {
+        return { ok: false, error: "射撃場が見つかりません" };
+      }
+      rangeRow = range;
+    }
   }
 
   let counterpartyRow: typeof ammoCounterparty.$inferSelect | undefined;
@@ -119,7 +123,13 @@ export async function prepareConfirmedTransaction({
         })
       : null;
 
-  if ((input.inputKind === "acquire" || input.inputKind === "transfer") && !counterparty) {
+  const counterpartyRequiredKinds = ["acquire", "transfer", "issue", "receive"] as const;
+  if (
+    counterpartyRequiredKinds.includes(
+      input.inputKind as (typeof counterpartyRequiredKinds)[number],
+    ) &&
+    !counterparty
+  ) {
     return { ok: false, error: "相手方を選択するか、氏名と住所を入力してください" };
   }
 
@@ -129,6 +139,12 @@ export async function prepareConfirmedTransaction({
     looseRounds: input.looseRounds,
     roundsPerBox: ammoTypeRow.roundsPerBox,
   });
+
+  const locationFromInput =
+    input.inputKind === "consume" &&
+    (input.purpose === "hunting" || input.purpose === "pest_control")
+      ? input.location
+      : undefined;
 
   const normalized = normalizeTransaction({
     inputKind: input.inputKind,
@@ -146,6 +162,7 @@ export async function prepareConfirmedTransaction({
     rangeId: rangeRow?.id,
     rangeName: rangeRow?.name,
     rangeAddress: rangeRow?.address,
+    location: locationFromInput,
     counterpartyName: counterparty?.name,
     counterpartyAddress: counterparty?.address,
   });

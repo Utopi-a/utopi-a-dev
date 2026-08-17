@@ -21,12 +21,17 @@ export async function updateAmmoTypeAction({ id, input }: { id: string; input: u
   const resolvedName = buildAmmoTypeLabel({
     name,
     caliber: rest.caliber,
-    shotType: rest.shotType,
+    cartridgeType: rest.cartridgeType,
     gaugeNumber: rest.gaugeNumber,
   });
   const result = await db
     .update(ammoType)
-    .set({ name: resolvedName, ...rest, updatedAt: new Date() })
+    .set({
+      name: resolvedName,
+      ...rest,
+      classificationConfirmedAt: new Date(),
+      updatedAt: new Date(),
+    })
     .where(and(eq(ammoType.id, id), eq(ammoType.userId, user.id)));
   if (result.count === 0) {
     return { ok: false as const, error: "弾種が見つかりません" };

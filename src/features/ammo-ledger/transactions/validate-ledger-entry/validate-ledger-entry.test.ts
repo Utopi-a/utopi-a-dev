@@ -102,4 +102,50 @@ describe("validateLedgerEntry", () => {
 
     expect(result).toEqual({ valid: true, missingFields: [] });
   });
+
+  it("製造は日付・種類・数量のみで valid", () => {
+    const result = validateLedgerEntry({
+      category: "manufacture",
+      ...baseEntry,
+      location: null,
+      gunId: null,
+      gunNumber: null,
+      gunPermitNumber: null,
+      counterpartyName: null,
+      counterpartyAddress: null,
+    });
+
+    expect(result).toEqual({ valid: true, missingFields: [] });
+  });
+
+  it("交付で相手方が未入力なら invalid", () => {
+    const result = validateLedgerEntry({
+      category: "issue",
+      ...baseEntry,
+      location: null,
+      gunId: null,
+      gunNumber: null,
+      gunPermitNumber: null,
+      counterpartyName: null,
+      counterpartyAddress: "東京都",
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.missingFields).toContain("相手方氏名");
+  });
+
+  it("被交付で相手方が揃っていれば valid", () => {
+    const result = validateLedgerEntry({
+      category: "receive",
+      ...baseEntry,
+      location: null,
+      gunId: null,
+      gunNumber: null,
+      gunPermitNumber: null,
+      counterpartyName: "○○組合",
+      counterpartyAddress: "東京都千代田区",
+    });
+
+    expect(result).toEqual({ valid: true, missingFields: [] });
+  });
 });

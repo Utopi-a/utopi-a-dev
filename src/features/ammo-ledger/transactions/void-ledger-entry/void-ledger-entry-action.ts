@@ -4,6 +4,8 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { ammoLedgerEntry, ammoTransaction } from "@/db/schema/ammo-ledger";
 import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { acquireLedgerAdvisoryLock } from "@/features/ammo-ledger/ledger/lock/acquire-ledger-advisory-lock/acquire-ledger-advisory-lock";
+import { assertDatesNotLocked } from "@/features/ammo-ledger/ledger/lock/assert-dates-not-locked/assert-dates-not-locked";
 import { canVoidLedgerEntry } from "@/features/ammo-ledger/transactions/void-ledger-entry/can-void-ledger-entry";
 
 export async function voidLedgerEntryAction({ ledgerEntryId }: { ledgerEntryId: string }) {
@@ -13,43 +15,67 @@ export async function voidLedgerEntryAction({ ledgerEntryId }: { ledgerEntryId: 
   }
   const user = userResult.user;
 
-  const [entry] = await db
-    .select()
-    .from(ammoLedgerEntry)
-    .where(
-      and(
-        eq(ammoLedgerEntry.id, ledgerEntryId),
-        eq(ammoLedgerEntry.userId, user.id),
-        isNull(ammoLedgerEntry.voidedAt),
-      ),
-    );
-
-  if (!entry) {
-    return { ok: false as const, error: "記録が見つかりません" };
-  }
-
-  if (
-    !canVoidLedgerEntry({
-      entryUserId: entry.userId,
-      requestUserId: user.id,
-      voidedAt: entry.voidedAt,
-    })
-  ) {
-    return { ok: false as const, error: "この記録は取消できません" };
-  }
-
   const now = new Date();
 
-  await db
-    .update(ammoLedgerEntry)
-    .set({ voidedAt: now, updatedAt: now })
-    .where(eq(ammoLedgerEntry.id, ledgerEntryId));
+  const transactionResult = await db.transaction(async (tx) => {
+    await acquireLedgerAdvisoryLock({ tx, userId: user.id });
 
-  if (entry.transactionId) {
-    await db
-      .update(ammoTransaction)
-      .set({ status: "voided", updatedAt: now })
-      .where(and(eq(ammoTransaction.id, entry.transactionId), eq(ammoTransaction.userId, user.id)));
+    const [currentEntry] = await tx
+      .select()
+      .from(ammoLedgerEntry)
+      .where(
+        and(
+          eq(ammoLedgerEntry.id, ledgerEntryId),
+          eq(ammoLedgerEntry.userId, user.id),
+          isNull(ammoLedgerEntry.voidedAt),
+        ),
+      );
+
+    if (!currentEntry) {
+      return { ok: false as const, error: "記録が見つかりません" };
+    }
+
+    if (
+      !canVoidLedgerEntry({
+        entryUserId: currentEntry.userId,
+        requestUserId: user.id,
+        voidedAt: currentEntry.voidedAt,
+      })
+    ) {
+      return { ok: false as const, error: "この記録は取消できません" };
+    }
+
+    const lockCheck = await assertDatesNotLocked({
+      userId: user.id,
+      dates: [currentEntry.occurredOn],
+      executor: tx,
+    });
+    if (!lockCheck.ok) {
+      return { ok: false as const, error: lockCheck.error };
+    }
+
+    await tx
+      .update(ammoLedgerEntry)
+      .set({ voidedAt: now, updatedAt: now })
+      .where(eq(ammoLedgerEntry.id, ledgerEntryId));
+
+    if (currentEntry.transactionId) {
+      await tx
+        .update(ammoTransaction)
+        .set({ status: "voided", updatedAt: now })
+        .where(
+          and(
+            eq(ammoTransaction.id, currentEntry.transactionId),
+            eq(ammoTransaction.userId, user.id),
+          ),
+        );
+    }
+
+    return { ok: true as const };
+  });
+
+  if (!transactionResult.ok) {
+    return transactionResult;
   }
 
   return { ok: true as const };

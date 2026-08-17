@@ -1,12 +1,17 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AcquireForm } from "@/features/ammo-ledger/components/acquire-form/acquire-form";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { ConsumeFormLazy } from "@/features/ammo-ledger/components/consume-form/consume-form.lazy";
 import { DisposeForm } from "@/features/ammo-ledger/components/dispose-form/dispose-form";
+import { IssueForm } from "@/features/ammo-ledger/components/issue-form/issue-form";
+import { ManufactureForm } from "@/features/ammo-ledger/components/manufacture-form/manufacture-form";
+import { ReceiveForm } from "@/features/ammo-ledger/components/receive-form/receive-form";
 import { TransferForm } from "@/features/ammo-ledger/components/transfer-form/transfer-form";
 import { getInventorySummary } from "@/features/ammo-ledger/ledger/get-inventory-summary/get-inventory-summary";
+import { checkDatesAgainstLock } from "@/features/ammo-ledger/ledger/lock/check-dates-against-lock/check-dates-against-lock";
+import { getLatestLockState } from "@/features/ammo-ledger/ledger/lock/get-latest-lock-state/get-latest-lock-state";
 import { buildStockByAmmoTypeId } from "@/features/ammo-ledger/master/build-stock-by-ammo-type-id/build-stock-by-ammo-type-id";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
@@ -24,7 +29,16 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
   const editData = await getLedgerEntryForEdit({ userId: user.id, ledgerEntryId });
 
   if (!editData) {
-    notFound();
+    return notFound();
+  }
+
+  const lockState = await getLatestLockState({ userId: user.id });
+  const lockResult = checkDatesAgainstLock({
+    lockState,
+    dates: [editData.initialValues.occurredOn],
+  });
+  if (lockResult.blocked) {
+    return redirect("/lab/ammo-ledger/ledger");
   }
 
   const { inputKind, category, initialValues } = editData;
@@ -39,6 +53,16 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
 
   const stockByAmmoTypeId =
     inputKind === "consume" ? buildStockByAmmoTypeId({ inventoryItems }) : {};
+
+  const emptyAmmoTypeMessage = (
+    <p className="text-sm text-muted-foreground">
+      弾種マスタを
+      <Link href="/lab/ammo-ledger/settings/ammo-types" className="underline">
+        登録
+      </Link>
+      してください。
+    </p>
+  );
 
   function renderForm() {
     switch (inputKind) {
@@ -65,17 +89,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
           />
         );
       case "acquire":
-        if (ammoTypes.length === 0) {
-          return (
-            <p className="text-sm text-muted-foreground">
-              弾種マスタを
-              <Link href="/lab/ammo-ledger/settings/ammo-types" className="underline">
-                登録
-              </Link>
-              してください。
-            </p>
-          );
-        }
+        if (ammoTypes.length === 0) return emptyAmmoTypeMessage;
         return (
           <AcquireForm
             key={ledgerEntryId}
@@ -86,17 +100,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
           />
         );
       case "dispose":
-        if (ammoTypes.length === 0) {
-          return (
-            <p className="text-sm text-muted-foreground">
-              弾種マスタを
-              <Link href="/lab/ammo-ledger/settings/ammo-types" className="underline">
-                登録
-              </Link>
-              してください。
-            </p>
-          );
-        }
+        if (ammoTypes.length === 0) return emptyAmmoTypeMessage;
         return (
           <DisposeForm
             key={ledgerEntryId}
@@ -106,17 +110,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
           />
         );
       case "transfer":
-        if (ammoTypes.length === 0) {
-          return (
-            <p className="text-sm text-muted-foreground">
-              弾種マスタを
-              <Link href="/lab/ammo-ledger/settings/ammo-types" className="underline">
-                登録
-              </Link>
-              してください。
-            </p>
-          );
-        }
+        if (ammoTypes.length === 0) return emptyAmmoTypeMessage;
         return (
           <TransferForm
             key={ledgerEntryId}
@@ -125,6 +119,42 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
             initialValues={initialValues}
           />
         );
+      case "manufacture":
+        if (ammoTypes.length === 0) return emptyAmmoTypeMessage;
+        return (
+          <ManufactureForm
+            key={ledgerEntryId}
+            ledgerEntryId={ledgerEntryId}
+            ammoTypes={ammoTypes}
+            initialValues={initialValues}
+          />
+        );
+      case "issue":
+        if (ammoTypes.length === 0) return emptyAmmoTypeMessage;
+        return (
+          <IssueForm
+            key={ledgerEntryId}
+            ledgerEntryId={ledgerEntryId}
+            ammoTypes={ammoTypes}
+            initialValues={initialValues}
+          />
+        );
+      case "receive":
+        if (ammoTypes.length === 0) return emptyAmmoTypeMessage;
+        return (
+          <ReceiveForm
+            key={ledgerEntryId}
+            ledgerEntryId={ledgerEntryId}
+            ammoTypes={ammoTypes}
+            initialValues={initialValues}
+          />
+        );
+      case "stock_check":
+        return null;
+      default: {
+        const _exhaustive: never = inputKind;
+        return _exhaustive;
+      }
     }
   }
 

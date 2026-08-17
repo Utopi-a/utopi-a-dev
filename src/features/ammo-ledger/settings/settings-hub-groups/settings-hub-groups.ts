@@ -22,6 +22,11 @@ export const settingsHubGroups = [
         label: "年初繰越",
         description: "紙の帳簿から移行するときの残弾数・許可残数",
       },
+      {
+        href: "/lab/ammo-ledger/settings/ledger-lock",
+        label: "帳簿の確定・ロック",
+        description: "特定期間の帳簿を確定して変更不可にする",
+      },
     ],
   },
   {
@@ -31,6 +36,11 @@ export const settingsHubGroups = [
         href: "/lab/ammo-ledger/settings/ammo-types",
         label: "弾種",
         description: "番径・散弾/単弾・1箱あたり発数",
+      },
+      {
+        href: "/lab/ammo-ledger/settings/ammo-types/review",
+        label: "弾種分類の確認",
+        description: "未確認の分類と孤立記録を補正",
       },
       {
         href: "/lab/ammo-ledger/settings/guns",

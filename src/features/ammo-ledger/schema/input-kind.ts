@@ -1,6 +1,15 @@
 import type { LedgerCategory } from "./ledger-category";
 
-export const inputKinds = ["consume", "acquire", "dispose", "transfer", "stock_check"] as const;
+export const inputKinds = [
+  "consume",
+  "acquire",
+  "dispose",
+  "transfer",
+  "manufacture",
+  "issue",
+  "receive",
+  "stock_check",
+] as const;
 
 export type InputKind = (typeof inputKinds)[number];
 
@@ -18,7 +27,17 @@ export function mapInputKindToCategory({
       return "dispose";
     case "transfer":
       return "transfer";
+    case "manufacture":
+      return "manufacture";
+    case "issue":
+      return "issue";
+    case "receive":
+      return "receive";
     case "stock_check":
       return null;
+    default: {
+      const _exhaustive: never = inputKind;
+      return _exhaustive;
+    }
   }
 }

@@ -24,6 +24,7 @@ import {
   type LedgerDisplayRow,
 } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
 import { formatPermitBalance } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
+import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
 import { resolveLedgerEntryReorderState } from "@/features/ammo-ledger/ledger/resolve-ledger-entry-reorder-state/resolve-ledger-entry-reorder-state";
 import { buildOpeningBalanceHref } from "@/features/ammo-ledger/opening-balance/build-opening-balance-href/build-opening-balance-href";
 import { formatPermitExpiryLabel } from "@/features/ammo-ledger/permit/compute-permit-expiry/compute-permit-expiry";
@@ -40,17 +41,32 @@ type LedgerEntryActionsSheetProps = {
   rows: LedgerDisplayRow[];
   purpose: LedgerPurpose;
   permitBalance?: number;
+  lockState?: LedgerLockState;
   open: boolean;
   onOpenChange: ({ open }: { open: boolean }) => void;
   onVoided?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
   onVoidFailed?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
 };
 
+function isDateLocked({
+  lockState,
+  occurredOn,
+}: {
+  lockState?: LedgerLockState;
+  occurredOn: string;
+}): boolean {
+  if (!lockState?.isLocked || !lockState.lockedThrough) {
+    return false;
+  }
+  return occurredOn <= lockState.lockedThrough;
+}
+
 export function LedgerEntryActionsSheet({
   row,
   rows,
   purpose,
   permitBalance,
+  lockState,
   open,
   onOpenChange,
   onVoided,
@@ -71,6 +87,7 @@ export function LedgerEntryActionsSheet({
 
   if (row.kind === "permit_carryover") {
     const today = new Date().toISOString().slice(0, 10);
+    const locked = isDateLocked({ lockState, occurredOn: row.occurredOn });
     const editHref = buildOpeningBalanceHref({
       occurredOn: row.occurredOn,
       purpose,
@@ -101,13 +118,19 @@ export function LedgerEntryActionsSheet({
           </SheetHeader>
 
           <div className="flex flex-col gap-2 px-4">
-            <Link
-              href={editHref}
-              className={cn(buttonVariants({ variant: "default" }), "h-11 w-full")}
-              onClick={() => onOpenChange({ open: false })}
-            >
-              編集
-            </Link>
+            {locked ? (
+              <p className="text-sm text-muted-foreground">
+                この期間はロック済みのため編集できません。
+              </p>
+            ) : (
+              <Link
+                href={editHref}
+                className={cn(buttonVariants({ variant: "default" }), "h-11 w-full")}
+                onClick={() => onOpenChange({ open: false })}
+              >
+                編集
+              </Link>
+            )}
             <Button
               type="button"
               variant="ghost"
@@ -158,9 +181,10 @@ export function LedgerEntryActionsSheet({
   }
 
   const entry = row.entry;
+  const locked = isDateLocked({ lockState, occurredOn: entry.occurredOn });
   const categoryLabel = ledgerCategoryLabels[entry.category as LedgerCategory] ?? entry.category;
-  const editable = isLedgerEntryEditable({ category: entry.category });
-  const carryover = isAmmoCarryoverEntry({ category: entry.category });
+  const editable = !locked && isLedgerEntryEditable({ category: entry.category });
+  const carryover = !locked && isAmmoCarryoverEntry({ category: entry.category });
   const editHref = carryover
     ? buildOpeningBalanceHref({
         occurredOn: entry.occurredOn,
@@ -193,30 +217,40 @@ export function LedgerEntryActionsSheet({
         </SheetHeader>
 
         <div className="flex flex-col gap-2 px-4">
-          {editable || carryover ? (
-            <Link
-              href={editHref}
-              className={cn(buttonVariants({ variant: "default" }), "h-11 w-full")}
-              onClick={() => onOpenChange({ open: false })}
-            >
-              編集
-            </Link>
+          {locked ? (
+            <p className="text-sm text-muted-foreground">
+              この期間はロック済みのため編集・取消できません。
+            </p>
           ) : (
-            <p className="text-sm text-muted-foreground">{categoryLabel}記録は編集できません。</p>
+            <>
+              {editable || carryover ? (
+                <Link
+                  href={editHref}
+                  className={cn(buttonVariants({ variant: "default" }), "h-11 w-full")}
+                  onClick={() => onOpenChange({ open: false })}
+                >
+                  編集
+                </Link>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {categoryLabel}記録は編集できません。
+                </p>
+              )}
+              <LedgerEntryReorderButtons
+                ledgerEntryId={entry.id}
+                canMoveUp={reorderState.canMoveUp}
+                canMoveDown={reorderState.canMoveDown}
+              />
+              <VoidLedgerEntryButton
+                ledgerEntryId={entry.id}
+                onVoided={handleVoided}
+                onVoidFailed={handleVoidFailed}
+                variant="outline"
+                className="h-11 w-full text-sm text-destructive hover:text-destructive"
+                label="取消"
+              />
+            </>
           )}
-          <LedgerEntryReorderButtons
-            ledgerEntryId={entry.id}
-            canMoveUp={reorderState.canMoveUp}
-            canMoveDown={reorderState.canMoveDown}
-          />
-          <VoidLedgerEntryButton
-            ledgerEntryId={entry.id}
-            onVoided={handleVoided}
-            onVoidFailed={handleVoidFailed}
-            variant="outline"
-            className="h-11 w-full text-sm text-destructive hover:text-destructive"
-            label="取消"
-          />
           <Button
             type="button"
             variant="ghost"

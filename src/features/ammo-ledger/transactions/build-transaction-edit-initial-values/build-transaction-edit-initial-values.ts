@@ -11,8 +11,10 @@ export type TransactionEditInitialValues = {
   boxCount: number;
   looseRounds: number;
   memo?: string;
+  ledgerNote?: string;
   gunId?: string;
   rangeId?: string;
+  location?: string;
   counterpartyId?: string;
   counterpartyName?: string;
   counterpartyAddress?: string;
@@ -44,8 +46,10 @@ export function buildTransactionEditInitialValues({
     boxCount: transaction.boxCount,
     looseRounds: transaction.looseRounds,
     memo: transaction.memo ?? undefined,
+    ledgerNote: entry.ledgerNote ?? undefined,
     gunId: transaction.gunId ?? entry.gunId ?? undefined,
     rangeId: transaction.rangeId ?? undefined,
+    location: !transaction.rangeId ? (entry.location ?? undefined) : undefined,
     counterpartyId: counterpartyUsesMaster
       ? (transaction.counterpartyId ?? undefined)
       : usesManualCounterparty

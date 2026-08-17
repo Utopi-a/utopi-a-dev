@@ -9,15 +9,27 @@ import {
   InflowRecordTabs,
   type InflowTab,
 } from "@/features/ammo-ledger/components/inflow-record-tabs/inflow-record-tabs";
+import { IssueForm } from "@/features/ammo-ledger/components/issue-form/issue-form";
+import { ManufactureForm } from "@/features/ammo-ledger/components/manufacture-form/manufacture-form";
+import { ReceiveForm } from "@/features/ammo-ledger/components/receive-form/receive-form";
 import { TransferForm } from "@/features/ammo-ledger/components/transfer-form/transfer-form";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { useDraftTransaction } from "@/features/ammo-ledger/transactions/get-draft/use-draft-transaction/use-draft-transaction";
 import { deriveAmmoTypesFromWorkspace } from "@/features/ammo-ledger/workspace/derive-form-workspace-data/derive-form-workspace-data";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
+const inflowTabs: InflowTab[] = [
+  "acquire",
+  "dispose",
+  "transfer",
+  "manufacture",
+  "issue",
+  "receive",
+];
+
 function parseTab(tab: string | null): InflowTab {
-  if (tab === "dispose" || tab === "transfer") {
-    return tab;
+  if (tab && inflowTabs.includes(tab as InflowTab)) {
+    return tab as InflowTab;
   }
   return "acquire";
 }
@@ -96,6 +108,27 @@ export function InflowNewView() {
                 key={tab === "transfer" ? (draftId ?? "new") : "transfer"}
                 ammoTypes={ammoTypes}
                 initialValues={tab === "transfer" ? initialValues : undefined}
+              />
+            }
+            manufactureContent={
+              <ManufactureForm
+                key={tab === "manufacture" ? (draftId ?? "new") : "manufacture"}
+                ammoTypes={ammoTypes}
+                initialValues={tab === "manufacture" ? initialValues : undefined}
+              />
+            }
+            issueContent={
+              <IssueForm
+                key={tab === "issue" ? (draftId ?? "new") : "issue"}
+                ammoTypes={ammoTypes}
+                initialValues={tab === "issue" ? initialValues : undefined}
+              />
+            }
+            receiveContent={
+              <ReceiveForm
+                key={tab === "receive" ? (draftId ?? "new") : "receive"}
+                ammoTypes={ammoTypes}
+                initialValues={tab === "receive" ? initialValues : undefined}
               />
             }
           />

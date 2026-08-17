@@ -7,6 +7,9 @@ describe("mapInputKindToCategory", () => {
     ["acquire", "acquire"],
     ["dispose", "dispose"],
     ["transfer", "transfer"],
+    ["manufacture", "manufacture"],
+    ["issue", "issue"],
+    ["receive", "receive"],
   ] as const)("inputKind %s → category %s", (inputKind, category) => {
     expect(mapInputKindToCategory({ inputKind })).toBe(category);
   });

@@ -9,10 +9,15 @@ import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { createAmmoTypeAction } from "@/features/ammo-ledger/master/create-ammo-type/create-ammo-type-action";
 import { buildAmmoTypeLabel } from "@/features/ammo-ledger/schema/build-ammo-type-label";
+import type { CartridgeType } from "@/features/ammo-ledger/schema/cartridge-type";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { listShotGaugeSelectOptions } from "@/features/ammo-ledger/schema/shot-gauge-options";
-import type { ShotType } from "@/features/ammo-ledger/schema/shot-type";
-import { shotTypeLabels, shotTypes } from "@/features/ammo-ledger/schema/shot-type";
+
+const cartridgeTypeFormOptions: { value: CartridgeType; label: string }[] = [
+  { value: "rifle", label: "ライフル実包" },
+  { value: "shotgun_slug", label: "散弾銃用単弾" },
+  { value: "shotgun_shot", label: "散弾" },
+];
 
 type OpeningBalanceAmmoTypeAddProps = {
   defaultPurpose: LedgerPurpose;
@@ -22,7 +27,7 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [caliber, setCaliber] = useState("12番");
-  const [shotType, setShotType] = useState<string>(shotTypes[1]);
+  const [cartridgeType, setCartridgeType] = useState<string>("shotgun_shot");
   const [gaugeNumber, setGaugeNumber] = useState("");
   const [roundsPerBox, setRoundsPerBox] = useState("25");
   const [error, setError] = useState<string | null>(null);
@@ -33,10 +38,17 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
     [defaultPurpose],
   );
 
+  function handleCartridgeTypeChange({ nextCartridgeType }: { nextCartridgeType: string }) {
+    setCartridgeType(nextCartridgeType);
+    if (nextCartridgeType !== "shotgun_shot") {
+      setGaugeNumber("");
+    }
+  }
+
   const previewLabel = buildAmmoTypeLabel({
     caliber,
-    shotType: shotType as ShotType,
-    gaugeNumber: gaugeNumber || undefined,
+    cartridgeType: cartridgeType as CartridgeType,
+    gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber || undefined : undefined,
   });
 
   async function handleAdd() {
@@ -50,8 +62,8 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
 
     const result = await createAmmoTypeAction({
       caliber,
-      shotType,
-      gaugeNumber: gaugeNumber || undefined,
+      cartridgeType,
+      gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber || undefined : undefined,
       roundsPerBox: Number(roundsPerBox),
       defaultPurpose,
     });
@@ -82,7 +94,7 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
       <p className="text-sm font-medium">弾種を追加</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="add-caliber">番径</Label>
+          <Label htmlFor="add-caliber">実包名称・番径</Label>
           <Input
             id="add-caliber"
             value={caliber}
@@ -90,21 +102,23 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
           />
         </div>
         <FieldSelect
-          id="add-shot-type"
-          label="単弾 / 散弾"
-          value={shotType}
-          onChange={setShotType}
-          options={shotTypes.map((type) => ({ value: type, label: shotTypeLabels[type] }))}
+          id="add-cartridge-type"
+          label="実包区分"
+          value={cartridgeType}
+          onChange={(value) => handleCartridgeTypeChange({ nextCartridgeType: value })}
+          options={cartridgeTypeFormOptions}
           placeholder=""
         />
-        <FieldSelect
-          id="add-gauge-number"
-          label="号数（散弾のみ）"
-          value={gaugeNumber}
-          onChange={setGaugeNumber}
-          options={gaugeSelectOptions}
-          placeholder="未選択"
-        />
+        {cartridgeType === "shotgun_shot" ? (
+          <FieldSelect
+            id="add-gauge-number"
+            label="号数（散弾のみ）"
+            value={gaugeNumber}
+            onChange={setGaugeNumber}
+            options={gaugeSelectOptions}
+            placeholder="未選択"
+          />
+        ) : null}
         <div className="space-y-2">
           <Label htmlFor="add-rounds-per-box">1箱あたり発数</Label>
           <Input

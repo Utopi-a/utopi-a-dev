@@ -48,6 +48,8 @@ export function validateLedgerEntry(entry: LedgerEntryForValidation): Validation
       break;
     case "acquire":
     case "transfer":
+    case "issue":
+    case "receive":
       if (!entry.counterpartyName) {
         missingFields.push("相手方氏名");
       }
@@ -58,6 +60,12 @@ export function validateLedgerEntry(entry: LedgerEntryForValidation): Validation
     case "dispose":
     case "manufacture":
       break;
+    case "carryover":
+      break;
+    default: {
+      const _exhaustive: never = entry.category;
+      return _exhaustive;
+    }
   }
 
   return {

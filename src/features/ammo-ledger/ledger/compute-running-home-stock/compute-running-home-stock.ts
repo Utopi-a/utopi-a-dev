@@ -8,8 +8,8 @@ type HomeStockEntry = {
   quantity: number;
 } & import("@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries").LedgerEntrySortKey;
 
-const increaseCategories: LedgerCategory[] = ["acquire", "manufacture", "carryover"];
-const decreaseCategories: LedgerCategory[] = ["consume", "transfer", "dispose"];
+const increaseCategories: LedgerCategory[] = ["acquire", "receive", "manufacture", "carryover"];
+const decreaseCategories: LedgerCategory[] = ["consume", "transfer", "issue", "dispose"];
 
 export function computeRunningHomeStock({
   entries,

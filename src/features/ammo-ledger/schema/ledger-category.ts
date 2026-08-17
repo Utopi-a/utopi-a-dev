@@ -4,6 +4,8 @@ export const ledgerCategories = [
   "transfer",
   "dispose",
   "manufacture",
+  "issue",
+  "receive",
   "carryover",
 ] as const;
 
@@ -15,5 +17,7 @@ export const ledgerCategoryLabels: Record<LedgerCategory, string> = {
   transfer: "譲渡",
   dispose: "廃棄",
   manufacture: "製造",
+  issue: "交付",
+  receive: "被交付",
   carryover: "繰越",
 };

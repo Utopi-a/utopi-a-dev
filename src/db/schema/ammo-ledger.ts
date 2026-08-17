@@ -25,7 +25,8 @@ export const ammoType = pgTable("ammo_type", {
     .references(() => user.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   caliber: text("caliber").notNull(),
-  shotType: text("shot_type").notNull(),
+  cartridgeType: text("cartridge_type").notNull(),
+  classificationConfirmedAt: timestamp("classification_confirmed_at"),
   gaugeNumber: text("gauge_number"),
   roundsPerBox: integer("rounds_per_box").notNull(),
   defaultPurpose: text("default_purpose"),
@@ -178,8 +179,12 @@ export const ammoLedgerEntry = pgTable("ammo_ledger_entry", {
   occurredOn: text("occurred_on").notNull(),
   ammoTypeId: text("ammo_type_id").references(() => ammoType.id, { onDelete: "set null" }),
   ammoTypeName: text("ammo_type_name").notNull(),
+  ammoCartridgeType: text("ammo_cartridge_type"),
+  ammoCaliber: text("ammo_caliber"),
+  ammoGaugeNumber: text("ammo_gauge_number"),
   quantity: integer("quantity").notNull(),
   location: text("location"),
+  ledgerNote: text("ledger_note"),
   counterpartyName: text("counterparty_name"),
   counterpartyAddress: text("counterparty_address"),
   gunId: text("gun_id").references(() => ammoGun.id, { onDelete: "set null" }),
@@ -190,4 +195,15 @@ export const ammoLedgerEntry = pgTable("ammo_ledger_entry", {
   dayOrder: integer("day_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const ammoLedgerLockEvent = pgTable("ammo_ledger_lock_event", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  eventKind: text("event_kind").notNull(),
+  lockedThrough: text("locked_through").notNull(),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });

@@ -18,6 +18,7 @@ export type BulkEntryRowState = {
   looseRounds: string;
   gunId: string;
   rangeId: string;
+  location: string;
   counterpartyId: string;
   counterpartyName: string;
   counterpartyAddress: string;
@@ -52,6 +53,7 @@ export function createBulkEntryRow({
     looseRounds: "",
     gunId: "",
     rangeId: "",
+    location: "",
     counterpartyId: defaultCounterpartyId,
     counterpartyName: "",
     counterpartyAddress: "",
@@ -82,7 +84,7 @@ export function copyBulkEntryField({
         looseRounds: source.looseRounds,
       };
     case "rangeId":
-      return { ...target, rangeId: source.rangeId };
+      return { ...target, rangeId: source.rangeId, location: source.location };
     case "gunId":
       return { ...target, gunId: source.gunId };
     case "counterparty":
@@ -175,12 +177,36 @@ export function buildBulkEntryPayload({
   };
 
   if (row.inputKind === "consume") {
-    return {
-      inputKind: "consume",
-      ...base,
-      gunId: row.gunId,
-      rangeId: row.rangeId,
-    };
+    switch (row.purpose) {
+      case "shooting":
+        return {
+          inputKind: "consume" as const,
+          ...base,
+          purpose: "shooting" as const,
+          gunId: row.gunId,
+          rangeId: row.rangeId,
+        };
+      case "hunting":
+        return {
+          inputKind: "consume" as const,
+          ...base,
+          purpose: "hunting" as const,
+          gunId: row.gunId,
+          location: row.location,
+        };
+      case "pest_control":
+        return {
+          inputKind: "consume" as const,
+          ...base,
+          purpose: "pest_control" as const,
+          gunId: row.gunId,
+          location: row.location,
+        };
+      default: {
+        const _exhaustive: never = row.purpose;
+        return _exhaustive;
+      }
+    }
   }
 
   if (row.counterpartyId === manualCounterpartyId) {

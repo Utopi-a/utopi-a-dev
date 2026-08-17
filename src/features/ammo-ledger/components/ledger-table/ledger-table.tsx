@@ -20,6 +20,7 @@ import {
   formatPermitBalance,
   showsAmmoQuantity,
 } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
+import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
@@ -30,6 +31,7 @@ type LedgerTableProps = {
   permitBalances?: Map<string, number>;
   homeStorageExceededEntryIds?: string[];
   highlightedEntryId?: string | null;
+  lockState?: LedgerLockState;
   onVoided?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
   onVoidFailed?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
 };
@@ -51,6 +53,7 @@ export function LedgerTable({
   permitBalances,
   homeStorageExceededEntryIds = [],
   highlightedEntryId,
+  lockState,
   onVoided,
   onVoidFailed,
 }: LedgerTableProps) {
@@ -385,6 +388,7 @@ export function LedgerTable({
         rows={rows}
         purpose={purpose}
         permitBalance={selectedPermitBalance}
+        lockState={lockState}
         open={selectedRow !== null}
         onOpenChange={handleSheetOpenChange}
         onVoided={onVoided}

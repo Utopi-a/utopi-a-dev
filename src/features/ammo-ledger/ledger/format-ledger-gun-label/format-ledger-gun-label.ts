@@ -1,13 +1,17 @@
 export function formatLedgerGunLabel({
   gunName,
   gunPermitNumber,
+  gunNumber,
 }: {
   gunName: string | null | undefined;
   gunPermitNumber?: string | null;
+  gunNumber?: string | null;
 }): string {
+  const identifyingNumber = gunPermitNumber || gunNumber;
+
   if (!gunName) {
-    return "";
+    return identifyingNumber ?? "";
   }
 
-  return gunPermitNumber ? `${gunName}（${gunPermitNumber}）` : gunName;
+  return identifyingNumber ? `${gunName}（${identifyingNumber}）` : gunName;
 }

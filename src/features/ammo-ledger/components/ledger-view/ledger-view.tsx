@@ -265,6 +265,7 @@ function LedgerViewContent({
         permitBalances={permitBalances}
         homeStorageExceededEntryIds={homeStorage.exceededEntryIds}
         highlightedEntryId={highlightedEntryId}
+        lockState={workspace.lockState}
       />
 
       <AmmoLedgerRefreshIndicator visible={isRefreshing} />

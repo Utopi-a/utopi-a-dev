@@ -7,6 +7,7 @@ import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-
 import { validateDraftFromDiff } from "@/features/ammo-ledger/inventory/validate-draft-from-diff/validate-draft-from-diff";
 import { computeStockByAmmoType } from "@/features/ammo-ledger/ledger/compute-stock/compute-stock";
 import type { InputKind } from "@/features/ammo-ledger/schema/input-kind";
+import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 
 export async function createDraftFromDiffAction({
   ammoTypeId,
@@ -50,7 +51,7 @@ export async function createDraftFromDiffAction({
       .filter((e) => e.ammoTypeId !== null)
       .map((e) => ({
         ammoTypeId: e.ammoTypeId as string,
-        category: e.category as "acquire" | "consume" | "transfer" | "dispose" | "manufacture",
+        category: e.category as LedgerCategory,
         quantity: e.quantity,
       })),
   });
@@ -109,7 +110,17 @@ function getDraftRedirectPath({
       return `/lab/ammo-ledger/inflow/new?tab=dispose&draft=${transactionId}`;
     case "transfer":
       return `/lab/ammo-ledger/inflow/new?tab=transfer&draft=${transactionId}`;
+    case "manufacture":
+      return `/lab/ammo-ledger/inflow/new?tab=manufacture&draft=${transactionId}`;
+    case "issue":
+      return `/lab/ammo-ledger/inflow/new?tab=issue&draft=${transactionId}`;
+    case "receive":
+      return `/lab/ammo-ledger/inflow/new?tab=receive&draft=${transactionId}`;
     case "stock_check":
       return `/lab/ammo-ledger/inventory`;
+    default: {
+      const _exhaustive: never = inputKind;
+      return _exhaustive;
+    }
   }
 }

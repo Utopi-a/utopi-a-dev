@@ -8,10 +8,11 @@ function buildWorkspace({ bookStock = 0 }: { bookStock?: number } = {}): AmmoLed
     userId: "user-1",
     name: "テスト弾",
     caliber: "12号",
-    shotType: "鳥撃",
+    cartridgeType: "散弾",
     gaugeNumber: "12",
     roundsPerBox: 25,
     defaultPurpose: "shooting",
+    classificationConfirmedAt: null,
     memo: null,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -22,6 +23,7 @@ function buildWorkspace({ bookStock = 0 }: { bookStock?: number } = {}): AmmoLed
     permitEvents: [],
     permits: [],
     profile: null,
+    lockState: { isLocked: false, lockedThrough: null },
     inventoryItems: [{ ammoType, bookStock }],
     guns: [
       {

@@ -3,6 +3,8 @@
 import { db } from "@/db";
 import { ammoLedgerEntry, ammoTransaction } from "@/db/schema/ammo-ledger";
 import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
+import { acquireLedgerAdvisoryLock } from "@/features/ammo-ledger/ledger/lock/acquire-ledger-advisory-lock/acquire-ledger-advisory-lock";
+import { assertDatesNotLocked } from "@/features/ammo-ledger/ledger/lock/assert-dates-not-locked/assert-dates-not-locked";
 import {
   assignDayOrdersForNewEntries,
   fetchMaxDayOrderByDate,
@@ -43,7 +45,18 @@ export async function createBulkTransactionsAction(input: unknown) {
     preparedTransactions.push(preparedResult.prepared);
   }
 
-  await db.transaction(async (tx) => {
+  const transactionResult = await db.transaction(async (tx) => {
+    await acquireLedgerAdvisoryLock({ tx, userId: user.id });
+
+    const lockCheck = await assertDatesNotLocked({
+      userId: user.id,
+      dates: preparedTransactions.map((p) => p.normalized.occurredOn),
+      executor: tx,
+    });
+    if (!lockCheck.ok) {
+      return { ok: false as const, error: lockCheck.error };
+    }
+
     const occurredOnDates = preparedTransactions.map((prepared) => prepared.normalized.occurredOn);
     const maxDayOrderByDate = await fetchMaxDayOrderByDate({
       tx,
@@ -91,6 +104,10 @@ export async function createBulkTransactionsAction(input: unknown) {
         dayOrder: dayOrders[index],
         ammoTypeId: normalized.ammoTypeId,
         ammoTypeName: normalized.ammoTypeName,
+        ammoCartridgeType: prepared.ammoTypeRow.cartridgeType,
+        ammoCaliber: prepared.ammoTypeRow.caliber,
+        ammoGaugeNumber: prepared.ammoTypeRow.gaugeNumber,
+        ledgerNote: data.ledgerNote ?? null,
         quantity: normalized.quantity,
         location: normalized.location,
         counterpartyName: normalized.counterpartyName,
@@ -101,7 +118,13 @@ export async function createBulkTransactionsAction(input: unknown) {
         gunPermitNumber: normalized.gunPermitNumber,
       });
     }
+
+    return { ok: true as const };
   });
+
+  if (!transactionResult.ok) {
+    return transactionResult;
+  }
 
   const redirectPurpose = parsed.data.entries[0]?.purpose ?? "shooting";
 

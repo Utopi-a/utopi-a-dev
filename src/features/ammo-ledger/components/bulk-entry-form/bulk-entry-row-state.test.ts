@@ -38,6 +38,33 @@ describe("bulk-entry-row-state", () => {
     });
   });
 
+  it("builds hunting consume payload with readable location", () => {
+    const row = {
+      ...createBulkEntryRow({
+        inputKind: "consume",
+        occurredOn: "2026-06-07",
+        defaultCounterpartyId: manualCounterpartyId,
+      }),
+      purpose: "hunting" as const,
+      ammoTypeId: "ammo-1",
+      gunId: "gun-1",
+      location: "千葉県○○猟場",
+      looseRounds: "5",
+    };
+
+    expect(buildBulkEntryPayload({ row })).toEqual({
+      inputKind: "consume",
+      purpose: "hunting",
+      occurredOn: "2026-06-07",
+      ammoTypeId: "ammo-1",
+      gunId: "gun-1",
+      location: "千葉県○○猟場",
+      outerBoxCount: 0,
+      boxCount: 0,
+      looseRounds: 5,
+    });
+  });
+
   it("copies selected fields from the row above", () => {
     const source = {
       ...createBulkEntryRow({
@@ -47,6 +74,7 @@ describe("bulk-entry-row-state", () => {
       }),
       purpose: "hunting" as const,
       ammoTypeId: "ammo-2",
+      location: "東京都猟場",
       counterpartyName: "テスト店",
       counterpartyAddress: "東京都",
     };
@@ -65,5 +93,32 @@ describe("bulk-entry-row-state", () => {
     expect(copied.counterpartyId).toBe("shop-1");
     expect(copied.counterpartyName).toBe("テスト店");
     expect(hasBulkEntryPackaging({ row: copied })).toBe(false);
+  });
+
+  it("copies consume place fields from the row above", () => {
+    const source = {
+      ...createBulkEntryRow({
+        inputKind: "consume",
+        occurredOn: "2026-06-01",
+        defaultCounterpartyId: manualCounterpartyId,
+      }),
+      purpose: "pest_control" as const,
+      rangeId: "range-1",
+      location: "千葉県△△駆除場所",
+    };
+    const target = createBulkEntryRow({
+      inputKind: "consume",
+      occurredOn: "2026-06-07",
+      defaultCounterpartyId: manualCounterpartyId,
+    });
+
+    const copied = copyBulkEntryField({
+      source,
+      target,
+      field: "rangeId",
+    });
+
+    expect(copied.rangeId).toBe("range-1");
+    expect(copied.location).toBe("千葉県△△駆除場所");
   });
 });

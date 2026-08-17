@@ -6,8 +6,8 @@ type StockEntry = {
   quantity: number;
 };
 
-const increaseCategories: LedgerCategory[] = ["acquire", "manufacture", "carryover"];
-const decreaseCategories: LedgerCategory[] = ["consume", "transfer", "dispose"];
+const increaseCategories: LedgerCategory[] = ["acquire", "receive", "manufacture"];
+const decreaseCategories: LedgerCategory[] = ["consume", "transfer", "issue", "dispose"];
 
 export function computeStockByAmmoType({
   entries,
@@ -17,6 +17,11 @@ export function computeStockByAmmoType({
   const stock = new Map<string, number>();
 
   for (const entry of entries) {
+    if (entry.category === "carryover") {
+      stock.set(entry.ammoTypeId, entry.quantity);
+      continue;
+    }
+
     const current = stock.get(entry.ammoTypeId) ?? 0;
     if (increaseCategories.includes(entry.category)) {
       stock.set(entry.ammoTypeId, current + entry.quantity);

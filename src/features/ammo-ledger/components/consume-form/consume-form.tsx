@@ -31,10 +31,12 @@ type ConsumeFormProps = {
     ammoTypeId?: string;
     gunId?: string;
     rangeId?: string;
+    location?: string;
     outerBoxCount?: number;
     boxCount?: number;
     looseRounds?: number;
     memo?: string;
+    ledgerNote?: string;
   };
 };
 
@@ -53,11 +55,13 @@ export function ConsumeForm({
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
   const [gunId, setGunId] = useState(initialValues?.gunId ?? "");
   const [rangeId, setRangeId] = useState(initialValues?.rangeId ?? "");
+  const [location, setLocation] = useState(initialValues?.location ?? "");
   const [outerBoxCount, setOuterBoxCount] = useState(String(initialValues?.outerBoxCount ?? 0));
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
   const [purpose, setPurpose] = useState<LedgerPurpose>(initialValues?.purpose ?? "shooting");
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
+  const [ledgerNote, setLedgerNote] = useState(initialValues?.ledgerNote ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -91,18 +95,24 @@ export function ConsumeForm({
     setIsPending(true);
     setError(null);
 
-    const payload = {
+    const base = {
       inputKind: "consume" as const,
-      purpose,
       occurredOn,
       ammoTypeId,
       gunId,
-      rangeId,
       outerBoxCount: Number(outerBoxCount) || 0,
       boxCount: Number(boxCount) || 0,
       looseRounds: Number(looseRounds) || 0,
       memo: memo || undefined,
+      ledgerNote: ledgerNote || undefined,
     };
+
+    const payload =
+      purpose === "shooting"
+        ? { ...base, purpose: "shooting" as const, rangeId }
+        : purpose === "hunting"
+          ? { ...base, purpose: "hunting" as const, location }
+          : { ...base, purpose: "pest_control" as const, location };
 
     const result = ledgerEntryId
       ? await updateTransactionAction({ ledgerEntryId, ...payload })
@@ -134,15 +144,30 @@ export function ConsumeForm({
         />
       </div>
 
-      <MasterPicker
-        id="range"
-        label="場所"
-        value={rangeId}
-        onChange={setRangeId}
-        catalogKind="range"
-        sheetTitle="射撃場を選ぶ"
-        required
-      />
+      <PurposeSelect value={purpose} onChange={setPurpose} />
+
+      {purpose === "shooting" ? (
+        <MasterPicker
+          id="range"
+          label="場所"
+          value={rangeId}
+          onChange={setRangeId}
+          catalogKind="range"
+          sheetTitle="射撃場を選ぶ"
+          required
+        />
+      ) : (
+        <div className="space-y-2">
+          <Label htmlFor="location">場所</Label>
+          <Input
+            id="location"
+            required
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder={purpose === "hunting" ? "狩猟場所" : "有害鳥獣駆除場所"}
+          />
+        </div>
+      )}
 
       <FieldSelect
         id="gun"
@@ -155,8 +180,6 @@ export function ConsumeForm({
         }))}
         required
       />
-
-      <PurposeSelect value={purpose} onChange={setPurpose} />
 
       <FieldSelect
         id="ammo-type"
@@ -180,6 +203,16 @@ export function ConsumeForm({
       <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
         <p className="text-muted-foreground">実消費（法定出力に使われる数量）</p>
         <p className="text-lg font-semibold">{computedRounds}発</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="ledger-note">帳簿摘要の補足（任意）</Label>
+        <Input
+          id="ledger-note"
+          maxLength={500}
+          value={ledgerNote}
+          onChange={(e) => setLedgerNote(e.target.value)}
+        />
       </div>
 
       <div className="space-y-2">

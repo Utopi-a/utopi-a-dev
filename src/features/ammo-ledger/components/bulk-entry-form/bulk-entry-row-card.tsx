@@ -198,15 +198,28 @@ export function BulkEntryRowCard({
 
       {row.inputKind === "consume" ? (
         <>
-          <MasterPicker
-            id={`range-${row.clientId}`}
-            label="場所"
-            value={row.rangeId}
-            onChange={(value) => updateRow({ patch: { rangeId: value } })}
-            catalogKind="range"
-            sheetTitle="射撃場を選ぶ"
-            required
-          />
+          {row.purpose === "shooting" ? (
+            <MasterPicker
+              id={`range-${row.clientId}`}
+              label="場所"
+              value={row.rangeId}
+              onChange={(value) => updateRow({ patch: { rangeId: value } })}
+              catalogKind="range"
+              sheetTitle="射撃場を選ぶ"
+              required
+            />
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor={`location-${row.clientId}`}>場所</Label>
+              <Input
+                id={`location-${row.clientId}`}
+                required
+                value={row.location}
+                onChange={(event) => updateRow({ patch: { location: event.target.value } })}
+                placeholder={row.purpose === "hunting" ? "狩猟場所" : "有害鳥獣駆除場所"}
+              />
+            </div>
+          )}
 
           <FieldSelect
             id={`gun-${row.clientId}`}

@@ -6,6 +6,7 @@ import type {
   ammoPermitEvent,
   ammoType,
 } from "@/db/schema/ammo-ledger";
+import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
 
 export type AmmoLedgerInventoryItem = {
   ammoType: typeof ammoType.$inferSelect;
@@ -19,4 +20,5 @@ export type AmmoLedgerWorkspace = {
   profile: typeof ammoLedgerProfile.$inferSelect | null;
   inventoryItems: AmmoLedgerInventoryItem[];
   guns: (typeof ammoGun.$inferSelect)[];
+  lockState: LedgerLockState;
 };

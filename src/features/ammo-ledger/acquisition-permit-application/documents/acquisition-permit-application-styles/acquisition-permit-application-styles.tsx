@@ -84,11 +84,31 @@ export function AcquisitionPermitApplicationStyles() {
           padding-right: 0 !important;
         }
 
-        html.printing-application-main .application-form-supplement {
+        html.printing-application-main .application-form-supplement,
+        html.printing-application-main .application-form-resume,
+        html.printing-application-main .application-form-cohabitants {
           display: none !important;
         }
 
-        html.printing-application-supplement .application-form-main {
+        html.printing-application-supplement .application-form-main,
+        html.printing-application-supplement .application-form-resume,
+        html.printing-application-supplement .application-form-cohabitants {
+          display: none !important;
+        }
+
+        html.printing-application-resume .application-form-main,
+        html.printing-application-resume .application-form-supplement,
+        html.printing-application-resume .application-form-cohabitants {
+          display: none !important;
+        }
+
+        html.printing-application-cohabitants .application-form-main,
+        html.printing-application-cohabitants .application-form-supplement,
+        html.printing-application-cohabitants .application-form-resume {
+          display: none !important;
+        }
+
+        html.printing-application-duplex-bundle .application-form-cohabitants {
           display: none !important;
         }
 

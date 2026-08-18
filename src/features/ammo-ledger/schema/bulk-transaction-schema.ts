@@ -4,10 +4,7 @@ import {
   consumeTransactionSchema,
 } from "@/features/ammo-ledger/schema/transaction-schema";
 
-export const bulkEntryInputSchema = z.discriminatedUnion("inputKind", [
-  consumeTransactionSchema,
-  acquireTransactionSchema,
-]);
+export const bulkEntryInputSchema = z.union([consumeTransactionSchema, acquireTransactionSchema]);
 
 export const bulkTransactionsInputSchema = z.object({
   entries: z.array(bulkEntryInputSchema).min(1),

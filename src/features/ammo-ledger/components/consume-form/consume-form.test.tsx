@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { updateTransactionAction } from "@/features/ammo-ledger/transactions/update-transaction/update-transaction-action";
 import { ConsumeForm } from "./consume-form";
 
 vi.mock("next/navigation", () => ({
@@ -87,9 +88,31 @@ const ammoTypes = [
     createdAt,
     updatedAt: createdAt,
   },
+  {
+    id: "ammo-hunting-2",
+    userId: "user-1",
+    name: "別の狩猟用の弾",
+    caliber: "12番",
+    cartridgeType: "shotgun_shot",
+    classificationConfirmedAt: createdAt,
+    gaugeNumber: "6号",
+    roundsPerBox: 25,
+    defaultPurpose: "hunting",
+    memo: null,
+    createdAt,
+    updatedAt: createdAt,
+  },
 ];
 
 describe("ConsumeForm", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(updateTransactionAction).mockResolvedValue({
+      ok: false,
+      error: "テストでは保存しない",
+    });
+  });
+
   it("編集画面で元記録の銃・用途・射撃場・弾種・数量・注記を初期表示する", () => {
     render(
       <ConsumeForm
@@ -155,6 +178,29 @@ describe("ConsumeForm", () => {
     expect(screen.getByLabelText("用途区分")).toHaveValue("hunting");
   });
 
+  it("狩猟用の弾種を変更しても選択済みの射撃場を保持する", () => {
+    render(
+      <ConsumeForm
+        guns={guns}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={{ "ammo-hunting": 100, "ammo-hunting-2": 100 }}
+        initialValues={{
+          purpose: "hunting",
+          ammoTypeId: "ammo-hunting",
+          gunId: "gun-original",
+          rangeId: "range-original",
+        }}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("弾"), {
+      target: { value: "ammo-hunting-2" },
+    });
+
+    expect(screen.getByLabelText("消費場所")).toHaveValue("range");
+    expect(screen.getByText("選択中の場所: range-original")).toBeInTheDocument();
+  });
+
   it("編集画面で狩猟場所を初期表示する", () => {
     render(
       <ConsumeForm
@@ -172,5 +218,60 @@ describe("ConsumeForm", () => {
     );
 
     expect(screen.getByLabelText("場所")).toHaveValue("元の狩猟場所");
+  });
+
+  it("狩猟用の弾でも射撃場を消費場所として初期表示する", () => {
+    render(
+      <ConsumeForm
+        guns={guns}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={{ "ammo-hunting": 100 }}
+        ledgerEntryId="ledger-entry-3"
+        initialValues={{
+          purpose: "hunting",
+          ammoTypeId: "ammo-hunting",
+          gunId: "gun-original",
+          rangeId: "range-original",
+        }}
+      />,
+    );
+
+    expect(screen.getByLabelText("消費場所")).toHaveValue("range");
+    expect(screen.getByText("選択中の場所: range-original")).toBeInTheDocument();
+  });
+
+  it("狩猟用の弾を射撃場で消費する更新入力を送る", async () => {
+    render(
+      <ConsumeForm
+        guns={guns}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={{ "ammo-hunting": 100 }}
+        ledgerEntryId="ledger-entry-3"
+        initialValues={{
+          occurredOn: "2026-08-18",
+          purpose: "hunting",
+          ammoTypeId: "ammo-hunting",
+          gunId: "gun-original",
+          rangeId: "range-original",
+          looseRounds: 1,
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "更新" }));
+
+    await waitFor(() =>
+      expect(updateTransactionAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ledgerEntryId: "ledger-entry-3",
+          inputKind: "consume",
+          purpose: "hunting",
+          rangeId: "range-original",
+        }),
+      ),
+    );
+    expect(updateTransactionAction).toHaveBeenCalledWith(
+      expect.not.objectContaining({ location: expect.anything() }),
+    );
   });
 });

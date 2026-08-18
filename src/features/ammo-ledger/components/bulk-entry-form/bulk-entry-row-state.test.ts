@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyAmmoTypeToRow,
   buildBulkEntryPayload,
   copyBulkEntryField,
   createBulkEntryRow,
@@ -46,6 +47,7 @@ describe("bulk-entry-row-state", () => {
         defaultCounterpartyId: manualCounterpartyId,
       }),
       purpose: "hunting" as const,
+      locationInputKind: "manual" as const,
       ammoTypeId: "ammo-1",
       gunId: "gun-1",
       location: "千葉県○○猟場",
@@ -63,6 +65,73 @@ describe("bulk-entry-row-state", () => {
       boxCount: 0,
       looseRounds: 5,
     });
+  });
+
+  it("builds hunting consume payload with a shooting range", () => {
+    const row = {
+      ...createBulkEntryRow({
+        inputKind: "consume",
+        occurredOn: "2026-06-07",
+        defaultCounterpartyId: manualCounterpartyId,
+      }),
+      purpose: "hunting" as const,
+      locationInputKind: "range" as const,
+      ammoTypeId: "ammo-1",
+      gunId: "gun-1",
+      rangeId: "range-1",
+      looseRounds: "5",
+    };
+
+    expect(buildBulkEntryPayload({ row })).toEqual({
+      inputKind: "consume",
+      purpose: "hunting",
+      occurredOn: "2026-06-07",
+      ammoTypeId: "ammo-1",
+      gunId: "gun-1",
+      rangeId: "range-1",
+      outerBoxCount: 0,
+      boxCount: 0,
+      looseRounds: 5,
+    });
+  });
+
+  it("keeps a selected range when changing between hunting ammo types", () => {
+    const row = {
+      ...createBulkEntryRow({
+        inputKind: "consume",
+        occurredOn: "2026-06-07",
+        defaultCounterpartyId: manualCounterpartyId,
+      }),
+      purpose: "hunting" as const,
+      locationInputKind: "range" as const,
+      rangeId: "range-1",
+    };
+    const createdAt = new Date("2026-01-01T00:00:00.000Z");
+
+    const result = applyAmmoTypeToRow({
+      row,
+      ammoTypeId: "ammo-2",
+      ammoTypes: [
+        {
+          id: "ammo-2",
+          userId: "user-1",
+          name: "別の狩猟用の弾",
+          caliber: "12番",
+          cartridgeType: "shotgun_shot",
+          classificationConfirmedAt: createdAt,
+          gaugeNumber: "6号",
+          roundsPerBox: 25,
+          defaultPurpose: "hunting",
+          memo: null,
+          createdAt,
+          updatedAt: createdAt,
+        },
+      ],
+    });
+
+    expect(result.purpose).toBe("hunting");
+    expect(result.locationInputKind).toBe("range");
+    expect(result.rangeId).toBe("range-1");
   });
 
   it("copies selected fields from the row above", () => {
@@ -103,6 +172,7 @@ describe("bulk-entry-row-state", () => {
         defaultCounterpartyId: manualCounterpartyId,
       }),
       purpose: "pest_control" as const,
+      locationInputKind: "range" as const,
       rangeId: "range-1",
       location: "千葉県△△駆除場所",
     };
@@ -115,9 +185,10 @@ describe("bulk-entry-row-state", () => {
     const copied = copyBulkEntryField({
       source,
       target,
-      field: "rangeId",
+      field: "consumeLocation",
     });
 
+    expect(copied.locationInputKind).toBe("range");
     expect(copied.rangeId).toBe("range-1");
     expect(copied.location).toBe("千葉県△△駆除場所");
   });

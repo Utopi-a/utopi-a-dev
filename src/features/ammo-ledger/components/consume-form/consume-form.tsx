@@ -40,6 +40,8 @@ type ConsumeFormProps = {
   };
 };
 
+type ConsumptionLocationInputKind = "range" | "manual";
+
 export function ConsumeForm({
   guns,
   ammoTypes,
@@ -54,12 +56,17 @@ export function ConsumeForm({
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
   const [gunId, setGunId] = useState(initialValues?.gunId ?? "");
+  const [purpose, setPurpose] = useState<LedgerPurpose>(initialValues?.purpose ?? "shooting");
+  const [locationInputKind, setLocationInputKind] = useState<ConsumptionLocationInputKind>(
+    initialValues?.rangeId || !initialValues?.purpose || initialValues.purpose === "shooting"
+      ? "range"
+      : "manual",
+  );
   const [rangeId, setRangeId] = useState(initialValues?.rangeId ?? "");
   const [location, setLocation] = useState(initialValues?.location ?? "");
   const [outerBoxCount, setOuterBoxCount] = useState(String(initialValues?.outerBoxCount ?? 0));
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
-  const [purpose, setPurpose] = useState<LedgerPurpose>(initialValues?.purpose ?? "shooting");
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [ledgerNote, setLedgerNote] = useState(initialValues?.ledgerNote ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +78,24 @@ export function ConsumeForm({
     setAmmoTypeId(nextAmmoTypeId);
     const nextType = ammoTypes.find((t) => t.id === nextAmmoTypeId);
     if (nextType && !ledgerEntryId) {
-      setPurpose(resolveDefaultPurpose({ defaultPurpose: nextType.defaultPurpose }));
+      const nextPurpose = resolveDefaultPurpose({ defaultPurpose: nextType.defaultPurpose });
+      setPurpose(nextPurpose);
+      setLocationInputKind(
+        nextPurpose === "shooting"
+          ? "range"
+          : purpose === "shooting"
+            ? "manual"
+            : locationInputKind,
+      );
+    }
+  }
+
+  function handlePurposeChange({ nextPurpose }: { nextPurpose: LedgerPurpose }) {
+    setPurpose(nextPurpose);
+    if (nextPurpose === "shooting") {
+      setLocationInputKind("range");
+    } else if (purpose === "shooting") {
+      setLocationInputKind("manual");
     }
   }
 
@@ -108,11 +132,9 @@ export function ConsumeForm({
     };
 
     const payload =
-      purpose === "shooting"
-        ? { ...base, purpose: "shooting" as const, rangeId }
-        : purpose === "hunting"
-          ? { ...base, purpose: "hunting" as const, location }
-          : { ...base, purpose: "pest_control" as const, location };
+      purpose === "shooting" || locationInputKind === "range"
+        ? { ...base, purpose, rangeId }
+        : { ...base, purpose, location };
 
     const result = ledgerEntryId
       ? await updateTransactionAction({ ledgerEntryId, ...payload })
@@ -144,9 +166,27 @@ export function ConsumeForm({
         />
       </div>
 
-      <PurposeSelect value={purpose} onChange={setPurpose} />
+      <PurposeSelect
+        value={purpose}
+        onChange={(nextPurpose) => handlePurposeChange({ nextPurpose })}
+      />
 
-      {purpose === "shooting" ? (
+      {purpose !== "shooting" ? (
+        <FieldSelect
+          id="location-input-kind"
+          label="消費場所"
+          value={locationInputKind}
+          onChange={(value) => setLocationInputKind(value as ConsumptionLocationInputKind)}
+          options={[
+            { value: "manual", label: "狩猟・駆除場所" },
+            { value: "range", label: "射撃場" },
+          ]}
+          placeholder=""
+          required
+        />
+      ) : null}
+
+      {purpose === "shooting" || locationInputKind === "range" ? (
         <MasterPicker
           id="range"
           label="場所"

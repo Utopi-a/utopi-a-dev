@@ -65,7 +65,7 @@ export function MasterPicker({
   const { pickerData: loadedPickerData, isLoading: isPickerDataLoading } = useMasterPickerData({
     catalogKind,
     includeRangeCatalog,
-    enabled: open && pickerDataProp === undefined,
+    enabled: (open || value !== "") && pickerDataProp === undefined,
   });
   const pickerData = pickerDataProp ?? loadedPickerData;
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);

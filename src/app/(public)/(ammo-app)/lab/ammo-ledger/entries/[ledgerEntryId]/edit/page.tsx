@@ -17,6 +17,7 @@ import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/lis
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 import { listAcquisitionPermits } from "@/features/ammo-ledger/permit/list-acquisition-permits/list-acquisition-permits";
 import { ledgerCategoryLabels } from "@/features/ammo-ledger/schema/ledger-category";
+import { buildConsumeEditStock } from "@/features/ammo-ledger/transactions/build-consume-edit-stock/build-consume-edit-stock";
 import { getLedgerEntryForEdit } from "@/features/ammo-ledger/transactions/get-ledger-entry-for-edit/get-ledger-entry-for-edit";
 
 type PageProps = {
@@ -52,7 +53,13 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
   ]);
 
   const stockByAmmoTypeId =
-    inputKind === "consume" ? buildStockByAmmoTypeId({ inventoryItems }) : {};
+    inputKind === "consume"
+      ? buildConsumeEditStock({
+          bookStockByAmmoTypeId: buildStockByAmmoTypeId({ inventoryItems }),
+          originalAmmoTypeId: initialValues.ammoTypeId,
+          originalQuantity: initialValues.originalQuantity,
+        })
+      : {};
 
   const emptyAmmoTypeMessage = (
     <p className="text-sm text-muted-foreground">

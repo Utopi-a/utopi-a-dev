@@ -31,23 +31,17 @@ function hasCounterparty(
   return Boolean(data.counterpartyName && data.counterpartyAddress);
 }
 
-export const consumeTransactionSchema = z.discriminatedUnion("purpose", [
-  baseTransactionSchema.extend({
-    inputKind: z.literal("consume"),
-    purpose: z.literal("shooting"),
-    gunId: z.string().min(1),
+const consumeBaseSchema = baseTransactionSchema.extend({
+  inputKind: z.literal("consume"),
+  gunId: z.string().min(1),
+});
+
+export const consumeTransactionSchema = z.union([
+  consumeBaseSchema.extend({
     rangeId: z.string().min(1),
   }),
-  baseTransactionSchema.extend({
-    inputKind: z.literal("consume"),
-    purpose: z.literal("hunting"),
-    gunId: z.string().min(1),
-    location: z.string().min(1).max(300),
-  }),
-  baseTransactionSchema.extend({
-    inputKind: z.literal("consume"),
-    purpose: z.literal("pest_control"),
-    gunId: z.string().min(1),
+  consumeBaseSchema.extend({
+    purpose: z.enum(["hunting", "pest_control"]),
     location: z.string().min(1).max(300),
   }),
 ]);
@@ -102,7 +96,7 @@ export const stockCheckSchema = z.object({
   actualRounds: z.number().int().min(0),
 });
 
-export const transactionInputSchema = z.discriminatedUnion("inputKind", [
+export const transactionInputSchema = z.union([
   consumeTransactionSchema,
   acquireTransactionSchema,
   disposeTransactionSchema,

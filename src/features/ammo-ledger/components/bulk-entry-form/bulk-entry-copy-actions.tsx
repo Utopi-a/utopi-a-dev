@@ -20,7 +20,11 @@ function buildCopyActions({ row }: { row: BulkEntryRowState }): CopyAction[] {
   ];
 
   if (row.inputKind === "consume") {
-    return [...common, { field: "rangeId", label: "場所" }, { field: "gunId", label: "銃" }];
+    return [
+      ...common,
+      { field: "consumeLocation", label: "場所" },
+      { field: "gunId", label: "銃" },
+    ];
   }
 
   return [...common, { field: "counterparty", label: "譲渡元" }];

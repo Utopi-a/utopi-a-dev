@@ -11,6 +11,7 @@ import {
   type BulkEntryCopyField,
   type BulkEntryRowKind,
   type BulkEntryRowState,
+  type ConsumptionLocationInputKind,
   computeBulkEntryRounds,
 } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-row-state";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
@@ -80,6 +81,20 @@ export function BulkEntryRowCard({
         ammoTypeId: nextAmmoTypeId,
         ammoTypes,
       }),
+    });
+  }
+
+  function handlePurposeChange({ nextPurpose }: { nextPurpose: LedgerPurpose }) {
+    updateRow({
+      patch: {
+        purpose: nextPurpose,
+        locationInputKind:
+          nextPurpose === "shooting"
+            ? "range"
+            : row.purpose === "shooting"
+              ? "manual"
+              : row.locationInputKind,
+      },
     });
   }
 
@@ -156,7 +171,7 @@ export function BulkEntryRowCard({
         id={`purpose-${row.clientId}`}
         label="用途区分"
         value={row.purpose}
-        onChange={(value) => updateRow({ patch: { purpose: value as LedgerPurpose } })}
+        onChange={(value) => handlePurposeChange({ nextPurpose: value as LedgerPurpose })}
         options={ledgerPurposes.map((purpose) => ({
           value: purpose,
           label: ledgerPurposeLabels[purpose],
@@ -198,7 +213,28 @@ export function BulkEntryRowCard({
 
       {row.inputKind === "consume" ? (
         <>
-          {row.purpose === "shooting" ? (
+          {row.purpose !== "shooting" ? (
+            <FieldSelect
+              id={`location-input-kind-${row.clientId}`}
+              label="消費場所"
+              value={row.locationInputKind}
+              onChange={(value) =>
+                updateRow({
+                  patch: {
+                    locationInputKind: value as ConsumptionLocationInputKind,
+                  },
+                })
+              }
+              options={[
+                { value: "manual", label: "狩猟・駆除場所" },
+                { value: "range", label: "射撃場" },
+              ]}
+              placeholder=""
+              required
+            />
+          ) : null}
+
+          {row.purpose === "shooting" || row.locationInputKind === "range" ? (
             <MasterPicker
               id={`range-${row.clientId}`}
               label="場所"

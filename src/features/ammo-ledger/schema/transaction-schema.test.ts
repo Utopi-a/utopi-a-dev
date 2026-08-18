@@ -30,7 +30,21 @@ describe("transactionInputSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("狩猟消費で location がなければ拒否する", () => {
+  it("狩猟用の弾を射撃場で消費できる", () => {
+    const result = transactionInputSchema.safeParse({
+      inputKind: "consume",
+      purpose: "hunting",
+      occurredOn: "2026-06-07",
+      ammoTypeId: "ammo-1",
+      gunId: "gun-1",
+      rangeId: "range-1",
+      boxCount: 1,
+      looseRounds: 0,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("狩猟消費で射撃場もその他の場所もなければ拒否する", () => {
     const result = transactionInputSchema.safeParse({
       inputKind: "consume",
       purpose: "hunting",
@@ -50,6 +64,20 @@ describe("transactionInputSchema", () => {
       occurredOn: "2026-06-07",
       ammoTypeId: "ammo-1",
       gunId: "gun-1",
+      boxCount: 1,
+      looseRounds: 0,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("射撃用の弾はその他の場所入力を拒否する", () => {
+    const result = transactionInputSchema.safeParse({
+      inputKind: "consume",
+      purpose: "shooting",
+      occurredOn: "2026-06-07",
+      ammoTypeId: "ammo-1",
+      gunId: "gun-1",
+      location: "任意の場所",
       boxCount: 1,
       looseRounds: 0,
     });

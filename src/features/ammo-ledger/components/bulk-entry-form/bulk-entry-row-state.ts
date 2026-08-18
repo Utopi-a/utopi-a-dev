@@ -6,6 +6,7 @@ import type { LedgerTransactionInput } from "@/features/ammo-ledger/schema/trans
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 
 export type BulkEntryRowKind = "consume" | "acquire";
+export type ConsumptionLocationInputKind = "range" | "manual";
 
 export type BulkEntryRowState = {
   clientId: string;
@@ -17,6 +18,7 @@ export type BulkEntryRowState = {
   boxCount: string;
   looseRounds: string;
   gunId: string;
+  locationInputKind: ConsumptionLocationInputKind;
   rangeId: string;
   location: string;
   counterpartyId: string;
@@ -29,7 +31,7 @@ export type BulkEntryCopyField =
   | "purpose"
   | "ammoTypeId"
   | "packaging"
-  | "rangeId"
+  | "consumeLocation"
   | "gunId"
   | "counterparty";
 
@@ -52,6 +54,7 @@ export function createBulkEntryRow({
     boxCount: "",
     looseRounds: "",
     gunId: "",
+    locationInputKind: "range",
     rangeId: "",
     location: "",
     counterpartyId: defaultCounterpartyId,
@@ -83,8 +86,13 @@ export function copyBulkEntryField({
         boxCount: source.boxCount,
         looseRounds: source.looseRounds,
       };
-    case "rangeId":
-      return { ...target, rangeId: source.rangeId, location: source.location };
+    case "consumeLocation":
+      return {
+        ...target,
+        locationInputKind: source.locationInputKind,
+        rangeId: source.rangeId,
+        location: source.location,
+      };
     case "gunId":
       return { ...target, gunId: source.gunId };
     case "counterparty":
@@ -118,12 +126,19 @@ export function applyAmmoTypeToRow({
   ammoTypes: (typeof ammoType.$inferSelect)[];
 }): BulkEntryRowState {
   const nextType = ammoTypes.find((type) => type.id === ammoTypeId);
+  const nextPurpose = nextType
+    ? resolveDefaultPurpose({ defaultPurpose: nextType.defaultPurpose })
+    : row.purpose;
   return {
     ...row,
     ammoTypeId,
-    purpose: nextType
-      ? resolveDefaultPurpose({ defaultPurpose: nextType.defaultPurpose })
-      : row.purpose,
+    purpose: nextPurpose,
+    locationInputKind:
+      nextPurpose === "shooting"
+        ? "range"
+        : row.purpose === "shooting"
+          ? "manual"
+          : row.locationInputKind,
   };
 }
 
@@ -187,21 +202,37 @@ export function buildBulkEntryPayload({
           rangeId: row.rangeId,
         };
       case "hunting":
-        return {
-          inputKind: "consume" as const,
-          ...base,
-          purpose: "hunting" as const,
-          gunId: row.gunId,
-          location: row.location,
-        };
+        return row.locationInputKind === "range"
+          ? {
+              inputKind: "consume" as const,
+              ...base,
+              purpose: "hunting" as const,
+              gunId: row.gunId,
+              rangeId: row.rangeId,
+            }
+          : {
+              inputKind: "consume" as const,
+              ...base,
+              purpose: "hunting" as const,
+              gunId: row.gunId,
+              location: row.location,
+            };
       case "pest_control":
-        return {
-          inputKind: "consume" as const,
-          ...base,
-          purpose: "pest_control" as const,
-          gunId: row.gunId,
-          location: row.location,
-        };
+        return row.locationInputKind === "range"
+          ? {
+              inputKind: "consume" as const,
+              ...base,
+              purpose: "pest_control" as const,
+              gunId: row.gunId,
+              rangeId: row.rangeId,
+            }
+          : {
+              inputKind: "consume" as const,
+              ...base,
+              purpose: "pest_control" as const,
+              gunId: row.gunId,
+              location: row.location,
+            };
       default: {
         const _exhaustive: never = row.purpose;
         return _exhaustive;

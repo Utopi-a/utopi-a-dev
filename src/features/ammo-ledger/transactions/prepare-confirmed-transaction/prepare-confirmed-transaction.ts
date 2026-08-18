@@ -73,7 +73,7 @@ export async function prepareConfirmedTransaction({
     }
     gunRow = gun;
 
-    if (input.purpose === "shooting") {
+    if ("rangeId" in input) {
       const [range] = await db
         .select()
         .from(ammoRange)
@@ -141,10 +141,7 @@ export async function prepareConfirmedTransaction({
   });
 
   const locationFromInput =
-    input.inputKind === "consume" &&
-    (input.purpose === "hunting" || input.purpose === "pest_control")
-      ? input.location
-      : undefined;
+    input.inputKind === "consume" && "location" in input ? input.location : undefined;
 
   const normalized = normalizeTransaction({
     inputKind: input.inputKind,

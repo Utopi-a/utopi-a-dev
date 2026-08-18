@@ -70,7 +70,7 @@ export function ConsumeForm({
   function handleAmmoTypeChange({ nextAmmoTypeId }: { nextAmmoTypeId: string }) {
     setAmmoTypeId(nextAmmoTypeId);
     const nextType = ammoTypes.find((t) => t.id === nextAmmoTypeId);
-    if (nextType) {
+    if (nextType && !ledgerEntryId) {
       setPurpose(resolveDefaultPurpose({ defaultPurpose: nextType.defaultPurpose }));
     }
   }

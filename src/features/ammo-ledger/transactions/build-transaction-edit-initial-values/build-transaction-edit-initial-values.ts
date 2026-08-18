@@ -4,6 +4,7 @@ import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-count
 
 export type TransactionEditInitialValues = {
   ledgerEntryId: string;
+  originalQuantity: number;
   purpose: LedgerPurpose;
   occurredOn: string;
   ammoTypeId: string;
@@ -37,17 +38,22 @@ export function buildTransactionEditInitialValues({
     !counterpartyUsesMaster &&
     Boolean(transaction.counterpartyName || transaction.counterpartyAddress);
 
+  const ammoTypeId = entry.ammoTypeId ?? transaction.ammoTypeId ?? "";
+  const hasAmmoTypeMismatch =
+    entry.ammoTypeId !== null && entry.ammoTypeId !== transaction.ammoTypeId;
+
   return {
     ledgerEntryId: entry.id,
+    originalQuantity: entry.quantity,
     purpose: entry.purpose as LedgerPurpose,
     occurredOn: entry.occurredOn,
-    ammoTypeId: transaction.ammoTypeId ?? entry.ammoTypeId ?? "",
-    outerBoxCount: transaction.outerBoxCount,
-    boxCount: transaction.boxCount,
-    looseRounds: transaction.looseRounds,
+    ammoTypeId,
+    outerBoxCount: hasAmmoTypeMismatch ? 0 : transaction.outerBoxCount,
+    boxCount: hasAmmoTypeMismatch ? 0 : transaction.boxCount,
+    looseRounds: hasAmmoTypeMismatch ? entry.quantity : transaction.looseRounds,
     memo: transaction.memo ?? undefined,
     ledgerNote: entry.ledgerNote ?? undefined,
-    gunId: transaction.gunId ?? entry.gunId ?? undefined,
+    gunId: entry.gunId ?? transaction.gunId ?? undefined,
     rangeId: transaction.rangeId ?? undefined,
     location: !transaction.rangeId ? (entry.location ?? undefined) : undefined,
     counterpartyId: counterpartyUsesMaster

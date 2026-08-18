@@ -7,6 +7,7 @@ import {
   ledgerPrintCellClass,
   ledgerPrintColClass,
 } from "@/features/ammo-ledger/documents/ledger-print-table/ledger-print-table-column-classes";
+import { mergePrintCarryoverRows } from "@/features/ammo-ledger/documents/merge-print-carryover-rows/merge-print-carryover-rows";
 import { formatLedgerGunLabel } from "@/features/ammo-ledger/ledger/format-ledger-gun-label/format-ledger-gun-label";
 import { ledgerCategoryLabels } from "@/features/ammo-ledger/schema/ledger-category";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
@@ -37,7 +38,9 @@ export function LedgerPrintBody({
   from,
   to,
 }: LedgerPrintBodyProps) {
-  const rows = buildLedgerBodyRows({ entries });
+  const rows = mergePrintCarryoverRows({
+    rows: buildLedgerBodyRows({ entries }),
+  });
   const purposeLabel = ledgerPurposeLabels[ledgerPurpose];
   const colCount = 10;
 

@@ -28,6 +28,8 @@ export default async function AcquisitionPermitApplicationNewPage() {
   return (
     <AcquisitionPermitApplicationFormLazy
       ownerName={ownerName}
+      ownerFurigana={profile?.ownerFurigana ?? undefined}
+      possessionPermitCertificateNumber={profile?.possessionPermitCertificateNumber ?? undefined}
       ownerAddress={profile?.ownerAddress ?? ""}
       ownerBirthDate={profile?.ownerBirthDate ?? undefined}
       ownerPhone={profile?.ownerPhone ?? undefined}

@@ -43,6 +43,8 @@ import { cn } from "@/lib/cn";
 
 type AcquisitionPermitApplicationFormProps = {
   ownerName: string;
+  ownerFurigana?: string;
+  possessionPermitCertificateNumber?: string;
   ownerAddress: string;
   ownerBirthDate?: string;
   ownerPhone?: string;
@@ -63,6 +65,8 @@ function defaultValidTo({ validFrom }: { validFrom: string }): string {
 
 export function AcquisitionPermitApplicationForm({
   ownerName,
+  ownerFurigana = "",
+  possessionPermitCertificateNumber: initialPossessionPermitCertificateNumber = "",
   ownerAddress,
   ownerBirthDate = "",
   ownerPhone = "",
@@ -84,11 +88,13 @@ export function AcquisitionPermitApplicationForm({
   const [prefectureName, setPrefectureName] = useState("茨城県");
   const [applicationDate, setApplicationDate] = useState(today);
   const [name, setName] = useState(ownerName);
-  const [furigana, setFurigana] = useState("");
+  const [furigana, setFurigana] = useState(ownerFurigana);
   const [address, setAddress] = useState(ownerAddress);
   const [birthDate, setBirthDate] = useState(ownerBirthDate);
   const [phone, setPhone] = useState(ownerPhone);
-  const [possessionPermitCertificateNumber, setPossessionPermitCertificateNumber] = useState("");
+  const [possessionPermitCertificateNumber, setPossessionPermitCertificateNumber] = useState(
+    initialPossessionPermitCertificateNumber,
+  );
   const [ledgerPurpose, setLedgerPurpose] = useState<LedgerPurpose>("shooting");
   const [ammoName, setAmmoName] = useState<AcquisitionPermitName>(defaultAcquisitionPermitName);
   const [permitPurpose, setPermitPurpose] = useState(defaultAcquisitionPermitPurpose);

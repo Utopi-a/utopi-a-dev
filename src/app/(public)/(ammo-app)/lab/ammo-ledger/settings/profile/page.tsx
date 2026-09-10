@@ -13,7 +13,7 @@ export default async function LedgerProfileSettingsPage() {
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">帳簿プロフィール</h1>
         <p className="text-sm text-muted-foreground">
-          帳簿の表紙・印刷や取得許可申請書に使う氏名・住所・生年月日・電話番号を設定します。
+          帳簿や譲受許可申請書に使う氏名・ふりがな・住所・生年月日・電話番号・銃砲所持許可証番号を設定します。
         </p>
       </div>
       <AmmoLedgerPanel
@@ -23,6 +23,8 @@ export default async function LedgerProfileSettingsPage() {
           accountName={user.name}
           initialValues={{
             ownerName: profile?.ownerName ?? user.name,
+            ownerFurigana: profile?.ownerFurigana,
+            possessionPermitCertificateNumber: profile?.possessionPermitCertificateNumber,
             ownerAddress: profile?.ownerAddress,
             ownerBirthDate: profile?.ownerBirthDate,
             ownerPhone: profile?.ownerPhone,

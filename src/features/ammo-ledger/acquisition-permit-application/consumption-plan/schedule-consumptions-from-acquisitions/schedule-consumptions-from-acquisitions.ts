@@ -15,170 +15,130 @@ import {
   serializePlanPeriodKey,
 } from "../plan-period/plan-period";
 
-export type ScheduledConsumptions = {
-  shootingConsumptions: ConsumptionEvent[];
-  bufferConsumptions: ConsumptionEvent[];
-};
-
-const maxConsumptionsBeforePurchase = 2;
+const maxConsumptionsPerGap = 2;
 const maxConsumptionPerEvent = 500;
 
-/** 各購入の直後に消費を置き、購入・消費・購入・消費…の交互配置を保つ */
+/** 初回購入前と各購入後に、実在庫と次回購入の空きを守って消費を配分する。 */
 export function scheduleConsumptionsFromAcquisitions({
   acquisitions,
-  requestedQuantity: _requestedQuantity,
-  shootingQuantity,
-  bufferNeedByAcquisition,
-  periodFrom: _periodFrom,
-  periodTo: _periodTo,
+  initialStock,
+  homeStorageLimit,
   rangeAllocations,
   consumptionUnit = 25,
 }: {
   acquisitions: AcquisitionEvent[];
-  requestedQuantity: number;
-  shootingQuantity: number;
-  bufferNeedByAcquisition: number[];
-  periodFrom: string;
-  periodTo: string;
+  initialStock: number;
+  homeStorageLimit: number;
   rangeAllocations: RangeAllocation[];
   consumptionUnit?: number;
-}): ScheduledConsumptions {
-  if (shootingQuantity <= 0 && bufferNeedByAcquisition.every((need) => need <= 0)) {
-    return { shootingConsumptions: [], bufferConsumptions: [] };
-  }
-
-  if (rangeAllocations.length === 0) {
-    return { shootingConsumptions: [], bufferConsumptions: [] };
-  }
-
-  if (shootingQuantity % consumptionUnit !== 0) {
-    throw new Error("shootingQuantity must be a multiple of consumptionUnit");
-  }
-
+}): ConsumptionEvent[] {
   const sortedAcquisitions = sortAcquisitions({ acquisitions });
-  if (sortedAcquisitions.length === 0) {
-    return { shootingConsumptions: [], bufferConsumptions: [] };
+  if (sortedAcquisitions.length === 0 || rangeAllocations.length === 0) {
+    return [];
   }
 
-  const shootingBySlot = distributeShootingAcrossSlots({
-    slotCount: sortedAcquisitions.length,
-    shootingQuantity,
-    consumptionUnit,
-  });
-
-  const primaryRange = rangeAllocations[0];
+  let remainingQuantity = sortedAcquisitions.reduce((sum, event) => sum + event.quantity, 0);
   const quantityByRange = allocateQuantityByWeight({
-    totalQuantity: shootingQuantity,
+    totalQuantity: remainingQuantity,
     consumptionUnit,
     rangeAllocations,
   });
   const remainingByRange = new Map(
     quantityByRange.map((allocation) => [allocation.rangeId, allocation.quantity]),
   );
+  const consumptions: ConsumptionEvent[] = [];
+  let stock = initialStock;
 
-  const bufferConsumptions: ConsumptionEvent[] = [];
-  const shootingConsumptions: ConsumptionEvent[] = [];
-
-  for (const [index, acquisition] of sortedAcquisitions.entries()) {
-    const bufferPart = bufferNeedByAcquisition[index] ?? 0;
-    const shootingPart = shootingBySlot[index] ?? 0;
-    const slotTotal = bufferPart + shootingPart;
-
-    if (slotTotal <= 0) {
-      continue;
-    }
-
+  function addConsumptions({
+    acquisition,
+    quantity,
+    beforePurchase = false,
+  }: {
+    acquisition: AcquisitionEvent;
+    quantity: number;
+    beforePurchase?: boolean;
+  }) {
     const chunks = splitGapConsumptionQuantity({
-      gapTotal: slotTotal,
+      gapTotal: quantity,
       consumptionUnit,
-      maxEventsPerGap: maxConsumptionsBeforePurchase,
-      preferredBatchSize: Math.min(maxConsumptionPerEvent, slotTotal),
+      maxEventsPerGap: maxConsumptionsPerGap,
+      preferredBatchSize: maxConsumptionPerEvent,
       maxPerEvent: maxConsumptionPerEvent,
     });
-
-    let bufferLeft = bufferPart;
-    let shootingLeft = shootingPart;
-
-    for (const [eventSequence, quantity] of chunks.entries()) {
-      const bufferQuantity = Math.min(bufferLeft, quantity);
-      const shootingQuantityPart = quantity - bufferQuantity;
-
-      if (bufferQuantity > 0) {
-        bufferConsumptions.push({
-          scheduledPeriod: acquisition.scheduledPeriod,
-          slotSequence: acquisition.slotSequence,
-          eventSequence,
-          quantity: bufferQuantity,
-          rangeId: primaryRange.rangeId,
-          rangeName: primaryRange.rangeName,
-          rangeAddress: primaryRange.rangeAddress,
-          purpose: primaryRange.purpose,
-        });
-        bufferLeft -= bufferQuantity;
-      }
-
-      if (shootingQuantityPart > 0) {
-        const range = pickRangeWithRemaining({
-          remainingByRange,
-          rangeAllocations,
-        });
+    let eventSequence = 0;
+    for (const chunk of chunks) {
+      let chunkRemaining = chunk;
+      while (chunkRemaining > 0) {
+        const range = pickRangeWithRemaining({ remainingByRange, rangeAllocations });
         if (!range) {
-          continue;
+          throw new Error("failed to allocate consumption to a shooting range");
         }
-
-        remainingByRange.set(
-          range.rangeId,
-          (remainingByRange.get(range.rangeId) ?? 0) - shootingQuantityPart,
-        );
-
-        shootingConsumptions.push({
+        const rangeRemaining = remainingByRange.get(range.rangeId) ?? 0;
+        const allocatedQuantity = Math.min(chunkRemaining, rangeRemaining);
+        remainingByRange.set(range.rangeId, rangeRemaining - allocatedQuantity);
+        consumptions.push({
           scheduledPeriod: acquisition.scheduledPeriod,
-          slotSequence: acquisition.slotSequence,
+          // 初回と同じ旬でも、購入より前の消費であることを表示・シミュレーションに共有する。
+          slotSequence: (acquisition.slotSequence ?? 0) - (beforePurchase ? 1 : 0),
           eventSequence,
-          quantity: shootingQuantityPart,
+          quantity: allocatedQuantity,
           rangeId: range.rangeId,
           rangeName: range.rangeName,
           rangeAddress: range.rangeAddress,
           purpose: range.purpose,
         });
-        shootingLeft -= shootingQuantityPart;
+        eventSequence += 1;
+        chunkRemaining -= allocatedQuantity;
       }
     }
-
-    if (bufferLeft > 0 || shootingLeft > 0) {
-      throw new Error("failed to allocate consumption before purchase");
-    }
+    stock -= quantity;
+    remainingQuantity -= quantity;
   }
 
-  return {
-    shootingConsumptions: sortConsumptionEvents({ events: shootingConsumptions }),
-    bufferConsumptions: sortConsumptionEvents({ events: bufferConsumptions }),
-  };
+  const firstAcquisition = sortedAcquisitions[0];
+  addConsumptions({
+    acquisition: firstAcquisition,
+    quantity: roundUpConsumption({
+      quantity: Math.max(0, stock + firstAcquisition.quantity - homeStorageLimit),
+      consumptionUnit,
+    }),
+    beforePurchase: true,
+  });
+
+  for (const [index, acquisition] of sortedAcquisitions.entries()) {
+    stock += acquisition.quantity;
+    const nextAcquisition = sortedAcquisitions[index + 1];
+    const minimumConsumption = roundUpConsumption({
+      quantity: Math.max(0, stock + (nextAcquisition?.quantity ?? 0) - homeStorageLimit),
+      consumptionUnit,
+    });
+    const balancedConsumption = roundUpConsumption({
+      quantity: remainingQuantity / (sortedAcquisitions.length - index),
+      consumptionUnit,
+    });
+    const availableConsumption = Math.floor(stock / consumptionUnit) * consumptionUnit;
+
+    addConsumptions({
+      acquisition,
+      quantity: Math.min(
+        remainingQuantity,
+        availableConsumption,
+        Math.max(minimumConsumption, balancedConsumption),
+      ),
+    });
+  }
+
+  return sortConsumptionEvents({ events: consumptions });
 }
 
-function distributeShootingAcrossSlots({
-  slotCount,
-  shootingQuantity,
+function roundUpConsumption({
+  quantity,
   consumptionUnit,
 }: {
-  slotCount: number;
-  shootingQuantity: number;
+  quantity: number;
   consumptionUnit: number;
-}): number[] {
-  if (slotCount <= 0) {
-    return [];
-  }
-
-  const base = Math.floor(shootingQuantity / slotCount / consumptionUnit) * consumptionUnit;
-  const quotas = Array.from({ length: slotCount }, () => base);
-  let remaining = shootingQuantity - base * slotCount;
-
-  for (let index = 0; remaining > 0; index += 1) {
-    quotas[index % slotCount] += consumptionUnit;
-    remaining -= consumptionUnit;
-  }
-
-  return quotas;
+}): number {
+  return Math.ceil(quantity / consumptionUnit) * consumptionUnit;
 }
 
 function sortConsumptionEvents({ events }: { events: ConsumptionEvent[] }): ConsumptionEvent[] {
@@ -225,7 +185,7 @@ function allocateQuantityByWeight({
   const unitCount = totalQuantity / consumptionUnit;
 
   const raw = rangeAllocations.map((allocation) => {
-    const exact = (unitCount * allocation.weight) / totalWeight;
+    const exact = (allocation.weight / totalWeight) * unitCount;
     return {
       ...allocation,
       units: Math.floor(exact),

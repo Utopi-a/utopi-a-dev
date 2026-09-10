@@ -1,8 +1,5 @@
 import { homeStorageRoundLimit } from "@/features/ammo-ledger/schema/home-storage-limit";
-import {
-  compareTimelinePosition,
-  serializeConsumptionSlotKey,
-} from "../consumption-plan-timeline/consumption-plan-timeline";
+import { compareTimelinePosition } from "../consumption-plan-timeline/consumption-plan-timeline";
 import type {
   AcquisitionEvent,
   BuildConsumptionPlanInput,
@@ -10,8 +7,6 @@ import type {
   ConsumptionPlan,
   ConsumptionPlanRow,
 } from "../consumption-plan-types";
-import { computeBufferNeedByAcquisition } from "../merge-consumptions/merge-consumptions";
-import { comparePlanPeriod } from "../plan-period/plan-period";
 import {
   hasConsecutivePurchasesWithoutConsumption,
   scheduleAcquisitions,
@@ -40,20 +35,45 @@ export function buildConsumptionPlan({
   consumptionUnit = defaultConsumptionUnit,
   homeStorageLimit = homeStorageRoundLimit,
 }: BuildConsumptionPlanInput): ConsumptionPlan {
-  if (rangeAllocations.length === 0) {
-    return {
-      rows: [],
-      warnings: ["射撃場を1件以上指定してください"],
-      peakHomeStock: currentHomeStock,
-      totalAcquisition: 0,
-      totalConsumption: 0,
-    };
+  const inputWarnings: string[] = [];
+  if (
+    !Number.isSafeInteger(purchaseUnit) ||
+    purchaseUnit <= 0 ||
+    !Number.isSafeInteger(consumptionUnit) ||
+    consumptionUnit <= 0 ||
+    purchaseUnit % consumptionUnit !== 0 ||
+    !Number.isSafeInteger(homeStorageLimit) ||
+    homeStorageLimit < purchaseUnit
+  ) {
+    inputWarnings.push("購入単位・消費単位・保管上限の設定を確認してください");
   }
-
-  if (requestedQuantity % purchaseUnit !== 0) {
+  if (
+    !Number.isSafeInteger(requestedQuantity) ||
+    requestedQuantity <= 0 ||
+    requestedQuantity % purchaseUnit !== 0
+  ) {
+    inputWarnings.push(`申請数量は正の ${purchaseUnit} 発単位（250, 500, 750…）で指定してください`);
+  }
+  if (
+    !Number.isSafeInteger(currentHomeStock) ||
+    currentHomeStock < 0 ||
+    currentHomeStock > homeStorageLimit
+  ) {
+    inputWarnings.push(`自宅在庫は 0〜${homeStorageLimit} 発の整数で指定してください`);
+  }
+  if (rangeAllocations.length === 0) {
+    inputWarnings.push("射撃場を1件以上指定してください");
+  } else if (
+    rangeAllocations.some((range) => !Number.isFinite(range.weight) || range.weight <= 0) ||
+    !Number.isFinite(rangeAllocations.reduce((sum, range) => sum + range.weight, 0)) ||
+    new Set(rangeAllocations.map((range) => range.rangeId)).size !== rangeAllocations.length
+  ) {
+    inputWarnings.push("射撃場は重複なく指定し、配分比率を正の数にしてください");
+  }
+  if (inputWarnings.length > 0) {
     return {
       rows: [],
-      warnings: [`申請数量は ${purchaseUnit} 発単位（250, 500, 750…）で指定してください`],
+      warnings: inputWarnings,
       peakHomeStock: currentHomeStock,
       totalAcquisition: 0,
       totalConsumption: 0,
@@ -67,53 +87,30 @@ export function buildConsumptionPlan({
     initialStock: currentHomeStock,
     homeStorageLimit,
     purchaseUnit,
-  });
-
-  const minimumBufferNeed = computeBufferNeedByAcquisition({
-    initialStock: currentHomeStock,
-    homeStorageLimit,
-    acquisitions,
-    shootingConsumptions: [],
-    bufferConsumptions: [],
     consumptionUnit,
   });
-  const minimumBufferTotal = sumNumbers({ values: minimumBufferNeed });
 
-  if (minimumBufferTotal > requestedQuantity) {
+  if (acquisitions.length === 0) {
     return {
       rows: [],
-      warnings: [
-        `自宅在庫 ${currentHomeStock} 発の状態では、申請数量 ${requestedQuantity} 発では保管上限 ${homeStorageLimit} 発を守れません（最低 ${minimumBufferTotal} 発の消費が必要）`,
-      ],
+      warnings: ["指定期間・購入単位・在庫の端数では保管上限内の購入を配置できません"],
       peakHomeStock: currentHomeStock,
       totalAcquisition: 0,
       totalConsumption: 0,
     };
   }
 
-  const bufferNeedByAcquisition = minimumBufferNeed;
-  const shootingQuantity = requestedQuantity - minimumBufferTotal;
-  const scheduled = scheduleConsumptionsFromAcquisitions({
+  const consumptions = scheduleConsumptionsFromAcquisitions({
     acquisitions,
-    requestedQuantity,
-    shootingQuantity,
-    bufferNeedByAcquisition,
-    periodFrom,
-    periodTo,
+    initialStock: currentHomeStock,
+    homeStorageLimit,
     rangeAllocations,
     consumptionUnit,
   });
 
-  const baseConsumptions = scheduled.shootingConsumptions;
-  const bufferConsumptions = scheduled.bufferConsumptions;
-  const displayConsumptions = mergeBufferAndShootingSamePeriod({
-    bufferConsumptions,
-    shootingConsumptions: baseConsumptions,
-  });
-
   const rows = mergeEventsIntoRows({
     acquisitions,
-    consumptions: displayConsumptions,
+    consumptions,
     counterpartyName,
     counterpartyAddress,
   });
@@ -121,8 +118,7 @@ export function buildConsumptionPlan({
   const simulation = simulateHomeStock({
     initialStock: currentHomeStock,
     acquisitions,
-    shootingConsumptions: baseConsumptions,
-    bufferConsumptions,
+    shootingConsumptions: consumptions,
   });
 
   const totalAcquisition = rows.reduce((sum, row) => sum + row.acquisitionQuantity, 0);
@@ -138,23 +134,17 @@ export function buildConsumptionPlan({
     maxRowsPerPage: defaultMaxRowsPerPage,
   });
 
-  if (sumConsumptionQuantity({ consumptions: baseConsumptions }) < shootingQuantity) {
-    warnings.push(
-      `購入間の上中下旬枠に割り当て可能な射撃消費が不足しています（${sumConsumptionQuantity({ consumptions: baseConsumptions })} / ${shootingQuantity}）`,
-    );
-  }
-
   if (
     hasConsecutivePurchasesWithoutConsumption({
       acquisitions,
-      consumptions: displayConsumptions,
+      consumptions,
     })
   ) {
     warnings.push("消費のないまま購入が連続しています");
   }
 
   const consumptionsPerGap = countConsumptionsBetweenPurchases({
-    consumptions: displayConsumptions,
+    consumptions,
     acquisitions,
   });
 
@@ -172,38 +162,6 @@ export function buildConsumptionPlan({
     totalAcquisition,
     totalConsumption,
   };
-}
-
-function mergeBufferAndShootingSamePeriod({
-  bufferConsumptions,
-  shootingConsumptions,
-}: {
-  bufferConsumptions: ConsumptionEvent[];
-  shootingConsumptions: ConsumptionEvent[];
-}): ConsumptionEvent[] {
-  const merged = new Map<string, ConsumptionEvent>();
-
-  for (const event of [...bufferConsumptions, ...shootingConsumptions]) {
-    const key = serializeConsumptionSlotKey({
-      period: event.scheduledPeriod,
-      slotSequence: event.slotSequence,
-    });
-    const existing = merged.get(key);
-
-    if (!existing) {
-      merged.set(key, { ...event });
-      continue;
-    }
-
-    existing.quantity += event.quantity;
-  }
-
-  return [...merged.values()].sort((a, b) =>
-    compareTimelinePosition({
-      a: { ...a, kind: "consumption" },
-      b: { ...b, kind: "consumption" },
-    }),
-  );
 }
 
 function mergeEventsIntoRows({
@@ -282,12 +240,4 @@ function mergeEventsIntoRows({
         rowIndex: index + 1,
       }),
     );
-}
-
-function sumConsumptionQuantity({ consumptions }: { consumptions: ConsumptionEvent[] }): number {
-  return consumptions.reduce((sum, event) => sum + event.quantity, 0);
-}
-
-function sumNumbers({ values }: { values: number[] }): number {
-  return values.reduce((sum, value) => sum + value, 0);
 }

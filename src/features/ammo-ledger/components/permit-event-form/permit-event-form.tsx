@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { buildLedgerHref } from "@/features/ammo-ledger/ledger/build-ledger-href/build-ledger-href";
+import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
 import { createPermitEventAction } from "@/features/ammo-ledger/permit/create-permit-event/create-permit-event-action";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import {
@@ -18,7 +18,7 @@ import {
 } from "@/features/ammo-ledger/schema/permit-event-kind";
 
 export function PermitEventForm() {
-  const router = useRouter();
+  const navigateAfterMutation = useAmmoLedgerMutationNavigation();
   const today = new Date().toISOString().slice(0, 10);
 
   const [purpose, setPurpose] = useState<LedgerPurpose>("shooting");
@@ -34,22 +34,28 @@ export function PermitEventForm() {
     setIsPending(true);
     setError(null);
 
-    const result = await createPermitEventAction({
-      purpose,
-      eventKind,
-      occurredOn,
-      quantity: Number(quantity) || 0,
-      memo: memo || undefined,
-    });
+    try {
+      const result = await createPermitEventAction({
+        purpose,
+        eventKind,
+        occurredOn,
+        quantity: Number(quantity) || 0,
+        memo: memo || undefined,
+      });
 
-    if (!result.ok) {
-      setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+
+        return;
+      }
+
+      showAmmoLedgerToast({ action: "created", subject: "許可イベント" });
+      navigateAfterMutation({ href: buildLedgerHref({ purpose }) });
+    } catch {
+      setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({ action: "created", subject: "許可イベント" });
-    router.push(buildLedgerHref({ purpose }));
   }
 
   return (
@@ -99,7 +105,11 @@ export function PermitEventForm() {
         <Input id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} />
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
 
       <Button type="submit" disabled={isPending}>
         {isPending ? "追加中…" : "イベントを追加"}

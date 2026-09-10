@@ -2,7 +2,10 @@ import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { shouldGuardAmmoLedgerLayout } from "@/features/ammo-ledger/auth/should-guard-ammo-ledger-layout/should-guard-ammo-ledger-layout";
 import type { AmmoLedgerWorkspacePayload } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-payload/ammo-ledger-workspace-payload";
 import { loadAmmoLedgerWorkspacePayload } from "@/features/ammo-ledger/workspace/load-ammo-ledger-workspace-payload/load-ammo-ledger-workspace-payload";
-import { resolveShellRoute } from "@/features/ammo-ledger/workspace/resolve-shell-route/resolve-shell-route";
+import {
+  isWorkspaceShellRoute,
+  resolveShellRoute,
+} from "@/features/ammo-ledger/workspace/resolve-shell-route/resolve-shell-route";
 
 export async function loadInitialAmmoLedgerWorkspace({
   pathname,
@@ -13,7 +16,8 @@ export async function loadInitialAmmoLedgerWorkspace({
     return undefined;
   }
 
-  if (!resolveShellRoute({ path: pathname ?? "" })) {
+  const route = resolveShellRoute({ path: pathname ?? "" });
+  if (!route || !isWorkspaceShellRoute({ route })) {
     return undefined;
   }
 

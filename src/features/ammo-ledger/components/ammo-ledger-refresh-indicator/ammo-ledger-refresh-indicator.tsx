@@ -1,8 +1,24 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+
 type AmmoLedgerRefreshIndicatorProps = {
   visible: boolean;
 };
 
 export function AmmoLedgerRefreshIndicator({ visible }: AmmoLedgerRefreshIndicatorProps) {
+  const { error, retry } = useAmmoLedgerWorkspace();
+  if (error) {
+    return (
+      <div role="alert" className="flex flex-wrap items-center justify-center gap-2 py-3 text-sm">
+        <p>帳簿の表示を更新できませんでした。</p>
+        <Button type="button" variant="outline" onClick={retry}>
+          再試行
+        </Button>
+      </div>
+    );
+  }
   if (!visible) {
     return null;
   }

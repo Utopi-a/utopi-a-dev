@@ -17,7 +17,7 @@ import {
   listShotGaugeSelectOptions,
   normalizeGaugeNumberForSelect,
 } from "@/features/ammo-ledger/schema/shot-gauge-options";
-import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 const cartridgeTypeFormOptions: { value: CartridgeType; label: string }[] = [
   { value: "rifle", label: "ライフル実包" },
@@ -40,7 +40,7 @@ type AmmoTypeFormProps = {
 
 export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}) {
   const router = useRouter();
-  const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
+  const requestRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const isEdit = Boolean(recordId);
   const [name, setName] = useState(initialValues?.name ?? "");
   const [caliber, setCaliber] = useState(initialValues?.caliber ?? "12番");
@@ -87,43 +87,48 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
     setIsPending(true);
     setError(null);
 
-    const payload = {
-      name: name || undefined,
-      caliber,
-      cartridgeType,
-      gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber || undefined : undefined,
-      roundsPerBox: Number(roundsPerBox),
-      defaultPurpose: defaultPurpose || undefined,
-      memo: memo || undefined,
-    };
+    try {
+      const payload = {
+        name: name || undefined,
+        caliber,
+        cartridgeType,
+        gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber || undefined : undefined,
+        roundsPerBox: Number(roundsPerBox),
+        defaultPurpose: defaultPurpose || undefined,
+        memo: memo || undefined,
+      };
 
-    const result = recordId
-      ? await updateAmmoTypeAction({ id: recordId, input: payload })
-      : await createAmmoTypeAction(payload);
+      const result = recordId
+        ? await updateAmmoTypeAction({ id: recordId, input: payload })
+        : await createAmmoTypeAction(payload);
 
-    if (!result.ok) {
-      setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+
+        return;
+      }
+
+      showAmmoLedgerToast({
+        action: isEdit ? "updated" : "created",
+        subject: "弾種",
+      });
+      requestRevalidation();
+
+      if (isEdit) {
+        router.push("/lab/ammo-ledger/settings/ammo-types");
+        return;
+      }
+
+      router.refresh();
+      setName("");
+      setGaugeNumber("");
+      setDefaultPurpose("");
+      setMemo("");
+    } catch {
+      setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({
-      action: isEdit ? "updated" : "created",
-      subject: "弾種",
-    });
-    await invalidateWorkspace();
-
-    if (isEdit) {
-      router.push("/lab/ammo-ledger/settings/ammo-types");
-      return;
-    }
-
-    router.refresh();
-    setName("");
-    setGaugeNumber("");
-    setDefaultPurpose("");
-    setMemo("");
-    setIsPending(false);
   }
 
   return (
@@ -207,7 +212,11 @@ export function AmmoTypeForm({ recordId, initialValues }: AmmoTypeFormProps = {}
         <p className="font-semibold">{previewLabel}</p>
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
       <Button type="submit" disabled={isPending}>
         {isPending ? "保存中…" : isEdit ? "変更を保存" : "弾種を追加"}
       </Button>

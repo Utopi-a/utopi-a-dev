@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { createGunAction } from "@/features/ammo-ledger/master/create-gun/create-gun-action";
 import { updateGunAction } from "@/features/ammo-ledger/master/update-gun/update-gun-action";
-import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type GunFormProps = {
   recordId?: string;
@@ -25,7 +25,7 @@ type GunFormProps = {
 
 export function GunForm({ recordId, initialValues }: GunFormProps = {}) {
   const router = useRouter();
-  const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
+  const requestRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const isEdit = Boolean(recordId);
   const [name, setName] = useState(initialValues?.name ?? "");
   const [gunNumber, setGunNumber] = useState(initialValues?.gunNumber ?? "");
@@ -42,44 +42,49 @@ export function GunForm({ recordId, initialValues }: GunFormProps = {}) {
     setIsPending(true);
     setError(null);
 
-    const payload = {
-      name,
-      gunNumber,
-      permitNumber,
-      gunType,
-      caliber,
-      purpose: purpose || undefined,
-      memo: memo || undefined,
-    };
+    try {
+      const payload = {
+        name,
+        gunNumber,
+        permitNumber,
+        gunType,
+        caliber,
+        purpose: purpose || undefined,
+        memo: memo || undefined,
+      };
 
-    const result = isEdit
-      ? await updateGunAction({ id: recordId!, input: payload })
-      : await createGunAction(payload);
+      const result = recordId
+        ? await updateGunAction({ id: recordId, input: payload })
+        : await createGunAction(payload);
 
-    if (!result.ok) {
-      setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+
+        return;
+      }
+
+      showAmmoLedgerToast({
+        action: isEdit ? "updated" : "created",
+        subject: "銃",
+      });
+      requestRevalidation();
+
+      if (isEdit) {
+        router.push("/lab/ammo-ledger/settings/guns");
+        return;
+      }
+
+      router.refresh();
+      setName("");
+      setGunNumber("");
+      setPermitNumber("");
+      setPurpose("");
+      setMemo("");
+    } catch {
+      setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({
-      action: isEdit ? "updated" : "created",
-      subject: "銃",
-    });
-    await invalidateWorkspace();
-
-    if (isEdit) {
-      router.push("/lab/ammo-ledger/settings/guns");
-      return;
-    }
-
-    router.refresh();
-    setName("");
-    setGunNumber("");
-    setPermitNumber("");
-    setPurpose("");
-    setMemo("");
-    setIsPending(false);
   }
 
   return (
@@ -127,7 +132,11 @@ export function GunForm({ recordId, initialValues }: GunFormProps = {}) {
         <Label htmlFor="memo">メモ</Label>
         <Input id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} />
       </div>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
       <Button type="submit" disabled={isPending}>
         {isPending ? "保存中…" : isEdit ? "変更を保存" : "銃を追加"}
       </Button>

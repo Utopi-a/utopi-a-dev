@@ -20,9 +20,15 @@ test("ヘッダーから About へ遷移できる", async ({ page, isMobile }) =
 
   if (isMobile) {
     await page.getByRole("button", { name: "メニューを開く" }).click();
-    await page.getByRole("navigation", { name: "モバイル" }).getByRole("link", { name: "About" }).click();
+    await page
+      .getByRole("navigation", { name: "モバイル" })
+      .getByRole("link", { name: "About" })
+      .click();
   } else {
-    await page.getByRole("navigation", { name: "メイン" }).getByRole("link", { name: "About" }).click();
+    await page
+      .getByRole("navigation", { name: "メイン" })
+      .getByRole("link", { name: "About" })
+      .click();
   }
 
   await expect(page).toHaveURL("/about");

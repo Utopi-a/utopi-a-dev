@@ -1,6 +1,6 @@
 import { AcquisitionPermitApplicationFormLazy } from "@/features/ammo-ledger/acquisition-permit-application/components/acquisition-permit-application-form/acquisition-permit-application-form.lazy";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
-import { computeStockByAmmoType } from "@/features/ammo-ledger/ledger/compute-stock/compute-stock";
+import { evaluateHomeStorageLimit } from "@/features/ammo-ledger/ledger/compute-running-home-stock/compute-running-home-stock";
 import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-entries/list-ledger-entries";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 import { getLedgerProfile } from "@/features/ammo-ledger/profile/get-ledger-profile/get-ledger-profile";
@@ -21,17 +21,9 @@ export default async function AcquisitionPermitApplicationNewPage() {
     accountName: user.name,
   });
 
-  const stockByAmmoType = computeStockByAmmoType({
-    entries: entries
-      .filter((entry) => !entry.voidedAt && entry.ammoTypeId)
-      .map((entry) => ({
-        ammoTypeId: entry.ammoTypeId as string,
-        category: entry.category as LedgerCategory,
-        quantity: entry.quantity,
-      })),
+  const { currentStock: currentHomeStock } = evaluateHomeStorageLimit({
+    entries: entries.map((entry) => ({ ...entry, category: entry.category as LedgerCategory })),
   });
-
-  const currentHomeStock = [...stockByAmmoType.values()].reduce((sum, value) => sum + value, 0);
 
   return (
     <AcquisitionPermitApplicationFormLazy

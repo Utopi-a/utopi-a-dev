@@ -38,11 +38,16 @@ export function InflowNewView() {
   const searchParams = useSearchParams();
   const draftId = searchParams.get("draft");
   const tab = parseTab(searchParams.get("tab"));
-  const { workspace, isLoading: isWorkspaceLoading } = useAmmoLedgerWorkspace();
-  const { draft, isLoading: isDraftLoading } = useDraftTransaction({ draftId });
+  const { workspace, isLoading: isWorkspaceLoading, error, retry } = useAmmoLedgerWorkspace();
+  const {
+    draft,
+    isLoading: isDraftLoading,
+    error: draftError,
+    retry: retryDraft,
+  } = useDraftTransaction({ draftId });
 
-  if (isWorkspaceLoading || isDraftLoading || !workspace) {
-    return <WorkspaceViewLoader />;
+  if (isWorkspaceLoading || isDraftLoading || !workspace || draftError) {
+    return <WorkspaceViewLoader error={error ?? draftError} onRetry={error ? retry : retryDraft} />;
   }
 
   const ammoTypes = deriveAmmoTypesFromWorkspace({ workspace });

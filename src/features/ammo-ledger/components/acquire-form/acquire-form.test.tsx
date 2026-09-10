@@ -1,9 +1,22 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
+import { AmmoLedgerSwrProvider } from "@/features/ammo-ledger/workspace/ammo-ledger-swr-provider/ammo-ledger-swr-provider";
+
+function render(ui: ReactNode) {
+  return renderBase(
+    <AmmoLedgerOptimisticNavProvider>
+      <AmmoLedgerSwrProvider>{ui}</AmmoLedgerSwrProvider>
+    </AmmoLedgerOptimisticNavProvider>,
+  );
+}
+
+import { fireEvent, render as renderBase, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AcquireForm } from "./acquire-form";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/lab/ammo-ledger/consume/new",
 }));
 
 vi.mock("@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data", () => ({
@@ -57,11 +70,6 @@ vi.mock("@/features/ammo-ledger/transactions/create-transaction/create-transacti
 vi.mock("@/features/ammo-ledger/transactions/update-transaction/update-transaction-action", () => ({
   updateTransactionAction: vi.fn(),
 }));
-
-vi.mock(
-  "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace",
-  () => ({ useInvalidateAmmoLedgerWorkspace: () => vi.fn() }),
-);
 
 const huntingAmmoType = {
   id: "ammo-hunting",

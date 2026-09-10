@@ -32,7 +32,7 @@ function syncTabToUrl({ tab, draft }: { tab: InflowTab; draft: string | null }) 
     params.set("draft", draft);
   }
   const url = `/lab/ammo-ledger/inflow/new?${params.toString()}`;
-  window.history.replaceState(window.history.state, "", url);
+  window.history.replaceState(null, "", url);
 }
 
 export function InflowRecordTabs({

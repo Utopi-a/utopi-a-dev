@@ -12,11 +12,16 @@ import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-amm
 export function ConsumeNewView() {
   const searchParams = useSearchParams();
   const draftId = searchParams.get("draft");
-  const { workspace, isLoading: isWorkspaceLoading } = useAmmoLedgerWorkspace();
-  const { draft, isLoading: isDraftLoading } = useDraftTransaction({ draftId });
+  const { workspace, isLoading: isWorkspaceLoading, error, retry } = useAmmoLedgerWorkspace();
+  const {
+    draft,
+    isLoading: isDraftLoading,
+    error: draftError,
+    retry: retryDraft,
+  } = useDraftTransaction({ draftId });
 
-  if (isWorkspaceLoading || isDraftLoading || !workspace) {
-    return <WorkspaceViewLoader />;
+  if (isWorkspaceLoading || isDraftLoading || !workspace || draftError) {
+    return <WorkspaceViewLoader error={error ?? draftError} onRetry={error ? retry : retryDraft} />;
   }
 
   const { guns, ammoTypes, stockByAmmoTypeId } = deriveFormWorkspaceData({ workspace });

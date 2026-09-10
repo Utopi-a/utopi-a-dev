@@ -62,7 +62,12 @@ export function MasterPicker({
 }: MasterPickerProps) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<PickerView>("quick");
-  const { pickerData: loadedPickerData, isLoading: isPickerDataLoading } = useMasterPickerData({
+  const {
+    pickerData: loadedPickerData,
+    isLoading: isPickerDataLoading,
+    error: pickerError,
+    retry: retryPicker,
+  } = useMasterPickerData({
     catalogKind,
     includeRangeCatalog,
     enabled: (open || value !== "") && pickerDataProp === undefined,
@@ -351,9 +356,12 @@ export function MasterPicker({
           {view === "quick" ? (
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2">
               {!pickerData && isPickerDataLoading ? (
-                <WorkspaceViewLoader />
+                <WorkspaceViewLoader error={pickerError} onRetry={retryPicker} />
               ) : !pickerData ? (
-                <p className="py-4 text-sm text-muted-foreground">データを読み込めませんでした。</p>
+                <WorkspaceViewLoader
+                  error={pickerError ?? new Error("一覧を取得できませんでした。")}
+                  onRetry={retryPicker}
+                />
               ) : (
                 <>
                   {favoriteEntries.length > 0 ? (

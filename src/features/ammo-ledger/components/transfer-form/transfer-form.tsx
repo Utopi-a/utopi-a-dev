@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,13 +11,13 @@ import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
+import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
 import { updateTransactionAction } from "@/features/ammo-ledger/transactions/update-transaction/update-transaction-action";
-import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type TransferFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
@@ -38,8 +37,7 @@ type TransferFormProps = {
 };
 
 export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: TransferFormProps) {
-  const router = useRouter();
-  const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
+  const navigateAfterMutation = useAmmoLedgerMutationNavigation();
   const today = new Date().toISOString().slice(0, 10);
   const { pickerData: counterpartyPickerData } = useMasterPickerData({
     catalogKind: "gun_shop",
@@ -102,34 +100,38 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
     setIsPending(true);
     setError(null);
 
-    const payload = {
-      inputKind: "transfer" as const,
-      purpose,
-      occurredOn,
-      ammoTypeId,
-      boxCount: Number(boxCount) || 0,
-      looseRounds: Number(looseRounds) || 0,
-      ...(isManualCounterparty ? { counterpartyName, counterpartyAddress } : { counterpartyId }),
-      memo: memo || undefined,
-      ledgerNote: ledgerNote || undefined,
-    };
+    try {
+      const payload = {
+        inputKind: "transfer" as const,
+        purpose,
+        occurredOn,
+        ammoTypeId,
+        boxCount: Number(boxCount) || 0,
+        looseRounds: Number(looseRounds) || 0,
+        ...(isManualCounterparty ? { counterpartyName, counterpartyAddress } : { counterpartyId }),
+        memo: memo || undefined,
+        ledgerNote: ledgerNote || undefined,
+      };
 
-    const result = ledgerEntryId
-      ? await updateTransactionAction({ ledgerEntryId, ...payload })
-      : await createTransactionAction(payload);
+      const result = ledgerEntryId
+        ? await updateTransactionAction({ ledgerEntryId, ...payload })
+        : await createTransactionAction(payload);
 
-    if (result.ok) {
-      showAmmoLedgerToast({
-        action: ledgerEntryId ? "updated" : "created",
-        subject: "譲渡記録",
-      });
-      await invalidateWorkspace();
-      router.push(result.redirectPath);
-      return;
+      if (result.ok) {
+        showAmmoLedgerToast({
+          action: ledgerEntryId ? "updated" : "created",
+          subject: "譲渡記録",
+        });
+        navigateAfterMutation({ href: result.redirectPath });
+        return;
+      }
+
+      setError(result.error);
+    } catch {
+      setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
+    } finally {
+      setIsPending(false);
     }
-
-    setError(result.error);
-    setIsPending(false);
   }
 
   return (
@@ -235,7 +237,11 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
         <Input id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} />
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
 
       <Button type="submit" disabled={isPending || computedRounds <= 0}>
         {isPending ? "保存中…" : ledgerEntryId ? "更新" : "保存"}

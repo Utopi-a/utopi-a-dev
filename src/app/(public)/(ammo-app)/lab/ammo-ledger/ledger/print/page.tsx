@@ -1,6 +1,6 @@
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { LedgerPrintControls } from "@/features/ammo-ledger/components/ledger-print-controls/ledger-print-controls";
-import { LedgerPrintDocumentLazy } from "@/features/ammo-ledger/documents/ledger-print-document/ledger-print-document.lazy";
+import { LedgerPrintDocument } from "@/features/ammo-ledger/documents/ledger-print-document/ledger-print-document";
 import { validateLedgerForLock } from "@/features/ammo-ledger/documents/validate-ledger-for-lock/validate-ledger-for-lock";
 import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-entries/list-ledger-entries";
 import { getLatestLockState } from "@/features/ammo-ledger/ledger/lock/get-latest-lock-state/get-latest-lock-state";
@@ -96,7 +96,9 @@ export default async function LedgerPrintPage({ searchParams }: PageProps) {
   const lockedThrough = lockState.lockedThrough ?? "";
   const officialTo = isTargetLocked ? (lockedThrough < to ? lockedThrough : to) : to;
 
-  const yearEntries = await listLedgerEntries({ userId: user.id, from, to: targetDate });
+  const yearEntries = allEntries.filter(
+    (entry) => entry.occurredOn >= from && entry.occurredOn <= targetDate,
+  );
   const lockIssues = [
     ...validateLedgerForLock({
       entries: yearEntries,
@@ -119,7 +121,7 @@ export default async function LedgerPrintPage({ searchParams }: PageProps) {
 
   const entries =
     canPrintOfficially || isPreview
-      ? await listLedgerEntries({ userId: user.id, from, to: printTo })
+      ? allEntries.filter((entry) => entry.occurredOn >= from && entry.occurredOn <= printTo)
       : [];
 
   return (
@@ -136,7 +138,7 @@ export default async function LedgerPrintPage({ searchParams }: PageProps) {
         lockIssues={lockIssues}
       />
       {canPrintOfficially || isPreview ? (
-        <LedgerPrintDocumentLazy
+        <LedgerPrintDocument
           ownerName={ownerName}
           ownerAddress={profile?.ownerAddress}
           from={from}

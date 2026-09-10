@@ -1,10 +1,9 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
-import { memo, useEffect, useTransition } from "react";
+import { usePathname } from "next/navigation";
+import { memo } from "react";
 import { useAmmoLedgerOptimisticNav } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { useAmmoLedgerClientNav } from "@/features/ammo-ledger/navigation/use-ammo-ledger-client-nav/use-ammo-ledger-client-nav";
-import { isClientShellNavPath } from "@/features/ammo-ledger/workspace/resolve-shell-route/resolve-shell-route";
 import { cn } from "@/lib/cn";
 
 const navItems = [
@@ -32,30 +31,12 @@ const navItems = [
 
 export const AmmoLedgerNav = memo(function AmmoLedgerNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const { activePath } = useAmmoLedgerOptimisticNav();
   const { navigate: navigateClientShell } = useAmmoLedgerClientNav();
-  const [isPending, startTransition] = useTransition();
   const displayPath = activePath ?? pathname;
 
-  useEffect(() => {
-    for (const item of navItems) {
-      router.prefetch(item.href);
-    }
-  }, [router]);
-
   function handleNavigate({ href }: { href: string }) {
-    if (href === displayPath) {
-      return;
-    }
-
-    if (navigateClientShell({ href })) {
-      return;
-    }
-
-    startTransition(() => {
-      router.push(href);
-    });
+    if (href !== displayPath) navigateClientShell({ href });
   }
 
   return (
@@ -68,7 +49,6 @@ export const AmmoLedgerNav = memo(function AmmoLedgerNav() {
             key={item.href}
             type="button"
             onClick={() => handleNavigate({ href: item.href })}
-            disabled={isPending && !isClientShellNavPath({ path: item.href })}
             className={cn(
               "flex items-center justify-center rounded-md px-1 py-1.5 text-center text-xs font-medium transition-colors sm:py-2 sm:text-sm",
               isActive

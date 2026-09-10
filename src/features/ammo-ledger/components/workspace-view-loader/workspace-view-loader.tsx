@@ -1,8 +1,33 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+
 type WorkspaceViewLoaderProps = {
   label?: string;
+  error?: unknown;
+  onRetry?: () => void;
 };
 
-export function WorkspaceViewLoader({ label = "読み込み中…" }: WorkspaceViewLoaderProps) {
+export function WorkspaceViewLoader({
+  label = "読み込み中…",
+  error,
+  onRetry,
+}: WorkspaceViewLoaderProps) {
+  if (error) {
+    return (
+      <div
+        role="alert"
+        className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-sm"
+      >
+        <p>{error instanceof Error ? error.message : "データを取得できませんでした。"}</p>
+        {onRetry ? (
+          <Button type="button" variant="outline" onClick={onRetry}>
+            再試行
+          </Button>
+        ) : null}
+      </div>
+    );
+  }
   return (
     <div
       role="status"

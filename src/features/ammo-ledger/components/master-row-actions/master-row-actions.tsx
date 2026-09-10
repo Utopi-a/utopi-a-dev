@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
-import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { cn } from "@/lib/cn";
 
 export type MasterDeleteResult = { ok: true } | { ok: false; error?: string };
@@ -24,7 +24,7 @@ export function MasterRowActions({
   deleteAction,
 }: MasterRowActionsProps) {
   const router = useRouter();
-  const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
+  const requestWorkspaceRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,17 +34,21 @@ export function MasterRowActions({
     }
     setIsPending(true);
     setError(null);
-    const result = await deleteAction({ id: recordId });
-    if (!result.ok) {
-      setError(result.error ?? "削除に失敗しました");
-      setIsPending(false);
-      return;
-    }
+    try {
+      const result = await deleteAction({ id: recordId });
+      if (!result.ok) {
+        setError(result.error ?? "削除に失敗しました");
+        return;
+      }
 
-    showAmmoLedgerToast({ action: "deleted", subject: deletedSubject });
-    await invalidateWorkspace();
-    router.refresh();
-    setIsPending(false);
+      showAmmoLedgerToast({ action: "deleted", subject: deletedSubject });
+      requestWorkspaceRevalidation();
+      router.refresh();
+    } catch {
+      setError("削除結果を確認できませんでした。時間をおいて再度お試しください。");
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (

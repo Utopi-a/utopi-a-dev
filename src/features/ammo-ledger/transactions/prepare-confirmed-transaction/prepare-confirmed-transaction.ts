@@ -34,17 +34,39 @@ export async function prepareConfirmedTransaction({
     return { ok: false, error: "この入力種別は保存できません" };
   }
 
-  const [ammoTypeRow] = await db
-    .select()
-    .from(ammoType)
-    .where(and(eq(ammoType.id, input.ammoTypeId), eq(ammoType.userId, userId)));
+  const [[ammoTypeRow], permits, [gunRow], [rangeRow], [selectedCounterparty]] = await Promise.all([
+    db
+      .select()
+      .from(ammoType)
+      .where(and(eq(ammoType.id, input.ammoTypeId), eq(ammoType.userId, userId))),
+    input.inputKind === "acquire" ? listAcquisitionPermits({ userId }) : Promise.resolve([]),
+    input.inputKind === "consume"
+      ? db
+          .select()
+          .from(ammoGun)
+          .where(and(eq(ammoGun.id, input.gunId), eq(ammoGun.userId, userId)))
+      : Promise.resolve([]),
+    input.inputKind === "consume" && "rangeId" in input
+      ? db
+          .select()
+          .from(ammoRange)
+          .where(and(eq(ammoRange.id, input.rangeId), eq(ammoRange.userId, userId)))
+      : Promise.resolve([]),
+    "counterpartyId" in input && input.counterpartyId
+      ? db
+          .select()
+          .from(ammoCounterparty)
+          .where(
+            and(eq(ammoCounterparty.id, input.counterpartyId), eq(ammoCounterparty.userId, userId)),
+          )
+      : Promise.resolve([]),
+  ]);
 
   if (!ammoTypeRow) {
     return { ok: false, error: "弾種が見つかりません" };
   }
 
   if (input.inputKind === "acquire") {
-    const permits = await listAcquisitionPermits({ userId });
     if (
       !hasActiveAcquisitionPermit({
         permits,
@@ -59,43 +81,19 @@ export async function prepareConfirmedTransaction({
     }
   }
 
-  let gunRow: typeof ammoGun.$inferSelect | undefined;
-  let rangeRow: typeof ammoRange.$inferSelect | undefined;
-
   if (input.inputKind === "consume") {
-    const [gun] = await db
-      .select()
-      .from(ammoGun)
-      .where(and(eq(ammoGun.id, input.gunId), eq(ammoGun.userId, userId)));
-
-    if (!gun) {
+    if (!gunRow) {
       return { ok: false, error: "銃が見つかりません" };
     }
-    gunRow = gun;
 
-    if ("rangeId" in input) {
-      const [range] = await db
-        .select()
-        .from(ammoRange)
-        .where(and(eq(ammoRange.id, input.rangeId), eq(ammoRange.userId, userId)));
-
-      if (!range) {
-        return { ok: false, error: "射撃場が見つかりません" };
-      }
-      rangeRow = range;
+    if ("rangeId" in input && !rangeRow) {
+      return { ok: false, error: "射撃場が見つかりません" };
     }
   }
 
-  let counterpartyRow: typeof ammoCounterparty.$inferSelect | undefined;
-  if ("counterpartyId" in input && input.counterpartyId) {
-    const [row] = await db
-      .select()
-      .from(ammoCounterparty)
-      .where(
-        and(eq(ammoCounterparty.id, input.counterpartyId), eq(ammoCounterparty.userId, userId)),
-      );
-    counterpartyRow = row;
-  } else if (
+  let counterpartyRow = selectedCounterparty;
+  if (
+    !("counterpartyId" in input && input.counterpartyId) &&
     "counterpartyName" in input &&
     input.counterpartyName &&
     "counterpartyAddress" in input &&

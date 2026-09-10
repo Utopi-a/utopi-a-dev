@@ -1,10 +1,23 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
+import { AmmoLedgerSwrProvider } from "@/features/ammo-ledger/workspace/ammo-ledger-swr-provider/ammo-ledger-swr-provider";
+
+function render(ui: ReactNode) {
+  return renderBase(
+    <AmmoLedgerOptimisticNavProvider>
+      <AmmoLedgerSwrProvider>{ui}</AmmoLedgerSwrProvider>
+    </AmmoLedgerOptimisticNavProvider>,
+  );
+}
+
+import { fireEvent, render as renderBase, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { updateTransactionAction } from "@/features/ammo-ledger/transactions/update-transaction/update-transaction-action";
 import { ConsumeForm } from "./consume-form";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/lab/ammo-ledger/consume/new",
 }));
 
 vi.mock("@/features/ammo-ledger/components/master-picker/master-picker", () => ({
@@ -22,11 +35,6 @@ vi.mock("@/features/ammo-ledger/transactions/create-transaction/create-transacti
 vi.mock("@/features/ammo-ledger/transactions/update-transaction/update-transaction-action", () => ({
   updateTransactionAction: vi.fn(),
 }));
-
-vi.mock(
-  "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace",
-  () => ({ useInvalidateAmmoLedgerWorkspace: () => vi.fn() }),
-);
 
 const createdAt = new Date("2026-01-01T00:00:00Z");
 

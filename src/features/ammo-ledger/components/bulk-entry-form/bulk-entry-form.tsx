@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
@@ -20,9 +19,9 @@ import {
 import { moveBulkEntryRow } from "@/features/ammo-ledger/components/bulk-entry-form/move-bulk-entry-row/move-bulk-entry-row";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { buildAmmoTypeFieldOptions } from "@/features/ammo-ledger/master/build-ammo-type-field-options/build-ammo-type-field-options";
+import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 import { createBulkTransactionsAction } from "@/features/ammo-ledger/transactions/create-bulk-transactions/create-bulk-transactions-action";
-import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type BulkEntryFormProps = {
   guns: (typeof ammoGun.$inferSelect)[];
@@ -31,8 +30,7 @@ type BulkEntryFormProps = {
 };
 
 export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryFormProps) {
-  const router = useRouter();
-  const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
+  const navigateAfterMutation = useAmmoLedgerMutationNavigation();
   const today = new Date().toISOString().slice(0, 10);
   const { pickerData: counterpartyPickerData } = useMasterPickerData({
     catalogKind: "gun_shop",
@@ -154,30 +152,34 @@ export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryF
     setIsPending(true);
     setError(null);
 
-    const entries = rows
-      .map((row) => buildBulkEntryPayload({ row }))
-      .filter((entry) => entry !== null);
+    try {
+      const entries = rows
+        .map((row) => buildBulkEntryPayload({ row }))
+        .filter((entry) => entry !== null);
 
-    if (entries.length === 0) {
-      setError("1件以上の記録に数量を入力してください");
+      if (entries.length === 0) {
+        setError("1件以上の記録に数量を入力してください");
+
+        return;
+      }
+
+      const result = await createBulkTransactionsAction({ entries });
+
+      if (result.ok) {
+        showAmmoLedgerToast({
+          action: "created",
+          subject: `記録 ${result.createdCount}件`,
+        });
+        navigateAfterMutation({ href: result.redirectPath });
+        return;
+      }
+
+      setError(result.error);
+    } catch {
+      setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    const result = await createBulkTransactionsAction({ entries });
-
-    if (result.ok) {
-      showAmmoLedgerToast({
-        action: "created",
-        subject: `記録 ${result.createdCount}件`,
-      });
-      await invalidateWorkspace();
-      router.push(result.redirectPath);
-      return;
-    }
-
-    setError(result.error);
-    setIsPending(false);
   }
 
   if (rows.length === 0) {
@@ -224,7 +226,11 @@ export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryF
         </p>
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
 
       <Button type="submit" disabled={isPending || activeRowCount === 0}>
         {isPending ? "保存中…" : `${activeRowCount}件をまとめて保存`}

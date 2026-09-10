@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq, gte, isNull, lte } from "drizzle-orm";
+import { refresh } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
 import { ammoLedgerEntry, ammoLedgerLockEvent, ammoType } from "@/db/schema/ammo-ledger";
@@ -33,7 +34,7 @@ export async function lockLedgerAction(input: unknown) {
     return { ok: false as const, error: "今日より未来の日付にはロックできません" };
   }
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     await acquireLedgerAdvisoryLock({ tx, userId: user.id });
 
     const currentState = await getLatestLockState({
@@ -91,6 +92,11 @@ export async function lockLedgerAction(input: unknown) {
       lockedThrough,
     });
 
-    return { ok: true as const };
+    return { ok: true as const, lockState: { isLocked: true, lockedThrough } };
   });
+
+  if (result.ok) {
+    refresh();
+  }
+  return result;
 }

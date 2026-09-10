@@ -1,8 +1,10 @@
-import { and, asc, eq, isNull, notInArray } from "drizzle-orm";
+import { and, eq, isNull, notInArray } from "drizzle-orm";
 import { ammoLedgerEntry } from "@/db/schema/ammo-ledger";
 import {
   applyStockEntry,
+  buildStockKey,
   isStockDecreaseCategory,
+  sortStockEntries,
 } from "@/features/ammo-ledger/ledger/compute-stock/compute-stock";
 import type { AmmoLedgerMutationTx } from "@/features/ammo-ledger/ledger/lock/acquire-ledger-advisory-lock/acquire-ledger-advisory-lock";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
@@ -19,35 +21,14 @@ export type PlannedStockChange = {
   createdAt: Date;
 };
 
-function buildStockKey({ purpose, ammoTypeId }: { purpose: string; ammoTypeId: string }): string {
-  return `${purpose}\0${ammoTypeId}`;
-}
-
 export function validateStockTimeline({
   entries,
 }: {
   entries: PlannedStockChange[];
 }): { ok: true } | { ok: false; error: string } {
   const remainingStock = new Map<string, number>();
-  const sortedEntries = entries
-    .map((entry, sequence) => ({ entry, sequence }))
-    .sort((a, b) => {
-      const dateCompare = a.entry.occurredOn.localeCompare(b.entry.occurredOn);
-      if (dateCompare !== 0) return dateCompare;
-      const dayOrderCompare = a.entry.dayOrder - b.entry.dayOrder;
-      if (dayOrderCompare !== 0) return dayOrderCompare;
-      const createdAtCompare = a.entry.createdAt.getTime() - b.entry.createdAt.getTime();
-      if (createdAtCompare !== 0) return createdAtCompare;
-      const idCompare = a.entry.id.localeCompare(b.entry.id);
-      if (idCompare !== 0) return idCompare;
-      return a.sequence - b.sequence;
-    });
-
-  for (const { entry } of sortedEntries) {
-    const stockKey = buildStockKey({
-      purpose: entry.purpose,
-      ammoTypeId: entry.ammoTypeId,
-    });
+  for (const entry of sortStockEntries({ entries })) {
+    const stockKey = buildStockKey({ entry });
     const currentStock = remainingStock.get(stockKey) ?? 0;
     if (isStockDecreaseCategory({ category: entry.category }) && currentStock < entry.quantity) {
       return {
@@ -58,11 +39,7 @@ export function validateStockTimeline({
 
     applyStockEntry({
       stock: remainingStock,
-      entry: {
-        ammoTypeId: stockKey,
-        category: entry.category,
-        quantity: entry.quantity,
-      },
+      entry,
     });
   }
 
@@ -101,11 +78,6 @@ export async function checkStockBeforeSave({
           ? notInArray(ammoLedgerEntry.id, excludedLedgerEntryIds)
           : undefined,
       ),
-    )
-    .orderBy(
-      asc(ammoLedgerEntry.occurredOn),
-      asc(ammoLedgerEntry.dayOrder),
-      asc(ammoLedgerEntry.createdAt),
     );
 
   return validateStockTimeline({

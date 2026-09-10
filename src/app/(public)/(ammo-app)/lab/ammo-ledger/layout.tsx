@@ -12,7 +12,7 @@ import {
   ammoLedgerPwaIcons,
 } from "@/features/ammo-ledger/pwa/ammo-ledger-pwa-config";
 import { AmmoLedgerSwrProvider } from "@/features/ammo-ledger/workspace/ammo-ledger-swr-provider/ammo-ledger-swr-provider";
-import { AmmoLedgerWorkspacePrefetch } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-prefetch/ammo-ledger-workspace-prefetch";
+import { AmmoLedgerWorkspaceSubscription } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-subscription/ammo-ledger-workspace-subscription";
 import { loadInitialAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/load-initial-ammo-ledger-workspace/load-initial-ammo-ledger-workspace";
 import "@/features/ammo-ledger/ammo-ledger-styles.css";
 import { labFontClassName } from "@/lib/theme/lab-fonts";
@@ -72,7 +72,7 @@ export default async function AmmoLedgerLayout({ children }: { children: React.R
       <SerwistProvider swUrl="/serwist/sw.js">
         <AmmoLedgerSwrProvider initialWorkspace={initialWorkspace}>
           <AmmoLedgerOptimisticNavProvider>
-            <AmmoLedgerWorkspacePrefetch />
+            <AmmoLedgerWorkspaceSubscription />
             <AmmoLedgerShell>
               <AmmoLedgerSubpageChrome>{children}</AmmoLedgerSubpageChrome>
             </AmmoLedgerShell>

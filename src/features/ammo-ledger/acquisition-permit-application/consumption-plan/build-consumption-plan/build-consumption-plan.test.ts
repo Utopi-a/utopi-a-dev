@@ -149,11 +149,32 @@ const baseInput = {
 
 describe("消費計画の境界と全行の契約", () => {
   it.each([
-    { currentHomeStock: 755, requestedQuantity: 250, quantities: [-225, 250, -25], peak: 780 },
-    { currentHomeStock: 755, requestedQuantity: 500, quantities: [-475, 500, -25], peak: 780 },
+    250, 500, 750, 1000, 1250, 5000,
+  ])("1射撃場の申請 %i 発は、全在庫値で100発未満の消費行を作らない", (requestedQuantity) => {
+    for (let currentHomeStock = 0; currentHomeStock <= 800; currentHomeStock += 1) {
+      const input = {
+        ...baseInput,
+        requestedQuantity,
+        currentHomeStock,
+        rangeAllocations: [baseInput.rangeAllocations[0]],
+      };
+      const plan = assertPlanContract(input);
+      for (const row of plan.rows.filter((row) => !row.isAcquisition)) {
+        expect(
+          row.consumptionQuantity,
+          `在庫${currentHomeStock} / 申請${requestedQuantity}`,
+        ).toBeGreaterThanOrEqual(100);
+      }
+    }
+  });
+
+  it.each([
+    { currentHomeStock: 755, requestedQuantity: 250, quantities: [-250, 250], peak: 755 },
+    { currentHomeStock: 755, requestedQuantity: 500, quantities: [-500, 500], peak: 755 },
     { currentHomeStock: 800, requestedQuantity: 250, quantities: [-250, 250], peak: 800 },
     { currentHomeStock: 799, requestedQuantity: 500, quantities: [-500, 500], peak: 799 },
     { currentHomeStock: 300, requestedQuantity: 500, quantities: [500, -500], peak: 800 },
+    { currentHomeStock: 301, requestedQuantity: 500, quantities: [-100, 500, -400], peak: 701 },
     { currentHomeStock: 0, requestedQuantity: 250, quantities: [250, -250], peak: 250 },
   ])("在庫 $currentHomeStock / 申請 $requestedQuantity の購入前後の数量", ({
     currentHomeStock,
@@ -172,6 +193,43 @@ describe("消費計画の境界と全行の契約", () => {
     );
     expect(plan.peakHomeStock).toBe(peak);
     expect(plan.warnings).toEqual([]);
+  });
+
+  it.each([
+    { currentHomeStock: 551, requestedQuantity: 250, weights: [1, 1], totals: [125, 125] },
+    { currentHomeStock: 601, requestedQuantity: 1250, weights: [1, 1], totals: [625, 625] },
+    { currentHomeStock: 601, requestedQuantity: 750, weights: [3, 1], totals: [575, 175] },
+    { currentHomeStock: 401, requestedQuantity: 500, weights: [1, 2, 1], totals: [125, 250, 125] },
+    { currentHomeStock: 601, requestedQuantity: 500, weights: [1, 2, 1], totals: [125, 250, 125] },
+  ])("射撃場への配分で避けられる小口を残さない: $currentHomeStock / $requestedQuantity / $weights", ({
+    currentHomeStock,
+    requestedQuantity,
+    weights,
+    totals,
+  }) => {
+    const input = {
+      ...baseInput,
+      currentHomeStock,
+      requestedQuantity,
+      rangeAllocations: weights.map((weight, index) => ({
+        ...baseInput.rangeAllocations[0],
+        rangeId: String(index),
+        rangeName: `射撃場${index}`,
+        weight,
+      })),
+    };
+    assertPlanContract(input);
+    const consumptionRows = buildConsumptionPlan(input).rows.filter((row) => !row.isAcquisition);
+    for (const row of consumptionRows) {
+      expect(row.consumptionQuantity).toBeGreaterThanOrEqual(100);
+    }
+    expect(
+      input.rangeAllocations.map((range) =>
+        consumptionRows
+          .filter((row) => row.locationName === range.rangeName)
+          .reduce((sum, row) => sum + row.consumptionQuantity, 0),
+      ),
+    ).toEqual(totals);
   });
 
   it.each([
@@ -264,8 +322,7 @@ describe("消費計画の境界と全行の契約", () => {
       ...baseInput,
       rangeAllocations: baseInput.rangeAllocations.map((range) => ({ ...range, weight: 1e307 })),
     };
-    assertPlanContract(input);
-    const plan = buildConsumptionPlan(input);
+    const plan = assertPlanContract(input);
     for (const range of input.rangeAllocations) {
       expect(
         plan.rows
@@ -277,8 +334,7 @@ describe("消費計画の境界と全行の契約", () => {
 
   it("保管上限と端数に合わせて購入量を250発に縮める", () => {
     const input = { ...baseInput, currentHomeStock: 255, homeStorageLimit: 500 };
-    assertPlanContract(input);
-    const plan = buildConsumptionPlan(input);
+    const plan = assertPlanContract(input);
     expect(
       plan.rows.filter((row) => row.isAcquisition).map((row) => row.acquisitionQuantity),
     ).toEqual(Array(20).fill(250));
@@ -352,4 +408,5 @@ function assertPlanContract(input: Parameters<typeof buildConsumptionPlan>[0]) {
     plan.warnings.filter((warning) => !warning.startsWith("別紙1枚あたり")),
     context,
   ).toEqual([]);
+  return plan;
 }

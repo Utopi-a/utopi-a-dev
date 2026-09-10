@@ -18,7 +18,7 @@ export type AcquisitionPermitApplicationInput = {
   gunTypeAndCaliber?: string;
   gunType?: string;
   compatibleAmmunition?: string;
-  gunPermitNumber?: string;
+  possessionPermitCertificateNumber?: string;
   permitPurpose: AcquisitionPermitPurpose;
   ledgerPurpose: LedgerPurpose;
   validFrom: string;

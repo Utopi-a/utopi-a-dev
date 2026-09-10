@@ -16,14 +16,6 @@ export type BuiltApplicationFieldValues = {
   supplementPageCount: number;
 };
 
-function extractPermitCertificateNumber({ value }: { value: string }): string {
-  const matched = value.match(/第?\s*([0-9０-９]+)\s*号?/);
-  if (matched) {
-    return matched[1];
-  }
-  return value.trim();
-}
-
 export function buildApplicationFieldValues({
   input,
 }: {
@@ -35,9 +27,10 @@ export function buildApplicationFieldValues({
   const validTo = splitDateParts({ value: input.validTo });
   const gunType = input.gunType ?? input.gunTypeAndCaliber ?? "";
   const compatibleAmmunition = input.compatibleAmmunition ?? input.ammoName;
-  const permitCertificateNumber = input.gunPermitNumber
-    ? extractPermitCertificateNumber({ value: input.gunPermitNumber })
-    : "";
+  const permitCertificateNumber = (input.possessionPermitCertificateNumber ?? "")
+    .trim()
+    .replace(/^第\s*/, "")
+    .replace(/\s*号$/, "");
 
   const mainFields: ApplicationFieldValues = {
     prefectureName: input.prefectureName,
@@ -85,7 +78,8 @@ export function buildApplicationFieldValues({
       values: {
         year: String(row.scheduledPeriod.year),
         month: String(row.scheduledPeriod.month),
-        period: row.scheduledPeriod.period,
+        // 帳票には「旬」が印刷済みのため、区分だけを重ねる。
+        period: row.scheduledPeriod.period[0],
         purchaseQuantity: row.acquisitionQuantity > 0 ? String(row.acquisitionQuantity) : "",
         consumptionQuantity: row.consumptionQuantity > 0 ? String(row.consumptionQuantity) : "",
         ...locationFields,

@@ -88,6 +88,7 @@ export function AcquisitionPermitApplicationForm({
   const [address, setAddress] = useState(ownerAddress);
   const [birthDate, setBirthDate] = useState(ownerBirthDate);
   const [phone, setPhone] = useState(ownerPhone);
+  const [possessionPermitCertificateNumber, setPossessionPermitCertificateNumber] = useState("");
   const [ledgerPurpose, setLedgerPurpose] = useState<LedgerPurpose>("shooting");
   const [ammoName, setAmmoName] = useState<AcquisitionPermitName>(defaultAcquisitionPermitName);
   const [permitPurpose, setPermitPurpose] = useState(defaultAcquisitionPermitPurpose);
@@ -126,7 +127,6 @@ export function AcquisitionPermitApplicationForm({
   const selectedGuns = guns.filter((gun) => selectedGunIds.includes(gun.id));
   const gunType = selectedGuns.map((gun) => gun.gunType).join("、");
   const compatibleAmmunition = ammoName;
-  const gunPermitNumber = selectedGuns[0]?.permitNumber ?? "";
   const gunTypeAndCaliber = selectedGuns.map((gun) => `${gun.gunType} ${gun.caliber}`).join("、");
 
   function handleValidFromChange(value: string) {
@@ -212,7 +212,7 @@ export function AcquisitionPermitApplicationForm({
       currentHomeStock: Number(homeStock) || 0,
       gunType,
       compatibleAmmunition,
-      gunPermitNumber: gunPermitNumber || undefined,
+      possessionPermitCertificateNumber: possessionPermitCertificateNumber.trim() || undefined,
       gunTypeAndCaliber,
       permitPurpose,
       ledgerPurpose,
@@ -381,16 +381,21 @@ export function AcquisitionPermitApplicationForm({
             />
           </div>
 
-          {selectedGuns.length > 0 ? (
-            <p className="text-sm text-muted-foreground">
-              許可証等の番号: 銃の所持許可証 第{selectedGuns[0].permitNumber}
-              号（使用銃から自動反映）
+          <div className="space-y-2">
+            <Label htmlFor="possession-permit-certificate-number">銃砲所持許可証の番号</Label>
+            <Input
+              id="possession-permit-certificate-number"
+              value={possessionPermitCertificateNumber}
+              onChange={(event) => setPossessionPermitCertificateNumber(event.target.value)}
+              aria-describedby="possession-permit-certificate-number-help"
+            />
+            <p
+              id="possession-permit-certificate-number-help"
+              className="text-sm text-muted-foreground"
+            >
+              許可証に記載された番号を入力してください。銃ごとの許可番号とは別の番号です。
             </p>
-          ) : (
-            <p className="text-sm text-destructive">
-              使用銃を選ぶと、所持許可証番号が申請書に反映されます。
-            </p>
-          )}
+          </div>
         </div>
       </AmmoLedgerPanel>
 
@@ -438,7 +443,7 @@ export function AcquisitionPermitApplicationForm({
       <AmmoLedgerPanel title="消費（購入）計画">
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            購入は250・500・750発…（250の倍数）、消費は25・50・75発…（25の倍数）で期間内にまとめて振り分けます。自宅保管は800発を超えないよう調整します。
+            購入は250発単位、消費は100発程度以上のまとまりを基本に配分し、端数は25発単位で調整します。自宅保管は800発を超えないようにします。
           </p>
 
           <ConsumptionPlanRangeAllocationList

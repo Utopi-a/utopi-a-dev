@@ -13,6 +13,8 @@ import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledge
 type LedgerProfileFormProps = {
   initialValues: {
     ownerName: string;
+    ownerFurigana?: string | null;
+    possessionPermitCertificateNumber?: string | null;
     ownerAddress?: string | null;
     ownerBirthDate?: string | null;
     ownerPhone?: string | null;
@@ -24,6 +26,10 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
   const router = useRouter();
   const requestRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const [ownerName, setOwnerName] = useState(initialValues.ownerName);
+  const [ownerFurigana, setOwnerFurigana] = useState(initialValues.ownerFurigana ?? "");
+  const [possessionPermitCertificateNumber, setPossessionPermitCertificateNumber] = useState(
+    initialValues.possessionPermitCertificateNumber ?? "",
+  );
   const [ownerAddress, setOwnerAddress] = useState(initialValues.ownerAddress ?? "");
   const [ownerBirthDate, setOwnerBirthDate] = useState(initialValues.ownerBirthDate ?? "");
   const [ownerPhone, setOwnerPhone] = useState(initialValues.ownerPhone ?? "");
@@ -38,6 +44,8 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
     try {
       const result = await upsertLedgerProfileAction({
         ownerName,
+        ownerFurigana: ownerFurigana || undefined,
+        possessionPermitCertificateNumber: possessionPermitCertificateNumber || undefined,
         ownerAddress: ownerAddress || undefined,
         ownerBirthDate: ownerBirthDate || undefined,
         ownerPhone: ownerPhone || undefined,
@@ -62,7 +70,7 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <p className="text-sm text-muted-foreground">
-        帳簿の表紙・印刷や取得許可申請書に使う情報です。氏名を未入力のときはアカウント名（
+        帳簿の表紙・印刷や譲受許可申請書に使う情報です。氏名を未入力のときはアカウント名（
         {accountName}）が使われます。
       </p>
 
@@ -74,6 +82,16 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
           value={ownerName}
           onChange={(e) => setOwnerName(e.target.value)}
           placeholder={accountName}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="owner-furigana">ふりがな（任意）</Label>
+        <Input
+          id="owner-furigana"
+          maxLength={100}
+          value={ownerFurigana}
+          onChange={(e) => setOwnerFurigana(e.target.value)}
         />
       </div>
 
@@ -105,6 +123,20 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
           onChange={(e) => setOwnerPhone(e.target.value)}
           placeholder="09012345678"
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="possession-permit-certificate-number">銃砲所持許可証の番号（任意）</Label>
+        <Input
+          id="possession-permit-certificate-number"
+          maxLength={100}
+          value={possessionPermitCertificateNumber}
+          onChange={(e) => setPossessionPermitCertificateNumber(e.target.value)}
+          aria-describedby="possession-permit-certificate-number-help"
+        />
+        <p id="possession-permit-certificate-number-help" className="text-sm text-muted-foreground">
+          許可証に記載された番号を入力してください。銃ごとの許可番号とは別の番号です。
+        </p>
       </div>
 
       {error ? (

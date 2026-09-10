@@ -9,6 +9,8 @@ let admin: ReturnType<typeof postgres> | undefined;
 let sql: ReturnType<typeof postgres>;
 let createBulkTransactionsAction: typeof import("@/features/ammo-ledger/transactions/create-bulk-transactions/create-bulk-transactions-action").createBulkTransactionsAction;
 let saveOpeningBalanceAction: typeof import("@/features/ammo-ledger/opening-balance/save-opening-balance/save-opening-balance-action").saveOpeningBalanceAction;
+let upsertLedgerProfileAction: typeof import("@/features/ammo-ledger/profile/upsert-ledger-profile/upsert-ledger-profile-action").upsertLedgerProfileAction;
+let getLedgerProfile: typeof import("@/features/ammo-ledger/profile/get-ledger-profile/get-ledger-profile").getLedgerProfile;
 let getDb: typeof import("@/db").getDb | undefined;
 let databaseCreated = false;
 
@@ -55,6 +57,12 @@ beforeAll(async () => {
   ));
   ({ saveOpeningBalanceAction } = await import(
     "@/features/ammo-ledger/opening-balance/save-opening-balance/save-opening-balance-action"
+  ));
+  ({ upsertLedgerProfileAction } = await import(
+    "@/features/ammo-ledger/profile/upsert-ledger-profile/upsert-ledger-profile-action"
+  ));
+  ({ getLedgerProfile } = await import(
+    "@/features/ammo-ledger/profile/get-ledger-profile/get-ledger-profile"
   ));
 });
 
@@ -133,6 +141,151 @@ async function savedCounts({ userId }: { userId: string }) {
 }
 
 describe("ammo ledger server mutations against local PostgreSQL", () => {
+  it("プロフィールのふりがなと所持許可証番号を保存し、前後の空白だけ除いて先頭の0を保持する", async () => {
+    const fixture = await seedLedger({ stock: 0 });
+    await expect(
+      upsertLedgerProfileAction({
+        ownerName: "山田 太郎",
+        ownerFurigana: "  やまだ たろう  ",
+        possessionPermitCertificateNumber: "  00123456789  ",
+      }),
+    ).resolves.toEqual({ ok: true });
+
+    expect(await getLedgerProfile({ userId: fixture.userId })).toMatchObject({
+      userId: fixture.userId,
+      ownerName: "山田 太郎",
+      ownerFurigana: "やまだ たろう",
+      possessionPermitCertificateNumber: "00123456789",
+    });
+    expect(
+      await sql`select owner_furigana, possession_permit_certificate_number
+        from ammo_ledger_profile where user_id = ${fixture.userId}`,
+    ).toEqual([
+      { owner_furigana: "やまだ たろう", possession_permit_certificate_number: "00123456789" },
+    ]);
+  });
+
+  it("保存済みのふりがなと所持許可証番号を更新し、空欄または未指定で削除できる", async () => {
+    const fixture = await seedLedger({ stock: 0 });
+    const original = {
+      ownerName: "山田 太郎",
+      ownerFurigana: "やまだ たろう",
+      possessionPermitCertificateNumber: "00123456789",
+    };
+    await expect(upsertLedgerProfileAction(original)).resolves.toEqual({ ok: true });
+    await expect(
+      upsertLedgerProfileAction({
+        ...original,
+        ownerFurigana: "やまだ じろう",
+        possessionPermitCertificateNumber: "00987654321",
+      }),
+    ).resolves.toEqual({ ok: true });
+    expect(await getLedgerProfile({ userId: fixture.userId })).toMatchObject({
+      ownerFurigana: "やまだ じろう",
+      possessionPermitCertificateNumber: "00987654321",
+    });
+
+    for (const cleared of [
+      { ownerName: original.ownerName, ownerFurigana: "  ", possessionPermitCertificateNumber: "" },
+      { ownerName: original.ownerName },
+    ]) {
+      await expect(upsertLedgerProfileAction(original)).resolves.toEqual({ ok: true });
+      await expect(upsertLedgerProfileAction(cleared)).resolves.toEqual({ ok: true });
+      expect(await getLedgerProfile({ userId: fixture.userId })).toMatchObject({
+        ownerName: original.ownerName,
+        ownerFurigana: null,
+        possessionPermitCertificateNumber: null,
+      });
+    }
+    expect(
+      await sql`select count(*)::int as count from ammo_ledger_profile
+        where user_id = ${fixture.userId}`,
+    ).toEqual([{ count: 1 }]);
+  });
+
+  it("プロフィール保存に他ユーザーのIDを混ぜても認証済み利用者だけを更新する", async () => {
+    const other = await seedLedger({ stock: 0 });
+    await expect(
+      upsertLedgerProfileAction({
+        ownerName: "別の利用者",
+        ownerFurigana: "べつのりようしゃ",
+        possessionPermitCertificateNumber: "00888888888",
+      }),
+    ).resolves.toEqual({ ok: true });
+    const otherBefore = await getLedgerProfile({ userId: other.userId });
+
+    const fixture = await seedLedger({ stock: 0 });
+    await expect(
+      upsertLedgerProfileAction({
+        userId: other.userId,
+        ownerName: "山田 太郎",
+        ownerFurigana: "やまだ たろう",
+        possessionPermitCertificateNumber: "00123456789",
+      }),
+    ).resolves.toEqual({ ok: true });
+    expect(await getLedgerProfile({ userId: fixture.userId })).toMatchObject({
+      userId: fixture.userId,
+      ownerName: "山田 太郎",
+      ownerFurigana: "やまだ たろう",
+      possessionPermitCertificateNumber: "00123456789",
+    });
+    expect(await getLedgerProfile({ userId: other.userId })).toEqual(otherBefore);
+  });
+
+  it("ふりがなと所持許可証番号の不正入力では新規作成も既存プロフィールの変更も行わない", async () => {
+    const fixture = await seedLedger({ stock: 0 });
+    const valid = {
+      ownerName: "山田 太郎",
+      ownerFurigana: "やまだ たろう",
+      possessionPermitCertificateNumber: "00123456789",
+    };
+    await expect(
+      upsertLedgerProfileAction({ ...valid, ownerFurigana: "あ".repeat(101) }),
+    ).resolves.toEqual({ ok: false, error: "入力内容を確認してください" });
+    expect(await getLedgerProfile({ userId: fixture.userId })).toBeNull();
+
+    await expect(upsertLedgerProfileAction(valid)).resolves.toEqual({ ok: true });
+    const before = await getLedgerProfile({ userId: fixture.userId });
+    for (const invalid of [
+      { ownerFurigana: "あ".repeat(101) },
+      { possessionPermitCertificateNumber: "0".repeat(101) },
+      { ownerFurigana: 123 },
+      { possessionPermitCertificateNumber: 123 },
+    ]) {
+      await expect(upsertLedgerProfileAction({ ...valid, ...invalid })).resolves.toEqual({
+        ok: false,
+        error: "入力内容を確認してください",
+      });
+      expect(await getLedgerProfile({ userId: fixture.userId })).toEqual(before);
+    }
+  });
+
+  it("追加項目のない従来のプロフィールを読み込み、既存項目を保持して保存できる", async () => {
+    const fixture = await seedLedger({ stock: 0 });
+    await sql`insert into ammo_ledger_profile
+      (user_id, owner_name, owner_address, owner_birth_date, owner_phone)
+      values (${fixture.userId}, '山田 太郎', '東京都新宿区', '1990-01-02', '03-1234-5678')`;
+    const expected = {
+      userId: fixture.userId,
+      ownerName: "山田 太郎",
+      ownerAddress: "東京都新宿区",
+      ownerBirthDate: "1990-01-02",
+      ownerPhone: "03-1234-5678",
+      ownerFurigana: null,
+      possessionPermitCertificateNumber: null,
+    };
+    expect(await getLedgerProfile({ userId: fixture.userId })).toMatchObject(expected);
+    await expect(
+      upsertLedgerProfileAction({
+        ownerName: expected.ownerName,
+        ownerAddress: expected.ownerAddress,
+        ownerBirthDate: expected.ownerBirthDate,
+        ownerPhone: expected.ownerPhone,
+      }),
+    ).resolves.toEqual({ ok: true });
+    expect(await getLedgerProfile({ userId: fixture.userId })).toMatchObject(expected);
+  });
+
   it("用途別残数がworkspace・編集用集計・棚卸下書きで一致し、取消行を含めない", async () => {
     const fixture = await seedLedger({ stock: 100 });
     await sql`insert into ammo_ledger_entry

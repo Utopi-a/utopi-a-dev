@@ -99,6 +99,13 @@
       "when": 1786953000264,
       "tag": "0013_prevent_ammo_type_deletion",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789026872671,
+      "tag": "0014_ledger_profile_permit_details",
+      "breakpoints": true
     }
   ]
 }

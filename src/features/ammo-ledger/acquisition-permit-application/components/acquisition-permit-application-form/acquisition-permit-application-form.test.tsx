@@ -35,7 +35,9 @@ const guns: (typeof ammoGun.$inferSelect)[] = ["A", "B"].map((name) => ({
   updatedAt: new Date("2026-09-10"),
 }));
 
-async function renderForm() {
+async function renderForm(
+  profile: { ownerFurigana?: string; possessionPermitCertificateNumber?: string } = {},
+) {
   render(
     <SWRConfig value={{ provider: () => new Map() }}>
       <AcquisitionPermitApplicationForm
@@ -43,6 +45,7 @@ async function renderForm() {
         ownerAddress="テスト住所"
         currentHomeStock={755}
         guns={guns}
+        {...profile}
       />
     </SWRConfig>,
   );
@@ -117,5 +120,30 @@ describe("譲受許可申請の入力から印刷への引き継ぎ", () => {
     expect(buildApplicationFieldValues({ input: payload }).mainFields.permitCertificateNumber).toBe(
       "",
     );
+  });
+
+  it.each([
+    false,
+    true,
+  ])("プロフィールを初期表示し、申請時の修正も書類に反映する（修正: %s）", async (edit) => {
+    await renderForm({
+      ownerFurigana: "やまだ たろう",
+      possessionPermitCertificateNumber: "00123456789",
+    });
+    expect(screen.getByLabelText("ふりがな")).toHaveValue("やまだ たろう");
+    expect(screen.getByLabelText("銃砲所持許可証の番号")).toHaveValue("00123456789");
+    if (edit) {
+      fireEvent.change(screen.getByLabelText("ふりがな"), { target: { value: "やまだ じろう" } });
+      fireEvent.change(screen.getByLabelText("銃砲所持許可証の番号"), {
+        target: { value: "00987654321" },
+      });
+    }
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+    const payload = loadAcquisitionPermitApplicationPayload();
+    if (!payload) throw new Error("印刷用データが保存されていません");
+    const fields = buildApplicationFieldValues({ input: payload });
+    expect(fields.mainFields.ownerFurigana).toBe(edit ? "やまだ じろう" : "やまだ たろう");
+    expect(fields.mainFields.permitCertificateNumber).toBe(edit ? "00987654321" : "00123456789");
   });
 });

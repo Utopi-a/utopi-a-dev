@@ -17,25 +17,25 @@ export async function upsertLedgerProfileAction(input: unknown) {
     return { ok: false as const, error: "入力内容を確認してください" };
   }
 
+  const profileValues = {
+    ownerName: parsed.data.ownerName,
+    ownerFurigana: parsed.data.ownerFurigana || null,
+    possessionPermitCertificateNumber: parsed.data.possessionPermitCertificateNumber || null,
+    ownerAddress: parsed.data.ownerAddress ?? null,
+    ownerBirthDate: parsed.data.ownerBirthDate ?? null,
+    ownerPhone: parsed.data.ownerPhone ?? null,
+    updatedAt: new Date(),
+  };
+
   await db
     .insert(ammoLedgerProfile)
     .values({
       userId: user.id,
-      ownerName: parsed.data.ownerName,
-      ownerAddress: parsed.data.ownerAddress ?? null,
-      ownerBirthDate: parsed.data.ownerBirthDate ?? null,
-      ownerPhone: parsed.data.ownerPhone ?? null,
-      updatedAt: new Date(),
+      ...profileValues,
     })
     .onConflictDoUpdate({
       target: ammoLedgerProfile.userId,
-      set: {
-        ownerName: parsed.data.ownerName,
-        ownerAddress: parsed.data.ownerAddress ?? null,
-        ownerBirthDate: parsed.data.ownerBirthDate ?? null,
-        ownerPhone: parsed.data.ownerPhone ?? null,
-        updatedAt: new Date(),
-      },
+      set: profileValues,
     });
 
   return { ok: true as const };

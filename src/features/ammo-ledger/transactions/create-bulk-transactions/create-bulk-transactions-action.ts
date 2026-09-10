@@ -88,14 +88,10 @@ export async function createBulkTransactionsAction(input: unknown) {
       return stockCheck;
     }
 
-    for (const [index, prepared] of preparedTransactions.entries()) {
-      const { input: data, gunRow, rangeRow, counterparty, computedRounds, normalized } = prepared;
-
-      const transactionId = transactionIds[index];
-      const ledgerEntryId = ledgerEntryIds[index];
-
-      await tx.insert(ammoTransaction).values({
-        id: transactionId,
+    const transactionRows = preparedTransactions.map((prepared, index) => {
+      const { input: data, gunRow, rangeRow, counterparty, computedRounds } = prepared;
+      return {
+        id: transactionIds[index],
         userId: user.id,
         status: "confirmed",
         inputKind: data.inputKind,
@@ -112,12 +108,15 @@ export async function createBulkTransactionsAction(input: unknown) {
         counterpartyName: counterparty?.name ?? null,
         counterpartyAddress: counterparty?.address ?? null,
         memo: data.memo ?? null,
-      });
+      };
+    });
 
-      await tx.insert(ammoLedgerEntry).values({
-        id: ledgerEntryId,
+    const ledgerEntryRows = preparedTransactions.map((prepared, index) => {
+      const { input: data, normalized } = prepared;
+      return {
+        id: ledgerEntryIds[index],
         userId: user.id,
-        transactionId,
+        transactionId: transactionIds[index],
         category: normalized.category,
         purpose: data.purpose,
         occurredOn: normalized.occurredOn,
@@ -137,7 +136,20 @@ export async function createBulkTransactionsAction(input: unknown) {
         gunNumber: normalized.gunNumber,
         gunPermitNumber: normalized.gunPermitNumber,
         createdAt,
-      });
+      };
+    });
+
+    // PostgreSQLのバインド数上限内に収め、全行の原子性は同じtransactionで保つ。
+    const insertBatchSize = 500;
+    for (let index = 0; index < transactionRows.length; index += insertBatchSize) {
+      await tx
+        .insert(ammoTransaction)
+        .values(transactionRows.slice(index, index + insertBatchSize));
+    }
+    for (let index = 0; index < ledgerEntryRows.length; index += insertBatchSize) {
+      await tx
+        .insert(ammoLedgerEntry)
+        .values(ledgerEntryRows.slice(index, index + insertBatchSize));
     }
 
     return { ok: true as const };

@@ -1,15 +1,11 @@
-import { compareLedgerEntries } from "@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries";
+import {
+  applyStockEntry,
+  type StockTimelineEntry,
+  sortStockEntries,
+} from "@/features/ammo-ledger/ledger/compute-stock/compute-stock";
 import { homeStorageRoundLimit } from "@/features/ammo-ledger/schema/home-storage-limit";
-import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 
-type HomeStockEntry = {
-  id: string;
-  category: LedgerCategory;
-  quantity: number;
-} & import("@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries").LedgerEntrySortKey;
-
-const increaseCategories: LedgerCategory[] = ["acquire", "receive", "manufacture", "carryover"];
-const decreaseCategories: LedgerCategory[] = ["consume", "transfer", "issue", "dispose"];
+type HomeStockEntry = StockTimelineEntry & { id: string };
 
 export function computeRunningHomeStock({
   entries,
@@ -17,16 +13,11 @@ export function computeRunningHomeStock({
   entries: HomeStockEntry[];
 }): Map<string, number> {
   const stockByEntryId = new Map<string, number>();
+  const stockByPurpose = new Map<string, number>();
   let total = 0;
 
-  const sorted = [...entries].sort((a, b) => compareLedgerEntries({ a, b }));
-
-  for (const entry of sorted) {
-    if (increaseCategories.includes(entry.category)) {
-      total += entry.quantity;
-    } else if (decreaseCategories.includes(entry.category)) {
-      total -= entry.quantity;
-    }
+  for (const entry of sortStockEntries({ entries })) {
+    total += applyStockEntry({ stock: stockByPurpose, entry });
     stockByEntryId.set(entry.id, total);
   }
 
@@ -41,12 +32,14 @@ export function evaluateHomeStorageLimit({
   limit?: number;
 }) {
   const runningStock = computeRunningHomeStock({ entries });
-  const stocks = [...runningStock.values()];
-  const currentStock = stocks.at(-1) ?? 0;
-  const peakStock = stocks.length > 0 ? Math.max(...stocks) : 0;
-  const exceededEntryIds = [...runningStock.entries()]
-    .filter(([, stock]) => stock > limit)
-    .map(([id]) => id);
+  let currentStock = 0;
+  let peakStock = runningStock.size === 0 ? 0 : Number.NEGATIVE_INFINITY;
+  const exceededEntryIds: string[] = [];
+  for (const [id, stock] of runningStock) {
+    currentStock = stock;
+    peakStock = Math.max(peakStock, stock);
+    if (stock > limit) exceededEntryIds.push(id);
+  }
 
   return {
     currentStock,

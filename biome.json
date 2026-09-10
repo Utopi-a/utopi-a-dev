@@ -45,6 +45,7 @@
   "files": {
     "includes": [
       "src/**",
+      "e2e/**",
       "*.json",
       "*.jsonc",
       "*.ts",

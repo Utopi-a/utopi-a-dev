@@ -32,38 +32,43 @@ export function CounterpartyForm({ recordId, initialValues }: CounterpartyFormPr
     setIsPending(true);
     setError(null);
 
-    const payload = {
-      name,
-      address,
-      kind: "shop" as const,
-      memo: memo || undefined,
-    };
+    try {
+      const payload = {
+        name,
+        address,
+        kind: "shop" as const,
+        memo: memo || undefined,
+      };
 
-    const result = isEdit
-      ? await updateCounterpartyAction({ id: recordId!, input: payload })
-      : await createCounterpartyAction(payload);
+      const result = recordId
+        ? await updateCounterpartyAction({ id: recordId, input: payload })
+        : await createCounterpartyAction(payload);
 
-    if (!result.ok) {
-      setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+
+        return;
+      }
+
+      showAmmoLedgerToast({
+        action: isEdit ? "updated" : "created",
+        subject: "購入先",
+      });
+
+      if (isEdit) {
+        router.push("/lab/ammo-ledger/settings/counterparties");
+        return;
+      }
+
+      router.refresh();
+      setName("");
+      setAddress("");
+      setMemo("");
+    } catch {
+      setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({
-      action: isEdit ? "updated" : "created",
-      subject: "購入先",
-    });
-
-    if (isEdit) {
-      router.push("/lab/ammo-ledger/settings/counterparties");
-      return;
-    }
-
-    router.refresh();
-    setName("");
-    setAddress("");
-    setMemo("");
-    setIsPending(false);
   }
 
   return (
@@ -90,7 +95,11 @@ export function CounterpartyForm({ recordId, initialValues }: CounterpartyFormPr
         <Label htmlFor="counterparty-memo">メモ</Label>
         <Input id="counterparty-memo" value={memo} onChange={(e) => setMemo(e.target.value)} />
       </div>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
       <Button type="submit" disabled={isPending}>
         {isPending ? "保存中…" : isEdit ? "変更を保存" : "購入先を追加"}
       </Button>

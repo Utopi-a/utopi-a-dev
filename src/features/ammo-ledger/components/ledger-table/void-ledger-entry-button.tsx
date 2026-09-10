@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { voidLedgerEntryAction } from "@/features/ammo-ledger/transactions/void-ledger-entry/void-ledger-entry-action";
@@ -35,20 +36,32 @@ export function VoidLedgerEntryButton({
 
     setIsPending(true);
     setError(null);
-    onVoided?.({ ledgerEntryId });
+    let voidSucceeded = false;
+    try {
+      onVoided?.({ ledgerEntryId });
+      const result = await voidLedgerEntryAction({ ledgerEntryId });
+      if (!result.ok) {
+        onVoidFailed?.({ ledgerEntryId });
+        setError(result.error);
+        toast.error(result.error);
+        return;
+      }
 
-    const result = await voidLedgerEntryAction({ ledgerEntryId });
-
-    if (!result.ok) {
-      onVoidFailed?.({ ledgerEntryId });
-      setError(result.error);
+      voidSucceeded = true;
+      showAmmoLedgerToast({ action: "voided" });
+      await invalidateWorkspace();
+    } catch {
+      if (!voidSucceeded) {
+        onVoidFailed?.({ ledgerEntryId });
+      }
+      const message = voidSucceeded
+        ? "取消は完了しましたが、表示を更新できませんでした。ページを再読み込みしてください。"
+        : "取消結果を確認できませんでした。時間をおいて再度お試しください。";
+      setError(message);
+      toast.error(message);
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({ action: "voided" });
-    await invalidateWorkspace();
-    setIsPending(false);
   }
 
   return (

@@ -8,6 +8,7 @@ import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { upsertLedgerProfileAction } from "@/features/ammo-ledger/profile/upsert-ledger-profile/upsert-ledger-profile-action";
+import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type LedgerProfileFormProps = {
   initialValues: {
@@ -21,6 +22,7 @@ type LedgerProfileFormProps = {
 
 export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileFormProps) {
   const router = useRouter();
+  const requestRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const [ownerName, setOwnerName] = useState(initialValues.ownerName);
   const [ownerAddress, setOwnerAddress] = useState(initialValues.ownerAddress ?? "");
   const [ownerBirthDate, setOwnerBirthDate] = useState(initialValues.ownerBirthDate ?? "");
@@ -33,22 +35,28 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
     setIsPending(true);
     setError(null);
 
-    const result = await upsertLedgerProfileAction({
-      ownerName,
-      ownerAddress: ownerAddress || undefined,
-      ownerBirthDate: ownerBirthDate || undefined,
-      ownerPhone: ownerPhone || undefined,
-    });
+    try {
+      const result = await upsertLedgerProfileAction({
+        ownerName,
+        ownerAddress: ownerAddress || undefined,
+        ownerBirthDate: ownerBirthDate || undefined,
+        ownerPhone: ownerPhone || undefined,
+      });
 
-    if (!result.ok) {
-      setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+
+        return;
+      }
+
+      showAmmoLedgerToast({ action: "saved", subject: "帳簿プロフィール" });
+      requestRevalidation();
+      router.refresh();
+    } catch {
+      setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({ action: "saved", subject: "帳簿プロフィール" });
-    router.refresh();
-    setIsPending(false);
   }
 
   return (
@@ -99,7 +107,11 @@ export function LedgerProfileForm({ initialValues, accountName }: LedgerProfileF
         />
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
 
       <Button type="submit" disabled={isPending}>
         {isPending ? "保存中…" : "保存"}

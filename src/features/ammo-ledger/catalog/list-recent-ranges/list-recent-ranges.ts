@@ -1,4 +1,4 @@
-import { and, desc, eq, isNotNull, max } from "drizzle-orm";
+import { and, desc, eq, max } from "drizzle-orm";
 import { db } from "@/db";
 import { ammoRange, ammoTransaction } from "@/db/schema/ammo-ledger";
 import type { PickerMasterEntry } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
@@ -10,41 +10,20 @@ export async function listRecentRanges({
   userId: string;
   limit?: number;
 }): Promise<PickerMasterEntry[]> {
-  const recentRows = await db
+  return db
     .select({
-      rangeId: ammoTransaction.rangeId,
-      lastUsedOn: max(ammoTransaction.occurredOn),
+      id: ammoRange.id,
+      name: ammoRange.name,
+      address: ammoRange.address,
+      catalogId: ammoRange.catalogId,
     })
     .from(ammoTransaction)
-    .where(and(eq(ammoTransaction.userId, userId), isNotNull(ammoTransaction.rangeId)))
-    .groupBy(ammoTransaction.rangeId)
+    .innerJoin(
+      ammoRange,
+      and(eq(ammoTransaction.rangeId, ammoRange.id), eq(ammoRange.userId, userId)),
+    )
+    .where(eq(ammoTransaction.userId, userId))
+    .groupBy(ammoRange.id)
     .orderBy(desc(max(ammoTransaction.occurredOn)))
     .limit(limit);
-
-  const rangeIds = recentRows
-    .map((row) => row.rangeId)
-    .filter((rangeId): rangeId is string => rangeId !== null);
-
-  if (rangeIds.length === 0) {
-    return [];
-  }
-
-  const ranges = await db.select().from(ammoRange).where(eq(ammoRange.userId, userId));
-  const rangeById = new Map(ranges.map((range) => [range.id, range]));
-
-  return rangeIds.flatMap((rangeId) => {
-    const range = rangeById.get(rangeId);
-    if (!range) {
-      return [];
-    }
-
-    return [
-      {
-        id: range.id,
-        name: range.name,
-        address: range.address,
-        catalogId: range.catalogId,
-      },
-    ];
-  });
 }

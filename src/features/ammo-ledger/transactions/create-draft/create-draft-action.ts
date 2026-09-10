@@ -39,21 +39,20 @@ export async function createDraftFromDiffAction({
 
   const entries = await db
     .select({
+      id: ammoLedgerEntry.id,
       ammoTypeId: ammoLedgerEntry.ammoTypeId,
+      purpose: ammoLedgerEntry.purpose,
       category: ammoLedgerEntry.category,
       quantity: ammoLedgerEntry.quantity,
+      occurredOn: ammoLedgerEntry.occurredOn,
+      dayOrder: ammoLedgerEntry.dayOrder,
+      createdAt: ammoLedgerEntry.createdAt,
     })
     .from(ammoLedgerEntry)
     .where(and(eq(ammoLedgerEntry.userId, user.id), isNull(ammoLedgerEntry.voidedAt)));
 
   const stockMap = computeStockByAmmoType({
-    entries: entries
-      .filter((e) => e.ammoTypeId !== null)
-      .map((e) => ({
-        ammoTypeId: e.ammoTypeId as string,
-        category: e.category as LedgerCategory,
-        quantity: e.quantity,
-      })),
+    entries: entries.map((entry) => ({ ...entry, category: entry.category as LedgerCategory })),
   });
 
   const bookStock = stockMap.get(ammoTypeId) ?? 0;

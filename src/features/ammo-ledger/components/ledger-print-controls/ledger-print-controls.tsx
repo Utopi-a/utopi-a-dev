@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,6 +15,7 @@ import {
 import { LedgerYearSelect } from "@/features/ammo-ledger/components/ledger-year-select/ledger-year-select";
 import type { LedgerLockIssue } from "@/features/ammo-ledger/documents/validate-ledger-for-lock/validate-ledger-for-lock";
 import { lockLedgerAction } from "@/features/ammo-ledger/ledger/lock/lock-ledger-action/lock-ledger-action";
+import { useUpdateAmmoLedgerLockState } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 
@@ -45,20 +46,52 @@ export function LedgerPrintControls({
 }: LedgerPrintControlsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const updateLockState = useUpdateAmmoLedgerLockState();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [printRequestedFor, setPrintRequestedFor] = useState<string | null>(null);
+  const printedRequest = useRef<string | null>(null);
+  const targetKey = `${selectedYear}:${targetDate}`;
+  const printRequest =
+    searchParams.get("print") === "1" || printRequestedFor === targetKey ? targetKey : null;
 
   const needsLock = !isTargetLocked;
   const needsExtension = !isTargetLocked && lockedThrough != null && lockedThrough < targetDate;
   const hasBlockingIssues = lockIssues.length > 0;
 
   useEffect(() => {
-    if (canPrintOfficially && searchParams.get("print") === "1") {
-      window.print();
+    if (!printRequest) {
+      printedRequest.current = null;
+      return;
     }
-  }, [canPrintOfficially, searchParams]);
+    if (
+      !canPrintOfficially ||
+      hasBlockingIssues ||
+      dialogOpen ||
+      isPending ||
+      printedRequest.current === printRequest
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+    let frame: number | undefined;
+    // サーバー描画した帳票のフォントとレイアウトが揃ってから印刷する。
+    void Promise.resolve(document.fonts?.ready).then(() => {
+      if (cancelled) return;
+      frame = window.requestAnimationFrame(() => {
+        if (cancelled) return;
+        printedRequest.current = printRequest;
+        window.print();
+      });
+    });
+    return () => {
+      cancelled = true;
+      if (frame !== undefined) window.cancelAnimationFrame(frame);
+    };
+  }, [canPrintOfficially, hasBlockingIssues, dialogOpen, isPending, printRequest]);
 
   function handleYearChange({ year }: { year: number }) {
     const previewParam = isPreview ? "&preview=1" : "";
@@ -67,16 +100,23 @@ export function LedgerPrintControls({
 
   function handleLockAndPrint() {
     setError(null);
+    setPrintRequestedFor(null);
+    printedRequest.current = null;
     startTransition(async () => {
-      const result = await lockLedgerAction({ lockedThrough: targetDate });
-      if (!result.ok) {
-        setError(result.error);
-        return;
+      try {
+        const result = await lockLedgerAction({ lockedThrough: targetDate });
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        updateLockState({ lockState: result.lockState });
+        setDialogOpen(false);
+        setConfirmed(false);
+        // Actionが返す正式帳票のpropsを受け取ってから印刷する。
+        setPrintRequestedFor(targetKey);
+      } catch {
+        setError("帳簿の確定結果を確認できませんでした。時間をおいて再度お試しください。");
       }
-      setDialogOpen(false);
-      setConfirmed(false);
-      router.push(`/lab/ammo-ledger/ledger/print?year=${selectedYear}&print=1`);
-      router.refresh();
     });
   }
 

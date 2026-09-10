@@ -26,6 +26,7 @@ export function StockCheckForm({ items }: StockCheckFormProps) {
   const [actualRounds, setActualRounds] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [draftCreated, setDraftCreated] = useState(false);
 
   const selected = items.find((i) => i.ammoTypeId === ammoTypeId);
 
@@ -45,22 +46,29 @@ export function StockCheckForm({ items }: StockCheckFormProps) {
     setIsPending(true);
     setError(null);
 
-    const result = await createDraftFromDiffAction({
-      ammoTypeId: selected.ammoTypeId,
-      actualRounds: Number(actualRounds),
-      inputKind: suggestion.inputKind,
-      quantity: suggestion.quantity,
-      boxCount: suggestion.boxCount,
-    });
+    try {
+      const result = await createDraftFromDiffAction({
+        ammoTypeId: selected.ammoTypeId,
+        actualRounds: Number(actualRounds),
+        inputKind: suggestion.inputKind,
+        quantity: suggestion.quantity,
+        boxCount: suggestion.boxCount,
+      });
 
-    if (!result.ok) {
-      setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+
+        return;
+      }
+
+      showAmmoLedgerToast({ action: "created", subject: "記録下書き" });
+      setDraftCreated(true);
+      router.push(result.redirectPath);
+    } catch {
+      setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({ action: "created", subject: "記録下書き" });
-    router.push(result.redirectPath);
   }
 
   if (items.length === 0) {
@@ -123,7 +131,7 @@ export function StockCheckForm({ items }: StockCheckFormProps) {
                 key={`${suggestion.inputKind}-${suggestion.label}`}
                 type="button"
                 variant="outline"
-                disabled={isPending}
+                disabled={isPending || draftCreated}
                 onClick={() => handleCreateDraft(suggestion)}
               >
                 {suggestion.label}
@@ -137,7 +145,11 @@ export function StockCheckForm({ items }: StockCheckFormProps) {
         <p className="text-sm text-muted-foreground">帳簿と実在庫は一致しています。</p>
       ) : null}
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

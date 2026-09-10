@@ -1,7 +1,6 @@
 "use client";
 
 import useSWR from "swr";
-import { getMasterPickerDataAction } from "@/features/ammo-ledger/catalog/get-master-picker-data-action/get-master-picker-data-action";
 import type { MasterPickerData } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import type { CatalogKind } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
 
@@ -32,9 +31,21 @@ export function useMasterPickerData({
 }) {
   const queryKey = buildPickerDataQueryKey({ catalogKind, includeRangeCatalog });
 
-  const { data, isLoading, error } = useSWR(
+  const { data, isLoading, error, mutate } = useSWR<MasterPickerData>(
     enabled ? queryKey : null,
-    () => getMasterPickerDataAction({ catalogKind, includeRangeCatalog }),
+    async () => {
+      const params = new URLSearchParams({
+        kind: catalogKind,
+        includeRangeCatalog: includeRangeCatalog ? "1" : "0",
+      });
+      const response = await fetch(`/api/ammo-ledger/picker?${params}`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!response.ok || response.redirected)
+        throw new Error("一覧を取得できませんでした。再試行してください。");
+      return response.json();
+    },
     pickerDataSwrOptions,
   );
 
@@ -42,6 +53,9 @@ export function useMasterPickerData({
     pickerData: data,
     isLoading,
     error,
+    retry: () => {
+      void mutate().catch(() => {});
+    },
   };
 }
 

@@ -7,10 +7,10 @@ import { deriveFormWorkspaceData } from "@/features/ammo-ledger/workspace/derive
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 export function BulkNewView() {
-  const { workspace, isLoading } = useAmmoLedgerWorkspace();
+  const { workspace, isLoading, error, retry } = useAmmoLedgerWorkspace();
 
   if (isLoading || !workspace) {
-    return <WorkspaceViewLoader />;
+    return <WorkspaceViewLoader error={error} onRetry={retry} />;
   }
 
   const { guns, ammoTypes, stockByAmmoTypeId } = deriveFormWorkspaceData({ workspace });

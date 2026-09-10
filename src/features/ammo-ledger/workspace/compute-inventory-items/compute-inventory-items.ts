@@ -5,7 +5,14 @@ import type { AmmoLedgerInventoryItem } from "@/features/ammo-ledger/workspace/a
 
 type InventoryEntry = Pick<
   typeof ammoLedgerEntry.$inferSelect,
-  "ammoTypeId" | "category" | "quantity"
+  | "id"
+  | "ammoTypeId"
+  | "purpose"
+  | "category"
+  | "quantity"
+  | "occurredOn"
+  | "dayOrder"
+  | "createdAt"
 >;
 
 export function computeInventoryItems({
@@ -16,13 +23,7 @@ export function computeInventoryItems({
   ammoTypes: (typeof ammoType.$inferSelect)[];
 }): AmmoLedgerInventoryItem[] {
   const stockMap = computeStockByAmmoType({
-    entries: entries
-      .filter((entry) => entry.ammoTypeId !== null)
-      .map((entry) => ({
-        ammoTypeId: entry.ammoTypeId as string,
-        category: entry.category as LedgerCategory,
-        quantity: entry.quantity,
-      })),
+    entries: entries.map((entry) => ({ ...entry, category: entry.category as LedgerCategory })),
   });
 
   return ammoTypes.map((type) => ({

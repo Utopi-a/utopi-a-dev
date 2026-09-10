@@ -1,5 +1,6 @@
 "use server";
 
+import { refresh } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
 import { ammoLedgerLockEvent } from "@/db/schema/ammo-ledger";
@@ -40,7 +41,7 @@ export async function unlockLedgerAction(input: unknown) {
 
   const { lockedThrough, reason } = parsed.data;
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     await acquireLedgerAdvisoryLock({ tx, userId: user.id });
 
     const currentState = await getLatestLockState({
@@ -67,6 +68,11 @@ export async function unlockLedgerAction(input: unknown) {
       reason,
     });
 
-    return { ok: true as const };
+    return { ok: true as const, lockState: { isLocked: false, lockedThrough: null } };
   });
+
+  if (result.ok) {
+    refresh();
+  }
+  return result;
 }

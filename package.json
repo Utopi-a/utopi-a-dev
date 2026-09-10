@@ -34,7 +34,9 @@
     "scrape:gun-shops": "pnpm dlx tsx src/features/ammo-ledger/counterparty-seed/scrape-nikkaren-traders/scrape-nikkaren-traders.ts",
     "resolve:shooting-range-addresses": "pnpm dlx tsx src/features/ammo-ledger/range-seed/resolve-range-addresses/resolve-range-addresses.ts",
     "fill:shooting-range-partial-addresses": "pnpm dlx tsx src/features/ammo-ledger/range-seed/resolve-range-addresses/fill-partial-addresses.ts",
-    "icons:postprocess": "pnpm dlx tsx src/features/portfolio/brand-icons/postprocess-generated-icon.ts"
+    "icons:postprocess": "pnpm dlx tsx src/features/portfolio/brand-icons/postprocess-generated-icon.ts",
+    "test:ammo-server": "vitest run --config vitest.ammo-server.config.ts",
+    "test:ammo-e2e": "playwright test --config playwright.ammo-ledger.config.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

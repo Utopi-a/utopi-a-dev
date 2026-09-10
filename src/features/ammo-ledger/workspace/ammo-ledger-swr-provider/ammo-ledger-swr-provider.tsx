@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { SWRConfig, unstable_serialize } from "swr";
 import type { AmmoLedgerWorkspacePayload } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-payload/ammo-ledger-workspace-payload";
 import { ammoLedgerWorkspaceQueryKey } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-query-key/ammo-ledger-workspace-query-key";
@@ -17,6 +17,14 @@ type AmmoLedgerSwrProviderProps = {
 };
 
 export function AmmoLedgerSwrProvider({ children, initialWorkspace }: AmmoLedgerSwrProviderProps) {
+  const [cache] = useState(
+    () =>
+      new Map(
+        initialWorkspace
+          ? [[unstable_serialize(ammoLedgerWorkspaceQueryKey), { data: initialWorkspace }]]
+          : [],
+      ),
+  );
   const fallback = initialWorkspace
     ? { [unstable_serialize(ammoLedgerWorkspaceQueryKey)]: initialWorkspace }
     : undefined;
@@ -25,6 +33,7 @@ export function AmmoLedgerSwrProvider({ children, initialWorkspace }: AmmoLedger
     <SWRConfig
       value={{
         ...ammoLedgerWorkspaceSwrConfig,
+        provider: () => cache,
         fallback,
       }}
     >

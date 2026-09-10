@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { buildLedgerHref } from "@/features/ammo-ledger/ledger/build-ledger-href/build-ledger-href";
+import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
 import { createAcquisitionPermitAction } from "@/features/ammo-ledger/permit/create-acquisition-permit/create-acquisition-permit-action";
 import {
   type AcquisitionPermitName,
@@ -30,7 +30,7 @@ function defaultExpiresOn({ grantedOn }: { grantedOn: string }): string {
 }
 
 export function AcquisitionPermitForm() {
-  const router = useRouter();
+  const navigateAfterMutation = useAmmoLedgerMutationNavigation();
   const today = new Date().toISOString().slice(0, 10);
 
   const [ledgerPurpose, setLedgerPurpose] = useState<LedgerPurpose>("shooting");
@@ -55,24 +55,30 @@ export function AcquisitionPermitForm() {
     setIsPending(true);
     setError(null);
 
-    const result = await createAcquisitionPermitAction({
-      ledgerPurpose,
-      name,
-      permitPurpose,
-      grantedOn,
-      expiresOn,
-      quantity: Number(quantity) || 0,
-      memo: memo || undefined,
-    });
+    try {
+      const result = await createAcquisitionPermitAction({
+        ledgerPurpose,
+        name,
+        permitPurpose,
+        grantedOn,
+        expiresOn,
+        quantity: Number(quantity) || 0,
+        memo: memo || undefined,
+      });
 
-    if (!result.ok) {
-      setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+
+        return;
+      }
+
+      showAmmoLedgerToast({ action: "created", subject: "譲受許可" });
+      navigateAfterMutation({ href: buildLedgerHref({ purpose: ledgerPurpose }) });
+    } catch {
+      setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({ action: "created", subject: "譲受許可" });
-    router.push(buildLedgerHref({ purpose: ledgerPurpose }));
   }
 
   return (
@@ -147,7 +153,11 @@ export function AcquisitionPermitForm() {
         <Input id="permit-memo" value={memo} onChange={(e) => setMemo(e.target.value)} />
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
 
       <Button type="submit" disabled={isPending}>
         {isPending ? "登録中…" : "許可を登録"}

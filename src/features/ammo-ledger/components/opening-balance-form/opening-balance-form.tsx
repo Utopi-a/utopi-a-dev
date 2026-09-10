@@ -13,6 +13,7 @@ import {
 import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/purpose-filter";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { buildLedgerHref } from "@/features/ammo-ledger/ledger/build-ledger-href/build-ledger-href";
+import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
 import { buildYearOpeningDay } from "@/features/ammo-ledger/opening-balance/build-year-day/build-year-day";
 import type { OpeningBalanceSnapshot } from "@/features/ammo-ledger/opening-balance/get-opening-balance/get-opening-balance";
 import { saveOpeningBalanceAction } from "@/features/ammo-ledger/opening-balance/save-opening-balance/save-opening-balance-action";
@@ -74,6 +75,7 @@ export function OpeningBalanceForm({
   snapshotsByPurpose,
 }: OpeningBalanceFormProps) {
   const router = useRouter();
+  const navigateAfterMutation = useAmmoLedgerMutationNavigation();
   const [year, setYear] = useState(initialYear);
 
   useEffect(() => {
@@ -136,33 +138,42 @@ export function OpeningBalanceForm({
     setIsPending(true);
     setError(null);
 
-    const parsedStock = Object.fromEntries(
-      ammoTypes.map((type) => [type.id, Number(stockByAmmoType[type.id]) || 0]),
-    );
+    try {
+      const parsedStock = Object.fromEntries(
+        ammoTypes.flatMap((type) => {
+          const value = stockByAmmoType[type.id]?.trim() ?? "";
+          return value === "" ? [] : [[type.id, Number(value)]];
+        }),
+      );
 
-    const parsedPermitCarryovers = permitCarryoverRows.map((row) => ({
-      permitId: row.permitId,
-      name: row.name,
-      permitPurpose: row.permitPurpose,
-      quantity: Number(row.quantity) || 0,
-      expiresOn: row.expiresOn,
-    }));
+      const parsedPermitCarryovers = permitCarryoverRows.map((row) => ({
+        permitId: row.permitId,
+        name: row.name,
+        permitPurpose: row.permitPurpose,
+        quantity: Number(row.quantity) || 0,
+        expiresOn: row.expiresOn,
+      }));
 
-    const result = await saveOpeningBalanceAction({
-      year,
-      purpose,
-      permitCarryovers: parsedPermitCarryovers,
-      stockByAmmoType: parsedStock,
-    });
+      const result = await saveOpeningBalanceAction({
+        year,
+        purpose,
+        permitCarryovers: parsedPermitCarryovers,
+        stockByAmmoType: parsedStock,
+      });
 
-    if (!result.ok) {
-      setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+
+        return;
+      }
+
+      showAmmoLedgerToast({ action: "saved", subject: "年初繰越" });
+      navigateAfterMutation({ href: buildLedgerHref({ purpose }) });
+    } catch {
+      setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({ action: "saved", subject: "年初繰越" });
-    router.push(buildLedgerHref({ purpose }));
   }
 
   return (
@@ -194,7 +205,7 @@ export function OpeningBalanceForm({
       <section className="space-y-3">
         <SectionHeading
           title={`${year}年 ${purposeLabel} — 残弾数`}
-          description="弾種ごとに、その年の最初に手元にあった帳簿上の残数を入力します。"
+          description="その年の最初の残数を入力します。0は残数を0に設定し、空欄は繰越を登録しません（登録済みの繰越は取り消します）。"
         />
 
         {ammoTypes.length === 0 ? (
@@ -223,7 +234,6 @@ export function OpeningBalanceForm({
                         type="number"
                         min={0}
                         inputMode="numeric"
-                        placeholder="0"
                         value={value}
                         onChange={(event) =>
                           handleStockChange({ ammoTypeId: type.id, value: event.target.value })
@@ -241,7 +251,11 @@ export function OpeningBalanceForm({
         <OpeningBalanceAmmoTypeAdd defaultPurpose={purpose} />
       </section>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
 
       <Button type="submit" disabled={isPending}>
         {isPending ? "保存中…" : `${year}年 ${purposeLabel} の繰越を保存`}

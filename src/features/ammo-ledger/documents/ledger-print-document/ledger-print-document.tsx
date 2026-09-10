@@ -92,18 +92,28 @@ export function LedgerPrintDocument({
       <LedgerPrintGunList guns={guns} />
       <LedgerPrintAddressList ranges={ranges} counterpartyReferences={counterpartyReferences} />
 
-      {activePurposes.map((purpose) => (
-        <LedgerPrintBody
-          key={purpose}
-          ownerName={ownerName}
-          ownerAddress={ownerAddress}
-          ledgerPurpose={purpose}
-          entries={entriesByPurpose.get(purpose) ?? []}
-          year={year}
-          from={from}
-          to={to}
-        />
-      ))}
+      <p className="no-print text-xs text-muted-foreground sm:hidden">
+        帳票は左右にスクロールして確認できます。
+      </p>
+      <section
+        className="ledger-print-preview-scroll space-y-4"
+        aria-label="帳票プレビュー"
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: キーボードでも帳票を横スクロールできるようにする。
+        tabIndex={0}
+      >
+        {activePurposes.map((purpose) => (
+          <LedgerPrintBody
+            key={purpose}
+            ownerName={ownerName}
+            ownerAddress={ownerAddress}
+            ledgerPurpose={purpose}
+            entries={entriesByPurpose.get(purpose) ?? []}
+            year={year}
+            from={from}
+            to={to}
+          />
+        ))}
+      </section>
     </div>
   );
 }

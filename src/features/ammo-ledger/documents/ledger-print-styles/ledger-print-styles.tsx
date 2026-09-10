@@ -1,6 +1,18 @@
 export function LedgerPrintStyles() {
   return (
     <style>{`
+      @media screen {
+        .ledger-print-preview-scroll {
+          max-width: 100%;
+          overflow-x: auto;
+        }
+
+        /* 小画面でも帳票の列幅を維持し、印刷時は用紙幅に合わせる。 */
+        .ledger-print-preview-scroll > .ledger-print-page {
+          min-width: 720px;
+        }
+      }
+
       .ledger-print-table {
         width: 100%;
         max-width: 100%;

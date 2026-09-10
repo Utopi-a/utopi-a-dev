@@ -31,6 +31,33 @@ function buildEntry({
 }
 
 describe("validateStockTimeline", () => {
+  it("取得順にかかわらず同日の繰越と出庫を帳簿順に検証する", () => {
+    const result = validateStockTimeline({
+      entries: [
+        buildEntry({
+          category: "consume",
+          quantity: 25,
+          occurredOn: "2026-01-01",
+          dayOrder: 2,
+        }),
+        buildEntry({
+          category: "consume",
+          quantity: 25,
+          occurredOn: "2026-01-01",
+          dayOrder: 1,
+        }),
+        buildEntry({
+          category: "carryover",
+          quantity: 50,
+          occurredOn: "2026-01-01",
+          dayOrder: 0,
+        }),
+      ],
+    });
+
+    expect(result).toEqual({ ok: true });
+  });
+
   it("在庫と同数の出庫を許可する", () => {
     const result = validateStockTimeline({
       entries: [

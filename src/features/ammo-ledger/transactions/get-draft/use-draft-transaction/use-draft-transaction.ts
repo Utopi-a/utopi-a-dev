@@ -9,7 +9,7 @@ const draftSwrOptions = {
 } as const;
 
 export function useDraftTransaction({ draftId }: { draftId: string | null }) {
-  const { data, isLoading } = useSWR(
+  const { data, isLoading, error, mutate } = useSWR(
     draftId ? (["ammo-ledger", "draft", draftId] as const) : null,
     () => getDraftTransactionAction({ draftId: draftId as string }),
     draftSwrOptions,
@@ -18,5 +18,9 @@ export function useDraftTransaction({ draftId }: { draftId: string | null }) {
   return {
     draft: data ?? null,
     isLoading: draftId !== null && isLoading,
+    error,
+    retry: () => {
+      void mutate().catch(() => {});
+    },
   };
 }

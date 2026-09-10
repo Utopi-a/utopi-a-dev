@@ -7,7 +7,7 @@ const webServerCommand =
   process.env.E2E_WEB_SERVER_COMMAND ?? "doppler run -- pnpm exec next dev --turbopack";
 
 export default defineConfig({
-  testDir: "./e2e",
+  testDir: "./e2e/smoke",
   timeout: 30_000,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,

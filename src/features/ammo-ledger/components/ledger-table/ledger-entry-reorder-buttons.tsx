@@ -31,18 +31,21 @@ export function LedgerEntryReorderButtons({
     setPendingDirection(direction);
     setError(null);
 
-    const result = await reorderLedgerEntryAction({ ledgerEntryId, direction });
+    try {
+      const result = await reorderLedgerEntryAction({ ledgerEntryId, direction });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
 
-    if (!result.ok) {
-      setError(result.error);
+      showAmmoLedgerToast({ action: "updated", subject: "並び順" });
+      await invalidateWorkspace();
+      onReordered?.();
+    } catch {
+      setError("並び替えの結果を確認できませんでした。時間をおいて再度お試しください。");
+    } finally {
       setPendingDirection(null);
-      return;
     }
-
-    showAmmoLedgerToast({ action: "updated", subject: "並び順" });
-    await invalidateWorkspace();
-    onReordered?.();
-    setPendingDirection(null);
   }
 
   if (!canMoveUp && !canMoveDown) {

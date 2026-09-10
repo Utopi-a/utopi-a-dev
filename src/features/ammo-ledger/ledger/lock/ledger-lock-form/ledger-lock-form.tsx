@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +19,7 @@ import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-l
 import { lockLedgerAction } from "@/features/ammo-ledger/ledger/lock/lock-ledger-action/lock-ledger-action";
 import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
 import { unlockLedgerAction } from "@/features/ammo-ledger/ledger/lock/unlock-ledger-action/unlock-ledger-action";
+import { useUpdateAmmoLedgerLockState } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
@@ -65,7 +65,7 @@ function LockStatusSection({ lockState }: { lockState: LedgerLockState }) {
 }
 
 function LockSection({ lockState }: { lockState: LedgerLockState }) {
-  const router = useRouter();
+  const updateLockState = useUpdateAmmoLedgerLockState();
   const today = getTokyoIsoDate();
   const minDate =
     lockState.isLocked && lockState.lockedThrough
@@ -81,17 +81,20 @@ function LockSection({ lockState }: { lockState: LedgerLockState }) {
     setIsPending(true);
     setError(null);
 
-    const result = await lockLedgerAction({ lockedThrough });
+    try {
+      const result = await lockLedgerAction({ lockedThrough });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
 
-    if (!result.ok) {
-      setError(result.error);
+      updateLockState({ lockState: result.lockState });
+      showAmmoLedgerToast({ action: "saved", subject: "帳簿ロック" });
+    } catch {
+      setError("帳簿のロック結果を確認できませんでした。時間をおいて再度お試しください。");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({ action: "saved", subject: "帳簿ロック" });
-    router.refresh();
-    setIsPending(false);
   }
 
   return (
@@ -128,7 +131,7 @@ function LockSection({ lockState }: { lockState: LedgerLockState }) {
 }
 
 function UnlockSection({ lockedThrough }: { lockedThrough: string }) {
-  const router = useRouter();
+  const updateLockState = useUpdateAmmoLedgerLockState();
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [unlockDate, setUnlockDate] = useState("");
   const [confirmationText, setConfirmationText] = useState("");
@@ -148,22 +151,25 @@ function UnlockSection({ lockedThrough }: { lockedThrough: string }) {
     setIsPending(true);
     setError(null);
 
-    const result = await unlockLedgerAction({
-      lockedThrough: unlockDate,
-      confirmationText,
-      reason,
-    });
+    try {
+      const result = await unlockLedgerAction({
+        lockedThrough: unlockDate,
+        confirmationText,
+        reason,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
 
-    if (!result.ok) {
-      setError(result.error);
+      updateLockState({ lockState: result.lockState });
+      setUnlockDialogOpen(false);
+      showAmmoLedgerToast({ action: "saved", subject: "帳簿ロック解除" });
+    } catch {
+      setError("帳簿のロック解除結果を確認できませんでした。時間をおいて再度お試しください。");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    setUnlockDialogOpen(false);
-    showAmmoLedgerToast({ action: "saved", subject: "帳簿ロック解除" });
-    router.refresh();
-    setIsPending(false);
   }
 
   return (

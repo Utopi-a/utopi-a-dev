@@ -25,12 +25,8 @@ function InventoryViewContent({ workspace, isRefreshing }: InventoryViewContentP
     () =>
       evaluateHomeStorageLimit({
         entries: entries.map((entry) => ({
-          id: entry.id,
-          occurredOn: entry.occurredOn,
-          dayOrder: entry.dayOrder,
-          createdAt: entry.createdAt,
+          ...entry,
           category: entry.category as LedgerCategory,
-          quantity: entry.quantity,
         })),
       }),
     [entries],
@@ -93,10 +89,10 @@ function InventoryViewContent({ workspace, isRefreshing }: InventoryViewContentP
 }
 
 export function InventoryView() {
-  const { workspace, isLoading, isRefreshing } = useAmmoLedgerWorkspace();
+  const { workspace, isLoading, isRefreshing, error, retry } = useAmmoLedgerWorkspace();
 
   if (isLoading || !workspace) {
-    return <WorkspaceViewLoader />;
+    return <WorkspaceViewLoader error={error} onRetry={retry} />;
   }
 
   return <InventoryViewContent workspace={workspace} isRefreshing={isRefreshing} />;

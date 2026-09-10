@@ -8,6 +8,7 @@ const clientShellPaths: Record<AmmoLedgerShellRoute, string> = {
 };
 
 export function resolveShellRoute({ path }: { path: string }): AmmoLedgerShellRoute | null {
+  path = path.split(/[?#]/, 1)[0];
   if (path === clientShellPaths.home) {
     return "home";
   }

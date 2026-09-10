@@ -12,6 +12,7 @@ import { buildAmmoTypeLabel } from "@/features/ammo-ledger/schema/build-ammo-typ
 import type { CartridgeType } from "@/features/ammo-ledger/schema/cartridge-type";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { listShotGaugeSelectOptions } from "@/features/ammo-ledger/schema/shot-gauge-options";
+import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 const cartridgeTypeFormOptions: { value: CartridgeType; label: string }[] = [
   { value: "rifle", label: "ライフル実包" },
@@ -25,6 +26,7 @@ type OpeningBalanceAmmoTypeAddProps = {
 
 export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmoTypeAddProps) {
   const router = useRouter();
+  const requestRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const [isOpen, setIsOpen] = useState(false);
   const [caliber, setCaliber] = useState("12番");
   const [cartridgeType, setCartridgeType] = useState<string>("shotgun_shot");
@@ -60,25 +62,31 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
     setIsPending(true);
     setError(null);
 
-    const result = await createAmmoTypeAction({
-      caliber,
-      cartridgeType,
-      gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber || undefined : undefined,
-      roundsPerBox: Number(roundsPerBox),
-      defaultPurpose,
-    });
+    try {
+      const result = await createAmmoTypeAction({
+        caliber,
+        cartridgeType,
+        gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber || undefined : undefined,
+        roundsPerBox: Number(roundsPerBox),
+        defaultPurpose,
+      });
 
-    if (!result.ok) {
-      setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+
+        return;
+      }
+
+      showAmmoLedgerToast({ action: "created", subject: "弾種" });
+      requestRevalidation();
+      router.refresh();
+      setIsOpen(false);
+      setGaugeNumber("");
+    } catch {
+      setError("通信に失敗しました。弾種の登録状況を確認してから再試行してください。");
+    } finally {
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({ action: "created", subject: "弾種" });
-    router.refresh();
-    setIsOpen(false);
-    setGaugeNumber("");
-    setIsPending(false);
   }
 
   if (!isOpen) {

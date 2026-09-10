@@ -8,10 +8,8 @@ const revision =
 
 export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } = createSerwistRoute(
   {
-    additionalPrecacheEntries: [
-      { url: ammoLedgerPwaConfig.startUrl, revision },
-      { url: ammoLedgerPwaConfig.offlinePath, revision },
-    ],
+    // 認証が必要な開始ページは事前保存せず、公開のオフライン案内だけを保存する。
+    additionalPrecacheEntries: [{ url: ammoLedgerPwaConfig.offlinePath, revision }],
     swSrc: "src/sw.ts",
     useNativeEsbuild: true,
     globIgnores: [

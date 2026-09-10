@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import { ActivePermitStatus } from "@/features/ammo-ledger/components/active-permit-status/active-permit-status";
 import { AmmoLedgerRefreshIndicator } from "@/features/ammo-ledger/components/ammo-ledger-refresh-indicator/ammo-ledger-refresh-indicator";
 import { HomeStorageWarning } from "@/features/ammo-ledger/components/home-storage-warning/home-storage-warning";
@@ -25,30 +25,12 @@ import {
 import type { PermitEventKind } from "@/features/ammo-ledger/schema/permit-event-kind";
 import { parseLedgerPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import type { AmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-types";
-import {
-  useAmmoLedgerWorkspace,
-  useRequestAmmoLedgerWorkspaceRevalidation,
-} from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
-
-function readPurposeFromUrl(): LedgerPurpose {
-  if (typeof window === "undefined") {
-    return "shooting";
-  }
-  const purpose = new URLSearchParams(window.location.search).get("purpose");
-  return parseLedgerPurpose({ value: purpose }) ?? "shooting";
-}
+import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 function syncPurposeToUrl({ purpose }: { purpose: LedgerPurpose }) {
   const url = new URL(window.location.href);
   url.searchParams.set("purpose", purpose);
-  window.history.replaceState(window.history.state, "", url);
-}
-
-function readHighlightedEntryIdFromUrl(): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  return new URLSearchParams(window.location.search).get("entry");
+  window.history.replaceState(null, "", url);
 }
 
 type LedgerViewContentProps = {
@@ -65,8 +47,8 @@ function LedgerViewContent({
   highlightedEntryId,
 }: LedgerViewContentProps) {
   const router = useRouter();
-  const requestWorkspaceRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
-  const [purpose, setPurpose] = useState(readPurposeFromUrl);
+  const searchParams = useSearchParams();
+  const purpose = parseLedgerPurpose({ value: searchParams.get("purpose") }) ?? "shooting";
   const today = new Date().toISOString().slice(0, 10);
   const currentYear = new Date().getFullYear();
   const [printYear, setPrintYear] = useState(currentYear);
@@ -82,21 +64,6 @@ function LedgerViewContent({
   const highlightedEntryExists = highlightedEntryId
     ? entries.some((entry) => entry.id === highlightedEntryId)
     : false;
-
-  useEffect(() => {
-    if (highlightedEntryId && !highlightedEntryExists) {
-      requestWorkspaceRevalidation();
-    }
-  }, [highlightedEntryExists, highlightedEntryId, requestWorkspaceRevalidation]);
-
-  useEffect(() => {
-    function handlePopState() {
-      setPurpose(readPurposeFromUrl());
-    }
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
 
   const purposeEntries = useMemo(
     () => filterByPurpose({ rows: entries, purpose }),
@@ -155,12 +122,8 @@ function LedgerViewContent({
     () =>
       evaluateHomeStorageLimit({
         entries: entries.map((entry) => ({
-          id: entry.id,
-          occurredOn: entry.occurredOn,
-          dayOrder: entry.dayOrder,
-          createdAt: entry.createdAt,
+          ...entry,
           category: entry.category as LedgerCategory,
-          quantity: entry.quantity,
         })),
       }),
     [entries],
@@ -179,7 +142,6 @@ function LedgerViewContent({
   );
 
   function handlePurposeChange({ nextPurpose }: { nextPurpose: LedgerPurpose }) {
-    setPurpose(nextPurpose);
     syncPurposeToUrl({ purpose: nextPurpose });
   }
 
@@ -252,7 +214,9 @@ function LedgerViewContent({
         >
           {highlightedEntryExists
             ? "追加した記録を強調表示しています。"
-            : "記録は保存済みです。帳簿の表示を更新しています…"}
+            : isRefreshing
+              ? "記録は保存済みです。帳簿の表示を更新しています…"
+              : "指定された記録を表示できません。帳簿を再取得してください。"}
         </p>
       ) : null}
 
@@ -274,10 +238,11 @@ function LedgerViewContent({
 }
 
 export function LedgerView() {
-  const { workspace, ownerName, isLoading, isRefreshing } = useAmmoLedgerWorkspace();
+  const searchParams = useSearchParams();
+  const { workspace, ownerName, isLoading, isRefreshing, error, retry } = useAmmoLedgerWorkspace();
 
   if (isLoading || !workspace) {
-    return <WorkspaceViewLoader />;
+    return <WorkspaceViewLoader error={error} onRetry={retry} />;
   }
 
   return (
@@ -285,7 +250,7 @@ export function LedgerView() {
       workspace={workspace}
       ownerName={ownerName || "（未設定）"}
       isRefreshing={isRefreshing}
-      highlightedEntryId={readHighlightedEntryIdFromUrl()}
+      highlightedEntryId={searchParams.get("entry")}
     />
   );
 }

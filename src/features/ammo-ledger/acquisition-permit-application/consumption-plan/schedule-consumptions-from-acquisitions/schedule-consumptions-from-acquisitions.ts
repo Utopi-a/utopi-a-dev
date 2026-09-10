@@ -1,6 +1,7 @@
+import { allocateNaturalRangeConsumptions } from "../allocate-natural-range-consumptions/allocate-natural-range-consumptions";
+import { compactSmallRangeConsumptions } from "../compact-small-range-consumptions/compact-small-range-consumptions";
 import { splitGapConsumptionQuantity } from "../consumption-chunk-size/consumption-chunk-size";
 import {
-  compareTimelinePosition,
   isConsumptionBetweenAcquisitions,
   sortAcquisitions,
 } from "../consumption-plan-timeline/consumption-plan-timeline";
@@ -17,6 +18,7 @@ import {
 
 const maxConsumptionsPerGap = 2;
 const maxConsumptionPerEvent = 500;
+const preferredConsumptionUnit = 100;
 
 /** 初回購入前と各購入後に、実在庫と次回購入の空きを守って消費を配分する。 */
 export function scheduleConsumptionsFromAcquisitions({
@@ -67,14 +69,15 @@ export function scheduleConsumptionsFromAcquisitions({
     });
     let eventSequence = 0;
     for (const chunk of chunks) {
-      let chunkRemaining = chunk;
-      while (chunkRemaining > 0) {
-        const range = pickRangeWithRemaining({ remainingByRange, rangeAllocations });
-        if (!range) {
-          throw new Error("failed to allocate consumption to a shooting range");
-        }
+      const allocations = allocateNaturalRangeConsumptions({
+        quantity: chunk,
+        remainingByRange,
+        rangeAllocations,
+        consumptionUnit,
+        minimumConsumption: naturalConsumptionUnit,
+      });
+      for (const { range, quantity: allocatedQuantity } of allocations) {
         const rangeRemaining = remainingByRange.get(range.rangeId) ?? 0;
-        const allocatedQuantity = Math.min(chunkRemaining, rangeRemaining);
         remainingByRange.set(range.rangeId, rangeRemaining - allocatedQuantity);
         consumptions.push({
           scheduledPeriod: acquisition.scheduledPeriod,
@@ -88,22 +91,34 @@ export function scheduleConsumptionsFromAcquisitions({
           purpose: range.purpose,
         });
         eventSequence += 1;
-        chunkRemaining -= allocatedQuantity;
       }
     }
     stock -= quantity;
     remainingQuantity -= quantity;
   }
 
-  const firstAcquisition = sortedAcquisitions[0];
-  addConsumptions({
-    acquisition: firstAcquisition,
-    quantity: roundUpConsumption({
-      quantity: Math.max(0, stock + firstAcquisition.quantity - homeStorageLimit),
-      consumptionUnit,
-    }),
-    beforePurchase: true,
+  const naturalConsumptionUnit = roundUpConsumption({
+    quantity: preferredConsumptionUnit,
+    consumptionUnit,
   });
+  const firstAcquisition = sortedAcquisitions[0];
+  const requiredBeforePurchase = roundUpConsumption({
+    quantity: Math.max(0, stock + firstAcquisition.quantity - homeStorageLimit),
+    consumptionUnit,
+  });
+  if (requiredBeforePurchase > 0) {
+    addConsumptions({
+      acquisition: firstAcquisition,
+      quantity: chooseNaturalConsumptionQuantity({
+        minimum: requiredBeforePurchase,
+        maximum: Math.min(remainingQuantity, Math.floor(stock / consumptionUnit) * consumptionUnit),
+        target: Math.ceil(requiredBeforePurchase / naturalConsumptionUnit) * naturalConsumptionUnit,
+        remainingQuantity,
+        naturalConsumptionUnit,
+      }),
+      beforePurchase: true,
+    });
+  }
 
   for (const [index, acquisition] of sortedAcquisitions.entries()) {
     stock += acquisition.quantity;
@@ -112,23 +127,63 @@ export function scheduleConsumptionsFromAcquisitions({
       quantity: Math.max(0, stock + (nextAcquisition?.quantity ?? 0) - homeStorageLimit),
       consumptionUnit,
     });
-    const balancedConsumption = roundUpConsumption({
-      quantity: remainingQuantity / (sortedAcquisitions.length - index),
-      consumptionUnit,
-    });
     const availableConsumption = Math.floor(stock / consumptionUnit) * consumptionUnit;
+    const maximum = Math.min(remainingQuantity, availableConsumption);
 
     addConsumptions({
       acquisition,
-      quantity: Math.min(
-        remainingQuantity,
-        availableConsumption,
-        Math.max(minimumConsumption, balancedConsumption),
-      ),
+      quantity: nextAcquisition
+        ? chooseNaturalConsumptionQuantity({
+            minimum: minimumConsumption,
+            maximum,
+            target: remainingQuantity / (sortedAcquisitions.length - index),
+            remainingQuantity,
+            naturalConsumptionUnit,
+          })
+        : maximum,
     });
   }
 
-  return sortConsumptionEvents({ events: consumptions });
+  return compactSmallRangeConsumptions({
+    acquisitions: sortedAcquisitions,
+    consumptions,
+    initialStock,
+    minimumConsumption: naturalConsumptionUnit,
+    maxConsumptionPerEvent,
+  });
+}
+
+function chooseNaturalConsumptionQuantity({
+  minimum,
+  maximum,
+  target,
+  remainingQuantity,
+  naturalConsumptionUnit,
+}: {
+  minimum: number;
+  maximum: number;
+  target: number;
+  remainingQuantity: number;
+  naturalConsumptionUnit: number;
+}): number {
+  let quantity = Math.min(
+    maximum,
+    Math.max(
+      naturalConsumptionUnit,
+      Math.ceil(Math.max(target, minimum) / naturalConsumptionUnit) * naturalConsumptionUnit,
+    ),
+  );
+  const remainder = remainingQuantity - quantity;
+  if (remainder > 0 && remainder < naturalConsumptionUnit) {
+    // 小さい最終行を作るより、今回と次回の両方をまとまった量にする。
+    const leaveFullBatch = remainingQuantity - naturalConsumptionUnit;
+    if (leaveFullBatch >= Math.max(minimum, naturalConsumptionUnit) && leaveFullBatch <= maximum) {
+      quantity = leaveFullBatch;
+    } else if (remainingQuantity <= maximum) {
+      quantity = remainingQuantity;
+    }
+  }
+  return quantity;
 }
 
 function roundUpConsumption({
@@ -139,33 +194,6 @@ function roundUpConsumption({
   consumptionUnit: number;
 }): number {
   return Math.ceil(quantity / consumptionUnit) * consumptionUnit;
-}
-
-function sortConsumptionEvents({ events }: { events: ConsumptionEvent[] }): ConsumptionEvent[] {
-  return [...events].sort((a, b) =>
-    compareTimelinePosition({
-      a: { ...a, kind: "consumption" },
-      b: { ...b, kind: "consumption" },
-    }),
-  );
-}
-
-function pickRangeWithRemaining({
-  remainingByRange,
-  rangeAllocations,
-}: {
-  remainingByRange: Map<string, number>;
-  rangeAllocations: RangeAllocation[];
-}): RangeAllocation | null {
-  const candidates = rangeAllocations
-    .map((allocation) => ({
-      allocation,
-      remaining: remainingByRange.get(allocation.rangeId) ?? 0,
-    }))
-    .filter(({ remaining }) => remaining > 0)
-    .sort((a, b) => b.remaining - a.remaining);
-
-  return candidates[0]?.allocation ?? null;
 }
 
 function allocateQuantityByWeight({

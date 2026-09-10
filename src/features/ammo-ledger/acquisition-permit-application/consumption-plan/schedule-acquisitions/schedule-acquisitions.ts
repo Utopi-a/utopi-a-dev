@@ -1,5 +1,4 @@
 import {
-  compareTimelinePosition,
   isConsumptionBetweenAcquisitions,
   sortAcquisitions,
 } from "../consumption-plan-timeline/consumption-plan-timeline";
@@ -61,9 +60,10 @@ export function scheduleAcquisitions({
   requestedQuantity,
   periodFrom,
   periodTo,
-  initialStock: _initialStock,
-  homeStorageLimit: _homeStorageLimit,
+  initialStock,
+  homeStorageLimit,
   purchaseUnit = 250,
+  consumptionUnit = 25,
 }: {
   requestedQuantity: number;
   periodFrom: string;
@@ -71,15 +71,28 @@ export function scheduleAcquisitions({
   initialStock: number;
   homeStorageLimit: number;
   purchaseUnit?: number;
+  consumptionUnit?: number;
 }): AcquisitionEvent[] {
   if (requestedQuantity <= 0) {
+    return [];
+  }
+
+  // 消費単位で取り除けない在庫の端数を残しても、購入が収まる大きさにする。
+  const maxChunk =
+    Math.floor(
+      Math.min(
+        Math.max(maxPurchasePerEvent, purchaseUnit),
+        homeStorageLimit - (initialStock % consumptionUnit),
+      ) / purchaseUnit,
+    ) * purchaseUnit;
+  if (maxChunk < purchaseUnit) {
     return [];
   }
 
   const chunks = splitIntoPurchaseChunks({
     totalQuantity: requestedQuantity,
     purchaseUnit,
-    maxChunk: maxPurchasePerEvent,
+    maxChunk,
   });
 
   const purchasePeriods = pickPurchasePeriods({

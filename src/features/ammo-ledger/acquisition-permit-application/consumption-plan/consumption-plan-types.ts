@@ -23,8 +23,9 @@ export type ConsumptionEvent = {
   rangeName: string;
   rangeAddress: string;
   purpose: AcquisitionPermitPurpose;
-  /** 購入スロットと揃える。同一スロット内の複数消費は eventSequence で区別 */
+  /** 購入スロットと揃える。初回購入前の消費は、その購入スロットより1小さい値。 */
   slotSequence?: number;
+  /** 同一スロット内の複数消費の順序 */
   eventSequence?: number;
 };
 

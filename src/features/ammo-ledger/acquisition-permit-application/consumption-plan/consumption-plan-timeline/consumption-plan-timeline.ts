@@ -1,9 +1,5 @@
 import type { AcquisitionEvent, ConsumptionEvent } from "../consumption-plan-types";
-import {
-  comparePlanPeriod,
-  type PlanPeriod,
-  serializePlanPeriodKey,
-} from "../plan-period/plan-period";
+import { comparePlanPeriod, type PlanPeriod } from "../plan-period/plan-period";
 
 export type TimelineKind = "acquisition" | "consumption" | "bufferConsumption";
 
@@ -58,16 +54,6 @@ export function sortAcquisitions({
       b: { ...b, kind: "acquisition" },
     }),
   );
-}
-
-export function serializeConsumptionSlotKey({
-  period,
-  slotSequence = 0,
-}: {
-  period: PlanPeriod;
-  slotSequence?: number;
-}): string {
-  return `${serializePlanPeriodKey({ period })}:${slotSequence}`;
 }
 
 export function isConsumptionBetweenAcquisitions({

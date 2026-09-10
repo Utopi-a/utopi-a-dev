@@ -29,20 +29,14 @@ describe("scheduleConsumptionsFromAcquisitions", () => {
   ];
 
   it("各購入の直後に消費を置く", () => {
-    const periodFrom = "2026-04-01";
-    const periodTo = "2027-03-31";
-
     const scheduled = scheduleConsumptionsFromAcquisitions({
       acquisitions,
-      requestedQuantity: 1000,
-      shootingQuantity: 1000,
-      bufferNeedByAcquisition: [0, 0],
-      periodFrom,
-      periodTo,
+      initialStock: 300,
+      homeStorageLimit: 800,
       rangeAllocations: [ranges[0]],
     });
 
-    const consumptions = [...scheduled.bufferConsumptions, ...scheduled.shootingConsumptions];
+    const consumptions = scheduled;
 
     expect(consumptions.length).toBeGreaterThan(0);
     expect(consumptions.reduce((sum, event) => sum + event.quantity, 0)).toBe(1000);
@@ -53,28 +47,23 @@ describe("scheduleConsumptionsFromAcquisitions", () => {
   });
 
   it("1500発を250発以上の块で配分する", () => {
-    const periodFrom = "2026-04-01";
-    const periodTo = "2027-03-31";
-
     const scheduled = scheduleConsumptionsFromAcquisitions({
-      acquisitions,
-      requestedQuantity: 1500,
-      shootingQuantity: 1500,
-      bufferNeedByAcquisition: [0, 0],
-      periodFrom,
-      periodTo,
+      acquisitions: [
+        ...acquisitions,
+        { scheduledPeriod: { year: 2027, month: 3, period: "下旬" }, quantity: 500 },
+      ],
+      initialStock: 300,
+      homeStorageLimit: 800,
       rangeAllocations: [ranges[0]],
     });
 
-    const consumptions = [...scheduled.bufferConsumptions, ...scheduled.shootingConsumptions];
+    const consumptions = scheduled;
 
     expect(consumptions.reduce((sum, event) => sum + event.quantity, 0)).toBe(1500);
     expect(consumptions.every((event) => event.quantity >= 250)).toBe(true);
   });
 
   it("同一区間に複数購入がある場合も直後消費で交互配置する", () => {
-    const periodFrom = "2026-04-01";
-    const periodTo = "2026-04-30";
     const samePeriodAcquisitions = [
       {
         scheduledPeriod: { year: 2026, month: 4, period: "上旬" as const },
@@ -90,15 +79,12 @@ describe("scheduleConsumptionsFromAcquisitions", () => {
 
     const scheduled = scheduleConsumptionsFromAcquisitions({
       acquisitions: samePeriodAcquisitions,
-      requestedQuantity: 1000,
-      shootingQuantity: 1000,
-      bufferNeedByAcquisition: [500, 0],
-      periodFrom,
-      periodTo,
+      initialStock: 300,
+      homeStorageLimit: 800,
       rangeAllocations: [ranges[0]],
     });
 
-    const consumptions = [...scheduled.bufferConsumptions, ...scheduled.shootingConsumptions];
+    const consumptions = scheduled;
     const perGap = countConsumptionsBetweenPurchases({
       consumptions,
       acquisitions: samePeriodAcquisitions,
@@ -114,18 +100,24 @@ describe("scheduleConsumptionsFromAcquisitions", () => {
     const availablePeriods = listPlanPeriodsInRange({ from: periodFrom, to: periodTo });
 
     const scheduled = scheduleConsumptionsFromAcquisitions({
-      acquisitions,
-      requestedQuantity: 1500,
-      shootingQuantity: 1500,
-      bufferNeedByAcquisition: [0, 0],
-      periodFrom,
-      periodTo,
+      acquisitions: [
+        ...acquisitions,
+        { scheduledPeriod: { year: 2027, month: 3, period: "下旬" }, quantity: 500 },
+      ],
+      initialStock: 300,
+      homeStorageLimit: 800,
       rangeAllocations: [ranges[0]],
     });
 
-    const consumptions = [...scheduled.bufferConsumptions, ...scheduled.shootingConsumptions];
+    const consumptions = scheduled;
 
-    expect(availablePeriods.length).toBeGreaterThan(0);
+    expect(
+      consumptions.every((event) =>
+        availablePeriods.some(
+          (period) => JSON.stringify(period) === JSON.stringify(event.scheduledPeriod),
+        ),
+      ),
+    ).toBe(true);
     expect(consumptions.reduce((sum, event) => sum + event.quantity, 0)).toBe(1500);
   });
 });

@@ -1,8 +1,16 @@
-export type ApplicationPrintSection = "main" | "supplement";
+export type ApplicationPrintSection =
+  | "main"
+  | "supplement"
+  | "resume"
+  | "cohabitants"
+  | "duplex-bundle";
 
 const printSectionClassNames: Record<ApplicationPrintSection, string> = {
   main: "printing-application-main",
   supplement: "printing-application-supplement",
+  resume: "printing-application-resume",
+  cohabitants: "printing-application-cohabitants",
+  "duplex-bundle": "printing-application-duplex-bundle",
 };
 
 export function printApplicationSection({ section }: { section: ApplicationPrintSection }): void {

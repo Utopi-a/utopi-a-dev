@@ -31,6 +31,8 @@ import {
 } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/calibration-preview-text-storage";
 import { calibrationSampleFieldValues } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/calibration-sample-field-values";
 import {
+  type CalibrationTemplateCategory,
+  type CalibrationTemplateEntry,
   calibrationTemplateRegistry,
   findCalibrationTemplate,
 } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/calibration-template-registry";
@@ -107,8 +109,48 @@ function resolveCalibrationPreviewValue({
   return previewValues[field.id] ?? "";
 }
 
-export function FieldCalibrationView() {
-  const [templateId, setTemplateId] = useState(calibrationTemplateRegistry[0]?.id ?? "");
+type FieldCalibrationViewProps = {
+  categoryFilter?: CalibrationTemplateCategory;
+  defaultTemplateId?: string;
+};
+
+function resolveCalibrationTemplates({
+  categoryFilter,
+}: {
+  categoryFilter?: CalibrationTemplateCategory;
+}): CalibrationTemplateEntry[] {
+  if (!categoryFilter) {
+    return calibrationTemplateRegistry;
+  }
+
+  return calibrationTemplateRegistry.filter((entry) => entry.category === categoryFilter);
+}
+
+function resolveDefaultTemplateId({
+  templates,
+  defaultTemplateId,
+}: {
+  templates: CalibrationTemplateEntry[];
+  defaultTemplateId?: string;
+}): string {
+  if (defaultTemplateId && templates.some((entry) => entry.id === defaultTemplateId)) {
+    return defaultTemplateId;
+  }
+
+  return templates[0]?.id ?? "";
+}
+
+export function FieldCalibrationView({
+  categoryFilter,
+  defaultTemplateId,
+}: FieldCalibrationViewProps = {}) {
+  const templates = useMemo(
+    () => resolveCalibrationTemplates({ categoryFilter }),
+    [categoryFilter],
+  );
+  const [templateId, setTemplateId] = useState(() =>
+    resolveDefaultTemplateId({ templates, defaultTemplateId }),
+  );
   const [pageIndex, setPageIndex] = useState(0);
   const [selectedFieldIds, setSelectedFieldIds] = useState<string[]>([]);
   const [previewValues, setPreviewValues] = useState<Record<string, string>>(
@@ -167,7 +209,12 @@ export function FieldCalibrationView() {
         repeatingRows: initialRepeatingRows,
       },
     });
-    setPreviewValues(savedPreview ?? { ...calibrationSampleFieldValues });
+    const entry = findCalibrationTemplate({ id: template.id });
+    setPreviewValues(
+      savedPreview ??
+        entry?.previewFieldValues ??
+        ({ ...calibrationSampleFieldValues } as Record<string, string>),
+    );
     setBackgroundScale(loadCalibrationBackgroundScale({ templateId: template.id }));
     setLayoutRepeatOffsetY(template.repeatingRows?.rowHeight ?? 19);
     setPageIndex(0);
@@ -821,7 +868,7 @@ export function FieldCalibrationView() {
               value={templateId}
               onChange={(event) => setTemplateId(event.target.value)}
             >
-              {calibrationTemplateRegistry.map((entry) => (
+              {templates.map((entry) => (
                 <option key={entry.id} value={entry.id}>
                   {entry.label}
                 </option>

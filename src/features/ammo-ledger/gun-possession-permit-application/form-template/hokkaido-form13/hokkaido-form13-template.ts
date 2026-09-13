@@ -1,0 +1,63 @@
+import type { FormTemplate } from "@/features/ammo-ledger/acquisition-permit-application/form-template/form-template-types";
+
+export const hokkaidoForm13Template: FormTemplate = {
+  id: "hokkaido-form13",
+  version: "form13-initial-v1",
+  label: "同居親族書（様式第13号）",
+  sourceUrl: "https://www.police.pref.hokkaido.lg.jp/down_load/06/08.pdf",
+  pageWidthMm: 210,
+  pageHeightMm: 297,
+  pages: [{ imagePath: "/forms/gun-possession-permit/hokkaido/png/form13.png" }],
+  fields: [
+    {
+      id: "applicationDateYear",
+      page: 0,
+      x: 150,
+      y: 30,
+      width: 12,
+      fontSize: 4.5,
+      align: "right",
+    },
+    {
+      id: "applicationDateMonth",
+      page: 0,
+      x: 165,
+      y: 30,
+      width: 8,
+      fontSize: 4.5,
+      align: "right",
+    },
+    {
+      id: "applicationDateDay",
+      page: 0,
+      x: 176,
+      y: 30,
+      width: 8,
+      fontSize: 4.5,
+      align: "right",
+    },
+    { id: "ownerName", page: 0, x: 120, y: 38, width: 70, fontSize: 6 },
+  ],
+  repeatingRows: {
+    startY: 52,
+    rowHeight: 32,
+    maxRowsPerPage: 4,
+    columns: [
+      {
+        id: "sameRegisteredDomicile",
+        x: 24,
+        width: 6,
+        height: 6,
+        fontSize: 6,
+        variant: "checkbox",
+      },
+      { id: "furigana", x: 34, width: 50, fontSize: 4, yOffset: 0 },
+      { id: "occupation", x: 90, width: 30, fontSize: 4, yOffset: 0 },
+      { id: "name", x: 34, width: 50, fontSize: 5, yOffset: 8 },
+      { id: "relationship", x: 90, width: 30, fontSize: 4, yOffset: 8 },
+      { id: "birthDateYear", x: 130, width: 12, fontSize: 4, yOffset: 8, align: "right" },
+      { id: "birthDateMonth", x: 146, width: 8, fontSize: 4, yOffset: 8, align: "right" },
+      { id: "birthDateDay", x: 158, width: 8, fontSize: 4, yOffset: 8, align: "right" },
+    ],
+  },
+};

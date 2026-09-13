@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { FieldCalibrationViewLazy } from "@/features/ammo-ledger/acquisition-permit-application/field-calibration/field-calibration-view.lazy";
+import { GunPermitFieldCalibrationViewLazy } from "@/features/ammo-ledger/gun-possession-permit-application/field-calibration/gun-permit-field-calibration-view.lazy";
 import { isDevelopmentEnvironment } from "@/lib/is-development-environment";
 
-export default function AcquisitionPermitFieldCalibrationPage() {
+export default function GunPossessionPermitFieldCalibrationPage() {
   if (!isDevelopmentEnvironment()) {
     notFound();
   }
@@ -10,10 +10,10 @@ export default function AcquisitionPermitFieldCalibrationPage() {
   return (
     <div className="space-y-1">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-        <h1 className="text-base font-semibold">申請書フィールド座標調整</h1>
+        <h1 className="text-base font-semibold">銃所持許可申請 フィールド座標調整</h1>
         <p className="text-xs text-muted-foreground">開発用 · フル幅編集モード</p>
       </div>
-      <FieldCalibrationViewLazy categoryFilter="acquisition-permit" />
+      <GunPermitFieldCalibrationViewLazy />
     </div>
   );
 }

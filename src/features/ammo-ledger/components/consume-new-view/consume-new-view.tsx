@@ -33,8 +33,6 @@ export function ConsumeNewView() {
     gunIds: guns.map((gun) => gun.id),
     ammoTypeIds: ammoTypes.map((type) => type.id),
   });
-  // 保存できなかった入力を戻すときは、その値を優先する（フォーム側で復元）。
-  const isRestoring = searchParams.get("restore") !== null;
 
   const initialValues = draft
     ? {
@@ -45,7 +43,8 @@ export function ConsumeNewView() {
         looseRounds: draft.looseRounds,
       }
     : defaults;
-  const showsPreviousDefaults = !draft && !isRestoring && fromPreviousEntry;
+  // 保存できなかった入力に戻るときはその値を優先するため、前回の内容の案内を出さない。
+  const showsPreviousDefaults = !draft && !restoreId && fromPreviousEntry;
 
   return (
     <div className="space-y-6">

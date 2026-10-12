@@ -292,6 +292,7 @@ test("消費保存の通信が途切れたら先行表示を外し、入力に�
 }) => {
   await page.goto(consumePath);
   await fillConsumption({ page, ...ledger });
+  await page.getByText("帳簿摘要の補足・メモ（任意）", { exact: true }).click();
   await page.getByLabel("メモ（帳簿には出ません）").fill("E2E再保存メモ");
   let rejectSave = true;
   const sentEntryIds: string[] = [];

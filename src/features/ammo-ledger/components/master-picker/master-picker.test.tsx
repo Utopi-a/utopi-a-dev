@@ -7,6 +7,7 @@ const useMasterPickerData = vi.fn();
 
 vi.mock("@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data", () => ({
   useMasterPickerData: (args: unknown) => useMasterPickerData(args),
+  useInvalidateMasterPickerData: () => vi.fn(),
 }));
 
 vi.mock(

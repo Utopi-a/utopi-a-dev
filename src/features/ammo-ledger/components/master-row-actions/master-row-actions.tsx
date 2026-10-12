@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { useInvalidateMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { cn } from "@/lib/cn";
@@ -25,6 +26,7 @@ export function MasterRowActions({
 }: MasterRowActionsProps) {
   const router = useRouter();
   const requestWorkspaceRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
+  const invalidatePickerData = useInvalidateMasterPickerData();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +45,7 @@ export function MasterRowActions({
 
       showAmmoLedgerToast({ action: "deleted", subject: deletedSubject });
       requestWorkspaceRevalidation();
+      invalidatePickerData();
       router.refresh();
     } catch {
       setError("削除結果を確認できませんでした。時間をおいて再度お試しください。");

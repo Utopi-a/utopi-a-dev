@@ -22,7 +22,10 @@ import type {
 } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import type { CatalogKind } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
 import { scrollToPrefectureSection } from "@/features/ammo-ledger/catalog/scroll-to-prefecture-section/scroll-to-prefecture-section";
-import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
+import {
+  useInvalidateMasterPickerData,
+  useMasterPickerData,
+} from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { CatalogFavoriteButton } from "@/features/ammo-ledger/components/catalog-favorite-button/catalog-favorite-button";
 import { CatalogScrollPane } from "@/features/ammo-ledger/components/catalog-scroll-pane/catalog-scroll-pane";
 import { PickerEntryRow } from "@/features/ammo-ledger/components/picker-entry-row/picker-entry-row";
@@ -78,6 +81,7 @@ export function MasterPicker({
   const [resolvedMasters, setResolvedMasters] = useState<PickerMasterEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const invalidatePickerData = useInvalidateMasterPickerData();
   const catalogScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -167,15 +171,20 @@ export function MasterPicker({
 
     startTransition(async () => {
       const catalogSource = resolveCatalogSource({ entry });
-      const result =
-        catalogSource === "range" && catalogKind === "range"
-          ? await ensureRangeFromCatalog({ catalogId: entry.catalogId })
-          : await ensureCounterpartyFromCatalog({ catalogId: entry.catalogId });
+      const result = await (catalogSource === "range" && catalogKind === "range"
+        ? ensureRangeFromCatalog({ catalogId: entry.catalogId })
+        : ensureCounterpartyFromCatalog({ catalogId: entry.catalogId })
+      ).catch(() => ({
+        ok: false as const,
+        error: `${entry.name}を登録できませんでした。通信状態を確認して、もう一度選んでください。`,
+      }));
 
       if (!result.ok) {
         toast.error(result.error);
         return;
       }
+
+      invalidatePickerData();
 
       const createdSubject =
         catalogKind === "range"

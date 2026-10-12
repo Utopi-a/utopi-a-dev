@@ -10,11 +10,12 @@ import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 export default async function AcquisitionPermitsSettingsPage() {
   const user = await requireAmmoUser();
   const permits = await listAcquisitionPermits({ userId: user.id });
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTokyoIsoDate();
 
   return (
     <div className="space-y-6">

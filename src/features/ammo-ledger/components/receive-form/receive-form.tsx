@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoType } from "@/db/schema/ammo-ledger";
+import { useDefaultCounterpartyId } from "@/features/ammo-ledger/catalog/use-default-counterparty-id/use-default-counterparty-id";
 import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
@@ -19,6 +20,7 @@ import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-def
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
 import { updateTransactionAction } from "@/features/ammo-ledger/transactions/update-transaction/update-transaction-action";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type ReceiveFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
@@ -40,32 +42,20 @@ type ReceiveFormProps = {
 
 export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: ReceiveFormProps) {
   const navigateAfterMutation = useAmmoLedgerMutationNavigation();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTokyoIsoDate();
   const { pickerData: counterpartyPickerData } = useMasterPickerData({
     catalogKind: "gun_shop",
     includeRangeCatalog: true,
     enabled: true,
   });
-  const defaultCounterpartyApplied = useRef(!!initialValues?.counterpartyId);
 
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
-  const [counterpartyId, setCounterpartyId] = useState(
-    initialValues?.counterpartyId ?? manualCounterpartyId,
-  );
+  const { counterpartyId, setCounterpartyId } = useDefaultCounterpartyId({
+    initialCounterpartyId: initialValues?.counterpartyId,
+    pickerData: counterpartyPickerData,
+  });
 
-  useEffect(() => {
-    if (!counterpartyPickerData || defaultCounterpartyApplied.current) {
-      return;
-    }
-
-    const defaultCounterpartyId =
-      counterpartyPickerData.recent[0]?.id ??
-      counterpartyPickerData.registered[0]?.id ??
-      manualCounterpartyId;
-    setCounterpartyId(defaultCounterpartyId);
-    defaultCounterpartyApplied.current = true;
-  }, [counterpartyPickerData]);
   const [outerBoxCount, setOuterBoxCount] = useState(String(initialValues?.outerBoxCount ?? 0));
   const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));

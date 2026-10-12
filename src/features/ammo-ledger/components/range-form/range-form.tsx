@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useInvalidateMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { createRangeAction } from "@/features/ammo-ledger/master/create-range/create-range-action";
 import { updateRangeAction } from "@/features/ammo-ledger/master/update-range/update-range-action";
@@ -21,6 +22,7 @@ type RangeFormProps = {
 
 export function RangeForm({ recordId, initialValues }: RangeFormProps = {}) {
   const router = useRouter();
+  const invalidatePickerData = useInvalidateMasterPickerData();
   const isEdit = Boolean(recordId);
   const [name, setName] = useState(initialValues?.name ?? "");
   const [address, setAddress] = useState(initialValues?.address ?? "");
@@ -56,6 +58,7 @@ export function RangeForm({ recordId, initialValues }: RangeFormProps = {}) {
         action: isEdit ? "updated" : "created",
         subject: "射撃場",
       });
+      invalidatePickerData();
 
       if (isEdit) {
         router.push("/lab/ammo-ledger/settings/ranges");

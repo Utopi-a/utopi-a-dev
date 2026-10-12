@@ -35,6 +35,7 @@ import {
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type LedgerEntryActionsSheetProps = {
   row: LedgerDisplayRow | null;
@@ -86,7 +87,7 @@ export function LedgerEntryActionsSheet({
   }
 
   if (row.kind === "permit_carryover") {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getTokyoIsoDate();
     const locked = isDateLocked({ lockState, occurredOn: row.occurredOn });
     const editHref = buildOpeningBalanceHref({
       occurredOn: row.occurredOn,

@@ -16,6 +16,7 @@ import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-def
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
 import { updateTransactionAction } from "@/features/ammo-ledger/transactions/update-transaction/update-transaction-action";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type DisposeFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
@@ -34,7 +35,7 @@ type DisposeFormProps = {
 
 export function DisposeForm({ ammoTypes, ledgerEntryId, initialValues }: DisposeFormProps) {
   const navigateAfterMutation = useAmmoLedgerMutationNavigation();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTokyoIsoDate();
 
   const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
   const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");

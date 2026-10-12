@@ -22,6 +22,7 @@ import { buildAmmoTypeFieldOptions } from "@/features/ammo-ledger/master/build-a
 import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 import { createBulkTransactionsAction } from "@/features/ammo-ledger/transactions/create-bulk-transactions/create-bulk-transactions-action";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type BulkEntryFormProps = {
   guns: (typeof ammoGun.$inferSelect)[];
@@ -31,7 +32,7 @@ type BulkEntryFormProps = {
 
 export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryFormProps) {
   const navigateAfterMutation = useAmmoLedgerMutationNavigation();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTokyoIsoDate();
   const { pickerData: counterpartyPickerData } = useMasterPickerData({
     catalogKind: "gun_shop",
     includeRangeCatalog: true,

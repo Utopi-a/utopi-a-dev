@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useInvalidateMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { createCounterpartyAction } from "@/features/ammo-ledger/master/create-counterparty/create-counterparty-action";
 import { updateCounterpartyAction } from "@/features/ammo-ledger/master/update-counterparty/update-counterparty-action";
@@ -20,6 +21,7 @@ type CounterpartyFormProps = {
 
 export function CounterpartyForm({ recordId, initialValues }: CounterpartyFormProps = {}) {
   const router = useRouter();
+  const invalidatePickerData = useInvalidateMasterPickerData();
   const isEdit = Boolean(recordId);
   const [name, setName] = useState(initialValues?.name ?? "");
   const [address, setAddress] = useState(initialValues?.address ?? "");
@@ -54,6 +56,7 @@ export function CounterpartyForm({ recordId, initialValues }: CounterpartyFormPr
         action: isEdit ? "updated" : "created",
         subject: "購入先",
       });
+      invalidatePickerData();
 
       if (isEdit) {
         router.push("/lab/ammo-ledger/settings/counterparties");

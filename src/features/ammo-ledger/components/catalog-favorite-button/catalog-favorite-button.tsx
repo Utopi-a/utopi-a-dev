@@ -2,6 +2,7 @@
 
 import { StarIcon } from "lucide-react";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { CatalogKind } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
 import { toggleCatalogFavoriteAction } from "@/features/ammo-ledger/catalog/toggle-catalog-favorite/toggle-catalog-favorite-action";
@@ -35,15 +36,22 @@ export function CatalogFavoriteButton({
     onFavoriteChange?.({ isFavorite: nextFavorite });
 
     startTransition(async () => {
-      const result = await toggleCatalogFavoriteAction({ catalogKind, catalogId });
-      if (!result.ok) {
+      try {
+        const result = await toggleCatalogFavoriteAction({ catalogKind, catalogId });
+        if (!result.ok) {
+          setFavorite(previousFavorite);
+          onFavoriteChange?.({ isFavorite: previousFavorite });
+          toast.error(result.error);
+          return;
+        }
+
+        setFavorite(result.isFavorite);
+        onFavoriteChange?.({ isFavorite: result.isFavorite });
+      } catch {
         setFavorite(previousFavorite);
         onFavoriteChange?.({ isFavorite: previousFavorite });
-        return;
+        toast.error("お気に入りを更新できませんでした。通信状態を確認してください。");
       }
-
-      setFavorite(result.isFavorite);
-      onFavoriteChange?.({ isFavorite: result.isFavorite });
     });
   }
 

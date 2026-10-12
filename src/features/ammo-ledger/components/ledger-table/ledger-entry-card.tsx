@@ -18,6 +18,7 @@ import { formatPermitExpiryLabel } from "@/features/ammo-ledger/permit/compute-p
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type LedgerEntryCardProps = {
   row: LedgerDisplayRow;
@@ -44,7 +45,7 @@ export function LedgerEntryCard({
   const selectable = isDisplayRowSelectable({ row });
 
   if (row.kind === "permit_carryover") {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getTokyoIsoDate();
 
     return (
       <button

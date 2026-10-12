@@ -25,31 +25,39 @@ const ammoTypes = [
   { id: "ammo-3", name: ".308", gaugeNumber: null, roundsPerBox: 20 },
 ];
 
-function renderForm({
-  shootingStock = {},
-  huntingStock = {},
-}: {
+type FormOptions = {
   shootingStock?: Record<string, number>;
   huntingStock?: Record<string, number>;
-} = {}) {
+  formAmmoTypes?: typeof ammoTypes;
+};
+
+function buildForm({
+  shootingStock = {},
+  huntingStock = {},
+  formAmmoTypes = ammoTypes,
+}: FormOptions) {
   const snapshotsByPurpose: Record<LedgerPurpose, OpeningBalanceSnapshot> = {
     shooting: { permitCarryovers: [], stockByAmmoType: shootingStock },
     hunting: { permitCarryovers: [], stockByAmmoType: huntingStock },
     pest_control: { permitCarryovers: [], stockByAmmoType: {} },
   };
-  return render(
+  return (
     <AmmoLedgerOptimisticNavProvider>
       <AmmoLedgerSwrProvider>
         <OpeningBalanceForm
           years={[2026]}
           initialYear={2026}
           initialPurpose="shooting"
-          ammoTypes={ammoTypes}
+          ammoTypes={formAmmoTypes}
           snapshotsByPurpose={snapshotsByPurpose}
         />
       </AmmoLedgerSwrProvider>
-    </AmmoLedgerOptimisticNavProvider>,
+    </AmmoLedgerOptimisticNavProvider>
   );
+}
+
+function renderForm(options: FormOptions = {}) {
+  return render(buildForm(options));
 }
 
 function stockInput(name: string) {
@@ -113,5 +121,45 @@ describe("OpeningBalanceForm", () => {
         stockByAmmoType: { "ammo-2": 0 },
       }),
     );
+  });
+
+  it("弾種追加でサーバーから新しいpropsが届いても、保存前の入力を保持する", async () => {
+    const { rerender } = renderForm({ shootingStock: { "ammo-1": 40 } });
+    fireEvent.change(stockInput("12番・散弾"), { target: { value: "120" } });
+    fireEvent.change(stockInput("12番・単弾"), { target: { value: "15" } });
+
+    rerender(
+      buildForm({
+        shootingStock: { "ammo-1": 40 },
+        formAmmoTypes: [
+          ...ammoTypes,
+          { id: "ammo-4", name: "20番・散弾", gaugeNumber: "9", roundsPerBox: 25 },
+        ],
+      }),
+    );
+
+    expect(stockInput("12番・散弾")).toHaveValue(120);
+    expect(stockInput("12番・単弾")).toHaveValue(15);
+    expect(stockInput("20番・散弾")).toHaveValue(null);
+    fireEvent.change(stockInput("20番・散弾"), { target: { value: "50" } });
+    fireEvent.click(screen.getByRole("button", { name: "2026年 射撃 の繰越を保存" }));
+
+    await waitFor(() =>
+      expect(saveOpeningBalanceAction).toHaveBeenCalledWith({
+        year: 2026,
+        purpose: "shooting",
+        permitCarryovers: [],
+        stockByAmmoType: { "ammo-1": 120, "ammo-2": 15, "ammo-4": 50 },
+      }),
+    );
+  });
+
+  it("用途を切り替えて戻っても、各用途の保存前の入力を保持する", () => {
+    renderForm({ shootingStock: { "ammo-1": 40 } });
+    fireEvent.change(stockInput("12番・散弾"), { target: { value: "75" } });
+    fireEvent.click(screen.getByRole("button", { name: "狩猟用" }));
+    expect(stockInput("12番・散弾")).toHaveValue(null);
+    fireEvent.click(screen.getByRole("button", { name: "射撃用" }));
+    expect(stockInput("12番・散弾")).toHaveValue(75);
   });
 });

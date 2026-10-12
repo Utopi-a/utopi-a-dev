@@ -40,6 +40,7 @@ import {
 } from "@/features/ammo-ledger/schema/acquisition-permit-purpose-options";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type AcquisitionPermitApplicationFormProps = {
   ownerName: string;
@@ -74,7 +75,7 @@ export function AcquisitionPermitApplicationForm({
   guns,
 }: AcquisitionPermitApplicationFormProps) {
   const router = useRouter();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTokyoIsoDate();
   const { pickerData: rangePickerData } = useMasterPickerData({
     catalogKind: "range",
     enabled: true,

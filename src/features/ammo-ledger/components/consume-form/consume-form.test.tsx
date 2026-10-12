@@ -121,6 +121,17 @@ describe("ConsumeForm", () => {
     });
   });
 
+  it("日本時間の0〜9時（UTCでは前日）でも、新規入力の日付は日本時間の当日にする", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-12T16:30:00Z"));
+    try {
+      render(<ConsumeForm guns={guns} ammoTypes={ammoTypes} stockByAmmoTypeId={{}} />);
+      expect(screen.getByLabelText("日付")).toHaveValue("2026/10/13");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("編集画面で元記録の銃・用途・射撃場・弾種・数量・注記を初期表示する", () => {
     render(
       <ConsumeForm

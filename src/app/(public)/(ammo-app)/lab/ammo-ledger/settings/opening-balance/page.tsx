@@ -8,6 +8,7 @@ import { listAcquisitionPermits } from "@/features/ammo-ledger/permit/list-acqui
 import { listPermitEvents } from "@/features/ammo-ledger/permit/list-permit-events/list-permit-events";
 import { type LedgerPurpose, ledgerPurposes } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { parseLedgerPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type PageProps = {
   searchParams: Promise<{ year?: string; purpose?: string }>;
@@ -16,7 +17,7 @@ type PageProps = {
 export default async function OpeningBalanceSettingsPage({ searchParams }: PageProps) {
   const user = await requireAmmoUser();
   const { year: yearParam, purpose: purposeParam } = await searchParams;
-  const currentYear = new Date().getFullYear();
+  const currentYear = Number(getTokyoIsoDate().slice(0, 4));
   const parsedYear = yearParam ? Number(yearParam) : currentYear;
   const selectedYear =
     Number.isFinite(parsedYear) && parsedYear >= 2000 && parsedYear <= 2100
@@ -62,6 +63,7 @@ export default async function OpeningBalanceSettingsPage({ searchParams }: PageP
       </div>
 
       <OpeningBalanceForm
+        key={selectedYear}
         years={years}
         initialYear={selectedYear}
         initialPurpose={selectedPurpose}

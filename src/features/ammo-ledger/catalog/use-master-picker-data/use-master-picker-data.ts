@@ -1,6 +1,7 @@
 "use client";
 
-import useSWR from "swr";
+import { useCallback } from "react";
+import useSWR, { useSWRConfig } from "swr";
 import type { MasterPickerData } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import type { CatalogKind } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
 
@@ -10,6 +11,8 @@ const pickerDataSwrOptions = {
   dedupingInterval: 60_000,
 } as const;
 
+const pickerDataQueryKeyPrefix = ["ammo-ledger", "picker-data"] as const;
+
 function buildPickerDataQueryKey({
   catalogKind,
   includeRangeCatalog,
@@ -17,7 +20,7 @@ function buildPickerDataQueryKey({
   catalogKind: CatalogKind;
   includeRangeCatalog: boolean;
 }) {
-  return ["ammo-ledger", "picker-data", catalogKind, includeRangeCatalog] as const;
+  return [...pickerDataQueryKeyPrefix, catalogKind, includeRangeCatalog] as const;
 }
 
 export function useMasterPickerData({
@@ -57,6 +60,19 @@ export function useMasterPickerData({
       void mutate().catch(() => {});
     },
   };
+}
+
+/** 射撃場・購入先を追加・削除した後、次に開くピッカーへ即座に反映する。 */
+export function useInvalidateMasterPickerData() {
+  const { mutate } = useSWRConfig();
+  return useCallback(() => {
+    void mutate(
+      (key) =>
+        Array.isArray(key) &&
+        key[0] === pickerDataQueryKeyPrefix[0] &&
+        key[1] === pickerDataQueryKeyPrefix[1],
+    ).catch(() => {});
+  }, [mutate]);
 }
 
 export function resolveMasterPickerData({

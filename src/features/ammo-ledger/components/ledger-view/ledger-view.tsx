@@ -26,6 +26,7 @@ import type { PermitEventKind } from "@/features/ammo-ledger/schema/permit-event
 import { parseLedgerPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import type { AmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-types";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 function syncPurposeToUrl({ purpose }: { purpose: LedgerPurpose }) {
   const url = new URL(window.location.href);
@@ -49,8 +50,8 @@ function LedgerViewContent({
   const router = useRouter();
   const searchParams = useSearchParams();
   const purpose = parseLedgerPurpose({ value: searchParams.get("purpose") }) ?? "shooting";
-  const today = new Date().toISOString().slice(0, 10);
-  const currentYear = new Date().getFullYear();
+  const today = getTokyoIsoDate();
+  const currentYear = Number(today.slice(0, 4));
   const [printYear, setPrintYear] = useState(currentYear);
   const { entries, permitEvents, permits } = workspace;
   const entryCounts = useMemo(

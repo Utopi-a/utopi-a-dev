@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -45,14 +45,19 @@ export function MasterRowActions({
   const [isDeleting, setIsDeleting] = useState(false);
   const [, startRefresh] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
+  const isClosingForDeleteRef = useRef(false);
 
   function handleDeleteFailed({ message }: { message: string }) {
     listItem?.setHidden(false);
+    // 行を戻したら、もう一度操作できるよう削除ボタンにフォーカスを戻す。
+    requestAnimationFrame(() => deleteButtonRef.current?.focus());
     setError(message);
     toast.error(`${deletedSubject}を削除できませんでした`, { description: message });
   }
 
   async function handleDelete() {
+    isClosingForDeleteRef.current = true;
     setIsConfirmOpen(false);
     setIsDeleting(true);
     setError(null);
@@ -87,6 +92,7 @@ export function MasterRowActions({
           </Link>
         ) : null}
         <Button
+          ref={deleteButtonRef}
           type="button"
           variant="ghost"
           className="h-9 text-destructive hover:text-destructive"
@@ -102,7 +108,16 @@ export function MasterRowActions({
         </span>
       ) : null}
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-        <DialogContent showCloseButton={false}>
+        <DialogContent
+          showCloseButton={false}
+          onCloseAutoFocus={(event) => {
+            // 削除を確定したときは行を隠すため、隠れたボタンへはフォーカスを戻さない。
+            if (isClosingForDeleteRef.current) {
+              event.preventDefault();
+              isClosingForDeleteRef.current = false;
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>{deletedSubject}を削除しますか？</DialogTitle>
             <DialogDescription>{deleteNote}</DialogDescription>

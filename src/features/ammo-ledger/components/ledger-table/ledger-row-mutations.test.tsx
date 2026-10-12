@@ -331,6 +331,8 @@ describe("帳簿行とマスターの非同期操作", () => {
     expect(screen.getByText("テスト射撃場")).toBeVisible();
     expect(await screen.findByRole("alert")).toHaveTextContent(/削除結果を確認できませんでした/);
     expect(screen.getByRole("button", { name: "削除" })).toBeEnabled();
+    // 戻した行の削除ボタンにフォーカスを戻し、キーボードで続けて操作できる。
+    await waitFor(() => expect(screen.getByRole("button", { name: "削除" })).toHaveFocus());
     expect(refresh).not.toHaveBeenCalled();
   });
 

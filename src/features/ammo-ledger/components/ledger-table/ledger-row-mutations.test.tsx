@@ -1,5 +1,5 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { type ReactNode, useState } from "react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { Toaster, toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MasterRowActions } from "@/features/ammo-ledger/components/master-row-actions/master-row-actions";
@@ -7,6 +7,10 @@ import { reorderLedgerEntryAction } from "@/features/ammo-ledger/transactions/re
 import { voidLedgerEntryAction } from "@/features/ammo-ledger/transactions/void-ledger-entry/void-ledger-entry-action";
 import { AmmoLedgerSwrProvider } from "@/features/ammo-ledger/workspace/ammo-ledger-swr-provider/ammo-ledger-swr-provider";
 import type { AmmoLedgerWorkspacePayload } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-payload/ammo-ledger-workspace-payload";
+import {
+  buildTestEntry,
+  buildTestWorkspace,
+} from "@/features/ammo-ledger/workspace/build-test-workspace/build-test-workspace";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { LedgerEntryReorderButtons } from "./ledger-entry-reorder-buttons";
 import { VoidLedgerEntryButton } from "./void-ledger-entry-button";
@@ -26,54 +30,61 @@ vi.mock(
 
 const workspacePayload: AmmoLedgerWorkspacePayload = {
   ownerName: "テスト利用者",
-  workspace: {
-    entries: [],
-    permitEvents: [],
-    permits: [],
-    profile: null,
-    inventoryItems: [],
-    guns: [],
-    lockState: { isLocked: false, lockedThrough: null },
-  },
+  workspace: buildTestWorkspace({
+    entries: [
+      buildTestEntry({
+        id: "acquire",
+        category: "acquire",
+        occurredOn: "2026-03-01",
+        quantity: 50,
+      }),
+      buildTestEntry({ id: "first", category: "consume", occurredOn: "2026-04-01", quantity: 10 }),
+      buildTestEntry({
+        id: "second",
+        category: "consume",
+        occurredOn: "2026-04-01",
+        quantity: 20,
+        dayOrder: 1,
+      }),
+    ],
+  }),
 };
 
 function WorkspaceStatus() {
-  const { isRefreshing } = useAmmoLedgerWorkspace();
-  return <p>{isRefreshing ? "帳簿更新中" : "帳簿更新待ちなし"}</p>;
+  const { workspace, isRefreshing } = useAmmoLedgerWorkspace();
+  return (
+    <>
+      <p>{isRefreshing ? "帳簿更新中" : "帳簿更新待ちなし"}</p>
+      <p data-testid="entry-order">{workspace?.entries.map((entry) => entry.id).join(",")}</p>
+    </>
+  );
 }
 
 function renderWithWorkspace(children: ReactNode) {
   return render(
     <AmmoLedgerSwrProvider initialWorkspace={workspacePayload}>
+      <Toaster />
       <WorkspaceStatus />
       {children}
     </AmmoLedgerSwrProvider>,
   );
 }
 
-function CancellableRow({ closeOnVoid = false }: { closeOnVoid?: boolean }) {
-  const [voided, setVoided] = useState(false);
-  const [open, setOpen] = useState(true);
-  return (
-    <>
-      <p>{voided ? "記録は取消済み" : "記録は有効"}</p>
-      {open ? (
-        <VoidLedgerEntryButton
-          ledgerEntryId="entry-1"
-          onVoided={() => {
-            setVoided(true);
-            if (closeOnVoid) setOpen(false);
-          }}
-          onVoidFailed={() => setVoided(false)}
-        />
-      ) : (
-        <button type="button" onClick={() => setOpen(true)}>
-          記録を開く
-        </button>
-      )}
-    </>
-  );
+function entryOrder() {
+  return screen.getByTestId("entry-order").textContent;
 }
+
+function deferred<T>() {
+  let resolve: (value: T) => void = () => {};
+  let reject: (reason: unknown) => void = () => {};
+  const promise = new Promise<T>((onResolve, onReject) => {
+    resolve = onResolve;
+    reject = onReject;
+  });
+  return { promise, resolve, reject };
+}
+
+const secondEntry = workspacePayload.workspace.entries[2];
 
 describe("帳簿行とマスターの非同期操作", () => {
   beforeEach(() => {
@@ -87,89 +98,94 @@ describe("帳簿行とマスターの非同期操作", () => {
     vi.restoreAllMocks();
   });
 
-  it("取消でシートが閉じた後の通信失敗も通知し、記録を元に戻す", async () => {
-    vi.mocked(voidLedgerEntryAction).mockRejectedValueOnce(new Error("network unavailable"));
+  it("取消は確認後すぐ帳簿から外し、保存の完了を待たない", async () => {
+    const save = deferred<{ ok: true }>();
+    vi.mocked(voidLedgerEntryAction).mockReturnValueOnce(save.promise);
+    const onVoidStarted = vi.fn();
     renderWithWorkspace(
-      <>
-        <Toaster />
-        <CancellableRow closeOnVoid />
-      </>,
+      <VoidLedgerEntryButton entry={secondEntry} onVoidStarted={onVoidStarted} />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "取消" }));
 
-    expect(await screen.findByText(/取消結果を確認できませんでした/)).toBeVisible();
-    expect(screen.getByText("記録は有効")).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "記録を開く" }));
-    expect(screen.getByRole("button", { name: "取消" })).toBeEnabled();
-    expect(fetch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "取消" }));
+    expect(voidLedgerEntryAction).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "取り消す" }));
+
+    expect(entryOrder()).toBe("acquire,first");
+    expect(onVoidStarted).toHaveBeenCalledTimes(1);
+    expect(voidLedgerEntryAction).toHaveBeenCalledWith({ ledgerEntryId: "second" });
+
+    // 確定後の再取得は保留させ、保存結果をキャッシュへ書いた状態を確かめる。
+    vi.mocked(fetch).mockImplementation(() => new Promise(() => {}));
+    await act(async () => save.resolve({ ok: true }));
+    expect(await screen.findByText("帳簿行を取消しました")).toBeVisible();
+    expect(entryOrder()).toBe("acquire,first");
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
-  it("取消の通信例外後は保留中を解除して再操作できる", async () => {
-    vi.mocked(voidLedgerEntryAction).mockRejectedValueOnce(new Error("network unavailable"));
-    renderWithWorkspace(<CancellableRow />);
-    fireEvent.click(screen.getByRole("button", { name: "取消" }));
-
-    expect(await screen.findByText(/取消結果を確認できませんでした/)).toBeVisible();
-    expect(screen.getByRole("button", { name: "取消" })).toBeEnabled();
-    expect(screen.getByText("記録は有効")).toBeVisible();
-  });
-
-  it("取消が拒否された場合は記録を元に戻して理由を表示する", async () => {
+  it("取消が拒否されたら記録を元に戻し、理由を通知する", async () => {
     vi.mocked(voidLedgerEntryAction).mockResolvedValueOnce({
       ok: false,
       error: "帳簿はロック済みです",
     });
-    renderWithWorkspace(<CancellableRow />);
+    renderWithWorkspace(<VoidLedgerEntryButton entry={secondEntry} />);
     fireEvent.click(screen.getByRole("button", { name: "取消" }));
+    fireEvent.click(screen.getByRole("button", { name: "取り消す" }));
 
     expect(await screen.findByText("帳簿はロック済みです")).toBeVisible();
-    expect(screen.getByText("記録は有効")).toBeVisible();
-    expect(screen.getByRole("button", { name: "取消" })).toBeEnabled();
+    expect(entryOrder()).toBe("acquire,first,second");
   });
 
-  it("取消成功後の帳簿再取得に失敗しても取消を元に戻さない", async () => {
-    vi.mocked(voidLedgerEntryAction).mockResolvedValueOnce({ ok: true });
-    vi.mocked(fetch).mockRejectedValueOnce(new Error("read unavailable"));
-    renderWithWorkspace(<CancellableRow />);
+  it("取消の通信が途切れたら記録を元に戻し、保存状況の確認を促す", async () => {
+    vi.mocked(voidLedgerEntryAction).mockRejectedValueOnce(new Error("network unavailable"));
+    renderWithWorkspace(<VoidLedgerEntryButton entry={secondEntry} />);
     fireEvent.click(screen.getByRole("button", { name: "取消" }));
+    fireEvent.click(screen.getByRole("button", { name: "取り消す" }));
 
-    await waitFor(() => expect(fetch).toHaveBeenCalled());
-    expect(await screen.findByRole("button", { name: "取消" })).toBeEnabled();
-    expect(screen.getByText("記録は取消済み")).toBeVisible();
-    expect(screen.queryByText(/取消結果を確認できませんでした/)).not.toBeInTheDocument();
+    expect(await screen.findByText(/保存できたか確認できませんでした/)).toBeVisible();
+    expect(entryOrder()).toBe("acquire,first,second");
   });
 
-  it("並び替え通信の失敗を表示し、上下ボタンを再操作できる", async () => {
+  it("後の消費が在庫不足になる取消は送信せず、理由を表示する", () => {
+    renderWithWorkspace(<VoidLedgerEntryButton entry={workspacePayload.workspace.entries[0]} />);
+    fireEvent.click(screen.getByRole("button", { name: "取消" }));
+    fireEvent.click(screen.getByRole("button", { name: "取り消す" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "取り消すとテスト散弾 7.5号の在庫が不足しています",
+    );
+    expect(voidLedgerEntryAction).not.toHaveBeenCalled();
+    expect(entryOrder()).toBe("acquire,first,second");
+  });
+
+  it("並び替えは押した時点で順番を入れ替え、続けて操作できる", async () => {
+    const save = deferred<{ ok: true }>();
+    vi.mocked(reorderLedgerEntryAction).mockReturnValueOnce(save.promise);
+    renderWithWorkspace(
+      <LedgerEntryReorderButtons ledgerEntryId="second" canMoveUp canMoveDown={false} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "上へ" }));
+
+    expect(entryOrder()).toBe("acquire,second,first");
+    expect(screen.getByRole("button", { name: "上へ" })).toBeEnabled();
+    expect(reorderLedgerEntryAction).toHaveBeenCalledWith({
+      ledgerEntryId: "second",
+      direction: "up",
+    });
+    vi.mocked(fetch).mockImplementation(() => new Promise(() => {}));
+    await act(async () => save.resolve({ ok: true }));
+    expect(entryOrder()).toBe("acquire,second,first");
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("並び替えの通信が途切れたら元の順番に戻して通知する", async () => {
     vi.mocked(reorderLedgerEntryAction).mockRejectedValueOnce(new Error("network unavailable"));
     renderWithWorkspace(
-      <LedgerEntryReorderButtons ledgerEntryId="entry-1" canMoveUp canMoveDown />,
+      <LedgerEntryReorderButtons ledgerEntryId="second" canMoveUp canMoveDown={false} />,
     );
     fireEvent.click(screen.getByRole("button", { name: "上へ" }));
 
-    expect(await screen.findByText(/並び替えの結果を確認できませんでした/)).toBeVisible();
-    expect(screen.getByRole("button", { name: "上へ" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "下へ" })).toBeEnabled();
-  });
-
-  it("並び替えは更新後の帳簿を受け取るまで連続操作を防ぐ", async () => {
-    vi.mocked(reorderLedgerEntryAction).mockResolvedValueOnce({ ok: true });
-    let resolveRead: (response: Response) => void = () => {};
-    vi.mocked(fetch).mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          resolveRead = resolve;
-        }),
-    );
-    renderWithWorkspace(
-      <LedgerEntryReorderButtons ledgerEntryId="entry-1" canMoveUp canMoveDown />,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "上へ" }));
-
-    expect(await screen.findByText("帳簿更新中")).toBeVisible();
-    expect(screen.getByRole("button", { name: "上へ" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "下へ" })).toBeDisabled();
-    await act(async () => resolveRead(Response.json(workspacePayload)));
-    await waitFor(() => expect(screen.getByRole("button", { name: "上へ" })).toBeEnabled());
+    expect(await screen.findByText("並び順を変更できませんでした")).toBeVisible();
+    expect(entryOrder()).toBe("acquire,first,second");
   });
 
   it("マスター削除の通信例外後はエラーを表示し、再操作できる", async () => {

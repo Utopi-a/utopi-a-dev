@@ -1,82 +1,89 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
+import { checkLedgerChangesAgainstStock } from "@/features/ammo-ledger/transactions/check-ledger-changes-against-stock/check-ledger-changes-against-stock";
 import { voidLedgerEntryAction } from "@/features/ammo-ledger/transactions/void-ledger-entry/void-ledger-entry-action";
-import { useInvalidateAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
-import { cn } from "@/lib/cn";
+import type { LedgerEntryRow } from "@/features/ammo-ledger/workspace/apply-ledger-entry-changes/apply-ledger-entry-changes";
+import { useRunPendingLedgerChange } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
+import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 
 type VoidLedgerEntryButtonProps = {
-  ledgerEntryId: string;
-  onVoided?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
-  onVoidFailed?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
-  className?: string;
-  label?: string;
-  variant?: "ghost" | "outline" | "destructive";
+  entry: Pick<LedgerEntryRow, "id" | "occurredOn" | "ammoTypeName" | "quantity">;
+  /** 取消を受け付けた時点で呼ぶ（シートを閉じるなど） */
+  onVoidStarted?: () => void;
 };
 
-export function VoidLedgerEntryButton({
-  ledgerEntryId,
-  onVoided,
-  onVoidFailed,
-  className,
-  label = "取消",
-  variant = "ghost",
-}: VoidLedgerEntryButtonProps) {
-  const invalidateWorkspace = useInvalidateAmmoLedgerWorkspace();
-  const [isPending, setIsPending] = useState(false);
+export function VoidLedgerEntryButton({ entry, onVoidStarted }: VoidLedgerEntryButtonProps) {
+  const { workspace } = useAmmoLedgerWorkspace();
+  const runPendingChange = useRunPendingLedgerChange();
+  const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleVoid() {
-    if (!window.confirm("この帳簿行を取り消しますか？削除ではなく取消履歴が残ります。")) {
-      return;
-    }
-
-    setIsPending(true);
+  function handleVoid() {
     setError(null);
-    let voidSucceeded = false;
-    try {
-      onVoided?.({ ledgerEntryId });
-      const result = await voidLedgerEntryAction({ ledgerEntryId });
-      if (!result.ok) {
-        onVoidFailed?.({ ledgerEntryId });
-        setError(result.error);
-        toast.error(result.error);
+    const changes = { upserted: [], removedIds: [entry.id] };
+    if (workspace) {
+      const stockCheck = checkLedgerChangesAgainstStock({ entries: workspace.entries, changes });
+      if (!stockCheck.ok) {
+        setError(`取り消すと${stockCheck.error}`);
         return;
       }
-
-      voidSucceeded = true;
-      showAmmoLedgerToast({ action: "voided" });
-      await invalidateWorkspace();
-    } catch {
-      if (!voidSucceeded) {
-        onVoidFailed?.({ ledgerEntryId });
-      }
-      const message = voidSucceeded
-        ? "取消は完了しましたが、表示を更新できませんでした。ページを再読み込みしてください。"
-        : "取消結果を確認できませんでした。時間をおいて再度お試しください。";
-      setError(message);
-      toast.error(message);
-    } finally {
-      setIsPending(false);
     }
+
+    const summary = `${formatIsoDateForDisplay({ value: entry.occurredOn })} ${entry.ammoTypeName} ${entry.quantity}発`;
+    runPendingChange({
+      overlay: changes,
+      summary,
+      failureTitle: `記録を取消できませんでした（${summary}）`,
+      successMessage: "帳簿行を取消しました",
+      action: async () => {
+        const result = await voidLedgerEntryAction({ ledgerEntryId: entry.id });
+        return result.ok ? { ok: true, changes } : result;
+      },
+    });
+    onVoidStarted?.();
+  }
+
+  if (!isConfirming) {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        className="h-11 w-full text-sm text-destructive hover:text-destructive"
+        onClick={() => setIsConfirming(true)}
+      >
+        取消
+      </Button>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      <Button
-        type="button"
-        variant={variant}
-        size="sm"
-        className={cn("h-7 px-2 text-xs text-muted-foreground", className)}
-        disabled={isPending}
-        onClick={handleVoid}
-      >
-        {isPending ? "取消中…" : label}
-      </Button>
-      {error ? <span className="text-center text-xs text-destructive">{error}</span> : null}
-    </div>
+    <fieldset className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+      <legend className="sr-only">取消の確認</legend>
+      <p className="text-sm">この記録を取り消しますか？削除ではなく、取消の履歴が残ります。</p>
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+      <div className="grid grid-cols-2 gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-11"
+          onClick={() => {
+            setIsConfirming(false);
+            setError(null);
+          }}
+        >
+          やめる
+        </Button>
+        <Button type="button" variant="destructive" className="h-11" onClick={handleVoid}>
+          取り消す
+        </Button>
+      </div>
+    </fieldset>
   );
 }

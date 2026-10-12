@@ -4,6 +4,7 @@ import { type ReactNode, useState } from "react";
 import { SWRConfig, unstable_serialize } from "swr";
 import type { AmmoLedgerWorkspacePayload } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-payload/ammo-ledger-workspace-payload";
 import { ammoLedgerWorkspaceQueryKey } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-query-key/ammo-ledger-workspace-query-key";
+import { PendingLedgerChangesProvider } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
 
 export const ammoLedgerWorkspaceSwrConfig = {
   revalidateOnFocus: false,
@@ -37,7 +38,7 @@ export function AmmoLedgerSwrProvider({ children, initialWorkspace }: AmmoLedger
         fallback,
       }}
     >
-      {children}
+      <PendingLedgerChangesProvider>{children}</PendingLedgerChangesProvider>
     </SWRConfig>
   );
 }

@@ -2,7 +2,10 @@
 
 import { useCallback } from "react";
 import useSWR, { useSWRConfig } from "swr";
-import type { MasterPickerData } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
+import type {
+  MasterPickerData,
+  PickerMasterEntry,
+} from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import type { CatalogKind } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
 
 const pickerDataSwrOptions = {
@@ -73,6 +76,24 @@ export function useInvalidateMasterPickerData() {
         key[1] === pickerDataQueryKeyPrefix[1],
     ).catch(() => {});
   }, [mutate]);
+}
+
+/** 選択中の射撃場・相手方の名称と住所を、帳簿の先行表示に使う。 */
+export function findPickerMaster({
+  pickerData,
+  id,
+}: {
+  pickerData?: MasterPickerData;
+  id: string;
+}): PickerMasterEntry | undefined {
+  if (!pickerData) {
+    return undefined;
+  }
+  return [
+    ...pickerData.recent,
+    ...pickerData.registered,
+    ...(pickerData.registeredRangeMasters ?? []),
+  ].find((master) => master.id === id);
 }
 
 export function resolveMasterPickerData({

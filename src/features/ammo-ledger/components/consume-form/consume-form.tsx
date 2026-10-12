@@ -6,18 +6,19 @@ import { Input } from "@/components/ui/input";
 import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
+import {
+  findPickerMaster,
+  useMasterPickerData,
+} from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
-import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { buildAmmoTypeFieldOptions } from "@/features/ammo-ledger/master/build-ammo-type-field-options/build-ammo-type-field-options";
-import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
-import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
-import { updateTransactionAction } from "@/features/ammo-ledger/transactions/update-transaction/update-transaction-action";
+import { useLedgerTransactionSubmit } from "@/features/ammo-ledger/transactions/use-ledger-transaction-submit/use-ledger-transaction-submit";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type ConsumeFormProps = {
@@ -25,19 +26,21 @@ type ConsumeFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
   stockByAmmoTypeId: Record<string, number>;
   ledgerEntryId?: string;
-  initialValues?: {
-    occurredOn?: string;
-    purpose?: LedgerPurpose;
-    ammoTypeId?: string;
-    gunId?: string;
-    rangeId?: string;
-    location?: string;
-    outerBoxCount?: number;
-    boxCount?: number;
-    looseRounds?: number;
-    memo?: string;
-    ledgerNote?: string;
-  };
+  initialValues?: ConsumeFormValues;
+};
+
+type ConsumeFormValues = {
+  occurredOn?: string;
+  purpose?: LedgerPurpose;
+  ammoTypeId?: string;
+  gunId?: string;
+  rangeId?: string;
+  location?: string;
+  outerBoxCount?: number;
+  boxCount?: number;
+  looseRounds?: number;
+  memo?: string;
+  ledgerNote?: string;
 };
 
 type ConsumptionLocationInputKind = "range" | "manual";
@@ -49,25 +52,31 @@ export function ConsumeForm({
   ledgerEntryId,
   initialValues,
 }: ConsumeFormProps) {
-  const navigateAfterMutation = useAmmoLedgerMutationNavigation();
+  const { submit, restoredValues } = useLedgerTransactionSubmit<ConsumeFormValues>({
+    formKey: "consume",
+    ledgerEntryId,
+  });
+  const { pickerData: rangePickerData } = useMasterPickerData({
+    catalogKind: "range",
+    enabled: true,
+  });
+  const initial = restoredValues ?? initialValues;
   const today = getTokyoIsoDate();
 
-  const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
-  const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
-  const [gunId, setGunId] = useState(initialValues?.gunId ?? "");
-  const [purpose, setPurpose] = useState<LedgerPurpose>(initialValues?.purpose ?? "shooting");
+  const [occurredOn, setOccurredOn] = useState(initial?.occurredOn ?? today);
+  const [ammoTypeId, setAmmoTypeId] = useState(initial?.ammoTypeId ?? "");
+  const [gunId, setGunId] = useState(initial?.gunId ?? "");
+  const [purpose, setPurpose] = useState<LedgerPurpose>(initial?.purpose ?? "shooting");
   const [locationInputKind, setLocationInputKind] = useState<ConsumptionLocationInputKind>(
-    initialValues?.rangeId || !initialValues?.purpose || initialValues.purpose === "shooting"
-      ? "range"
-      : "manual",
+    initial?.rangeId || !initial?.purpose || initial.purpose === "shooting" ? "range" : "manual",
   );
-  const [rangeId, setRangeId] = useState(initialValues?.rangeId ?? "");
-  const [location, setLocation] = useState(initialValues?.location ?? "");
-  const [outerBoxCount, setOuterBoxCount] = useState(String(initialValues?.outerBoxCount ?? 0));
-  const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
-  const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
-  const [memo, setMemo] = useState(initialValues?.memo ?? "");
-  const [ledgerNote, setLedgerNote] = useState(initialValues?.ledgerNote ?? "");
+  const [rangeId, setRangeId] = useState(initial?.rangeId ?? "");
+  const [location, setLocation] = useState(initial?.location ?? "");
+  const [outerBoxCount, setOuterBoxCount] = useState(String(initial?.outerBoxCount ?? 0));
+  const [boxCount, setBoxCount] = useState(String(initial?.boxCount ?? 0));
+  const [looseRounds, setLooseRounds] = useState(String(initial?.looseRounds ?? 0));
+  const [memo, setMemo] = useState(initial?.memo ?? "");
+  const [ledgerNote, setLedgerNote] = useState(initial?.ledgerNote ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -118,41 +127,38 @@ export function ConsumeForm({
     setIsPending(true);
     setError(null);
 
+    const usesRange = purpose === "shooting" || locationInputKind === "range";
+    const values = {
+      occurredOn,
+      purpose,
+      ammoTypeId,
+      gunId,
+      rangeId: usesRange ? rangeId : undefined,
+      location: usesRange ? undefined : location,
+      outerBoxCount: Number(outerBoxCount) || 0,
+      boxCount: Number(boxCount) || 0,
+      looseRounds: Number(looseRounds) || 0,
+      memo: memo || undefined,
+      ledgerNote: ledgerNote || undefined,
+    };
+    const range = usesRange
+      ? findPickerMaster({ pickerData: rangePickerData, id: rangeId })
+      : undefined;
+
     try {
-      const base = {
-        inputKind: "consume" as const,
-        occurredOn,
-        ammoTypeId,
-        gunId,
-        outerBoxCount: Number(outerBoxCount) || 0,
-        boxCount: Number(boxCount) || 0,
-        looseRounds: Number(looseRounds) || 0,
-        memo: memo || undefined,
-        ledgerNote: ledgerNote || undefined,
-      };
-
-      const payload =
-        purpose === "shooting" || locationInputKind === "range"
-          ? { ...base, purpose, rangeId }
-          : { ...base, purpose, location };
-
-      const result = ledgerEntryId
-        ? await updateTransactionAction({ ledgerEntryId, ...payload })
-        : await createTransactionAction(payload);
-
-      if (result.ok) {
-        showAmmoLedgerToast({
-          action: ledgerEntryId ? "updated" : "created",
-          subject: "消費記録",
-        });
-        navigateAfterMutation({ href: result.redirectPath });
-        return;
+      const result = await submit({
+        payload: { inputKind: "consume", ...values },
+        display: { rangeName: range?.name, rangeAddress: range?.address },
+        subject: "消費記録",
+        restoreValues: values,
+      });
+      // 成功時は帳簿へ移動するため、二重送信を防ぐよう処理中のままにする。
+      if (!result.ok) {
+        setError(result.error);
+        setIsPending(false);
       }
-
-      setError(result.error);
     } catch {
       setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
-    } finally {
       setIsPending(false);
     }
   }

@@ -9,6 +9,7 @@ import { assertDatesNotLocked } from "@/features/ammo-ledger/ledger/lock/assert-
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import { mapCategoryToInputKind } from "@/features/ammo-ledger/schema/map-category-to-input-kind";
 import { transactionInputSchema } from "@/features/ammo-ledger/schema/transaction-schema";
+import { buildLedgerEntryRedirectPath } from "@/features/ammo-ledger/transactions/build-ledger-entry-redirect-path/build-ledger-entry-redirect-path";
 import { canEditLedgerEntry } from "@/features/ammo-ledger/transactions/can-edit-ledger-entry/can-edit-ledger-entry";
 import { checkStockBeforeSave } from "@/features/ammo-ledger/transactions/check-stock-before-save/check-stock-before-save";
 import { prepareConfirmedTransaction } from "@/features/ammo-ledger/transactions/prepare-confirmed-transaction/prepare-confirmed-transaction";
@@ -153,7 +154,7 @@ export async function updateTransactionAction({
         and(eq(ammoTransaction.id, currentTransaction.id), eq(ammoTransaction.userId, user.id)),
       );
 
-    await tx
+    const [entry] = await tx
       .update(ammoLedgerEntry)
       .set({
         purpose: data.purpose,
@@ -174,9 +175,10 @@ export async function updateTransactionAction({
         gunPermitNumber: normalized.gunPermitNumber,
         updatedAt: now,
       })
-      .where(and(eq(ammoLedgerEntry.id, ledgerEntryId), eq(ammoLedgerEntry.userId, user.id)));
+      .where(and(eq(ammoLedgerEntry.id, ledgerEntryId), eq(ammoLedgerEntry.userId, user.id)))
+      .returning();
 
-    return { ok: true as const };
+    return { ok: true as const, entry };
   });
 
   if (!transactionResult.ok) {
@@ -185,6 +187,7 @@ export async function updateTransactionAction({
 
   return {
     ok: true as const,
-    redirectPath: `/lab/ammo-ledger/ledger?purpose=${data.purpose}`,
+    entry: transactionResult.entry,
+    redirectPath: buildLedgerEntryRedirectPath({ purpose: data.purpose, ledgerEntryId }),
   };
 }

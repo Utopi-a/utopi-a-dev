@@ -3,6 +3,7 @@ import {
   LedgerCategoryBadge,
   PermitCarryoverBadge,
   PermitExpiryBadge,
+  SavingBadge,
 } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
 import {
   buildPermitCarryoverLabel,
@@ -24,6 +25,8 @@ type LedgerEntryCardProps = {
   row: LedgerDisplayRow;
   permitBalance?: number;
   isHomeStorageExceeded?: boolean;
+  /** 保存の応答待ち。確定するまで編集・取消を受け付けない */
+  isSaving?: boolean;
   onSelect: ({ row, permitBalance }: { row: LedgerDisplayRow; permitBalance?: number }) => void;
 };
 
@@ -40,9 +43,10 @@ export function LedgerEntryCard({
   row,
   permitBalance,
   isHomeStorageExceeded = false,
+  isSaving = false,
   onSelect,
 }: LedgerEntryCardProps) {
-  const selectable = isDisplayRowSelectable({ row });
+  const selectable = isDisplayRowSelectable({ row }) && !isSaving;
 
   if (row.kind === "permit_carryover") {
     const today = getTokyoIsoDate();
@@ -105,6 +109,7 @@ export function LedgerEntryCard({
         selectable && "hover:border-border hover:bg-muted/30 active:bg-muted/40",
         !selectable && "cursor-default",
         isHomeStorageExceeded && "border-amber-500/30 bg-amber-500/5",
+        isSaving && "border-dashed",
       )}
     >
       <div className="min-w-0 flex-1 space-y-2">
@@ -113,6 +118,7 @@ export function LedgerEntryCard({
             {formatIsoDateForDisplay({ value: entry.occurredOn })}
           </span>
           <LedgerCategoryBadge category={entry.category} />
+          {isSaving ? <SavingBadge /> : null}
         </div>
         <p className="font-medium leading-snug">{entry.ammoTypeName}</p>
         <div className="space-y-1">

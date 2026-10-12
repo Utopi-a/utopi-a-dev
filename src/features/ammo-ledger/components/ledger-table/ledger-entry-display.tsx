@@ -32,6 +32,18 @@ export function PermitExpiryBadge() {
   );
 }
 
+export function SavingBadge() {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+      <span
+        aria-hidden
+        className="size-3 animate-spin rounded-full border-2 border-primary/30 border-t-primary"
+      />
+      保存中
+    </span>
+  );
+}
+
 export function isAmmoCarryoverEntry({ category }: { category: string }): boolean {
   return category === "carryover";
 }

@@ -36,6 +36,7 @@ function syncPurposeToUrl({ purpose }: { purpose: LedgerPurpose }) {
 
 type LedgerViewContentProps = {
   workspace: AmmoLedgerWorkspace;
+  savingEntryIds: ReadonlySet<string>;
   ownerName: string;
   isRefreshing: boolean;
   highlightedEntryId: string | null;
@@ -43,6 +44,7 @@ type LedgerViewContentProps = {
 
 function LedgerViewContent({
   workspace,
+  savingEntryIds,
   ownerName,
   isRefreshing,
   highlightedEntryId,
@@ -214,9 +216,11 @@ function LedgerViewContent({
           aria-live="polite"
         >
           {highlightedEntryExists
-            ? "追加した記録を強調表示しています。"
+            ? savingEntryIds.has(highlightedEntryId)
+              ? "記録を保存しています。保存が終わるまで編集・取消はできません。"
+              : "保存した記録を強調表示しています。"
             : isRefreshing
-              ? "記録は保存済みです。帳簿の表示を更新しています…"
+              ? "帳簿の表示を更新しています…"
               : "指定された記録を表示できません。帳簿を再取得してください。"}
         </p>
       ) : null}
@@ -231,6 +235,7 @@ function LedgerViewContent({
         homeStorageExceededEntryIds={homeStorage.exceededEntryIds}
         highlightedEntryId={highlightedEntryId}
         lockState={workspace.lockState}
+        savingEntryIds={savingEntryIds}
       />
 
       <AmmoLedgerRefreshIndicator visible={isRefreshing} />
@@ -240,7 +245,8 @@ function LedgerViewContent({
 
 export function LedgerView() {
   const searchParams = useSearchParams();
-  const { workspace, ownerName, isLoading, isRefreshing, error, retry } = useAmmoLedgerWorkspace();
+  const { workspace, pendingEntryIds, ownerName, isLoading, isRefreshing, error, retry } =
+    useAmmoLedgerWorkspace();
 
   if (isLoading || !workspace) {
     return <WorkspaceViewLoader error={error} onRetry={retry} />;
@@ -249,6 +255,7 @@ export function LedgerView() {
   return (
     <LedgerViewContent
       workspace={workspace}
+      savingEntryIds={pendingEntryIds}
       ownerName={ownerName || "（未設定）"}
       isRefreshing={isRefreshing}
       highlightedEntryId={searchParams.get("entry")}

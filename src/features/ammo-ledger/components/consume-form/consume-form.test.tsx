@@ -18,6 +18,7 @@ import { ConsumeForm } from "./consume-form";
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
   usePathname: () => "/lab/ammo-ledger/consume/new",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/features/ammo-ledger/components/master-picker/master-picker", () => ({

@@ -45,8 +45,6 @@ type LedgerEntryActionsSheetProps = {
   lockState?: LedgerLockState;
   open: boolean;
   onOpenChange: ({ open }: { open: boolean }) => void;
-  onVoided?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
-  onVoidFailed?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
 };
 
 function isDateLocked({
@@ -70,20 +68,9 @@ export function LedgerEntryActionsSheet({
   lockState,
   open,
   onOpenChange,
-  onVoided,
-  onVoidFailed,
 }: LedgerEntryActionsSheetProps) {
   if (!row) {
     return null;
-  }
-
-  function handleVoided({ ledgerEntryId }: { ledgerEntryId: string }) {
-    onOpenChange({ open: false });
-    onVoided?.({ ledgerEntryId });
-  }
-
-  function handleVoidFailed({ ledgerEntryId }: { ledgerEntryId: string }) {
-    onVoidFailed?.({ ledgerEntryId });
   }
 
   if (row.kind === "permit_carryover") {
@@ -243,12 +230,9 @@ export function LedgerEntryActionsSheet({
                 canMoveDown={reorderState.canMoveDown}
               />
               <VoidLedgerEntryButton
-                ledgerEntryId={entry.id}
-                onVoided={handleVoided}
-                onVoidFailed={handleVoidFailed}
-                variant="outline"
-                className="h-11 w-full text-sm text-destructive hover:text-destructive"
-                label="取消"
+                key={entry.id}
+                entry={entry}
+                onVoidStarted={() => onOpenChange({ open: false })}
               />
             </>
           )}

@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import useSWR, { useSWRConfig } from "swr";
 import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
 import type { AmmoLedgerWorkspacePayload } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-payload/ammo-ledger-workspace-payload";
 import { ammoLedgerWorkspaceQueryKey } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-query-key/ammo-ledger-workspace-query-key";
+import { applyLedgerEntryChanges } from "@/features/ammo-ledger/workspace/apply-ledger-entry-changes/apply-ledger-entry-changes";
 import { fetchAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/fetch-ammo-ledger-workspace/fetch-ammo-ledger-workspace";
+import { usePendingLedgerChanges } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
 import { workspaceStaleMs } from "@/features/ammo-ledger/workspace/workspace-stale-ms/workspace-stale-ms";
 
 const workspaceSwrOptions = {
@@ -29,10 +31,37 @@ export function useAmmoLedgerWorkspace({
     { ...workspaceSwrOptions, revalidateOnMount },
   );
 
+  const { changes } = usePendingLedgerChanges();
+  const appliedChanges = useMemo(
+    () => changes.filter((change) => change.status !== "failed"),
+    [changes],
+  );
+  // 保存待ちの変更を確定済みデータに重ね、帳簿・残弾・入力時の在庫確認を同じ表示にそろえる。
+  const workspace = useMemo(
+    () =>
+      data &&
+      appliedChanges.reduce(
+        (current, change) =>
+          applyLedgerEntryChanges({ workspace: current, changes: change.overlay }),
+        data.workspace,
+      ),
+    [data, appliedChanges],
+  );
+  const pendingEntryIds = useMemo(
+    () =>
+      new Set(
+        appliedChanges
+          .filter((change) => change.status === "saving" && change.marksEntriesSaving)
+          .flatMap((change) => change.overlay.upserted.map((entry) => entry.id)),
+      ),
+    [appliedChanges],
+  );
+
   const hasData = data !== undefined;
 
   return {
-    workspace: data?.workspace,
+    workspace,
+    pendingEntryIds,
     ownerName: data?.ownerName,
     isLoading: !hasData && isLoading,
     isRefreshing: hasData && isValidating,

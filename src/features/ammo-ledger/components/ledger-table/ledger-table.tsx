@@ -7,6 +7,7 @@ import {
   LedgerCategoryBadge,
   PermitCarryoverBadge,
   PermitExpiryBadge,
+  SavingBadge,
 } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
 import {
   buildPermitCarryoverLabel,
@@ -32,8 +33,7 @@ type LedgerTableProps = {
   homeStorageExceededEntryIds?: string[];
   highlightedEntryId?: string | null;
   lockState?: LedgerLockState;
-  onVoided?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
-  onVoidFailed?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
+  savingEntryIds?: ReadonlySet<string>;
 };
 
 const ledgerTableColumnClass = {
@@ -47,6 +47,8 @@ const ledgerTableColumnClass = {
   gun: "min-w-28",
 } as const;
 
+const noSavingEntryIds: ReadonlySet<string> = new Set();
+
 export function LedgerTable({
   rows,
   purpose,
@@ -54,8 +56,7 @@ export function LedgerTable({
   homeStorageExceededEntryIds = [],
   highlightedEntryId,
   lockState,
-  onVoided,
-  onVoidFailed,
+  savingEntryIds = noSavingEntryIds,
 }: LedgerTableProps) {
   const [selectedRow, setSelectedRow] = useState<LedgerDisplayRow | null>(null);
   const [selectedPermitBalance, setSelectedPermitBalance] = useState<number | undefined>(undefined);
@@ -126,6 +127,7 @@ export function LedgerTable({
                 row={row}
                 permitBalance={resolveDisplayRowPermitBalance({ row, permitBalances })}
                 isHomeStorageExceeded={row.kind === "entry" ? exceededSet.has(row.entry.id) : false}
+                isSaving={row.kind === "entry" && savingEntryIds.has(row.entry.id)}
                 onSelect={handleSelectRow}
               />
             </div>
@@ -273,18 +275,20 @@ export function LedgerTable({
                 }
 
                 const entry = row.entry;
+                const isSaving = savingEntryIds.has(entry.id);
+                const entrySelectable = selectable && !isSaving;
 
                 return (
                   <tr
                     key={entry.id}
                     ref={entry.id === highlightedEntryId ? desktopHighlightedEntryRef : undefined}
                     data-ledger-entry-id={entry.id}
-                    tabIndex={selectable ? 0 : -1}
+                    tabIndex={entrySelectable ? 0 : -1}
                     onClick={() =>
-                      selectable ? handleSelectRow({ row, permitBalance }) : undefined
+                      entrySelectable ? handleSelectRow({ row, permitBalance }) : undefined
                     }
                     onKeyDown={(event) => {
-                      if (!selectable) {
+                      if (!entrySelectable) {
                         return;
                       }
                       if (event.key === "Enter" || event.key === " ") {
@@ -293,9 +297,10 @@ export function LedgerTable({
                       }
                     }}
                     className={cn(
-                      selectable &&
+                      entrySelectable &&
                         "cursor-pointer border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20",
-                      !selectable && "border-b border-border/25 last:border-0",
+                      !entrySelectable && "border-b border-border/25 last:border-0",
+                      isSaving && "text-muted-foreground",
                       exceededSet.has(entry.id) && "bg-amber-500/5",
                       entry.id === highlightedEntryId &&
                         "bg-primary/10 ring-2 ring-inset ring-primary",
@@ -307,7 +312,10 @@ export function LedgerTable({
                       </span>
                     </td>
                     <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.category)}>
-                      <LedgerCategoryBadge category={entry.category} />
+                      <div className="flex flex-col items-start gap-1">
+                        <LedgerCategoryBadge category={entry.category} />
+                        {isSaving ? <SavingBadge /> : null}
+                      </div>
                     </td>
                     <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.ammoType)}>
                       <span className="font-medium">{entry.ammoTypeName}</span>
@@ -391,8 +399,6 @@ export function LedgerTable({
         lockState={lockState}
         open={selectedRow !== null}
         onOpenChange={handleSheetOpenChange}
-        onVoided={onVoided}
-        onVoidFailed={onVoidFailed}
       />
     </>
   );

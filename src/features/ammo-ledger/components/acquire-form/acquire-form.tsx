@@ -7,40 +7,42 @@ import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoAcquisitionPermit, ammoType } from "@/db/schema/ammo-ledger";
 import { useDefaultCounterpartyId } from "@/features/ammo-ledger/catalog/use-default-counterparty-id/use-default-counterparty-id";
-import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
+import {
+  findPickerMaster,
+  useMasterPickerData,
+} from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
-import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
-import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
 import { hasActiveAcquisitionPermit } from "@/features/ammo-ledger/permit/has-active-acquisition-permit/has-active-acquisition-permit";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
-import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
-import { updateTransactionAction } from "@/features/ammo-ledger/transactions/update-transaction/update-transaction-action";
+import { useLedgerTransactionSubmit } from "@/features/ammo-ledger/transactions/use-ledger-transaction-submit/use-ledger-transaction-submit";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type AcquireFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
   permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
   ledgerEntryId?: string;
-  initialValues?: {
-    occurredOn?: string;
-    purpose?: LedgerPurpose;
-    ammoTypeId?: string;
-    counterpartyId?: string;
-    counterpartyName?: string;
-    counterpartyAddress?: string;
-    outerBoxCount?: number;
-    boxCount?: number;
-    looseRounds?: number;
-    memo?: string;
-    ledgerNote?: string;
-  };
+  initialValues?: AcquireFormValues;
+};
+
+type AcquireFormValues = {
+  occurredOn?: string;
+  purpose?: LedgerPurpose;
+  ammoTypeId?: string;
+  counterpartyId?: string;
+  counterpartyName?: string;
+  counterpartyAddress?: string;
+  outerBoxCount?: number;
+  boxCount?: number;
+  looseRounds?: number;
+  memo?: string;
+  ledgerNote?: string;
 };
 
 export function AcquireForm({
@@ -49,7 +51,11 @@ export function AcquireForm({
   ledgerEntryId,
   initialValues,
 }: AcquireFormProps) {
-  const navigateAfterMutation = useAmmoLedgerMutationNavigation();
+  const { submit, restoredValues } = useLedgerTransactionSubmit<AcquireFormValues>({
+    formKey: "acquire",
+    ledgerEntryId,
+  });
+  const initial = restoredValues ?? initialValues;
   const today = getTokyoIsoDate();
   const { pickerData: counterpartyPickerData } = useMasterPickerData({
     catalogKind: "gun_shop",
@@ -57,23 +63,23 @@ export function AcquireForm({
     enabled: true,
   });
 
-  const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
-  const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
+  const [occurredOn, setOccurredOn] = useState(initial?.occurredOn ?? today);
+  const [ammoTypeId, setAmmoTypeId] = useState(initial?.ammoTypeId ?? "");
   const { counterpartyId, setCounterpartyId } = useDefaultCounterpartyId({
-    initialCounterpartyId: initialValues?.counterpartyId,
+    initialCounterpartyId: initial?.counterpartyId,
     pickerData: counterpartyPickerData,
   });
 
-  const [outerBoxCount, setOuterBoxCount] = useState(String(initialValues?.outerBoxCount ?? 0));
-  const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
-  const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
-  const [counterpartyName, setCounterpartyName] = useState(initialValues?.counterpartyName ?? "");
+  const [outerBoxCount, setOuterBoxCount] = useState(String(initial?.outerBoxCount ?? 0));
+  const [boxCount, setBoxCount] = useState(String(initial?.boxCount ?? 0));
+  const [looseRounds, setLooseRounds] = useState(String(initial?.looseRounds ?? 0));
+  const [counterpartyName, setCounterpartyName] = useState(initial?.counterpartyName ?? "");
   const [counterpartyAddress, setCounterpartyAddress] = useState(
-    initialValues?.counterpartyAddress ?? "",
+    initial?.counterpartyAddress ?? "",
   );
-  const [purpose, setPurpose] = useState<LedgerPurpose>(initialValues?.purpose ?? "shooting");
-  const [memo, setMemo] = useState(initialValues?.memo ?? "");
-  const [ledgerNote, setLedgerNote] = useState(initialValues?.ledgerNote ?? "");
+  const [purpose, setPurpose] = useState<LedgerPurpose>(initial?.purpose ?? "shooting");
+  const [memo, setMemo] = useState(initial?.memo ?? "");
+  const [ledgerNote, setLedgerNote] = useState(initial?.ledgerNote ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -118,23 +124,25 @@ export function AcquireForm({
         ledgerNote: ledgerNote || undefined,
       };
 
-      const result = ledgerEntryId
-        ? await updateTransactionAction({ ledgerEntryId, ...payload })
-        : await createTransactionAction(payload);
-
-      if (result.ok) {
-        showAmmoLedgerToast({
-          action: ledgerEntryId ? "updated" : "created",
-          subject: "取得記録",
-        });
-        navigateAfterMutation({ href: result.redirectPath });
-        return;
+      const counterpartyMaster = isManualCounterparty
+        ? undefined
+        : findPickerMaster({ pickerData: counterpartyPickerData, id: counterpartyId });
+      const result = await submit({
+        payload,
+        display: {
+          counterpartyName: counterpartyMaster?.name,
+          counterpartyAddress: counterpartyMaster?.address,
+        },
+        subject: "取得記録",
+        restoreValues: { ...payload, counterpartyId },
+      });
+      // 成功時は帳簿へ移動するため、二重送信を防ぐよう処理中のままにする。
+      if (!result.ok) {
+        setError(result.error);
+        setIsPending(false);
       }
-
-      setError(result.error);
     } catch {
       setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
-    } finally {
       setIsPending(false);
     }
   }

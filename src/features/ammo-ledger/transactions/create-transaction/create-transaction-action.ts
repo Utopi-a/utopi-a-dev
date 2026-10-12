@@ -105,32 +105,35 @@ export async function createTransactionAction(input: unknown) {
       memo: data.memo ?? null,
     });
 
-    await tx.insert(ammoLedgerEntry).values({
-      id: ledgerEntryId,
-      userId: user.id,
-      transactionId,
-      category: normalized.category,
-      purpose: data.purpose,
-      occurredOn: normalized.occurredOn,
-      dayOrder,
-      ammoTypeId: normalized.ammoTypeId,
-      ammoTypeName: normalized.ammoTypeName,
-      ammoCartridgeType: ammoTypeRow.cartridgeType,
-      ammoCaliber: ammoTypeRow.caliber,
-      ammoGaugeNumber: ammoTypeRow.gaugeNumber,
-      ledgerNote: data.ledgerNote ?? null,
-      quantity: normalized.quantity,
-      location: normalized.location,
-      counterpartyName: normalized.counterpartyName,
-      counterpartyAddress: normalized.counterpartyAddress,
-      gunId: normalized.gunId,
-      gunName: normalized.gunName,
-      gunNumber: normalized.gunNumber,
-      gunPermitNumber: normalized.gunPermitNumber,
-      createdAt,
-    });
+    const [entry] = await tx
+      .insert(ammoLedgerEntry)
+      .values({
+        id: ledgerEntryId,
+        userId: user.id,
+        transactionId,
+        category: normalized.category,
+        purpose: data.purpose,
+        occurredOn: normalized.occurredOn,
+        dayOrder,
+        ammoTypeId: normalized.ammoTypeId,
+        ammoTypeName: normalized.ammoTypeName,
+        ammoCartridgeType: ammoTypeRow.cartridgeType,
+        ammoCaliber: ammoTypeRow.caliber,
+        ammoGaugeNumber: ammoTypeRow.gaugeNumber,
+        ledgerNote: data.ledgerNote ?? null,
+        quantity: normalized.quantity,
+        location: normalized.location,
+        counterpartyName: normalized.counterpartyName,
+        counterpartyAddress: normalized.counterpartyAddress,
+        gunId: normalized.gunId,
+        gunName: normalized.gunName,
+        gunNumber: normalized.gunNumber,
+        gunPermitNumber: normalized.gunPermitNumber,
+        createdAt,
+      })
+      .returning();
 
-    return { ok: true as const };
+    return { ok: true as const, entry };
   });
 
   if (!transactionResult.ok) {
@@ -140,6 +143,7 @@ export async function createTransactionAction(input: unknown) {
   return {
     ok: true as const,
     ledgerEntryId,
+    entry: transactionResult.entry,
     redirectPath: buildLedgerEntryRedirectPath({
       purpose: data.purpose,
       ledgerEntryId,

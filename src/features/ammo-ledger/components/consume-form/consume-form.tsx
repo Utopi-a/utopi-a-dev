@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { IsoDateInput } from "@/components/ui/iso-date-input";
@@ -19,6 +19,7 @@ import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { useLedgerTransactionSubmit } from "@/features/ammo-ledger/transactions/use-ledger-transaction-submit/use-ledger-transaction-submit";
+import { cn } from "@/lib/cn";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type ConsumeFormProps = {
@@ -71,7 +72,13 @@ export function ConsumeForm({
     initial?.rangeId || !initial?.purpose || initial.purpose === "shooting" ? "range" : "manual",
   );
   const [rangeId, setRangeId] = useState(initial?.rangeId ?? "");
-  const [location, setLocation] = useState(initial?.location ?? "");
+  // 新規入力では最近使った射撃場を初期値にする。編集・入力の復元・利用者の選択は上書きしない。
+  const isRangeDecided = useRef(Boolean(initial?.rangeId || ledgerEntryId || restoredValues));
+  const [previousLocation] = useState(initial?.location);
+  // 射撃場で消費した前回の場所は、手入力欄には入れず射撃場の選択に使う。
+  const [location, setLocation] = useState(
+    locationInputKind === "manual" ? (initial?.location ?? "") : "",
+  );
   const [outerBoxCount, setOuterBoxCount] = useState(String(initial?.outerBoxCount ?? 0));
   const [boxCount, setBoxCount] = useState(String(initial?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initial?.looseRounds ?? 0));
@@ -79,6 +86,32 @@ export function ConsumeForm({
   const [ledgerNote, setLedgerNote] = useState(initial?.ledgerNote ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+
+  useEffect(() => {
+    if (!rangePickerData || isRangeDecided.current) {
+      return;
+    }
+    isRangeDecided.current = true;
+    const previousRange = previousLocation
+      ? [...rangePickerData.recent, ...rangePickerData.registered].find(
+          (range) =>
+            range.name === previousLocation ||
+            `${range.name} ${range.address}` === previousLocation,
+        )
+      : undefined;
+    const defaultRangeId =
+      previousRange?.id ??
+      rangePickerData.recent[0]?.id ??
+      (rangePickerData.registered.length === 1 ? rangePickerData.registered[0].id : undefined);
+    if (defaultRangeId) {
+      setRangeId(defaultRangeId);
+    }
+  }, [rangePickerData, previousLocation]);
+
+  function handleRangeChange(nextRangeId: string) {
+    isRangeDecided.current = true;
+    setRangeId(nextRangeId);
+  }
 
   const selectedAmmoType = ammoTypes.find((t) => t.id === ammoTypeId);
 
@@ -121,6 +154,9 @@ export function ConsumeForm({
       roundsPerBox: selectedAmmoType.roundsPerBox,
     });
   }, [selectedAmmoType, outerBoxCount, boxCount, looseRounds]);
+
+  const bookStock = selectedAmmoType ? (stockByAmmoTypeId[selectedAmmoType.id] ?? 0) : undefined;
+  const stockAfterConsumption = bookStock !== undefined ? bookStock - computedRounds : undefined;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -200,7 +236,7 @@ export function ConsumeForm({
           id="range"
           label="場所"
           value={rangeId}
-          onChange={setRangeId}
+          onChange={handleRangeChange}
           catalogKind="range"
           sheetTitle="射撃場を選ぶ"
           required
@@ -251,33 +287,62 @@ export function ConsumeForm({
 
       <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
         <p className="text-muted-foreground">実消費（法定出力に使われる数量）</p>
-        <p className="text-lg font-semibold">{computedRounds}発</p>
+        <p className="text-lg font-semibold tabular-nums">{computedRounds}発</p>
+        {stockAfterConsumption !== undefined ? (
+          <p
+            className={cn(
+              "mt-1 text-xs tabular-nums",
+              stockAfterConsumption < 0
+                ? "font-medium text-amber-700 dark:text-amber-300"
+                : "text-muted-foreground",
+            )}
+          >
+            帳簿残数（全用途）{bookStock}発 → 消費後 {stockAfterConsumption}発
+            {stockAfterConsumption < 0 ? "（残数を超えています）" : ""}
+          </p>
+        ) : null}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="ledger-note">帳簿摘要の補足（任意）</Label>
-        <Input
-          id="ledger-note"
-          maxLength={500}
-          value={ledgerNote}
-          onChange={(e) => setLedgerNote(e.target.value)}
-        />
+      <details
+        className="rounded-lg border border-border/60 px-4 py-3"
+        open={Boolean(initial?.ledgerNote || initial?.memo)}
+      >
+        <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
+          帳簿摘要の補足・メモ（任意）
+        </summary>
+        <div className="mt-3 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="ledger-note">帳簿摘要の補足</Label>
+            <Input
+              id="ledger-note"
+              maxLength={500}
+              value={ledgerNote}
+              onChange={(e) => setLedgerNote(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="memo">メモ（帳簿には出ません）</Label>
+            <Input id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} />
+          </div>
+        </div>
+      </details>
+
+      {/* モバイルでは保存ボタンを画面下に固定し、入力の途中でもすぐ保存できるようにする。 */}
+      <div className="sticky bottom-0 z-10 -mx-4 space-y-2 border-t border-border/60 bg-background/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+        {error ? (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        ) : null}
+        <Button
+          type="submit"
+          className="h-12 w-full text-base sm:h-9 sm:w-auto sm:text-sm"
+          disabled={isPending || computedRounds <= 0}
+        >
+          {isPending ? "保存中…" : ledgerEntryId ? "更新" : "保存"}
+        </Button>
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="memo">メモ（帳簿には出ません）</Label>
-        <Input id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} />
-      </div>
-
-      {error ? (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
-
-      <Button type="submit" disabled={isPending || computedRounds <= 0}>
-        {isPending ? "保存中…" : ledgerEntryId ? "更新" : "保存"}
-      </Button>
     </form>
   );
 }

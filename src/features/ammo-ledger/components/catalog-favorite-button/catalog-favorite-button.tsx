@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { CatalogKind } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
 import { toggleCatalogFavoriteAction } from "@/features/ammo-ledger/catalog/toggle-catalog-favorite/toggle-catalog-favorite-action";
+import { useInvalidateMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { cn } from "@/lib/cn";
 
 type CatalogFavoriteButtonProps = {
@@ -25,6 +26,7 @@ export function CatalogFavoriteButton({
 }: CatalogFavoriteButtonProps) {
   const [favorite, setFavorite] = useState(isFavorite);
   const [isPending, startTransition] = useTransition();
+  const invalidatePickerData = useInvalidateMasterPickerData();
 
   function handleToggle(event: React.MouseEvent) {
     event.preventDefault();
@@ -47,6 +49,8 @@ export function CatalogFavoriteButton({
 
         setFavorite(result.isFavorite);
         onFavoriteChange?.({ isFavorite: result.isFavorite });
+        // 入力画面のピッカーにある「お気に入り」へ反映する。
+        invalidatePickerData();
       } catch {
         setFavorite(previousFavorite);
         onFavoriteChange?.({ isFavorite: previousFavorite });

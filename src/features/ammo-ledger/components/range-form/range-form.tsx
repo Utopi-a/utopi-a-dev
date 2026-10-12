@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +30,8 @@ export function RangeForm({ recordId, initialValues }: RangeFormProps = {}) {
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  // 追加した行が一覧に出るまで処理中にし、反映前の二重登録を防ぐ。
+  const [isRefreshingList, startListRefresh] = useTransition();
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -65,7 +67,7 @@ export function RangeForm({ recordId, initialValues }: RangeFormProps = {}) {
         return;
       }
 
-      router.refresh();
+      startListRefresh(() => router.refresh());
       setName("");
       setAddress("");
       setDefaultPurpose("");
@@ -104,8 +106,14 @@ export function RangeForm({ recordId, initialValues }: RangeFormProps = {}) {
           {error}
         </p>
       ) : null}
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "保存中…" : isEdit ? "変更を保存" : "射撃場を追加"}
+      <Button type="submit" disabled={isPending || isRefreshingList}>
+        {isPending
+          ? "保存中…"
+          : isRefreshingList
+            ? "一覧を更新中…"
+            : isEdit
+              ? "変更を保存"
+              : "射撃場を追加"}
       </Button>
     </form>
   );

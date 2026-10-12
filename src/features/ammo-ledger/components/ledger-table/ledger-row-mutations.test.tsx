@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react";
 import { Toaster, toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MasterListItem } from "@/features/ammo-ledger/components/master-list-item/master-list-item";
 import { MasterRowActions } from "@/features/ammo-ledger/components/master-row-actions/master-row-actions";
 import { PendingLedgerChangeAlerts } from "@/features/ammo-ledger/components/pending-ledger-change-alerts/pending-ledger-change-alerts";
 import { reorderLedgerEntryAction } from "@/features/ammo-ledger/transactions/reorder-ledger-entry/reorder-ledger-entry-action";
@@ -287,14 +288,48 @@ describe("帳簿行とマスターの非同期操作", () => {
     expect(entryOrder()).toBe("acquire,first,second");
   });
 
-  it("マスター削除の通信例外後はエラーを表示し、再操作できる", async () => {
-    const deleteAction = vi.fn().mockRejectedValueOnce(new Error("network unavailable"));
+  it("マスター削除は確認ダイアログで内容を伝え、やめると削除しない", () => {
+    const deleteAction = vi.fn();
     renderWithWorkspace(
-      <MasterRowActions recordId="master-1" deletedSubject="射撃場" deleteAction={deleteAction} />,
+      <MasterRowActions
+        recordId="permit-1"
+        deletedSubject="譲受許可"
+        deleteNote="この許可の取得・繰越の記録も削除され、帳簿の許可残数が変わります。"
+        deleteAction={deleteAction}
+      />,
     );
     fireEvent.click(screen.getByRole("button", { name: "削除" }));
 
-    expect(await screen.findByText(/削除結果を確認できませんでした/)).toBeVisible();
+    const dialog = screen.getByRole("dialog", { name: "譲受許可を削除しますか？" });
+    expect(dialog).toHaveTextContent("帳簿の許可残数が変わります");
+    fireEvent.click(screen.getByRole("button", { name: "やめる" }));
+    expect(deleteAction).not.toHaveBeenCalled();
+    expect(window.confirm).not.toHaveBeenCalled();
+  });
+
+  it("マスター削除は確認後すぐ行を隠し、通信例外なら行を戻して再操作できる", async () => {
+    const save = deferred<{ ok: true }>();
+    const deleteAction = vi.fn().mockReturnValueOnce(save.promise);
+    renderWithWorkspace(
+      <ul>
+        <MasterListItem>
+          <span>テスト射撃場</span>
+          <MasterRowActions
+            recordId="master-1"
+            deletedSubject="射撃場"
+            deleteAction={deleteAction}
+          />
+        </MasterListItem>
+      </ul>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "削除" }));
+    fireEvent.click(screen.getByRole("button", { name: "削除する" }));
+
+    expect(screen.getByText("テスト射撃場")).not.toBeVisible();
+    await act(async () => save.reject(new Error("network unavailable")));
+
+    expect(screen.getByText("テスト射撃場")).toBeVisible();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/削除結果を確認できませんでした/);
     expect(screen.getByRole("button", { name: "削除" })).toBeEnabled();
     expect(refresh).not.toHaveBeenCalled();
   });
@@ -312,6 +347,7 @@ describe("帳簿行とマスターの非同期操作", () => {
       <MasterRowActions recordId="master-1" deletedSubject="射撃場" deleteAction={deleteAction} />,
     );
     fireEvent.click(screen.getByRole("button", { name: "削除" }));
+    fireEvent.click(screen.getByRole("button", { name: "削除する" }));
 
     expect(await screen.findByText("帳簿更新中")).toBeVisible();
     expect(refresh).toHaveBeenCalledTimes(1);

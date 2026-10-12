@@ -13,6 +13,7 @@ export function AmmoTypeRowActions({ ammoTypeId }: AmmoTypeRowActionsProps) {
       editHref={`/lab/ammo-ledger/settings/ammo-types/${ammoTypeId}/edit`}
       recordId={ammoTypeId}
       deletedSubject="弾種"
+      deleteNote="帳簿や取引で使っている弾種は削除できません。"
       deleteAction={deleteAmmoTypeAction}
     />
   );

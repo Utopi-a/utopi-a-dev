@@ -3,6 +3,7 @@ import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-p
 import { CatalogBrowsePromo } from "@/features/ammo-ledger/components/catalog-browse-promo/catalog-browse-promo";
 import { CounterpartyForm } from "@/features/ammo-ledger/components/counterparty-form/counterparty-form";
 import { CounterpartyRowActions } from "@/features/ammo-ledger/components/counterparty-row-actions/counterparty-row-actions";
+import { MasterListItem } from "@/features/ammo-ledger/components/master-list-item/master-list-item";
 import { listCounterparties } from "@/features/ammo-ledger/master/list-counterparties/list-counterparties";
 
 export default async function CounterpartiesSettingsPage() {
@@ -27,7 +28,7 @@ export default async function CounterpartiesSettingsPage() {
         ) : (
           <ul className="divide-y divide-border/50 text-sm">
             {counterparties.map((item) => (
-              <li
+              <MasterListItem
                 key={item.id}
                 className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
               >
@@ -40,7 +41,7 @@ export default async function CounterpartiesSettingsPage() {
                   )}
                 </span>
                 <CounterpartyRowActions counterpartyId={item.id} />
-              </li>
+              </MasterListItem>
             ))}
           </ul>
         )}

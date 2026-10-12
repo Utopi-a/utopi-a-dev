@@ -1,6 +1,7 @@
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { CatalogBrowsePromo } from "@/features/ammo-ledger/components/catalog-browse-promo/catalog-browse-promo";
+import { MasterListItem } from "@/features/ammo-ledger/components/master-list-item/master-list-item";
 import { RangeForm } from "@/features/ammo-ledger/components/range-form/range-form";
 import { RangeRowActions } from "@/features/ammo-ledger/components/range-row-actions/range-row-actions";
 import { listRanges } from "@/features/ammo-ledger/master/list-ranges/list-ranges";
@@ -27,7 +28,7 @@ export default async function RangesSettingsPage() {
         ) : (
           <ul className="divide-y divide-border/50 text-sm">
             {ranges.map((range) => (
-              <li
+              <MasterListItem
                 key={range.id}
                 className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
               >
@@ -40,7 +41,7 @@ export default async function RangesSettingsPage() {
                   )}
                 </span>
                 <RangeRowActions rangeId={range.id} />
-              </li>
+              </MasterListItem>
             ))}
           </ul>
         )}

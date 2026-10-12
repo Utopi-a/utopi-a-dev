@@ -91,11 +91,10 @@ export function InflowNewView() {
           emptyMasters
         ) : (
           <InflowRecordTabs
-            key={`${tab}-${draftId ?? "new"}`}
+            key={draftId ?? "new"}
             defaultTab={tab}
             acquireContent={
               <AcquireForm
-                key={tab === "acquire" ? (draftId ?? "new") : "acquire"}
                 ammoTypes={ammoTypes}
                 permits={workspace.permits}
                 initialValues={tab === "acquire" ? initialValues : undefined}
@@ -103,35 +102,30 @@ export function InflowNewView() {
             }
             disposeContent={
               <DisposeForm
-                key={tab === "dispose" ? (draftId ?? "new") : "dispose"}
                 ammoTypes={ammoTypes}
                 initialValues={tab === "dispose" ? initialValues : undefined}
               />
             }
             transferContent={
               <TransferForm
-                key={tab === "transfer" ? (draftId ?? "new") : "transfer"}
                 ammoTypes={ammoTypes}
                 initialValues={tab === "transfer" ? initialValues : undefined}
               />
             }
             manufactureContent={
               <ManufactureForm
-                key={tab === "manufacture" ? (draftId ?? "new") : "manufacture"}
                 ammoTypes={ammoTypes}
                 initialValues={tab === "manufacture" ? initialValues : undefined}
               />
             }
             issueContent={
               <IssueForm
-                key={tab === "issue" ? (draftId ?? "new") : "issue"}
                 ammoTypes={ammoTypes}
                 initialValues={tab === "issue" ? initialValues : undefined}
               />
             }
             receiveContent={
               <ReceiveForm
-                key={tab === "receive" ? (draftId ?? "new") : "receive"}
                 ammoTypes={ammoTypes}
                 initialValues={tab === "receive" ? initialValues : undefined}
               />

@@ -58,6 +58,7 @@ export function InflowRecordTabs({
     syncTabToUrl({ tab: nextTab, draft });
   }
 
+  // 切り替えても入力が消えないよう、全タブのフォームを保持して表示だけを切り替える。
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange}>
       <TabsList className="w-full flex-wrap">
@@ -67,23 +68,28 @@ export function InflowRecordTabs({
           </TabsTrigger>
         ))}
       </TabsList>
-      <TabsContent value="acquire" className="mt-4">
-        {activeTab === "acquire" ? acquireContent : null}
+      <TabsContent value="acquire" forceMount hidden={activeTab !== "acquire"} className="mt-4">
+        {acquireContent}
       </TabsContent>
-      <TabsContent value="dispose" className="mt-4">
-        {activeTab === "dispose" ? disposeContent : null}
+      <TabsContent value="dispose" forceMount hidden={activeTab !== "dispose"} className="mt-4">
+        {disposeContent}
       </TabsContent>
-      <TabsContent value="transfer" className="mt-4">
-        {activeTab === "transfer" ? transferContent : null}
+      <TabsContent value="transfer" forceMount hidden={activeTab !== "transfer"} className="mt-4">
+        {transferContent}
       </TabsContent>
-      <TabsContent value="manufacture" className="mt-4">
-        {activeTab === "manufacture" ? manufactureContent : null}
+      <TabsContent
+        value="manufacture"
+        forceMount
+        hidden={activeTab !== "manufacture"}
+        className="mt-4"
+      >
+        {manufactureContent}
       </TabsContent>
-      <TabsContent value="issue" className="mt-4">
-        {activeTab === "issue" ? issueContent : null}
+      <TabsContent value="issue" forceMount hidden={activeTab !== "issue"} className="mt-4">
+        {issueContent}
       </TabsContent>
-      <TabsContent value="receive" className="mt-4">
-        {activeTab === "receive" ? receiveContent : null}
+      <TabsContent value="receive" forceMount hidden={activeTab !== "receive"} className="mt-4">
+        {receiveContent}
       </TabsContent>
     </Tabs>
   );

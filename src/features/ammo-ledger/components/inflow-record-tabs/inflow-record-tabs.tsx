@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -25,13 +24,10 @@ type InflowRecordTabsProps = {
   receiveContent: ReactNode;
 };
 
-function syncTabToUrl({ tab, draft }: { tab: InflowTab; draft: string | null }) {
-  const params = new URLSearchParams();
-  params.set("tab", tab);
-  if (draft) {
-    params.set("draft", draft);
-  }
-  const url = `/lab/ammo-ledger/inflow/new?${params.toString()}`;
+// 下書き・入力の復元などの指定を保ったまま、タブだけを URL に反映する。
+function syncTabToUrl({ tab }: { tab: InflowTab }) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("tab", tab);
   window.history.replaceState(null, "", url);
 }
 
@@ -44,8 +40,6 @@ export function InflowRecordTabs({
   issueContent,
   receiveContent,
 }: InflowRecordTabsProps) {
-  const searchParams = useSearchParams();
-  const draft = searchParams.get("draft");
   const [activeTab, setActiveTab] = useState<InflowTab>(defaultTab);
 
   useEffect(() => {
@@ -55,7 +49,7 @@ export function InflowRecordTabs({
   function handleTabChange(tab: string) {
     const nextTab = tab as InflowTab;
     setActiveTab(nextTab);
-    syncTabToUrl({ tab: nextTab, draft });
+    syncTabToUrl({ tab: nextTab });
   }
 
   // 切り替えても入力が消えないよう、全タブのフォームを保持して表示だけを切り替える。

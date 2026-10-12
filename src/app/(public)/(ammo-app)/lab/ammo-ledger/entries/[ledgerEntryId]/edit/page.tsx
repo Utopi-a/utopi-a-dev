@@ -21,11 +21,14 @@ import { getLedgerEntryForEdit } from "@/features/ammo-ledger/transactions/get-l
 
 type PageProps = {
   params: Promise<{ ledgerEntryId: string }>;
+  searchParams: Promise<{ restore?: string }>;
 };
 
-export default async function EditLedgerEntryPage({ params }: PageProps) {
+export default async function EditLedgerEntryPage({ params, searchParams }: PageProps) {
   const user = await requireAmmoUser();
   const { ledgerEntryId } = await params;
+  // 保存できなかった編集に戻るたびにフォームを作り直し、その入力値で始める。
+  const formKey = `${ledgerEntryId}:${(await searchParams).restore ?? ""}`;
   const editData = await getLedgerEntryForEdit({ userId: user.id, ledgerEntryId });
 
   if (!editData) {
@@ -81,7 +84,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
         }
         return (
           <ConsumeFormLazy
-            key={ledgerEntryId}
+            key={formKey}
             ledgerEntryId={ledgerEntryId}
             guns={guns}
             ammoTypes={ammoTypes}
@@ -93,7 +96,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
         if (ammoTypes.length === 0) return emptyAmmoTypeMessage;
         return (
           <AcquireForm
-            key={ledgerEntryId}
+            key={formKey}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
             permits={permits}
@@ -104,7 +107,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
         if (ammoTypes.length === 0) return emptyAmmoTypeMessage;
         return (
           <DisposeForm
-            key={ledgerEntryId}
+            key={formKey}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
             initialValues={initialValues}
@@ -114,7 +117,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
         if (ammoTypes.length === 0) return emptyAmmoTypeMessage;
         return (
           <TransferForm
-            key={ledgerEntryId}
+            key={formKey}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
             initialValues={initialValues}
@@ -124,7 +127,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
         if (ammoTypes.length === 0) return emptyAmmoTypeMessage;
         return (
           <ManufactureForm
-            key={ledgerEntryId}
+            key={formKey}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
             initialValues={initialValues}
@@ -134,7 +137,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
         if (ammoTypes.length === 0) return emptyAmmoTypeMessage;
         return (
           <IssueForm
-            key={ledgerEntryId}
+            key={formKey}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
             initialValues={initialValues}
@@ -144,7 +147,7 @@ export default async function EditLedgerEntryPage({ params }: PageProps) {
         if (ammoTypes.length === 0) return emptyAmmoTypeMessage;
         return (
           <ReceiveForm
-            key={ledgerEntryId}
+            key={formKey}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
             initialValues={initialValues}

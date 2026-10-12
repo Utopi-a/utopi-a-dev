@@ -115,12 +115,16 @@ export async function reorderLedgerEntryAction(input: unknown) {
         .where(and(eq(ammoLedgerEntry.id, entryId), eq(ammoLedgerEntry.userId, user.id)));
     }
 
-    return { ok: true as const };
+    return {
+      ok: true as const,
+      dayOrders: [...nextDayOrders].map(([id, dayOrder]) => ({ id, dayOrder })),
+    };
   });
 
   if (!transactionResult.ok) {
     return transactionResult;
   }
 
-  return { ok: true as const };
+  // 画面は保存された並び順だけを反映する（行の内容は確定済みのものを使う）。
+  return { ok: true as const, dayOrders: transactionResult.dayOrders };
 }

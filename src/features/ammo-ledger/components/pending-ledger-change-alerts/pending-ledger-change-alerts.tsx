@@ -30,7 +30,9 @@ export function PendingLedgerChangeAlerts() {
           role="alert"
           className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm"
         >
-          <p className="font-medium text-destructive">{change.summary}を保存できませんでした</p>
+          <p className="font-medium text-destructive">
+            {change.failureTitle ?? `${change.summary}を保存できませんでした`}
+          </p>
           {change.error ? <p className="text-muted-foreground">{change.error}</p> : null}
           <div className="flex flex-wrap gap-2">
             {change.restore ? (

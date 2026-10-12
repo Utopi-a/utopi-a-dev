@@ -29,7 +29,8 @@ function selectTab(name: string) {
 }
 
 describe("InflowRecordTabs", () => {
-  it("タブを切り替えて戻っても、入力途中の値を保持する", () => {
+  it("タブを切り替えて戻っても入力途中の値を保持し、URL の他の指定を消さない", () => {
+    window.history.replaceState(null, "", "/lab/ammo-ledger/inflow/new?restore=change-1");
     render(
       <InflowRecordTabs
         defaultTab="acquire"
@@ -46,6 +47,9 @@ describe("InflowRecordTabs", () => {
     selectTab("廃棄");
     expect(screen.getByLabelText("廃棄の入力")).toBeVisible();
     expect(screen.getByLabelText("譲受の入力")).not.toBeVisible();
+
+    expect(new URL(window.location.href).searchParams.get("restore")).toBe("change-1");
+    expect(new URL(window.location.href).searchParams.get("tab")).toBe("dispose");
 
     selectTab("譲受");
     expect(screen.getByLabelText("譲受の入力")).toHaveValue("50発");

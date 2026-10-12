@@ -12,6 +12,8 @@ import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-amm
 export function ConsumeNewView() {
   const searchParams = useSearchParams();
   const draftId = searchParams.get("draft");
+  // 保存できなかった入力に戻るたびにフォームを作り直し、その入力値で始める。
+  const restoreId = searchParams.get("restore");
   const { workspace, isLoading: isWorkspaceLoading, error, retry } = useAmmoLedgerWorkspace();
   const {
     draft,
@@ -61,7 +63,7 @@ export function ConsumeNewView() {
           </p>
         ) : (
           <ConsumeForm
-            key={draftId ?? "new"}
+            key={`${draftId ?? "new"}:${restoreId ?? ""}`}
             guns={guns}
             ammoTypes={ammoTypes}
             stockByAmmoTypeId={stockByAmmoTypeId}

@@ -11,6 +11,8 @@ let createBulkTransactionsAction: typeof import("@/features/ammo-ledger/transact
 let saveOpeningBalanceAction: typeof import("@/features/ammo-ledger/opening-balance/save-opening-balance/save-opening-balance-action").saveOpeningBalanceAction;
 let upsertLedgerProfileAction: typeof import("@/features/ammo-ledger/profile/upsert-ledger-profile/upsert-ledger-profile-action").upsertLedgerProfileAction;
 let getLedgerProfile: typeof import("@/features/ammo-ledger/profile/get-ledger-profile/get-ledger-profile").getLedgerProfile;
+let createTransactionAction: typeof import("@/features/ammo-ledger/transactions/create-transaction/create-transaction-action").createTransactionAction;
+let reorderLedgerEntryAction: typeof import("@/features/ammo-ledger/transactions/reorder-ledger-entry/reorder-ledger-entry-action").reorderLedgerEntryAction;
 let getDb: typeof import("@/db").getDb | undefined;
 let databaseCreated = false;
 
@@ -54,6 +56,12 @@ beforeAll(async () => {
   ({ getDb } = await import("@/db"));
   ({ createBulkTransactionsAction } = await import(
     "@/features/ammo-ledger/transactions/create-bulk-transactions/create-bulk-transactions-action"
+  ));
+  ({ createTransactionAction } = await import(
+    "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action"
+  ));
+  ({ reorderLedgerEntryAction } = await import(
+    "@/features/ammo-ledger/transactions/reorder-ledger-entry/reorder-ledger-entry-action"
   ));
   ({ saveOpeningBalanceAction } = await import(
     "@/features/ammo-ledger/opening-balance/save-opening-balance/save-opening-balance-action"
@@ -754,5 +762,85 @@ describe("ammo ledger server mutations against local PostgreSQL", () => {
     ).resolves.toEqual({ ok: false, error });
     expect(await savedCounts(fixture)).toEqual({ transactions: 0, entries: 0 });
     expect(await savedCounts(otherUser)).toEqual({ transactions: 0, entries: 0 });
+  });
+
+  it("画面で決めた記録 ID の再送は二重登録せず、保存済みの行を返す", async () => {
+    const fixture = await seedLedger({ stock: 10 });
+    const ledgerEntryId = crypto.randomUUID();
+    const input = { ...consumeInput({ fixture, quantity: 3 }), ledgerEntryId };
+
+    const first = await createTransactionAction(input);
+    // 応答が失われた後に、利用者が数量を変えて入力し直したケースを想定する。
+    const retried = await createTransactionAction({ ...input, looseRounds: 5 });
+
+    expect(first).toMatchObject({ ok: true, alreadySaved: false, entry: { id: ledgerEntryId } });
+    expect(retried).toMatchObject({
+      ok: true,
+      alreadySaved: true,
+      entry: { id: ledgerEntryId, quantity: 3 },
+    });
+    expect(await savedCounts(fixture)).toEqual({ transactions: 1, entries: 1 });
+  });
+
+  it("同じ記録 ID の同時送信も advisory lock で1件だけ保存する", async () => {
+    const fixture = await seedLedger({ stock: 10 });
+    const input = { ...consumeInput({ fixture, quantity: 2 }), ledgerEntryId: crypto.randomUUID() };
+
+    const results = await Promise.all([
+      createTransactionAction(input),
+      createTransactionAction(input),
+    ]);
+
+    expect(results.map((result) => result.ok && result.alreadySaved).sort()).toEqual([false, true]);
+    expect(await savedCounts(fixture)).toEqual({ transactions: 1, entries: 1 });
+  });
+
+  it("他ユーザーの記録 ID を指定しても、その記録を返さず保存もしない", async () => {
+    const otherUser = await seedLedger({ stock: 10 });
+    const otherResult = await createTransactionAction({
+      ...consumeInput({ fixture: otherUser }),
+      ledgerEntryId: crypto.randomUUID(),
+    });
+    expect(otherResult.ok).toBe(true);
+    const otherEntryId = otherResult.ok ? otherResult.entry.id : "";
+
+    const fixture = await seedLedger({ stock: 10 });
+    await expect(
+      createTransactionAction({ ...consumeInput({ fixture }), ledgerEntryId: otherEntryId }),
+    ).resolves.toEqual({ ok: false, error: "この記録は保存できません。入力し直してください" });
+    expect(await savedCounts(fixture)).toEqual({ transactions: 0, entries: 0 });
+  });
+
+  it("記録 ID が UUID でなければ保存しない", async () => {
+    const fixture = await seedLedger({ stock: 10 });
+    await expect(
+      createTransactionAction({ ...consumeInput({ fixture }), ledgerEntryId: "not-a-uuid" }),
+    ).resolves.toEqual({ ok: false, error: "入力内容を確認してください" });
+    expect(await savedCounts(fixture)).toEqual({ transactions: 0, entries: 0 });
+  });
+
+  it("並び替えは保存した並び順を返し、帳簿の並び順と一致する", async () => {
+    const fixture = await seedLedger({ stock: 10 });
+    const first = await createTransactionAction(consumeInput({ fixture, quantity: 1 }));
+    const second = await createTransactionAction(consumeInput({ fixture, quantity: 2 }));
+    if (!first.ok || !second.ok) throw new Error("seed failed");
+
+    const result = await reorderLedgerEntryAction({
+      ledgerEntryId: second.entry.id,
+      direction: "up",
+    });
+
+    const rows = await sql`
+      select id, day_order from ammo_ledger_entry
+      where id in ${sql([first.entry.id, second.entry.id])}`;
+    expect(result).toEqual({
+      ok: true,
+      dayOrders: expect.arrayContaining(
+        rows.map((row) => ({ id: row.id as string, dayOrder: row.day_order as number })),
+      ),
+    });
+    expect(result.ok && result.dayOrders).toHaveLength(2);
+    const order = Object.fromEntries(rows.map((row) => [row.id, row.day_order]));
+    expect(order[second.entry.id]).toBeLessThan(order[first.entry.id]);
   });
 });

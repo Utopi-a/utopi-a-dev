@@ -6,7 +6,10 @@ import { checkLedgerChangesAgainstStock } from "@/features/ammo-ledger/transacti
 import { voidLedgerEntryAction } from "@/features/ammo-ledger/transactions/void-ledger-entry/void-ledger-entry-action";
 import type { LedgerEntryRow } from "@/features/ammo-ledger/workspace/apply-ledger-entry-changes/apply-ledger-entry-changes";
 import { useRunPendingLedgerChange } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
-import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+import {
+  useAmmoLedgerWorkspace,
+  useRequestAmmoLedgerWorkspaceRevalidation,
+} from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 
 type VoidLedgerEntryButtonProps = {
@@ -18,6 +21,7 @@ type VoidLedgerEntryButtonProps = {
 export function VoidLedgerEntryButton({ entry, onVoidStarted }: VoidLedgerEntryButtonProps) {
   const { workspace } = useAmmoLedgerWorkspace();
   const runPendingChange = useRunPendingLedgerChange();
+  const requestRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,6 +32,7 @@ export function VoidLedgerEntryButton({ entry, onVoidStarted }: VoidLedgerEntryB
       const stockCheck = checkLedgerChangesAgainstStock({ entries: workspace.entries, changes });
       if (!stockCheck.ok) {
         setError(`取り消すと${stockCheck.error}`);
+        requestRevalidation();
         return;
       }
     }
@@ -37,11 +42,16 @@ export function VoidLedgerEntryButton({ entry, onVoidStarted }: VoidLedgerEntryB
       overlay: changes,
       summary,
       failureTitle: `記録を取消できませんでした（${summary}）`,
+      unknownTitle: `記録の取消が反映されたか確認できませんでした（${summary}）`,
+      unknownDescription:
+        "通信が途切れました。帳簿に記録が残っていれば取消されていないため、もう一度取り消してください。",
       successMessage: "帳簿行を取消しました",
       action: async () => {
         const result = await voidLedgerEntryAction({ ledgerEntryId: entry.id });
         return result.ok ? { ok: true, changes } : result;
       },
+      isApplied: (latest) => !latest.entries.some((item) => item.id === entry.id),
+      appliedMessage: `記録の取消は反映されていました（${summary}）`,
     });
     onVoidStarted?.();
   }

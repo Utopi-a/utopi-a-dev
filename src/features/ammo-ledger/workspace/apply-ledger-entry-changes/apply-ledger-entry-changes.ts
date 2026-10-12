@@ -8,6 +8,8 @@ export type LedgerEntryRow = typeof ammoLedgerEntry.$inferSelect;
 export type LedgerEntryChanges = {
   upserted: LedgerEntryRow[];
   removedIds: string[];
+  /** 並び替え。行の内容は変えず、同日内の順番だけを更新する */
+  dayOrders?: { id: string; dayOrder: number }[];
 };
 
 /**
@@ -21,7 +23,8 @@ export function applyLedgerEntryChanges({
   workspace: AmmoLedgerWorkspace;
   changes: LedgerEntryChanges;
 }): AmmoLedgerWorkspace {
-  if (changes.upserted.length === 0 && changes.removedIds.length === 0) {
+  const dayOrders = new Map(changes.dayOrders?.map(({ id, dayOrder }) => [id, dayOrder]));
+  if (changes.upserted.length === 0 && changes.removedIds.length === 0 && dayOrders.size === 0) {
     return workspace;
   }
 
@@ -32,7 +35,12 @@ export function applyLedgerEntryChanges({
   const entries = [
     ...workspace.entries.filter((entry) => !replacedIds.has(entry.id)),
     ...changes.upserted,
-  ].sort((a, b) => compareLedgerEntries({ a, b }));
+  ]
+    .map((entry) => {
+      const dayOrder = dayOrders.get(entry.id);
+      return dayOrder === undefined ? entry : { ...entry, dayOrder };
+    })
+    .sort((a, b) => compareLedgerEntries({ a, b }));
 
   return {
     ...workspace,

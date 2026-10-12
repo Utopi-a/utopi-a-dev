@@ -7,7 +7,10 @@ import { computeSwappedDayOrders } from "@/features/ammo-ledger/ledger/compute-s
 import { checkLedgerChangesAgainstStock } from "@/features/ammo-ledger/transactions/check-ledger-changes-against-stock/check-ledger-changes-against-stock";
 import { reorderLedgerEntryAction } from "@/features/ammo-ledger/transactions/reorder-ledger-entry/reorder-ledger-entry-action";
 import { useRunPendingLedgerChange } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
-import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+import {
+  useAmmoLedgerWorkspace,
+  useRequestAmmoLedgerWorkspaceRevalidation,
+} from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { cn } from "@/lib/cn";
 
 type LedgerEntryReorderButtonsProps = {
@@ -23,8 +26,9 @@ export function LedgerEntryReorderButtons({
   canMoveDown,
   className,
 }: LedgerEntryReorderButtonsProps) {
-  const { workspace } = useAmmoLedgerWorkspace();
+  const { workspace, pendingEntryIds } = useAmmoLedgerWorkspace();
   const runPendingChange = useRunPendingLedgerChange();
+  const requestRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const [error, setError] = useState<string | null>(null);
 
   function handleReorder({ direction }: { direction: "up" | "down" }) {
@@ -39,6 +43,11 @@ export function LedgerEntryReorderButtons({
     const siblings = workspace.entries.filter(
       (entry) => entry.occurredOn === target.occurredOn && entry.purpose === target.purpose,
     );
+    // 保存待ちの行はサーバーの並び順がまだ決まっていないため、同じ日の並び替えを待ってもらう。
+    if (siblings.some((entry) => pendingEntryIds.has(entry.id))) {
+      setError("同じ日に保存中の記録があります。保存が終わってから並び替えてください。");
+      return;
+    }
     const nextDayOrders = computeSwappedDayOrders({ entries: siblings, ledgerEntryId, direction });
     if (!nextDayOrders) {
       setError("この方向には移動できません");
@@ -46,14 +55,14 @@ export function LedgerEntryReorderButtons({
     }
 
     const changes = {
-      upserted: siblings
-        .filter((entry) => nextDayOrders.has(entry.id))
-        .map((entry) => ({ ...entry, dayOrder: nextDayOrders.get(entry.id) ?? entry.dayOrder })),
+      upserted: [],
       removedIds: [],
+      dayOrders: [...nextDayOrders].map(([id, dayOrder]) => ({ id, dayOrder })),
     };
     const stockCheck = checkLedgerChangesAgainstStock({ entries: workspace.entries, changes });
     if (!stockCheck.ok) {
       setError(`この順番では${stockCheck.error}`);
+      requestRevalidation();
       return;
     }
 
@@ -62,9 +71,15 @@ export function LedgerEntryReorderButtons({
       marksEntriesSaving: false,
       summary: "並び順の変更",
       failureTitle: "並び順を変更できませんでした",
+      unknownTitle: "並び順を変更できたか確認できませんでした",
+      unknownDescription:
+        "通信が途切れました。帳簿を取り直して、保存されている並び順を表示します。",
       action: async () => {
         const result = await reorderLedgerEntryAction({ ledgerEntryId, direction });
-        return result.ok ? { ok: true, changes } : result;
+        // 確定時はサーバーが保存した並び順だけを反映し、画面上の行の内容は書き込まない。
+        return result.ok
+          ? { ok: true, changes: { upserted: [], removedIds: [], dayOrders: result.dayOrders } }
+          : result;
       },
     });
   }

@@ -20,6 +20,7 @@ export function checkLedgerChangesAgainstStock({
     ...changes.removedIds,
     ...changes.upserted.map((entry) => entry.id),
   ]);
+  const dayOrders = new Map(changes.dayOrders?.map(({ id, dayOrder }) => [id, dayOrder]));
 
   return validateStockTimeline({
     entries: [
@@ -36,7 +37,7 @@ export function checkLedgerChangesAgainstStock({
               category: entry.category as LedgerCategory,
               quantity: entry.quantity,
               occurredOn: entry.occurredOn,
-              dayOrder: entry.dayOrder,
+              dayOrder: dayOrders.get(entry.id) ?? entry.dayOrder,
               createdAt: entry.createdAt,
             },
           ]

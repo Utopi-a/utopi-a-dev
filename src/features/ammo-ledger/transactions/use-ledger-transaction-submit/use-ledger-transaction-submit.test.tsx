@@ -1,6 +1,6 @@
 import { act, render, renderHook, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { toast } from "sonner";
+import { Toaster, toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { PendingLedgerChangeAlerts } from "@/features/ammo-ledger/components/pending-ledger-change-alerts/pending-ledger-change-alerts";
@@ -91,7 +91,7 @@ describe("useLedgerTransactionSubmit", () => {
     vi.restoreAllMocks();
   });
 
-  it("保存の応答を待たずに帳簿へ移動し、確定後に本来のIDへ差し替える", async () => {
+  it("保存の応答を待たずに帳簿へ移動し、画面で決めた記録 ID のまま確定する", async () => {
     const save = deferred<Awaited<ReturnType<typeof createTransactionAction>>>();
     vi.mocked(createTransactionAction).mockReturnValueOnce(save.promise);
     const { result } = renderHook(useSubmitAndWorkspace, { wrapper: Providers });
@@ -107,30 +107,77 @@ describe("useLedgerTransactionSubmit", () => {
     });
 
     expect(submitResult).toEqual({ ok: true });
-    const pendingId = new URLSearchParams(window.location.search).get("entry");
+    const entryId = new URLSearchParams(window.location.search).get("entry") ?? "";
     expect(window.location.pathname).toBe("/lab/ammo-ledger/ledger");
-    expect(pendingId).toMatch(/^pending-/);
-    expect(result.current.ledger.pendingEntryIds.has(pendingId ?? "")).toBe(true);
+    expect(entryId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(result.current.ledger.pendingEntryIds.has(entryId)).toBe(true);
     expect(result.current.ledger.workspace?.inventoryItems[0].bookStock).toBe(50);
-    expect(createTransactionAction).toHaveBeenCalledWith(payload);
+    expect(createTransactionAction).toHaveBeenCalledWith({ ...payload, ledgerEntryId: entryId });
 
     const saved = buildTestEntry({
-      id: "saved-entry",
+      id: entryId,
       category: "consume",
       occurredOn: "2026-10-13",
       quantity: 50,
     });
     await act(async () => {
-      save.resolve({ ok: true, ledgerEntryId: saved.id, entry: saved, redirectPath: "/" });
+      save.resolve({
+        ok: true,
+        ledgerEntryId: saved.id,
+        entry: saved,
+        alreadySaved: false,
+        redirectPath: "/",
+      });
     });
 
-    expect(new URLSearchParams(window.location.search).get("entry")).toBe("saved-entry");
+    expect(new URLSearchParams(window.location.search).get("entry")).toBe(entryId);
     expect(result.current.ledger.pendingEntryIds.size).toBe(0);
     expect(result.current.ledger.workspace?.entries.map((entry) => entry.id)).toEqual([
       "carryover",
-      "saved-entry",
+      entryId,
     ]);
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("応答が届かなくても、取り直した帳簿に記録があれば保存済みとして扱う", async () => {
+    vi.mocked(createTransactionAction).mockImplementationOnce(async (input) => {
+      const { ledgerEntryId } = input as { ledgerEntryId: string };
+      vi.mocked(fetch).mockResolvedValueOnce(
+        Response.json({
+          ...workspacePayload,
+          workspace: {
+            ...workspacePayload.workspace,
+            entries: [
+              ...workspacePayload.workspace.entries,
+              buildTestEntry({
+                id: ledgerEntryId,
+                category: "consume",
+                occurredOn: "2026-10-13",
+                quantity: 50,
+              }),
+            ],
+          },
+        }),
+      );
+      throw new Error("response lost");
+    });
+    const { result } = renderHook(useSubmitAndWorkspace, {
+      wrapper: ({ children }) => (
+        <Providers>
+          <Toaster />
+          <PendingLedgerChangeAlerts />
+          {children}
+        </Providers>
+      ),
+    });
+    await act(async () => {
+      await result.current.form.submit({ payload, subject: "消費記録", restoreValues: payload });
+    });
+
+    expect(await screen.findByText(/消費記録（.*）は保存されていました/)).toBeVisible();
+    expect(result.current.ledger.pendingEntryIds.size).toBe(0);
+    expect(result.current.ledger.workspace?.entries).toHaveLength(2);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("在庫が足りない入力は送信も移動もせずにエラーを返す", async () => {
@@ -173,8 +220,10 @@ describe("useLedgerTransactionSubmit", () => {
     unmount();
   });
 
-  it("保存できなかった記録をアラートに残し、入力に戻ると入力値を返す", async () => {
+  it("保存できたか分からない記録はアラートに残し、入力に戻って再送しても同じ記録 ID を使う", async () => {
     vi.mocked(createTransactionAction).mockRejectedValueOnce(new Error("network unavailable"));
+    // 取り直した帳簿には記録がない（保存されていなかった）。
+    vi.mocked(fetch).mockResolvedValue(Response.json(workspacePayload));
 
     function Screen() {
       const { form } = useSubmitAndWorkspace();
@@ -207,9 +256,12 @@ describe("useLedgerTransactionSubmit", () => {
 
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent(
-      "消費記録（2026/10/13 テスト散弾 7.5号 50発）を保存できませんでした",
+      "消費記録（2026/10/13 テスト散弾 7.5号 50発）を保存できたか確認できませんでした",
     );
-    expect(alert).toHaveTextContent("保存できたか確認できませんでした");
+    expect(alert).toHaveTextContent("二重に登録されることはありません");
+    const firstEntryId = (
+      vi.mocked(createTransactionAction).mock.calls[0][0] as { ledgerEntryId: string }
+    ).ledgerEntryId;
     const restoreHref = screen.getByRole("link", { name: "入力に戻る" }).getAttribute("href") ?? "";
     expect(restoreHref).toMatch(/^\/lab\/ammo-ledger\/consume\/new\?restore=/);
 
@@ -220,5 +272,13 @@ describe("useLedgerTransactionSubmit", () => {
       </Providers>,
     );
     expect(screen.getByTestId("restored")).toHaveTextContent("3");
+
+    vi.mocked(createTransactionAction).mockReturnValueOnce(new Promise(() => {}));
+    await act(async () => screen.getByRole("button", { name: "保存" }).click());
+    expect(createTransactionAction).toHaveBeenLastCalledWith({
+      ...payload,
+      ledgerEntryId: firstEntryId,
+    });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

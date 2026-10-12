@@ -96,7 +96,8 @@ test("消費は保存の応答を待たずに帳簿へ先行表示し、確定�
           );
           const start = performance.now();
           const observer = new MutationObserver(() => {
-            if (document.querySelector('[data-ledger-entry-id^="pending-"]')) {
+            const rows = [...document.querySelectorAll("[data-ledger-entry-id]")];
+            if (rows.some((row) => row.textContent?.includes("保存中"))) {
               observer.disconnect();
               resolve(Math.round(performance.now() - start));
             }
@@ -105,10 +106,13 @@ test("消費は保存の応答を待たずに帳簿へ先行表示し、確定�
           button?.click();
         }),
     );
-    await expect(page).toHaveURL(/\/ledger\?purpose=shooting&entry=pending-/, { timeout: 3_000 });
+    await expect(page).toHaveURL(/\/ledger\?purpose=shooting&entry=[0-9a-f-]{36}$/, {
+      timeout: 3_000,
+    });
     await expect(page.getByRole("heading", { name: "帳簿", exact: true })).toBeVisible();
-    const pendingId = new URL(page.url()).searchParams.get("entry") as string;
-    const pendingEntry = visibleEntry({ page, id: pendingId });
+    // 画面で決めた記録 ID を保存後もそのまま使う。
+    const entryId = new URL(page.url()).searchParams.get("entry") as string;
+    const pendingEntry = visibleEntry({ page, id: entryId });
     await expect(pendingEntry).toContainText("保存中");
     await expect(pendingEntry).toContainText("25");
     const measurementPath = testInfo.outputPath("save-to-ledger.json");
@@ -124,8 +128,8 @@ test("消費は保存の応答を待たずに帳簿へ先行表示し、確定�
 
     releaseSave();
     await started;
-    await expect(page).toHaveURL(/entry=(?!pending-)[0-9a-f-]+$/);
-    const entryId = new URL(page.url()).searchParams.get("entry") as string;
+    await expect(page.getByText("消費記録を保存しました", { exact: true })).toBeVisible();
+    expect(new URL(page.url()).searchParams.get("entry")).toBe(entryId);
     await expect(visibleEntry({ page, id: entryId })).toContainText("25");
     await expect(visibleEntry({ page, id: entryId })).not.toContainText("保存中");
     await expect(page.getByText("保存した記録を強調表示しています。")).toBeVisible();
@@ -282,7 +286,7 @@ test("未確定プレビューの確定後に正式帳票を印刷し、解除�
   await page.screenshot({ path: testInfo.outputPath("unlocked-ledger.png"), fullPage: true });
 });
 
-test("消費保存の通信が途切れたら先行表示を外し、入力に戻って再保存しても二重登録しない", async ({
+test("消費保存の通信が途切れたら先行表示を外し、入力に戻って同じ記録 ID で再保存する", async ({
   page,
   ledger,
 }) => {
@@ -290,8 +294,13 @@ test("消費保存の通信が途切れたら先行表示を外し、入力に�
   await fillConsumption({ page, ...ledger });
   await page.getByLabel("メモ（帳簿には出ません）").fill("E2E再保存メモ");
   let rejectSave = true;
+  const sentEntryIds: string[] = [];
   await page.route("**/*", async (route) => {
-    if (rejectSave && isConsumeSave(route.request())) {
+    const request = route.request();
+    if (isConsumeSave(request)) {
+      sentEntryIds.push(request.postData()?.match(/"ledgerEntryId":"([0-9a-f-]+)"/)?.[1] ?? "");
+    }
+    if (rejectSave && isConsumeSave(request)) {
       await route.abort("failed");
       return;
     }
@@ -302,10 +311,12 @@ test("消費保存の通信が途切れたら先行表示を外し、入力に�
   const failure = page
     .getByRole("alert")
     .filter({ hasText: "消費記録（" })
-    .filter({ hasText: "を保存できませんでした" });
+    .filter({ hasText: "を保存できたか確認できませんでした" });
   await expect(failure).toBeVisible();
-  await expect(failure).toContainText("保存できたか確認できませんでした");
-  await expect(page.locator('[data-ledger-entry-id^="pending-"]:visible')).toHaveCount(0);
+  await expect(failure).toContainText("二重に登録されることはありません");
+  await expect(
+    page.locator("[data-ledger-entry-id]:visible").filter({ hasText: "保存中" }),
+  ).toHaveCount(0);
   const beforeRetry = await ledger.sql`
     select quantity from ammo_ledger_entry
     where user_id = ${ledger.userId} and category = 'consume'
@@ -319,13 +330,19 @@ test("消費保存の通信が途切れたら先行表示を外し、入力に�
   await expect(page.getByLabel("銃", { exact: true })).toHaveValue(ledger.gunId);
   await expect(page.getByLabel("メモ（帳簿には出ません）")).toHaveValue("E2E再保存メモ");
   await page.getByRole("button", { name: "保存", exact: true }).click();
-  await expect(page).toHaveURL(/\/ledger\?purpose=shooting&entry=(?!pending-)[0-9a-f-]+$/);
+  await expect(page).toHaveURL(/\/ledger\?purpose=shooting&entry=[0-9a-f-]{36}$/);
+  await expect(page.getByText("消費記録を保存しました", { exact: true })).toBeVisible();
   await expect(failure).toHaveCount(0);
+  expect(sentEntryIds).toHaveLength(2);
+  expect(sentEntryIds[1]).toBe(sentEntryIds[0]);
   const afterRetry = await ledger.sql`
-    select quantity from ammo_ledger_entry
+    select id, quantity from ammo_ledger_entry
     where user_id = ${ledger.userId} and category = 'consume' order by quantity
   `;
-  expect(afterRetry).toEqual([{ quantity: 10 }, { quantity: 25 }]);
+  expect(afterRetry).toEqual([
+    { id: ledger.consumedEntryId, quantity: 10 },
+    { id: sentEntryIds[0], quantity: 25 },
+  ]);
 });
 
 test("用途クエリを切り替えてもブラウザの戻る・進むと帳簿表示が一致する", async ({

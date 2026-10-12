@@ -1,5 +1,7 @@
 "use server";
 
+import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "@/db";
 import { ammoLedgerEntry, ammoTransaction } from "@/db/schema/ammo-ledger";
 import { resolveAmmoUserForMutation } from "@/features/ammo-ledger/auth/require-ammo-user";
@@ -11,6 +13,9 @@ import { buildLedgerEntryRedirectPath } from "@/features/ammo-ledger/transaction
 import { checkStockBeforeSave } from "@/features/ammo-ledger/transactions/check-stock-before-save/check-stock-before-save";
 import { prepareConfirmedTransaction } from "@/features/ammo-ledger/transactions/prepare-confirmed-transaction/prepare-confirmed-transaction";
 
+// 応答が届かずに再送された保存を二重に登録しないよう、画面で決めた記録 ID を受け付ける。
+const clientLedgerEntryIdSchema = z.string().uuid().optional();
+
 export async function createTransactionAction(input: unknown) {
   const userResult = await resolveAmmoUserForMutation();
   if (!userResult.ok) {
@@ -18,8 +23,13 @@ export async function createTransactionAction(input: unknown) {
   }
   const user = userResult.user;
   const parsed = transactionInputSchema.safeParse(input);
+  const requestedLedgerEntryId = clientLedgerEntryIdSchema.safeParse(
+    typeof input === "object" && input !== null && "ledgerEntryId" in input
+      ? input.ledgerEntryId
+      : undefined,
+  );
 
-  if (!parsed.success) {
+  if (!parsed.success || !requestedLedgerEntryId.success) {
     return { ok: false as const, error: "入力内容を確認してください" };
   }
 
@@ -47,11 +57,24 @@ export async function createTransactionAction(input: unknown) {
   } = preparedResult.prepared;
 
   const transactionId = crypto.randomUUID();
-  const ledgerEntryId = crypto.randomUUID();
+  const ledgerEntryId = requestedLedgerEntryId.data ?? crypto.randomUUID();
   const createdAt = new Date();
 
   const transactionResult = await db.transaction(async (tx) => {
     await acquireLedgerAdvisoryLock({ tx, userId: user.id });
+
+    if (requestedLedgerEntryId.data) {
+      const [savedEntry] = await tx
+        .select()
+        .from(ammoLedgerEntry)
+        .where(eq(ammoLedgerEntry.id, ledgerEntryId));
+      if (savedEntry) {
+        if (savedEntry.userId !== user.id || savedEntry.voidedAt) {
+          return { ok: false as const, error: "この記録は保存できません。入力し直してください" };
+        }
+        return { ok: true as const, entry: savedEntry, alreadySaved: true };
+      }
+    }
 
     const lockCheck = await assertDatesNotLocked({
       userId: user.id,
@@ -133,7 +156,7 @@ export async function createTransactionAction(input: unknown) {
       })
       .returning();
 
-    return { ok: true as const, entry };
+    return { ok: true as const, entry, alreadySaved: false };
   });
 
   if (!transactionResult.ok) {
@@ -144,6 +167,7 @@ export async function createTransactionAction(input: unknown) {
     ok: true as const,
     ledgerEntryId,
     entry: transactionResult.entry,
+    alreadySaved: transactionResult.alreadySaved,
     redirectPath: buildLedgerEntryRedirectPath({
       purpose: data.purpose,
       ledgerEntryId,

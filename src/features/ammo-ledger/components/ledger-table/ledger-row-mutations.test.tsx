@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { Toaster, toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,6 +11,7 @@ import {
   buildTestEntry,
   buildTestWorkspace,
 } from "@/features/ammo-ledger/workspace/build-test-workspace/build-test-workspace";
+import { usePendingLedgerChanges } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { LedgerEntryReorderButtons } from "./ledger-entry-reorder-buttons";
 import { VoidLedgerEntryButton } from "./void-ledger-entry-button";
@@ -112,7 +113,10 @@ describe("帳簿行とマスターの非同期操作", () => {
 
     expect(entryOrder()).toBe("acquire,first");
     expect(onVoidStarted).toHaveBeenCalledTimes(1);
-    expect(voidLedgerEntryAction).toHaveBeenCalledWith({ ledgerEntryId: "second" });
+    // 保存は送信順を保つキューを通すため、次のマイクロタスクで送られる。
+    await waitFor(() =>
+      expect(voidLedgerEntryAction).toHaveBeenCalledWith({ ledgerEntryId: "second" }),
+    );
 
     // 確定後の再取得は保留させ、保存結果をキャッシュへ書いた状態を確かめる。
     vi.mocked(fetch).mockImplementation(() => new Promise(() => {}));
@@ -141,8 +145,26 @@ describe("帳簿行とマスターの非同期操作", () => {
     fireEvent.click(screen.getByRole("button", { name: "取消" }));
     fireEvent.click(screen.getByRole("button", { name: "取り消す" }));
 
-    expect(await screen.findByText(/保存できたか確認できませんでした/)).toBeVisible();
+    expect(await screen.findByText(/取消が反映されたか確認できませんでした/)).toBeVisible();
     expect(entryOrder()).toBe("acquire,first,second");
+  });
+
+  it("取消の応答が届かなくても、取り直した帳簿で反映済みなら元に戻さない", async () => {
+    vi.mocked(voidLedgerEntryAction).mockRejectedValueOnce(new Error("response lost"));
+    vi.mocked(fetch).mockResolvedValue(
+      Response.json({
+        ...workspacePayload,
+        workspace: buildTestWorkspace({
+          entries: workspacePayload.workspace.entries.filter((entry) => entry.id !== "second"),
+        }),
+      }),
+    );
+    renderWithWorkspace(<VoidLedgerEntryButton entry={secondEntry} />);
+    fireEvent.click(screen.getByRole("button", { name: "取消" }));
+    fireEvent.click(screen.getByRole("button", { name: "取り消す" }));
+
+    expect(await screen.findByText(/記録の取消は反映されていました/)).toBeVisible();
+    expect(entryOrder()).toBe("acquire,first");
   });
 
   it("後の消費が在庫不足になる取消は送信せず、理由を表示する", () => {
@@ -158,7 +180,7 @@ describe("帳簿行とマスターの非同期操作", () => {
   });
 
   it("並び替えは押した時点で順番を入れ替え、続けて操作できる", async () => {
-    const save = deferred<{ ok: true }>();
+    const save = deferred<Awaited<ReturnType<typeof reorderLedgerEntryAction>>>();
     vi.mocked(reorderLedgerEntryAction).mockReturnValueOnce(save.promise);
     renderWithWorkspace(
       <LedgerEntryReorderButtons ledgerEntryId="second" canMoveUp canMoveDown={false} />,
@@ -167,14 +189,67 @@ describe("帳簿行とマスターの非同期操作", () => {
 
     expect(entryOrder()).toBe("acquire,second,first");
     expect(screen.getByRole("button", { name: "上へ" })).toBeEnabled();
-    expect(reorderLedgerEntryAction).toHaveBeenCalledWith({
-      ledgerEntryId: "second",
-      direction: "up",
-    });
+    await waitFor(() =>
+      expect(reorderLedgerEntryAction).toHaveBeenCalledWith({
+        ledgerEntryId: "second",
+        direction: "up",
+      }),
+    );
     vi.mocked(fetch).mockImplementation(() => new Promise(() => {}));
-    await act(async () => save.resolve({ ok: true }));
+    await act(async () =>
+      save.resolve({
+        ok: true,
+        dayOrders: [
+          { id: "second", dayOrder: 0 },
+          { id: "first", dayOrder: 1 },
+        ],
+      }),
+    );
     expect(entryOrder()).toBe("acquire,second,first");
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("同じ日に保存中の記録があるうちは並び替えを送らない", () => {
+    function StartSavingSameDay() {
+      const { begin } = usePendingLedgerChanges();
+      return (
+        <button
+          type="button"
+          onClick={() =>
+            begin({
+              id: "saving-change",
+              marksEntriesSaving: true,
+              summary: "保存中の記録",
+              overlay: {
+                upserted: [
+                  buildTestEntry({
+                    id: "saving-entry",
+                    category: "consume",
+                    occurredOn: "2026-04-01",
+                    quantity: 5,
+                    dayOrder: 2,
+                  }),
+                ],
+                removedIds: [],
+              },
+            })
+          }
+        >
+          保存中の記録を追加
+        </button>
+      );
+    }
+    renderWithWorkspace(
+      <>
+        <StartSavingSameDay />
+        <LedgerEntryReorderButtons ledgerEntryId="second" canMoveUp canMoveDown />
+      </>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "保存中の記録を追加" }));
+    fireEvent.click(screen.getByRole("button", { name: "下へ" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("保存が終わってから並び替えてください");
+    expect(reorderLedgerEntryAction).not.toHaveBeenCalled();
   });
 
   it("並び替えの通信が途切れたら元の順番に戻して通知する", async () => {
@@ -184,7 +259,7 @@ describe("帳簿行とマスターの非同期操作", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "上へ" }));
 
-    expect(await screen.findByText("並び順を変更できませんでした")).toBeVisible();
+    expect(await screen.findByText("並び順を変更できたか確認できませんでした")).toBeVisible();
     expect(entryOrder()).toBe("acquire,first,second");
   });
 

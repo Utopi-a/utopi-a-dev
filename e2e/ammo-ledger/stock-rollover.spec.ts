@@ -92,7 +92,9 @@ test("用途別在庫を合計し、翌年繰越と旧年消費の編集後も�
   ).toHaveText("E2E架空実包（1箱25発 · 全用途の残140個）");
   await page.getByLabel("バラ（±）", { exact: true }).fill("5");
   await page.getByRole("button", { name: "更新", exact: true }).click();
-  await expect(page).toHaveURL(`${ledgerPath}?purpose=shooting`);
+  // 編集した行を強調表示する帳簿へすぐ移動し、保存の確定を待ってから DB を確かめる。
+  await expect(page).toHaveURL(`${ledgerPath}?purpose=shooting&entry=${ledger.consumedEntryId}`);
+  await expect(page.getByText("消費記録を更新しました", { exact: true })).toBeVisible();
   const edited = await ledger.sql`
     select entry.quantity, transaction.computed_rounds
     from ammo_ledger_entry as entry

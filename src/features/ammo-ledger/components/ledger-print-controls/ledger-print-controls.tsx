@@ -154,7 +154,12 @@ export function LedgerPrintControls({
           ← 帳簿に戻る
         </Link>
         {canPrintOfficially && !hasBlockingIssues ? (
-          <Button type="button" size="sm" disabled={isSaving} onClick={() => window.print()}>
+          <Button
+            type="button"
+            size="sm"
+            disabled={isSaving || isRefreshingAfterSave}
+            onClick={() => window.print()}
+          >
             印刷
           </Button>
         ) : null}

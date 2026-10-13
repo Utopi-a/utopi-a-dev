@@ -58,7 +58,7 @@ export const skills: SkillEntry[] = [
   },
   {
     name: "Python",
-    summary: "研究室開発と競技プログラミング。",
+    summary: "競技プログラミング。",
   },
   {
     name: "Git",

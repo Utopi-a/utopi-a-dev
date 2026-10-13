@@ -11,9 +11,9 @@ export const siteMetadataConfig = {
   description: "ゆーとぴあのポートフォリオ — プロフィール、制作物、ブログ、実験的なミニアプリ",
   locale: "ja_JP",
   lang: "ja",
-  themeColorLight: "#6B3560",
-  themeColorDark: "#1E1A24",
-  backgroundColor: "#FAF9FC",
+  themeColorLight: "#FDFCFE",
+  themeColorDark: "#141317",
+  backgroundColor: "#FDFCFE",
   icons: {
     favicon: "/favicon.png",
     apple: "/icons/site-icon-180.png",

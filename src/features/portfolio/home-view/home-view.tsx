@@ -1,46 +1,41 @@
 import Image from "next/image";
-import { ExploreLinkCard } from "@/features/portfolio/explore-link-card/explore-link-card";
-import { exploreLinks, siteProfile } from "@/features/portfolio/site-config";
+import { EntryRow } from "@/features/portfolio/entry-row/entry-row";
+import { LabeledSection } from "@/features/portfolio/labeled-section/labeled-section";
+import { siteProfile } from "@/features/portfolio/site-config";
 import { SocialLinks } from "@/features/portfolio/social-links/social-links";
+import { workItems } from "@/features/portfolio/works";
 
 export function HomeView() {
   return (
-    <div className="flex w-full flex-col gap-14 sm:gap-20">
-      <section className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-14">
-        <div className="flex flex-col gap-6 sm:gap-8">
-          <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+    <div className="flex flex-col gap-20 sm:gap-24">
+      <section className="flex flex-col gap-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-700">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <Image
+            src={siteProfile.avatarSrc}
+            alt=""
+            width={96}
+            height={96}
+            priority
+            fetchPriority="high"
+            sizes="(min-width: 640px) 80px, 56px"
+            className="size-14 shrink-0 rounded-full bg-muted ring-1 ring-border sm:size-20"
+          />
+          <h1 className="text-5xl leading-none font-extrabold tracking-[-0.04em] sm:text-7xl">
             {siteProfile.name}
           </h1>
-          <SocialLinks />
         </div>
-
-        <div className="mx-auto w-full max-w-xs lg:mx-0 lg:max-w-sm">
-          <div
-            className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/80 p-2 shadow-xl"
-            style={{ boxShadow: "0 24px 64px var(--brand-glow)" }}
-          >
-            <Image
-              src={siteProfile.avatarSrc}
-              alt={siteProfile.avatarAlt}
-              width={400}
-              height={400}
-              priority
-              fetchPriority="high"
-              sizes="(max-width: 1024px) 288px, 384px"
-              className="aspect-square w-full rounded-[1.25rem] object-cover"
-            />
-          </div>
-        </div>
+        <SocialLinks />
       </section>
 
-      <section className="space-y-5">
-        <h2 className="text-sm font-medium tracking-wide text-muted-foreground">Explore</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {exploreLinks.map((link) => (
-            <ExploreLinkCard key={link.href} href={link.href} label={link.label} />
+      <LabeledSection title="制作物">
+        <ul className="-my-3">
+          {workItems.map((work) => (
+            <li key={work.id}>
+              <EntryRow title={work.title} description={work.description} href={work.href} />
+            </li>
           ))}
-        </div>
-      </section>
+        </ul>
+      </LabeledSection>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { WorksView } from "@/features/portfolio/works-view/works-view";
 
 export default function WorkPage() {
   return (
-    <PublicPageShell width="content">
+    <PublicPageShell>
       <WorksView />
     </PublicPageShell>
   );

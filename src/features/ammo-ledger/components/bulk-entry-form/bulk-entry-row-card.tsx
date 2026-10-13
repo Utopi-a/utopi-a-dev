@@ -191,6 +191,7 @@ export function BulkEntryRowCard({
       />
 
       <PackagingFields
+        idPrefix={row.clientId}
         outerBoxCount={row.outerBoxCount}
         boxCount={row.boxCount}
         looseRounds={row.looseRounds}

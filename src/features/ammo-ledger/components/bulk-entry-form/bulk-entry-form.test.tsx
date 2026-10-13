@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { AmmoLedgerSwrProvider } from "@/features/ammo-ledger/workspace/ammo-ledger-swr-provider/ammo-ledger-swr-provider";
@@ -41,5 +41,22 @@ describe("BulkEntryForm", () => {
     expect(screen.getAllByLabelText("小箱").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "再試行" }));
     expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it("行ごとの数量欄を、それぞれのラベルで操作できる", () => {
+    render(
+      <AmmoLedgerOptimisticNavProvider>
+        <AmmoLedgerSwrProvider>
+          <BulkEntryForm guns={[]} ammoTypes={[]} stockByAmmoTypeId={{}} />
+        </AmmoLedgerSwrProvider>
+      </AmmoLedgerOptimisticNavProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "+ 消費を追加" }));
+    const [firstRow, secondRow] = screen.getAllByRole("article");
+    fireEvent.change(within(secondRow).getByLabelText("小箱"), { target: { value: "3" } });
+
+    expect(within(firstRow).getByLabelText("小箱")).toHaveValue(null);
+    expect(within(secondRow).getByLabelText("小箱")).toHaveValue(3);
   });
 });

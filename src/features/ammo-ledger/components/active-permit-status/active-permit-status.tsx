@@ -15,7 +15,7 @@ type ActivePermitStatusProps = {
   permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
   ledgerPurpose: LedgerPurpose;
   permitBalance: number;
-  usedQuantityByPermitId: ReadonlyMap<string, number>;
+  remainingByPermitId: ReadonlyMap<string | null, number>;
   today: string;
 };
 
@@ -25,16 +25,15 @@ export function ActivePermitStatus({
   permits,
   ledgerPurpose,
   permitBalance,
-  usedQuantityByPermitId,
+  remainingByPermitId,
   today,
 }: ActivePermitStatusProps) {
   const purposePermits = permits.filter((permit) => permit.ledgerPurpose === ledgerPurpose);
   // 期限切れの許可と、数量を使い切った許可は帳簿では出さない（設定の譲受許可で確認できる）。
-  // 用途全体の残数は別の許可の失効でも0になるため、許可ごとの使用数の見積もりで判定する。
   const usablePermits = purposePermits.filter(
     (permit) =>
       isPermitActive({ grantedOn: permit.grantedOn, expiresOn: permit.expiresOn, today }) &&
-      (usedQuantityByPermitId.get(permit.id) ?? 0) < permit.quantity,
+      (remainingByPermitId.get(permit.id) ?? 0) > 0,
   );
   const visiblePermits = purposePermits.filter(
     (permit) => today < permit.grantedOn || usablePermits.includes(permit),

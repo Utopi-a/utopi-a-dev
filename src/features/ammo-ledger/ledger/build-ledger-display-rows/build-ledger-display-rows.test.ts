@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildLedgerDisplayRows, isDisplayRowSelectable } from "./build-ledger-display-rows";
+import { computeRunningPermitBalance } from "@/features/ammo-ledger/permit/compute-running-permit-balance/compute-running-permit-balance";
+import {
+  buildLedgerDisplayRows,
+  isDisplayRowSelectable,
+  resolveDisplayRowPermitBalance,
+} from "./build-ledger-display-rows";
 
 const permit = {
   id: "permit-1",
@@ -278,5 +283,86 @@ describe("buildLedgerDisplayRows", () => {
     });
 
     expect(rows).toHaveLength(0);
+  });
+
+  it("失効行の許可残数は、失効した許可の残りを除いた用途の残数を表示する", () => {
+    const permitEvents = [
+      {
+        id: "pe-grant-1",
+        permitId: "permit-1",
+        eventKind: "grant" as const,
+        occurredOn: "2026-01-01",
+        quantity: 1200,
+      },
+      {
+        id: "pe-grant-2",
+        permitId: "permit-2",
+        eventKind: "grant" as const,
+        occurredOn: "2026-01-01",
+        quantity: 800,
+      },
+      {
+        id: "pe-expiry-2",
+        permitId: "permit-2",
+        eventKind: "expiry" as const,
+        occurredOn: "2026-09-30",
+        quantity: 0,
+      },
+    ].map((event) => ({
+      ...event,
+      userId: "u1",
+      purpose: "shooting",
+      memo: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+    const entries = [
+      {
+        id: "e1",
+        userId: "u1",
+        transactionId: "t1",
+        category: "acquire",
+        purpose: "shooting",
+        occurredOn: "2026-03-01",
+        ammoTypeId: "ammo-1",
+        ammoTypeName: "クレー",
+        ammoCartridgeType: null,
+        ammoCaliber: null,
+        ammoGaugeNumber: null,
+        ledgerNote: null,
+        quantity: 500,
+        location: null,
+        counterpartyName: "銃砲店",
+        counterpartyAddress: null,
+        gunId: null,
+        gunName: null,
+        gunNumber: null,
+        gunPermitNumber: null,
+        voidedAt: null,
+        dayOrder: 0,
+        createdAt: new Date("2026-03-01T00:00:00.000Z"),
+        updatedAt: new Date(),
+      },
+    ];
+    const rows = buildLedgerDisplayRows({
+      purpose: "shooting",
+      today: "2026-10-31",
+      permits: [permit, permit2],
+      permitEvents,
+      entries,
+    });
+    const permitBalances = computeRunningPermitBalance({
+      permitEvents,
+      ledgerEntries: entries.map((entry) => ({ ...entry, category: "acquire" as const })),
+      today: "2026-10-31",
+    });
+
+    // 譲受500は有効期限の早い permit-2 から差し引くため、permit-2 の失効で消えるのは残りの300だけ
+    expect(
+      rows.map((row) => [row.kind, resolveDisplayRowPermitBalance({ row, permitBalances })]),
+    ).toEqual([
+      ["entry", 1500],
+      ["permit_expiry", 1200],
+    ]);
   });
 });

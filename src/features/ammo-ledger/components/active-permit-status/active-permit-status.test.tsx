@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { computePermitUsage } from "@/features/ammo-ledger/permit/compute-permit-usage/compute-permit-usage";
-import { computeCurrentPermitBalance } from "@/features/ammo-ledger/permit/compute-running-permit-balance/compute-running-permit-balance";
+import { computeCurrentPermitState } from "@/features/ammo-ledger/permit/compute-running-permit-balance/compute-running-permit-balance";
 import { ActivePermitStatus } from "./active-permit-status";
 
 const createdAt = new Date("2026-01-01T00:00:00Z");
@@ -36,11 +35,25 @@ function buildPermit({
   };
 }
 
-const today = "2026-10-13";
-const expired = buildPermit({ id: "expired", grantedOn: "2025-03-01", expiresOn: "2026-02-28" });
-const active = buildPermit({ id: "active", grantedOn: "2026-03-01", expiresOn: "2027-02-28" });
-const upcoming = buildPermit({ id: "upcoming", grantedOn: "2026-11-01", expiresOn: "2027-10-31" });
-const noUsage = new Map<string, number>();
+// 許可の登録時に作られる付与・失効イベント
+function buildPermitEvents({ permit }: { permit: ReturnType<typeof buildPermit> }) {
+  return [
+    {
+      id: `${permit.id}-grant`,
+      permitId: permit.id,
+      occurredOn: permit.grantedOn,
+      eventKind: "grant" as const,
+      quantity: permit.quantity,
+    },
+    {
+      id: `${permit.id}-expiry`,
+      permitId: permit.id,
+      occurredOn: permit.expiresOn,
+      eventKind: "expiry" as const,
+      quantity: 0,
+    },
+  ];
+}
 
 function acquire({
   id,
@@ -54,17 +67,44 @@ function acquire({
   return { id, occurredOn, category: "acquire" as const, quantity };
 }
 
+function renderWithLedger({
+  permits,
+  ledgerEntries = [],
+  today,
+}: {
+  permits: ReturnType<typeof buildPermit>[];
+  ledgerEntries?: ReturnType<typeof acquire>[];
+  today: string;
+}) {
+  const state = computeCurrentPermitState({
+    permitEvents: permits.flatMap((permit) => buildPermitEvents({ permit })),
+    ledgerEntries,
+    today,
+  });
+
+  render(
+    <ActivePermitStatus
+      permits={permits}
+      ledgerPurpose="shooting"
+      permitBalance={state.balance}
+      remainingByPermitId={state.remainingByPermitId}
+      today={today}
+    />,
+  );
+}
+
+const today = "2026-10-13";
+const expired = buildPermit({ id: "expired", grantedOn: "2025-03-01", expiresOn: "2026-02-28" });
+const active = buildPermit({ id: "active", grantedOn: "2026-03-01", expiresOn: "2027-02-28" });
+const upcoming = buildPermit({ id: "upcoming", grantedOn: "2026-11-01", expiresOn: "2027-10-31" });
+
 describe("ActivePermitStatus", () => {
   it("期限切れの許可は表示せず、使い切っていない有効な許可を表示する", () => {
-    render(
-      <ActivePermitStatus
-        permits={[expired, active]}
-        ledgerPurpose="shooting"
-        permitBalance={300}
-        usedQuantityByPermitId={new Map([["active", 200]])}
-        today={today}
-      />,
-    );
+    renderWithLedger({
+      permits: [expired, active],
+      ledgerEntries: [acquire({ id: "e1", occurredOn: "2026-05-01", quantity: 200 })],
+      today,
+    });
 
     expect(screen.getByText(/許可active/)).toBeInTheDocument();
     expect(screen.queryByText(/許可expired/)).not.toBeInTheDocument();
@@ -72,15 +112,11 @@ describe("ActivePermitStatus", () => {
   });
 
   it("数量を使い切った許可は表示せず、登録を案内する", () => {
-    render(
-      <ActivePermitStatus
-        permits={[expired, active]}
-        ledgerPurpose="shooting"
-        permitBalance={0}
-        usedQuantityByPermitId={new Map([["active", 500]])}
-        today={today}
-      />,
-    );
+    renderWithLedger({
+      permits: [expired, active],
+      ledgerEntries: [acquire({ id: "e1", occurredOn: "2026-05-01", quantity: 500 })],
+      today,
+    });
 
     expect(screen.queryByText(/許可active/)).not.toBeInTheDocument();
     expect(screen.queryByText(/許可expired/)).not.toBeInTheDocument();
@@ -93,15 +129,11 @@ describe("ActivePermitStatus", () => {
   });
 
   it("これから有効になる許可は、開始日つきで表示する", () => {
-    render(
-      <ActivePermitStatus
-        permits={[active, upcoming]}
-        ledgerPurpose="shooting"
-        permitBalance={0}
-        usedQuantityByPermitId={new Map([["active", 500]])}
-        today={today}
-      />,
-    );
+    renderWithLedger({
+      permits: [active, upcoming],
+      ledgerEntries: [acquire({ id: "e1", occurredOn: "2026-05-01", quantity: 500 })],
+      today,
+    });
 
     expect(screen.queryByText(/許可active/)).not.toBeInTheDocument();
     expect(screen.getByText(/許可upcoming/)).toBeInTheDocument();
@@ -110,37 +142,15 @@ describe("ActivePermitStatus", () => {
   });
 
   it("有効期限の当日は、使い切っていなければ「本日まで」として表示する", () => {
-    const expiringToday = buildPermit({
-      id: "expiring",
-      grantedOn: "2025-10-14",
-      expiresOn: today,
+    renderWithLedger({
+      permits: [buildPermit({ id: "expiring", grantedOn: "2025-10-14", expiresOn: today })],
+      ledgerEntries: [
+        acquire({ id: "e1", occurredOn: "2026-05-01", quantity: 200 }),
+        // 今日より後の日付で入力済みの譲受は、今日使える残数を減らさない
+        acquire({ id: "e2", occurredOn: "2026-10-20", quantity: 300 }),
+      ],
+      today,
     });
-    const ledgerEntries = [
-      acquire({ id: "e1", occurredOn: "2026-05-01", quantity: 200 }),
-      // 今日より後の日付で入力済みの譲受は、今日使える残数を減らさない
-      acquire({ id: "e2", occurredOn: "2026-10-20", quantity: 300 }),
-    ];
-
-    render(
-      <ActivePermitStatus
-        permits={[expiringToday]}
-        ledgerPurpose="shooting"
-        permitBalance={computeCurrentPermitBalance({
-          permitEvents: [
-            { occurredOn: expiringToday.grantedOn, eventKind: "grant", quantity: 500 },
-            { occurredOn: expiringToday.expiresOn, eventKind: "expiry", quantity: 0 },
-          ],
-          ledgerEntries,
-          today,
-        })}
-        usedQuantityByPermitId={computePermitUsage({
-          permits: [expiringToday],
-          ledgerEntries,
-          today,
-        })}
-        today={today}
-      />,
-    );
 
     expect(screen.getByText(/今日使える残り/).parentElement).toHaveTextContent(
       "今日使える残り 300",
@@ -150,42 +160,26 @@ describe("ActivePermitStatus", () => {
     expect(screen.getByText(/有効な許可 1件/)).toBeInTheDocument();
   });
 
-  it("期間が重なる旧許可の失効で用途の残数が0になっても、未使用の新許可は表示する", () => {
+  it("使い切った旧許可が満了しても、期間が重なる新許可の残りは消えない", () => {
     const oldPermit = buildPermit({
       id: "old",
       grantedOn: "2026-01-01",
       expiresOn: "2026-10-12",
       quantity: 100,
     });
-    const newPermit = buildPermit({ id: "new", grantedOn: "2026-10-11", expiresOn: "2027-10-10" });
-    const permitBalance = computeCurrentPermitBalance({
-      permitEvents: [
-        { permitId: "old", occurredOn: "2026-01-01", eventKind: "grant", quantity: 100 },
-        { permitId: "new", occurredOn: "2026-10-11", eventKind: "grant", quantity: 500 },
-        { permitId: "old", occurredOn: "2026-10-12", eventKind: "expiry", quantity: 0 },
-      ],
-      ledgerEntries: [],
+    const newPermit = buildPermit({ id: "new", grantedOn: "2026-09-29", expiresOn: "2027-09-28" });
+
+    renderWithLedger({
+      permits: [oldPermit, newPermit],
+      ledgerEntries: [acquire({ id: "e1", occurredOn: "2026-09-27", quantity: 100 })],
       today,
     });
 
-    render(
-      <ActivePermitStatus
-        permits={[oldPermit, newPermit]}
-        ledgerPurpose="shooting"
-        permitBalance={permitBalance}
-        usedQuantityByPermitId={computePermitUsage({
-          permits: [oldPermit, newPermit],
-          ledgerEntries: [],
-          today,
-        })}
-        today={today}
-      />,
+    expect(screen.getByText(/今日使える残り/).parentElement).toHaveTextContent(
+      "今日使える残り 500",
     );
-
-    expect(permitBalance).toBe(0);
     expect(screen.queryByText(/許可old/)).not.toBeInTheDocument();
     expect(screen.getByText(/許可new/)).toBeInTheDocument();
-    expect(screen.queryByText(/使える譲受許可はありません/)).not.toBeInTheDocument();
   });
 
   it("使い切った旧許可は、期間が重なる新許可に残りがあっても表示しない", () => {
@@ -197,19 +191,11 @@ describe("ActivePermitStatus", () => {
     });
     const newPermit = buildPermit({ id: "new", grantedOn: "2026-06-01", expiresOn: "2027-05-31" });
 
-    render(
-      <ActivePermitStatus
-        permits={[oldPermit, newPermit]}
-        ledgerPurpose="shooting"
-        permitBalance={500}
-        usedQuantityByPermitId={computePermitUsage({
-          permits: [oldPermit, newPermit],
-          ledgerEntries: [acquire({ id: "e1", occurredOn: "2026-03-01", quantity: 100 })],
-          today,
-        })}
-        today={today}
-      />,
-    );
+    renderWithLedger({
+      permits: [oldPermit, newPermit],
+      ledgerEntries: [acquire({ id: "e1", occurredOn: "2026-03-01", quantity: 100 })],
+      today,
+    });
 
     expect(screen.queryByText(/許可old/)).not.toBeInTheDocument();
     expect(screen.getByText(/許可new/)).toBeInTheDocument();
@@ -222,7 +208,7 @@ describe("ActivePermitStatus", () => {
         permits={[expired]}
         ledgerPurpose="shooting"
         permitBalance={100}
-        usedQuantityByPermitId={noUsage}
+        remainingByPermitId={new Map([[null, 100]])}
         today={today}
       />,
     );
@@ -238,8 +224,13 @@ describe("ActivePermitStatus", () => {
       <ActivePermitStatus
         permits={[active, { ...active, id: "hunting", ledgerPurpose: "hunting" }]}
         ledgerPurpose="shooting"
-        permitBalance={300}
-        usedQuantityByPermitId={noUsage}
+        permitBalance={500}
+        remainingByPermitId={
+          new Map([
+            ["active", 500],
+            ["hunting", 500],
+          ])
+        }
         today={today}
       />,
     );
@@ -248,15 +239,7 @@ describe("ActivePermitStatus", () => {
   });
 
   it("用途の許可が1件もなければ、未登録として案内する", () => {
-    render(
-      <ActivePermitStatus
-        permits={[]}
-        ledgerPurpose="shooting"
-        permitBalance={0}
-        usedQuantityByPermitId={noUsage}
-        today={today}
-      />,
-    );
+    renderWithLedger({ permits: [], today });
 
     expect(screen.getByText("譲受許可が未登録です")).toBeInTheDocument();
   });

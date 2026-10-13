@@ -140,4 +140,19 @@ describe("AcquireForm", () => {
 
     expect(screen.queryByText(/この譲受日に有効な狩猟用/)).not.toBeInTheDocument();
   });
+
+  it("編集では弾を選び直しても元の用途を保つ", () => {
+    render(
+      <AcquireForm
+        ammoTypes={[huntingAmmoType]}
+        permits={permits}
+        ledgerEntryId="ledger-entry-1"
+        initialValues={{ occurredOn: "2026-08-08", purpose: "shooting", ammoTypeId: "" }}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("弾"), { target: { value: "ammo-hunting" } });
+
+    expect(screen.getByLabelText("用途区分")).toHaveValue("shooting");
+  });
 });

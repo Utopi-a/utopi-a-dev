@@ -285,6 +285,22 @@ describe("ConsumeForm", () => {
     expect(screen.getByLabelText("用途区分")).toHaveValue("hunting");
   });
 
+  it("新規作成でも、先に選んだ用途を弾の選択で上書きしない", () => {
+    render(
+      <ConsumeForm
+        guns={guns}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={{ "ammo-original": 100, "ammo-hunting": 100 }}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("用途区分"), { target: { value: "hunting" } });
+    fireEvent.change(screen.getByLabelText("弾"), { target: { value: "ammo-original" } });
+
+    expect(screen.getByLabelText("用途区分")).toHaveValue("hunting");
+    expect(screen.getByLabelText("消費場所")).toHaveValue("manual");
+  });
+
   it("狩猟用の弾種を変更しても選択済みの射撃場を保持する", () => {
     render(
       <ConsumeForm

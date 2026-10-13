@@ -14,9 +14,9 @@ import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
+import { usePurposeFollowingAmmoType } from "@/features/ammo-ledger/components/purpose-select/use-purpose-following-ammo-type";
 import { buildAmmoTypeFieldOptions } from "@/features/ammo-ledger/master/build-ammo-type-field-options/build-ammo-type-field-options";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
-import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { useLedgerTransactionSubmit } from "@/features/ammo-ledger/transactions/use-ledger-transaction-submit/use-ledger-transaction-submit";
 import { cn } from "@/lib/cn";
@@ -65,9 +65,13 @@ export function ConsumeForm({
   const today = getTokyoIsoDate();
 
   const [occurredOn, setOccurredOn] = useState(initial?.occurredOn ?? today);
-  const [ammoTypeId, setAmmoTypeId] = useState(initial?.ammoTypeId ?? "");
+  const { ammoTypeId, purpose, selectAmmoType, choosePurpose } = usePurposeFollowingAmmoType({
+    ammoTypes,
+    initialAmmoTypeId: initial?.ammoTypeId,
+    initialPurpose: initial?.purpose,
+    keepsPurpose: Boolean(ledgerEntryId || restoredValues),
+  });
   const [gunId, setGunId] = useState(initial?.gunId ?? "");
-  const [purpose, setPurpose] = useState<LedgerPurpose>(initial?.purpose ?? "shooting");
   const [locationInputKind, setLocationInputKind] = useState<ConsumptionLocationInputKind>(
     initial?.rangeId || !initial?.purpose || initial.purpose === "shooting" ? "range" : "manual",
   );
@@ -115,29 +119,22 @@ export function ConsumeForm({
 
   const selectedAmmoType = ammoTypes.find((t) => t.id === ammoTypeId);
 
-  function handleAmmoTypeChange({ nextAmmoTypeId }: { nextAmmoTypeId: string }) {
-    setAmmoTypeId(nextAmmoTypeId);
-    const nextType = ammoTypes.find((t) => t.id === nextAmmoTypeId);
-    if (nextType && !ledgerEntryId) {
-      const nextPurpose = resolveDefaultPurpose({ defaultPurpose: nextType.defaultPurpose });
-      setPurpose(nextPurpose);
-      setLocationInputKind(
-        nextPurpose === "shooting"
-          ? "range"
-          : purpose === "shooting"
-            ? "manual"
-            : locationInputKind,
-      );
-    }
-  }
-
-  function handlePurposeChange({ nextPurpose }: { nextPurpose: LedgerPurpose }) {
-    setPurpose(nextPurpose);
+  // 射撃用は射撃場で消費する。射撃用から狩猟・駆除へ変えたときは、狩猟・駆除場所の入力にする。
+  function followLocationInputKind({ nextPurpose }: { nextPurpose: LedgerPurpose }) {
     if (nextPurpose === "shooting") {
       setLocationInputKind("range");
     } else if (purpose === "shooting") {
       setLocationInputKind("manual");
     }
+  }
+
+  function handleAmmoTypeChange({ nextAmmoTypeId }: { nextAmmoTypeId: string }) {
+    followLocationInputKind({ nextPurpose: selectAmmoType(nextAmmoTypeId) });
+  }
+
+  function handlePurposeChange({ nextPurpose }: { nextPurpose: LedgerPurpose }) {
+    choosePurpose(nextPurpose);
+    followLocationInputKind({ nextPurpose });
   }
 
   const ammoTypeOptions = useMemo(
@@ -211,6 +208,15 @@ export function ConsumeForm({
         />
       </div>
 
+      <FieldSelect
+        id="ammo-type"
+        label="弾"
+        value={ammoTypeId}
+        onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
+        options={ammoTypeOptions}
+        required
+      />
+
       <PurposeSelect
         value={purpose}
         onChange={(nextPurpose) => handlePurposeChange({ nextPurpose })}
@@ -263,15 +269,6 @@ export function ConsumeForm({
           value: g.id,
           label: `${g.name}（${g.gunNumber} / ${g.permitNumber}）`,
         }))}
-        required
-      />
-
-      <FieldSelect
-        id="ammo-type"
-        label="弾"
-        value={ammoTypeId}
-        onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
-        options={ammoTypeOptions}
         required
       />
 

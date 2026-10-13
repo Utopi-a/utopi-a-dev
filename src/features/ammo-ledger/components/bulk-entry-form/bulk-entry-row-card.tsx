@@ -88,6 +88,7 @@ export function BulkEntryRowCard({
     updateRow({
       patch: {
         purpose: nextPurpose,
+        isPurposeChosen: true,
         locationInputKind:
           nextPurpose === "shooting"
             ? "range"
@@ -169,6 +170,15 @@ export function BulkEntryRowCard({
       </div>
 
       <FieldSelect
+        id={`ammo-type-${row.clientId}`}
+        label="弾"
+        value={row.ammoTypeId}
+        onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
+        options={ammoTypeOptions}
+        required
+      />
+
+      <FieldSelect
         id={`purpose-${row.clientId}`}
         label="用途区分"
         value={row.purpose}
@@ -179,15 +189,6 @@ export function BulkEntryRowCard({
         }))}
         required
         placeholder=""
-      />
-
-      <FieldSelect
-        id={`ammo-type-${row.clientId}`}
-        label="弾"
-        value={row.ammoTypeId}
-        onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
-        options={ammoTypeOptions}
-        required
       />
 
       <PackagingFields

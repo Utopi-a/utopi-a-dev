@@ -15,11 +15,11 @@ import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
+import { usePurposeFollowingAmmoType } from "@/features/ammo-ledger/components/purpose-select/use-purpose-following-ammo-type";
 import { hasActiveAcquisitionPermit } from "@/features/ammo-ledger/permit/has-active-acquisition-permit/has-active-acquisition-permit";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
-import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { useLedgerTransactionSubmit } from "@/features/ammo-ledger/transactions/use-ledger-transaction-submit/use-ledger-transaction-submit";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
@@ -64,7 +64,12 @@ export function AcquireForm({
   });
 
   const [occurredOn, setOccurredOn] = useState(initial?.occurredOn ?? today);
-  const [ammoTypeId, setAmmoTypeId] = useState(initial?.ammoTypeId ?? "");
+  const { ammoTypeId, purpose, selectAmmoType, choosePurpose } = usePurposeFollowingAmmoType({
+    ammoTypes,
+    initialAmmoTypeId: initial?.ammoTypeId,
+    initialPurpose: initial?.purpose,
+    keepsPurpose: Boolean(ledgerEntryId || restoredValues),
+  });
   const { counterpartyId, setCounterpartyId } = useDefaultCounterpartyId({
     initialCounterpartyId: initial?.counterpartyId,
     pickerData: counterpartyPickerData,
@@ -77,7 +82,6 @@ export function AcquireForm({
   const [counterpartyAddress, setCounterpartyAddress] = useState(
     initial?.counterpartyAddress ?? "",
   );
-  const [purpose, setPurpose] = useState<LedgerPurpose>(initial?.purpose ?? "shooting");
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [ledgerNote, setLedgerNote] = useState(initial?.ledgerNote ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -85,13 +89,6 @@ export function AcquireForm({
 
   const selectedAmmoType = ammoTypes.find((t) => t.id === ammoTypeId);
 
-  function handleAmmoTypeChange({ nextAmmoTypeId }: { nextAmmoTypeId: string }) {
-    setAmmoTypeId(nextAmmoTypeId);
-    const nextType = ammoTypes.find((t) => t.id === nextAmmoTypeId);
-    if (nextType) {
-      setPurpose(resolveDefaultPurpose({ defaultPurpose: nextType.defaultPurpose }));
-    }
-  }
   const isManualCounterparty = counterpartyId === manualCounterpartyId;
 
   const computedRounds = useMemo(() => {
@@ -166,7 +163,7 @@ export function AcquireForm({
         id={`${idPrefix}-ammo-type`}
         label="弾"
         value={ammoTypeId}
-        onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
+        onChange={selectAmmoType}
         options={ammoTypes.map((t) => ({
           value: t.id,
           label: `${t.name}（小箱${t.roundsPerBox}発）`,
@@ -174,7 +171,7 @@ export function AcquireForm({
         required
       />
 
-      <PurposeSelect id={`${idPrefix}-purpose`} value={purpose} onChange={setPurpose} />
+      <PurposeSelect id={`${idPrefix}-purpose`} value={purpose} onChange={choosePurpose} />
 
       {!hasValidPermit ? (
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">

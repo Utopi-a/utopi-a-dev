@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { LedgerLockIssueList } from "@/features/ammo-ledger/components/ledger-lock-issue-list/ledger-lock-issue-list";
 import { LedgerYearSelect } from "@/features/ammo-ledger/components/ledger-year-select/ledger-year-select";
 import type { LedgerLockIssue } from "@/features/ammo-ledger/documents/validate-ledger-for-lock/validate-ledger-for-lock";
 import { lockLedgerAction } from "@/features/ammo-ledger/ledger/lock/lock-ledger-action/lock-ledger-action";
@@ -217,13 +218,15 @@ export function LedgerPrintControls({
               ? "ロックを解除し、以下の問題を修正してから印刷してください"
               : "以下の問題を修正してから確定してください"}
           </p>
-          <ul className="mt-2 space-y-1 text-xs text-destructive/90">
-            {lockIssues.map((issue) => (
-              <li key={`${issue.entryId}-${issue.message}`}>
-                {formatIsoDateForDisplay({ value: issue.occurredOn })}: {issue.message}
-              </li>
-            ))}
-          </ul>
+          {isTargetLocked ? (
+            <Link
+              href="/lab/ammo-ledger/settings/ledger-lock"
+              className="mt-1 inline-block text-xs font-medium text-destructive underline underline-offset-2"
+            >
+              帳簿の確定・ロックを開く
+            </Link>
+          ) : null}
+          <LedgerLockIssueList issues={lockIssues} />
         </div>
       ) : null}
 

@@ -15,6 +15,8 @@ import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { ammoLedgerLockEvent } from "@/db/schema/ammo-ledger";
+import { LedgerLockIssueList } from "@/features/ammo-ledger/components/ledger-lock-issue-list/ledger-lock-issue-list";
+import type { LedgerLockIssue } from "@/features/ammo-ledger/documents/validate-ledger-for-lock/validate-ledger-for-lock";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { lockLedgerAction } from "@/features/ammo-ledger/ledger/lock/lock-ledger-action/lock-ledger-action";
 import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
@@ -75,6 +77,7 @@ function LockSection({ lockState }: { lockState: LedgerLockState }) {
 
   const [lockedThrough, setLockedThrough] = useState(minDate ?? today);
   const [error, setError] = useState<string | null>(null);
+  const [issues, setIssues] = useState<LedgerLockIssue[]>([]);
   const [isPending, setIsPending] = useState(false);
   // 先行表示した変更の保存が終わる前に確定すると、その変更がロック期間で拒否されるため待たせる。
   const isSaving = useSavingLedgerChangeCount() > 0;
@@ -83,11 +86,13 @@ function LockSection({ lockState }: { lockState: LedgerLockState }) {
     event.preventDefault();
     setIsPending(true);
     setError(null);
+    setIssues([]);
 
     try {
       const result = await lockLedgerAction({ lockedThrough });
       if (!result.ok) {
         setError(result.error);
+        setIssues(result.issues ?? []);
         return;
       }
 
@@ -125,6 +130,7 @@ function LockSection({ lockState }: { lockState: LedgerLockState }) {
           </div>
         </div>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {issues.length > 0 ? <LedgerLockIssueList issues={issues} /> : null}
         <Button type="submit" disabled={isPending || isSaving}>
           {isPending ? "ロック中…" : isSaving ? "保存待ちの変更があります" : "ロックする"}
         </Button>

@@ -68,6 +68,45 @@ describe("LedgerLockForm", () => {
     expect(refresh).not.toHaveBeenCalled();
   });
 
+  it("確定できない理由をすべて用途ごとに示し、直す画面へリンクする", async () => {
+    vi.mocked(lockLedgerAction).mockResolvedValueOnce({
+      ok: false,
+      error: "帳簿に2件の問題があるため確定できません",
+      issues: [
+        {
+          kind: "missing_carryover",
+          purpose: "shooting",
+          entryId: null,
+          occurredOn: "2026-01-01",
+          message: "2026年の年初繰越が未登録です（前年末の帳簿残数 90個）",
+          href: "/lab/ammo-ledger/settings/opening-balance?year=2026&purpose=shooting",
+        },
+        {
+          kind: "negative_total_balance",
+          purpose: "shooting",
+          entryId: "entry-1",
+          occurredOn: "2026-02-01",
+          message: "総残数が-25個になります",
+          href: "/lab/ammo-ledger/ledger?purpose=shooting&entry=entry-1",
+        },
+      ],
+    });
+    renderForm({ lockState: { isLocked: false, lockedThrough: null } });
+    fireEvent.click(screen.getByRole("button", { name: "ロックする" }));
+
+    expect(await screen.findByText("帳簿に2件の問題があるため確定できません")).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "2026年の年初繰越が未登録です（前年末の帳簿残数 90個）" }),
+    ).toHaveAttribute(
+      "href",
+      "/lab/ammo-ledger/settings/opening-balance?year=2026&purpose=shooting",
+    );
+    expect(
+      screen.getByRole("link", { name: "2026/02/01: 総残数が-25個になります" }),
+    ).toHaveAttribute("href", "/lab/ammo-ledger/ledger?purpose=shooting&entry=entry-1");
+    expect(screen.getByText("帳簿画面: 編集可能")).toBeVisible();
+  });
+
   it("ロック成功後は帳簿画面にも確定した日付を反映する", async () => {
     vi.mocked(lockLedgerAction).mockResolvedValueOnce({
       ok: true,

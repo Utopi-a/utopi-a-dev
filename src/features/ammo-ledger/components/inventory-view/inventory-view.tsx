@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
-import { AmmoLedgerRefreshIndicator } from "@/features/ammo-ledger/components/ammo-ledger-refresh-indicator/ammo-ledger-refresh-indicator";
 import { HomeStorageWarning } from "@/features/ammo-ledger/components/home-storage-warning/home-storage-warning";
 import { InventoryOverviewPanel } from "@/features/ammo-ledger/components/inventory-overview/inventory-overview";
 import { StockCheckForm } from "@/features/ammo-ledger/components/stock-check-form/stock-check-form";
@@ -19,10 +18,9 @@ import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-amm
 
 type InventoryViewContentProps = {
   workspace: AmmoLedgerWorkspace;
-  isRefreshing: boolean;
 };
 
-function InventoryViewContent({ workspace, isRefreshing }: InventoryViewContentProps) {
+function InventoryViewContent({ workspace }: InventoryViewContentProps) {
   const { entries, inventoryItems } = workspace;
 
   const homeStorage = useMemo(
@@ -116,18 +114,16 @@ function InventoryViewContent({ workspace, isRefreshing }: InventoryViewContentP
       >
         <StockCheckForm items={stockCheckItems} />
       </AmmoLedgerPanel>
-
-      <AmmoLedgerRefreshIndicator visible={isRefreshing} />
     </div>
   );
 }
 
 export function InventoryView() {
-  const { workspace, isLoading, isRefreshing, error, retry } = useAmmoLedgerWorkspace();
+  const { workspace, isLoading, error, retry } = useAmmoLedgerWorkspace();
 
   if (isLoading || !workspace) {
     return <WorkspaceViewLoader error={error} onRetry={retry} />;
   }
 
-  return <InventoryViewContent workspace={workspace} isRefreshing={isRefreshing} />;
+  return <InventoryViewContent workspace={workspace} />;
 }

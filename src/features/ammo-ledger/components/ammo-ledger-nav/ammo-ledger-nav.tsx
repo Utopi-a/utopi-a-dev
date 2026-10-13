@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { memo } from "react";
+import { memo, type ReactNode } from "react";
 import { useAmmoLedgerOptimisticNav } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import {
   ammoLedgerNavSections,
@@ -10,7 +10,12 @@ import {
 import { useAmmoLedgerClientNav } from "@/features/ammo-ledger/navigation/use-ammo-ledger-client-nav/use-ammo-ledger-client-nav";
 import { cn } from "@/lib/cn";
 
-export const AmmoLedgerNav = memo(function AmmoLedgerNav() {
+type AmmoLedgerNavProps = {
+  /** ナビの直下に重ねて出す短い状態表示。固定したナビと一緒にスクロールしても見える。 */
+  status?: ReactNode;
+};
+
+export const AmmoLedgerNav = memo(function AmmoLedgerNav({ status }: AmmoLedgerNavProps) {
   const pathname = usePathname();
   const { activePath } = useAmmoLedgerOptimisticNav();
   const { navigate: navigateClientShell } = useAmmoLedgerClientNav();
@@ -49,6 +54,11 @@ export const AmmoLedgerNav = memo(function AmmoLedgerNav() {
           );
         })}
       </nav>
+      {status ? (
+        <div className="pointer-events-none absolute inset-x-0 top-full flex justify-center pt-2">
+          {status}
+        </div>
+      ) : null}
     </div>
   );
 });

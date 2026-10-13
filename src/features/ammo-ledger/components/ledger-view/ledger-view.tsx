@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { ActivePermitStatus } from "@/features/ammo-ledger/components/active-permit-status/active-permit-status";
-import { AmmoLedgerRefreshIndicator } from "@/features/ammo-ledger/components/ammo-ledger-refresh-indicator/ammo-ledger-refresh-indicator";
 import { HomeStorageWarning } from "@/features/ammo-ledger/components/home-storage-warning/home-storage-warning";
 import { LedgerLockedThroughLink } from "@/features/ammo-ledger/components/ledger-locked-through-link/ledger-locked-through-link";
 import { LedgerTableShell } from "@/features/ammo-ledger/components/ledger-table/ledger-table-shell";
@@ -328,8 +327,6 @@ function LedgerViewContent({
           </div>
         }
       />
-
-      <AmmoLedgerRefreshIndicator visible={isRefreshing} />
     </div>
   );
 }

@@ -5,10 +5,17 @@ import { usePathname } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { useAmmoLedgerOptimisticNav } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
+import {
+  AmmoLedgerRefreshError,
+  AmmoLedgerRefreshStatus,
+} from "@/features/ammo-ledger/components/ammo-ledger-refresh-indicator/ammo-ledger-refresh-indicator";
 import { PendingLedgerChangeAlerts } from "@/features/ammo-ledger/components/pending-ledger-change-alerts/pending-ledger-change-alerts";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { matchesNavTarget } from "@/features/ammo-ledger/workspace/matches-nav-target/matches-nav-target";
-import { resolveShellRoute } from "@/features/ammo-ledger/workspace/resolve-shell-route/resolve-shell-route";
+import {
+  isWorkspaceShellRoute,
+  resolveShellRoute,
+} from "@/features/ammo-ledger/workspace/resolve-shell-route/resolve-shell-route";
 
 const AmmoLedgerHomeView = dynamic(
   () =>
@@ -84,10 +91,12 @@ export function AmmoLedgerShell({ children }: AmmoLedgerShellProps) {
   usePreloadShellViews();
 
   if (shellRoute) {
+    const showsWorkspace = isWorkspaceShellRoute({ route: shellRoute });
     return (
       <div className="space-y-5">
-        <AmmoLedgerNav />
+        <AmmoLedgerNav status={showsWorkspace ? <AmmoLedgerRefreshStatus /> : null} />
         <PendingLedgerChangeAlerts />
+        {showsWorkspace ? <AmmoLedgerRefreshError /> : null}
         <ShellContent route={shellRoute} />
       </div>
     );

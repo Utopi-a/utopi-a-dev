@@ -12,6 +12,8 @@ type PackagingFieldsProps = {
   onBoxCountChange: (value: string) => void;
   onLooseRoundsChange: (value: string) => void;
   looseLabel?: string;
+  /** 同じ画面に複数のフォームがあるとき、ラベルと入力欄を正しく結び付けるための接頭辞 */
+  idPrefix?: string;
 };
 
 export function PackagingFields({
@@ -22,14 +24,16 @@ export function PackagingFields({
   onBoxCountChange,
   onLooseRoundsChange,
   looseLabel = "バラ",
+  idPrefix,
 }: PackagingFieldsProps) {
+  const fieldId = (name: string) => (idPrefix ? `${idPrefix}-${name}` : name);
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="outer-box-count">大箱</Label>
+          <Label htmlFor={fieldId("outer-box-count")}>大箱</Label>
           <Input
-            id="outer-box-count"
+            id={fieldId("outer-box-count")}
             type="number"
             min={0}
             value={outerBoxCount}
@@ -37,9 +41,9 @@ export function PackagingFields({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="box-count">小箱</Label>
+          <Label htmlFor={fieldId("box-count")}>小箱</Label>
           <Input
-            id="box-count"
+            id={fieldId("box-count")}
             type="number"
             min={0}
             value={boxCount}
@@ -47,9 +51,9 @@ export function PackagingFields({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="loose-rounds">{looseLabel}</Label>
+          <Label htmlFor={fieldId("loose-rounds")}>{looseLabel}</Label>
           <Input
-            id="loose-rounds"
+            id={fieldId("loose-rounds")}
             type="number"
             value={looseRounds}
             onChange={(e) => onLooseRoundsChange(e.target.value)}

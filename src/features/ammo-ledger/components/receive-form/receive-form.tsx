@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { IsoDateInput } from "@/components/ui/iso-date-input";
@@ -130,22 +130,25 @@ export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: Receive
     }
   }
 
+  // 受入画面では全タブのフォームを保持するため、入力欄の id をフォームごとに分ける。
+  const idPrefix = useId();
+
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2">
-        <Label htmlFor="occurred-on">日付</Label>
+        <Label htmlFor={`${idPrefix}-occurred-on`}>日付</Label>
         <IsoDateInput
-          id="occurred-on"
+          id={`${idPrefix}-occurred-on`}
           required
           value={occurredOn}
           onChange={({ value }) => setOccurredOn(value)}
         />
       </div>
 
-      <PurposeSelect value={purpose} onChange={setPurpose} />
+      <PurposeSelect id={`${idPrefix}-purpose`} value={purpose} onChange={setPurpose} />
 
       <FieldSelect
-        id="ammo-type"
+        id={`${idPrefix}-ammo-type`}
         label="弾"
         value={ammoTypeId}
         onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
@@ -157,6 +160,7 @@ export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: Receive
       />
 
       <PackagingFields
+        idPrefix={idPrefix}
         outerBoxCount={outerBoxCount}
         boxCount={boxCount}
         looseRounds={looseRounds}
@@ -171,7 +175,7 @@ export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: Receive
       </div>
 
       <MasterPicker
-        id="counterparty"
+        id={`${idPrefix}-counterparty`}
         label="交付元"
         value={counterpartyId}
         onChange={setCounterpartyId}
@@ -185,18 +189,18 @@ export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: Receive
       {isManualCounterparty ? (
         <>
           <div className="space-y-2">
-            <Label htmlFor="counterparty-name">相手方氏名</Label>
+            <Label htmlFor={`${idPrefix}-counterparty-name`}>相手方氏名</Label>
             <Input
-              id="counterparty-name"
+              id={`${idPrefix}-counterparty-name`}
               required
               value={counterpartyName}
               onChange={(e) => setCounterpartyName(e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="counterparty-address">相手方住所</Label>
+            <Label htmlFor={`${idPrefix}-counterparty-address`}>相手方住所</Label>
             <Input
-              id="counterparty-address"
+              id={`${idPrefix}-counterparty-address`}
               required
               value={counterpartyAddress}
               onChange={(e) => setCounterpartyAddress(e.target.value)}
@@ -206,9 +210,9 @@ export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: Receive
       ) : null}
 
       <div className="space-y-2">
-        <Label htmlFor="ledger-note">帳簿摘要の補足（任意）</Label>
+        <Label htmlFor={`${idPrefix}-ledger-note`}>帳簿摘要の補足（任意）</Label>
         <Input
-          id="ledger-note"
+          id={`${idPrefix}-ledger-note`}
           maxLength={500}
           value={ledgerNote}
           onChange={(e) => setLedgerNote(e.target.value)}
@@ -216,8 +220,8 @@ export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: Receive
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="memo">メモ（帳簿には出ません）</Label>
-        <Input id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} />
+        <Label htmlFor={`${idPrefix}-memo`}>メモ（帳簿には出ません）</Label>
+        <Input id={`${idPrefix}-memo`} value={memo} onChange={(e) => setMemo(e.target.value)} />
       </div>
 
       {error ? (

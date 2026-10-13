@@ -26,4 +26,10 @@ describe("resolveScrollBehavior", () => {
 
     expect(resolveScrollBehavior()).toBe("smooth");
   });
+
+  it("matchMedia がない環境ではなめらかにスクロールする", () => {
+    vi.stubGlobal("matchMedia", undefined);
+
+    expect(resolveScrollBehavior()).toBe("smooth");
+  });
 });

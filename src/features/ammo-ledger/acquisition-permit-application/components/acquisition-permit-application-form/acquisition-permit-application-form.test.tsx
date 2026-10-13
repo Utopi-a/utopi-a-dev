@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { SWRConfig } from "swr";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -36,9 +36,9 @@ const guns: (typeof ammoGun.$inferSelect)[] = ["A", "B"].map((name) => ({
   updatedAt: new Date("2026-09-10"),
 }));
 
-async function renderForm(
-  profile: Partial<ComponentProps<typeof AcquisitionPermitApplicationForm>> = {},
-) {
+type FormProps = ComponentProps<typeof AcquisitionPermitApplicationForm>;
+
+async function mountForm(profile: Partial<FormProps> = {}) {
   render(
     <SWRConfig value={{ provider: () => new Map() }}>
       <AcquisitionPermitApplicationForm
@@ -51,6 +51,10 @@ async function renderForm(
     </SWRConfig>,
   );
   await screen.findByText("テスト射撃場");
+}
+
+async function renderForm(profile: Partial<FormProps> = {}) {
+  await mountForm(profile);
   fireEvent.change(screen.getByLabelText("申請数量（発）"), { target: { value: "500" } });
 }
 
@@ -109,6 +113,44 @@ describe("譲受許可申請の入力から印刷への引き継ぎ", () => {
     expect(fields.supplementRows.map((row) => row.values.period)).toEqual(
       payload.consumptionPlan.rows.map((row) => row.scheduledPeriod.period[0]),
     );
+  });
+
+  it("印刷プレビューから入力に戻ると、入力・銃・購入先・射撃場の配分を復元する", async () => {
+    await renderForm();
+    fireEvent.change(screen.getByLabelText("ふりがな"), { target: { value: "てすと しめい" } });
+    fireEvent.change(screen.getByLabelText("貯蔵又は保管する場所"), {
+      target: { value: "ガンロッカー" },
+    });
+    fireEvent.click(screen.getByRole("checkbox", { name: /テスト銃B/ }));
+    fireEvent.change(screen.getByLabelText("配分の比率（2なら2倍）"), { target: { value: "2" } });
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+
+    cleanup();
+    await mountForm();
+
+    expect(screen.getByLabelText("ふりがな")).toHaveValue("てすと しめい");
+    expect(screen.getByLabelText("貯蔵又は保管する場所")).toHaveValue("ガンロッカー");
+    expect(screen.getByLabelText("申請数量（発）")).toHaveValue(500);
+    expect(screen.getByRole("checkbox", { name: /テスト銃A/ })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /テスト銃B/ })).toBeChecked();
+    expect(screen.getByLabelText("配分の比率（2なら2倍）")).toHaveValue(2);
+    expect(await screen.findByText("テスト銃砲店")).toBeInTheDocument();
+  });
+
+  it("最初からやり直すと、下書きを消してプロフィールの内容と既定値に戻す", async () => {
+    await renderForm({ ownerFurigana: "やまだ たろう" });
+    fireEvent.change(screen.getByLabelText("ふりがな"), { target: { value: "やまだ じろう" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "最初からやり直す" }));
+    const dialog = screen.getByRole("dialog", { name: "入力を最初からやり直しますか？" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "最初からやり直す" }));
+
+    expect(screen.getByLabelText("ふりがな")).toHaveValue("やまだ たろう");
+    expect(screen.getByLabelText("申請数量（発）")).toHaveValue(5000);
+    cleanup();
+    await mountForm({ ownerFurigana: "やまだ たろう" });
+    expect(screen.getByLabelText("ふりがな")).toHaveValue("やまだ たろう");
   });
 
   it("火薬類の名称は、様式の実包欄に印字できる実包だけを選べる", async () => {

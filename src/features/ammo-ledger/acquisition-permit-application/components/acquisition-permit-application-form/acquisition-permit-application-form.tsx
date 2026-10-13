@@ -4,6 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
@@ -14,13 +22,18 @@ import {
   applicationAmmoNameOptions,
   defaultApplicationAmmoName,
 } from "@/features/ammo-ledger/acquisition-permit-application/application-ammo-name/application-ammo-name";
+import {
+  type ApplicationFormDraft,
+  clearApplicationFormDraft,
+  loadApplicationFormDraft,
+  saveApplicationFormDraft,
+} from "@/features/ammo-ledger/acquisition-permit-application/application-session/application-form-draft";
 import { saveAcquisitionPermitApplicationPayload } from "@/features/ammo-ledger/acquisition-permit-application/application-session/application-session";
 import { ConsumptionPlanPreview } from "@/features/ammo-ledger/acquisition-permit-application/components/consumption-plan-preview/consumption-plan-preview";
 import {
   buildRangeAllocationsFromRows,
   ConsumptionPlanRangeAllocationList,
   createInitialRangeAllocationRows,
-  type RangeAllocationRowState,
 } from "@/features/ammo-ledger/acquisition-permit-application/components/consumption-plan-range-allocation-list/consumption-plan-range-allocation-list";
 import { buildConsumptionPlan } from "@/features/ammo-ledger/acquisition-permit-application/consumption-plan/build-consumption-plan/build-consumption-plan";
 import type { ConsumptionPlan } from "@/features/ammo-ledger/acquisition-permit-application/consumption-plan/consumption-plan-types";
@@ -33,6 +46,7 @@ import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-p
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
+import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import {
   type AcquisitionPermitPurpose,
   acquisitionPermitPurposeOptions,
@@ -66,7 +80,7 @@ function defaultValidTo({ validFrom }: { validFrom: string }): string {
 export function AcquisitionPermitApplicationForm({
   ownerName,
   ownerFurigana = "",
-  possessionPermitCertificateNumber: initialPossessionPermitCertificateNumber = "",
+  possessionPermitCertificateNumber = "",
   ownerAddress,
   ownerBirthDate = "",
   ownerPhone = "",
@@ -83,91 +97,114 @@ export function AcquisitionPermitApplicationForm({
     catalogKind: "gun_shop",
     enabled: true,
   });
-  const defaultsApplied = useRef(false);
+  const pickerDefaultsApplied = useRef(false);
 
-  const [prefectureName, setPrefectureName] = useState(() =>
-    resolveSubmissionPrefecture({ ownerAddress }),
-  );
-  const [applicationDate, setApplicationDate] = useState(today);
-  const [name, setName] = useState(ownerName);
-  const [furigana, setFurigana] = useState(ownerFurigana);
-  const [address, setAddress] = useState(ownerAddress);
-  const [birthDate, setBirthDate] = useState(ownerBirthDate);
-  const [phone, setPhone] = useState(ownerPhone);
-  const [possessionPermitCertificateNumber, setPossessionPermitCertificateNumber] = useState(
-    initialPossessionPermitCertificateNumber,
-  );
-  const [ammoName, setAmmoName] = useState<ApplicationAmmoName>(defaultApplicationAmmoName);
-  const [permitPurpose, setPermitPurpose] = useState(defaultAcquisitionPermitPurpose);
-  const [requestedQuantity, setRequestedQuantity] = useState("5000");
-  const [homeStock, setHomeStock] = useState(String(currentHomeStock));
-  const [validFrom, setValidFrom] = useState(today);
-  const [validTo, setValidTo] = useState(defaultValidTo({ validFrom: today }));
-  const [storageLocation, setStorageLocation] = useState("自宅装弾ロッカー");
-  const [selectedGunIds, setSelectedGunIds] = useState<string[]>(
-    guns.length > 0 ? [guns[0].id] : [],
-  );
-  const [counterpartyId, setCounterpartyId] = useState("");
-  const [selectedCounterparty, setSelectedCounterparty] = useState<PickerMasterEntry | null>(null);
-  const [rangeAllocationRows, setRangeAllocationRows] = useState<RangeAllocationRowState[]>([]);
+  function createInitialDraft(): ApplicationFormDraft {
+    return {
+      prefectureName: resolveSubmissionPrefecture({ ownerAddress }),
+      applicationDate: today,
+      ownerName,
+      ownerFurigana,
+      ownerAddress,
+      ownerBirthDate,
+      ownerPhone,
+      possessionPermitCertificateNumber,
+      ammoName: defaultApplicationAmmoName,
+      permitPurpose: defaultAcquisitionPermitPurpose,
+      requestedQuantity: "5000",
+      homeStock: String(currentHomeStock),
+      validFrom: today,
+      validTo: defaultValidTo({ validFrom: today }),
+      storageLocation: "自宅装弾ロッカー",
+      selectedGunIds: guns.length > 0 ? [guns[0].id] : [],
+      counterparty: null,
+      rangeAllocationRows: [],
+    };
+  }
 
-  useEffect(() => {
-    if (!counterpartyPickerData || !rangePickerData || defaultsApplied.current) {
-      return;
-    }
-
-    const initialCounterpartyId =
-      counterpartyPickerData.recent[0]?.id ?? counterpartyPickerData.registered[0]?.id ?? "";
-    setCounterpartyId(initialCounterpartyId);
-    setSelectedCounterparty(
-      findPickerMaster({
-        masterId: initialCounterpartyId,
-        pickerData: counterpartyPickerData,
-      }),
-    );
-    setRangeAllocationRows(createInitialRangeAllocationRows({ rangePickerData }));
-    defaultsApplied.current = true;
-  }, [counterpartyPickerData, rangePickerData]);
+  const [draft, setDraft] = useState(createInitialDraft);
+  const [isDraftRestored, setIsDraftRestored] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [consumptionPlan, setConsumptionPlan] = useState<ConsumptionPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const selectedGuns = guns.filter((gun) => selectedGunIds.includes(gun.id));
-  const gunType = selectedGuns.map((gun) => gun.gunType).join("、");
-  const compatibleAmmunition = ammoName;
-  const gunTypeAndCaliber = selectedGuns.map((gun) => `${gun.gunType} ${gun.caliber}`).join("、");
-
-  function handleValidFromChange(value: string) {
-    setValidFrom(value);
-    setValidTo(defaultValidTo({ validFrom: value }));
+  function updateDraft(patch: Partial<ApplicationFormDraft>) {
+    setDraft((current) => ({ ...current, ...patch }));
   }
 
-  function toggleGunId({ gunId }: { gunId: string }) {
-    setSelectedGunIds((current) =>
-      current.includes(gunId) ? current.filter((id) => id !== gunId) : [...current, gunId],
-    );
-  }
+  // sessionStorage はサーバー描画時に読めないため、マウント後に復元する。
+  useEffect(() => {
+    const savedDraft = loadApplicationFormDraft();
+    if (savedDraft) {
+      setDraft(savedDraft);
+    }
+    setIsDraftRestored(true);
+  }, []);
 
-  function handleCounterpartyChange({ nextCounterpartyId }: { nextCounterpartyId: string }) {
-    setCounterpartyId(nextCounterpartyId);
-    if (!counterpartyPickerData) {
+  useEffect(() => {
+    if (isDraftRestored) {
+      saveApplicationFormDraft({ draft });
+    }
+  }, [draft, isDraftRestored]);
+
+  useEffect(() => {
+    if (
+      !isDraftRestored ||
+      !counterpartyPickerData ||
+      !rangePickerData ||
+      pickerDefaultsApplied.current
+    ) {
       return;
     }
 
-    const found = findPickerMaster({
-      masterId: nextCounterpartyId,
-      pickerData: counterpartyPickerData,
+    setDraft((current) =>
+      fillPickerDefaults({ draft: current, counterpartyPickerData, rangePickerData }),
+    );
+    pickerDefaultsApplied.current = true;
+  }, [isDraftRestored, counterpartyPickerData, rangePickerData]);
+
+  const selectedGuns = guns.filter((gun) => draft.selectedGunIds.includes(gun.id));
+  const gunType = selectedGuns.map((gun) => gun.gunType).join("、");
+  const compatibleAmmunition = draft.ammoName;
+  const gunTypeAndCaliber = selectedGuns.map((gun) => `${gun.gunType} ${gun.caliber}`).join("、");
+
+  function handleValidFromChange(value: string) {
+    updateDraft({ validFrom: value, validTo: defaultValidTo({ validFrom: value }) });
+  }
+
+  function toggleGunId({ gunId }: { gunId: string }) {
+    setDraft((current) => ({
+      ...current,
+      selectedGunIds: current.selectedGunIds.includes(gunId)
+        ? current.selectedGunIds.filter((id) => id !== gunId)
+        : [...current.selectedGunIds, gunId],
+    }));
+  }
+
+  function handleCounterpartySelect({ master }: { master: PickerMasterEntry }) {
+    updateDraft({
+      counterparty: { id: master.id, name: master.name, address: master.address },
     });
-    if (found) {
-      setSelectedCounterparty(found);
-    }
+  }
+
+  function handleReset() {
+    clearApplicationFormDraft();
+    const initialDraft = createInitialDraft();
+    setDraft(
+      counterpartyPickerData && rangePickerData
+        ? fillPickerDefaults({ draft: initialDraft, counterpartyPickerData, rangePickerData })
+        : initialDraft,
+    );
+    setConsumptionPlan(null);
+    setError(null);
+    setIsResetConfirmOpen(false);
   }
 
   function handleGeneratePlan() {
     setError(null);
-    const quantity = Number(requestedQuantity) || 0;
     const rangeAllocations = buildRangeAllocationsFromRows({
-      rows: rangeAllocationRows,
-      permitPurpose,
+      rows: draft.rangeAllocationRows,
+      permitPurpose: draft.permitPurpose,
     });
 
     if (rangeAllocations.length === 0) {
@@ -175,19 +212,19 @@ export function AcquisitionPermitApplicationForm({
       return;
     }
 
-    if (!selectedCounterparty) {
+    if (!draft.counterparty) {
       setError("譲渡者（購入先）を選んでください");
       return;
     }
 
     const plan = buildConsumptionPlan({
-      requestedQuantity: quantity,
-      periodFrom: validFrom,
-      periodTo: validTo,
-      currentHomeStock: Number(homeStock) || 0,
+      requestedQuantity: Number(draft.requestedQuantity) || 0,
+      periodFrom: draft.validFrom,
+      periodTo: draft.validTo,
+      currentHomeStock: Number(draft.homeStock) || 0,
       rangeAllocations,
-      counterpartyName: selectedCounterparty.name,
-      counterpartyAddress: selectedCounterparty.address,
+      counterpartyName: draft.counterparty.name,
+      counterpartyAddress: draft.counterparty.address,
     });
 
     setConsumptionPlan(plan);
@@ -201,37 +238,43 @@ export function AcquisitionPermitApplicationForm({
       return;
     }
 
-    if (!selectedCounterparty) {
+    if (!draft.counterparty) {
       setError("譲渡者（購入先）を選んでください");
       return;
     }
 
     const payload: AcquisitionPermitApplicationPayload = {
-      prefectureName,
-      applicationDate,
-      ownerName: name,
-      ownerFurigana: furigana || undefined,
-      ownerAddress: address,
-      ownerBirthDate: birthDate || undefined,
-      ownerPhone: phone || undefined,
-      ammoName,
-      requestedQuantity: Number(requestedQuantity) || 0,
-      currentHomeStock: Number(homeStock) || 0,
+      prefectureName: draft.prefectureName,
+      applicationDate: draft.applicationDate,
+      ownerName: draft.ownerName,
+      ownerFurigana: draft.ownerFurigana || undefined,
+      ownerAddress: draft.ownerAddress,
+      ownerBirthDate: draft.ownerBirthDate || undefined,
+      ownerPhone: draft.ownerPhone || undefined,
+      ammoName: draft.ammoName,
+      requestedQuantity: Number(draft.requestedQuantity) || 0,
+      currentHomeStock: Number(draft.homeStock) || 0,
       gunType,
       compatibleAmmunition,
-      possessionPermitCertificateNumber: possessionPermitCertificateNumber.trim() || undefined,
+      possessionPermitCertificateNumber:
+        draft.possessionPermitCertificateNumber.trim() || undefined,
       gunTypeAndCaliber,
-      permitPurpose,
-      validFrom,
-      validTo,
-      storageLocation,
-      counterpartyName: selectedCounterparty.name,
-      counterpartyAddress: selectedCounterparty.address,
+      permitPurpose: draft.permitPurpose,
+      validFrom: draft.validFrom,
+      validTo: draft.validTo,
+      storageLocation: draft.storageLocation,
+      counterpartyName: draft.counterparty.name,
+      counterpartyAddress: draft.counterparty.address,
       consumptionPlan,
     };
 
+    saveApplicationFormDraft({ draft });
     saveAcquisitionPermitApplicationPayload({ payload });
     router.push("/lab/ammo-ledger/applications/acquisition-permit/print");
+  }
+
+  if (!isDraftRestored) {
+    return <WorkspaceViewLoader />;
   }
 
   return (
@@ -249,8 +292,8 @@ export function AcquisitionPermitApplicationForm({
             <Label htmlFor="prefecture-name">提出先（公安委員会）</Label>
             <Input
               id="prefecture-name"
-              value={prefectureName}
-              onChange={(event) => setPrefectureName(event.target.value)}
+              value={draft.prefectureName}
+              onChange={(event) => updateDraft({ prefectureName: event.target.value })}
               placeholder="茨城県"
             />
             <p className="text-xs text-muted-foreground">
@@ -261,44 +304,48 @@ export function AcquisitionPermitApplicationForm({
             <Label htmlFor="application-date">申請日</Label>
             <IsoDateInput
               id="application-date"
-              value={applicationDate}
-              onChange={({ value }) => setApplicationDate(value)}
+              value={draft.applicationDate}
+              onChange={({ value }) => updateDraft({ applicationDate: value })}
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="owner-name">氏名</Label>
-            <Input id="owner-name" value={name} onChange={(event) => setName(event.target.value)} />
+            <Input
+              id="owner-name"
+              value={draft.ownerName}
+              onChange={(event) => updateDraft({ ownerName: event.target.value })}
+            />
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="owner-furigana">ふりがな</Label>
             <Input
               id="owner-furigana"
-              value={furigana}
-              onChange={(event) => setFurigana(event.target.value)}
+              value={draft.ownerFurigana}
+              onChange={(event) => updateDraft({ ownerFurigana: event.target.value })}
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="owner-address">住所</Label>
             <Input
               id="owner-address"
-              value={address}
-              onChange={(event) => setAddress(event.target.value)}
+              value={draft.ownerAddress}
+              onChange={(event) => updateDraft({ ownerAddress: event.target.value })}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="owner-birth-date">生年月日</Label>
             <IsoDateInput
               id="owner-birth-date"
-              value={birthDate}
-              onChange={({ value }) => setBirthDate(value)}
+              value={draft.ownerBirthDate}
+              onChange={({ value }) => updateDraft({ ownerBirthDate: value })}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="owner-phone">電話番号</Label>
             <Input
               id="owner-phone"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
+              value={draft.ownerPhone}
+              onChange={(event) => updateDraft({ ownerPhone: event.target.value })}
             />
           </div>
         </div>
@@ -309,8 +356,8 @@ export function AcquisitionPermitApplicationForm({
           <FieldSelect
             id="ammo-name"
             label="火薬類の名称"
-            value={ammoName}
-            onChange={(value) => setAmmoName(value as ApplicationAmmoName)}
+            value={draft.ammoName}
+            onChange={(value) => updateDraft({ ammoName: value as ApplicationAmmoName })}
             options={applicationAmmoNameOptions.map((option) => ({
               value: option,
               label: option,
@@ -322,8 +369,8 @@ export function AcquisitionPermitApplicationForm({
           <FieldSelect
             id="permit-purpose"
             label="譲受の目的"
-            value={permitPurpose}
-            onChange={(value) => setPermitPurpose(value as AcquisitionPermitPurpose)}
+            value={draft.permitPurpose}
+            onChange={(value) => updateDraft({ permitPurpose: value as AcquisitionPermitPurpose })}
             options={acquisitionPermitPurposeOptions.map((option) => ({
               value: option,
               label: option,
@@ -340,8 +387,8 @@ export function AcquisitionPermitApplicationForm({
                 type="number"
                 min={250}
                 step={250}
-                value={requestedQuantity}
-                onChange={(event) => setRequestedQuantity(event.target.value)}
+                value={draft.requestedQuantity}
+                onChange={(event) => updateDraft({ requestedQuantity: event.target.value })}
               />
             </div>
             <div className="space-y-2">
@@ -350,8 +397,8 @@ export function AcquisitionPermitApplicationForm({
                 id="home-stock"
                 type="number"
                 min={0}
-                value={homeStock}
-                onChange={(event) => setHomeStock(event.target.value)}
+                value={draft.homeStock}
+                onChange={(event) => updateDraft({ homeStock: event.target.value })}
               />
             </div>
           </div>
@@ -361,7 +408,7 @@ export function AcquisitionPermitApplicationForm({
               <Label htmlFor="valid-from">譲受期間（開始）</Label>
               <IsoDateInput
                 id="valid-from"
-                value={validFrom}
+                value={draft.validFrom}
                 onChange={({ value }) => handleValidFromChange(value)}
               />
             </div>
@@ -369,9 +416,9 @@ export function AcquisitionPermitApplicationForm({
               <Label htmlFor="valid-to">譲受期間（終了）</Label>
               <IsoDateInput
                 id="valid-to"
-                value={validTo}
-                min={validFrom}
-                onChange={({ value }) => setValidTo(value)}
+                value={draft.validTo}
+                min={draft.validFrom}
+                onChange={({ value }) => updateDraft({ validTo: value })}
               />
             </div>
           </div>
@@ -380,8 +427,8 @@ export function AcquisitionPermitApplicationForm({
             <Label htmlFor="storage-location">貯蔵又は保管する場所</Label>
             <Input
               id="storage-location"
-              value={storageLocation}
-              onChange={(event) => setStorageLocation(event.target.value)}
+              value={draft.storageLocation}
+              onChange={(event) => updateDraft({ storageLocation: event.target.value })}
             />
           </div>
 
@@ -389,8 +436,10 @@ export function AcquisitionPermitApplicationForm({
             <Label htmlFor="possession-permit-certificate-number">銃砲所持許可証の番号</Label>
             <Input
               id="possession-permit-certificate-number"
-              value={possessionPermitCertificateNumber}
-              onChange={(event) => setPossessionPermitCertificateNumber(event.target.value)}
+              value={draft.possessionPermitCertificateNumber}
+              onChange={(event) =>
+                updateDraft({ possessionPermitCertificateNumber: event.target.value })
+              }
               aria-describedby="possession-permit-certificate-number-help"
             />
             <p
@@ -418,7 +467,7 @@ export function AcquisitionPermitApplicationForm({
                 <label className="flex items-start gap-2">
                   <input
                     type="checkbox"
-                    checked={selectedGunIds.includes(gun.id)}
+                    checked={draft.selectedGunIds.includes(gun.id)}
                     onChange={() => toggleGunId({ gunId: gun.id })}
                   />
                   <span>
@@ -435,9 +484,10 @@ export function AcquisitionPermitApplicationForm({
         <MasterPicker
           id="counterparty"
           label="銃砲火薬店"
-          value={counterpartyId}
-          onChange={(nextCounterpartyId) => handleCounterpartyChange({ nextCounterpartyId })}
-          onMasterSelect={setSelectedCounterparty}
+          value={draft.counterparty?.id ?? ""}
+          // 店名と住所が必要なので、ID だけの onChange ではなく onMasterSelect で受け取る。
+          onChange={() => {}}
+          onMasterSelect={(master) => handleCounterpartySelect({ master })}
           catalogKind="gun_shop"
           sheetTitle="購入先を選ぶ"
           required
@@ -451,8 +501,8 @@ export function AcquisitionPermitApplicationForm({
           </p>
 
           <ConsumptionPlanRangeAllocationList
-            rows={rangeAllocationRows}
-            onRowsChange={setRangeAllocationRows}
+            rows={draft.rangeAllocationRows}
+            onRowsChange={(rangeAllocationRows) => updateDraft({ rangeAllocationRows })}
           />
 
           <Button type="button" variant="outline" onClick={handleGeneratePlan}>
@@ -472,28 +522,62 @@ export function AcquisitionPermitApplicationForm({
         >
           譲受許可設定に戻る
         </Link>
+        <Button type="button" variant="ghost" onClick={() => setIsResetConfirmOpen(true)}>
+          最初からやり直す
+        </Button>
         <Button type="button" onClick={handleGoToPrint}>
           印刷プレビューへ
         </Button>
       </div>
+
+      <Dialog open={isResetConfirmOpen} onOpenChange={setIsResetConfirmOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>入力を最初からやり直しますか？</DialogTitle>
+            <DialogDescription>
+              この申請書に入力した内容を消して、プロフィールの内容と既定値に戻します。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setIsResetConfirmOpen(false)}>
+              やめる
+            </Button>
+            <Button type="button" variant="destructive" onClick={handleReset}>
+              最初からやり直す
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function findPickerMaster({
-  masterId,
-  pickerData,
+function fillPickerDefaults({
+  draft,
+  counterpartyPickerData,
+  rangePickerData,
 }: {
-  masterId: string;
-  pickerData: MasterPickerData;
-}): PickerMasterEntry | null {
-  if (!masterId) {
-    return null;
-  }
+  draft: ApplicationFormDraft;
+  counterpartyPickerData: MasterPickerData;
+  rangePickerData: MasterPickerData;
+}): ApplicationFormDraft {
+  const defaultCounterparty =
+    counterpartyPickerData.recent[0] ?? counterpartyPickerData.registered[0] ?? null;
 
-  return (
-    pickerData.recent.find((item) => item.id === masterId) ??
-    pickerData.registered.find((item) => item.id === masterId) ??
-    null
-  );
+  return {
+    ...draft,
+    counterparty:
+      draft.counterparty ??
+      (defaultCounterparty
+        ? {
+            id: defaultCounterparty.id,
+            name: defaultCounterparty.name,
+            address: defaultCounterparty.address,
+          }
+        : null),
+    rangeAllocationRows:
+      draft.rangeAllocationRows.length > 0
+        ? draft.rangeAllocationRows
+        : createInitialRangeAllocationRows({ rangePickerData }),
+  };
 }

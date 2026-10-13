@@ -365,4 +365,62 @@ describe("buildLedgerDisplayRows", () => {
       ["permit_expiry", 1200],
     ]);
   });
+
+  it("同じ日に複数の許可が失効しても、失効行の残数は表示順に減って最後は0になる", () => {
+    // 許可IDの順とイベントIDの順が逆になるようにしている
+    const permitEvents = [
+      {
+        id: "z-grant",
+        permitId: "a",
+        eventKind: "grant" as const,
+        occurredOn: "2026-01-01",
+        quantity: 100,
+      },
+      {
+        id: "y-grant",
+        permitId: "b",
+        eventKind: "grant" as const,
+        occurredOn: "2026-02-01",
+        quantity: 200,
+      },
+      {
+        id: "z-expiry",
+        permitId: "a",
+        eventKind: "expiry" as const,
+        occurredOn: "2026-06-30",
+        quantity: 0,
+      },
+      {
+        id: "a-expiry",
+        permitId: "b",
+        eventKind: "expiry" as const,
+        occurredOn: "2026-06-30",
+        quantity: 0,
+      },
+    ].map((event) => ({
+      ...event,
+      userId: "u1",
+      purpose: "shooting",
+      memo: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+
+    const rows = buildLedgerDisplayRows({
+      purpose: "shooting",
+      today: "2026-07-01",
+      permits: [],
+      permitEvents,
+      entries: [],
+    });
+    const permitBalances = computeRunningPermitBalance({
+      permitEvents,
+      ledgerEntries: [],
+      today: "2026-07-01",
+    });
+
+    expect(rows.map((row) => resolveDisplayRowPermitBalance({ row, permitBalances }))).toEqual([
+      100, 0,
+    ]);
+  });
 });

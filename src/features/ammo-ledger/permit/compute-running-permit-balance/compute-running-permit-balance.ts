@@ -47,11 +47,9 @@ function compareSteps({ a, b }: { a: PermitLedgerStep; b: PermitLedgerStep }): n
     return compareLedgerEntries({ a: a.entry, b: b.entry });
   }
   if (a.kind !== "entry" && b.kind !== "entry") {
-    // DBは同日のイベントの順序を保証しないため、許可IDで並べて結果を毎回そろえる。
-    return (
-      (a.event.permitId ?? "").localeCompare(b.event.permitId ?? "") ||
-      a.event.id.localeCompare(b.event.id)
-    );
+    // DBは同日のイベントの順序を保証しない。帳簿の表も同日の失効行をイベントID順に並べるため、
+    // 同じ順で適用して行ごとの残数を表示順とそろえる。
+    return a.event.id.localeCompare(b.event.id);
   }
   return 0;
 }

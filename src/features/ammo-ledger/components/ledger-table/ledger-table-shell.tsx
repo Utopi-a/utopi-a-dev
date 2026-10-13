@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import type {
   ammoAcquisitionPermit,
   ammoLedgerEntry,
@@ -25,6 +25,7 @@ type LedgerTableShellProps = {
   highlightedEntryId?: string | null;
   lockState?: LedgerLockState;
   savingEntryIds?: ReadonlySet<string>;
+  emptyState: ReactNode;
 };
 
 export function LedgerTableShell({
@@ -40,6 +41,7 @@ export function LedgerTableShell({
   highlightedEntryId,
   lockState,
   savingEntryIds,
+  emptyState,
 }: LedgerTableShellProps) {
   const displayRows = useMemo(
     () =>
@@ -69,6 +71,7 @@ export function LedgerTableShell({
       highlightedEntryId={highlightedEntryId}
       lockState={lockState}
       savingEntryIds={savingEntryIds}
+      emptyState={emptyState}
     />
   );
 }

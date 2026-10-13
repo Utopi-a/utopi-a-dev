@@ -97,6 +97,7 @@ function shownEntryIds() {
 
 describe("LedgerView", () => {
   beforeEach(() => {
+    window.localStorage.clear();
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-13T03:00:00Z"));
     vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise(() => {}));
@@ -189,5 +190,59 @@ describe("LedgerView", () => {
     expect(
       within(sheet).getByRole("link", { name: "2025/12/31 まで確定済み →" }),
     ).toBeInTheDocument();
+  });
+
+  it("用途を切り替えると強調表示を外し、表示中の年は保つ", () => {
+    renderLedgerView({ search: "?purpose=shooting&entry=consume-2025" });
+    expect(screen.getByText("保存した記録を強調表示しています。")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "狩猟用 0件" }));
+
+    const params = new URLSearchParams(window.location.search);
+    expect(params.get("entry")).toBeNull();
+    expect(params.get("year")).toBe("2025");
+    expect(screen.queryByText(/強調表示/)).not.toBeInTheDocument();
+  });
+
+  it("強調表示は解除でき、解除しても開いていた年のまま", () => {
+    renderLedgerView({ search: "?purpose=shooting&entry=consume-2025" });
+
+    fireEvent.click(screen.getByRole("button", { name: "強調を解除" }));
+
+    expect(screen.queryByText(/強調表示/)).not.toBeInTheDocument();
+    expect(shownEntryIds()).toEqual(["carryover-2025", "consume-2025"]);
+  });
+
+  it("ほかの用途の記録を指定されても、保存した記録として強調表示しない", () => {
+    renderLedgerView({ search: "?purpose=hunting&entry=consume-2026" });
+
+    expect(screen.queryByText("保存した記録を強調表示しています。")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("指定された記録を表示できません。帳簿を再取得してください。"),
+    ).toBeInTheDocument();
+  });
+
+  it("記録のない用途・年では、その用途と年に合わせて案内し、登録への導線を出す", () => {
+    const { unmount } = renderLedgerView({ search: "?purpose=pest_control" });
+    expect(screen.getByText("有害鳥獣駆除用の記録はまだありません。")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "2026年の年初繰越を登録する" })).toHaveAttribute(
+      "href",
+      "/lab/ammo-ledger/settings/opening-balance?year=2026&purpose=pest_control",
+    );
+    expect(screen.getByRole("link", { name: "消費を記録する" })).toBeInTheDocument();
+    unmount();
+
+    renderLedgerView({ search: "?purpose=hunting&year=2025" });
+    expect(screen.getByText("2025年の狩猟用の記録はありません。")).toBeInTheDocument();
+  });
+
+  it("用途の指定がなければ最後に見た用途で開く", () => {
+    const { unmount } = renderLedgerView({ search: "?purpose=hunting" });
+    unmount();
+
+    renderLedgerView({ search: "" });
+
+    expect(screen.getByText("狩猟の法定記録")).toBeInTheDocument();
+    expect(shownEntryIds()).toEqual(["hunting-2026"]);
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { LedgerEntryActionsSheet } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-actions-sheet";
 import { LedgerEntryCard } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-card";
 import {
@@ -37,6 +37,7 @@ type LedgerTableProps = {
   highlightedEntryId?: string | null;
   lockState?: LedgerLockState;
   savingEntryIds?: ReadonlySet<string>;
+  emptyState?: ReactNode;
 };
 
 const ledgerTableColumnClass = {
@@ -66,6 +67,7 @@ export function LedgerTable({
   highlightedEntryId,
   lockState,
   savingEntryIds = noSavingEntryIds,
+  emptyState,
 }: LedgerTableProps) {
   const [selectedRow, setSelectedRow] = useState<LedgerDisplayRow | null>(null);
   const [selectedPermitBalance, setSelectedPermitBalance] = useState<number | undefined>(undefined);
@@ -109,11 +111,7 @@ export function LedgerTable({
   }
 
   if (rows.length === 0) {
-    return (
-      <p className="py-10 text-center text-sm text-muted-foreground">
-        まだ記録がありません。年初繰越や消費・譲り受けを入力するとここに表示されます。
-      </p>
-    );
+    return emptyState;
   }
 
   return (

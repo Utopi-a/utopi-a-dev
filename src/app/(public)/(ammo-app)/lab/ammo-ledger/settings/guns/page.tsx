@@ -22,8 +22,14 @@ export default async function GunsSettingsPage() {
                 key={gun.id}
                 className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
               >
-                <span>
-                  {gun.name} — {gun.gunNumber} / {gun.permitNumber}（{gun.gunType} / {gun.caliber}）
+                <span className="min-w-0 break-words">
+                  <span className="font-medium">{gun.name}</span>
+                  <span className="mt-0.5 block text-muted-foreground">
+                    銃番号 {gun.gunNumber} / 許可番号 {gun.permitNumber}
+                  </span>
+                  <span className="block text-muted-foreground">
+                    {gun.gunType} / {gun.caliber}
+                  </span>
                 </span>
                 <GunRowActions gunId={gun.id} />
               </MasterListItem>

@@ -3,9 +3,11 @@ import { OpeningBalanceForm } from "@/features/ammo-ledger/components/opening-ba
 import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-entries/list-ledger-entries";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import { buildAvailableYears } from "@/features/ammo-ledger/opening-balance/build-available-years/build-available-years";
+import { computePriorYearEndStock } from "@/features/ammo-ledger/opening-balance/compute-prior-year-end-stock/compute-prior-year-end-stock";
 import { getOpeningBalance } from "@/features/ammo-ledger/opening-balance/get-opening-balance/get-opening-balance";
 import { listAcquisitionPermits } from "@/features/ammo-ledger/permit/list-acquisition-permits/list-acquisition-permits";
 import { listPermitEvents } from "@/features/ammo-ledger/permit/list-permit-events/list-permit-events";
+import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import { type LedgerPurpose, ledgerPurposes } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { parseLedgerPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
@@ -52,13 +54,17 @@ export default async function OpeningBalanceSettingsPage({ searchParams }: PageP
       }),
     ]),
   ) as Record<LedgerPurpose, ReturnType<typeof getOpeningBalance>>;
+  const priorYearEndStockByPurpose = computePriorYearEndStock({
+    entries: entries.map((entry) => ({ ...entry, category: entry.category as LedgerCategory })),
+    year: selectedYear,
+  });
 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">年初繰越</h1>
         <p className="text-sm text-muted-foreground">
-          紙の帳簿から移行するとき、各年の1月1日時点の残弾数と譲り受け許可残数（有効期限付き）を登録できます。
+          各年の1月1日時点の残弾数と譲り受け許可残数（有効期限付き）を登録します。印刷する帳簿は、年ごとにこの繰越から数え始めます。
         </p>
       </div>
 
@@ -74,6 +80,7 @@ export default async function OpeningBalanceSettingsPage({ searchParams }: PageP
           roundsPerBox: type.roundsPerBox,
         }))}
         snapshotsByPurpose={snapshotsByPurpose}
+        priorYearEndStockByPurpose={priorYearEndStockByPurpose}
       />
     </div>
   );

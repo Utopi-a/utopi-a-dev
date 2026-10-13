@@ -29,12 +29,14 @@ type FormOptions = {
   shootingStock?: Record<string, number>;
   huntingStock?: Record<string, number>;
   formAmmoTypes?: typeof ammoTypes;
+  priorYearEndStockByPurpose?: Record<string, Record<string, number>>;
 };
 
 function buildForm({
   shootingStock = {},
   huntingStock = {},
   formAmmoTypes = ammoTypes,
+  priorYearEndStockByPurpose = {},
 }: FormOptions) {
   const snapshotsByPurpose: Record<LedgerPurpose, OpeningBalanceSnapshot> = {
     shooting: { permitCarryovers: [], stockByAmmoType: shootingStock },
@@ -50,6 +52,7 @@ function buildForm({
           initialPurpose="shooting"
           ammoTypes={formAmmoTypes}
           snapshotsByPurpose={snapshotsByPurpose}
+          priorYearEndStockByPurpose={priorYearEndStockByPurpose}
         />
       </AmmoLedgerSwrProvider>
     </AmmoLedgerOptimisticNavProvider>
@@ -161,5 +164,47 @@ describe("OpeningBalanceForm", () => {
     expect(stockInput("12番・散弾")).toHaveValue(null);
     fireEvent.click(screen.getByRole("button", { name: "射撃用" }));
     expect(stockInput("12番・散弾")).toHaveValue(75);
+  });
+
+  it("前年末の帳簿残数を行ごとに示し、空欄で残数のある弾種だけにまとめて入れる", async () => {
+    renderForm({
+      shootingStock: { "ammo-2": 3 },
+      priorYearEndStockByPurpose: {
+        shooting: { "ammo-1": 90, "ammo-2": 25, "ammo-3": 0 },
+        hunting: { "ammo-1": 50 },
+      },
+    });
+    expect(screen.getByRole("row", { name: /12番・散弾/ })).toHaveTextContent(
+      "前年末の帳簿残数 90個",
+    );
+    expect(screen.getByRole("row", { name: /\.308/ })).toHaveTextContent("前年末の帳簿残数 0個");
+    expect(stockInput("12番・散弾")).toHaveValue(null);
+
+    fireEvent.click(screen.getByRole("button", { name: "前年末の残数を入れる" }));
+
+    expect(stockInput("12番・散弾")).toHaveValue(90);
+    expect(stockInput("12番・単弾")).toHaveValue(3);
+    expect(stockInput(".308")).toHaveValue(null);
+    expect(screen.getByRole("status")).toHaveTextContent("1件の弾種に前年末の残数を入れました");
+    expect(screen.getByRole("button", { name: "前年末の残数を入れる" })).toBeDisabled();
+    expect(saveOpeningBalanceAction).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "2026年 射撃 の繰越を保存" }));
+    await waitFor(() =>
+      expect(saveOpeningBalanceAction).toHaveBeenCalledWith({
+        year: 2026,
+        purpose: "shooting",
+        permitCarryovers: [],
+        stockByAmmoType: { "ammo-1": 90, "ammo-2": 3 },
+      }),
+    );
+  });
+
+  it("前年末の記録がない用途には前年末の残数を入れるボタンを出さない", () => {
+    renderForm({ priorYearEndStockByPurpose: { hunting: { "ammo-1": 50 } } });
+    expect(screen.queryByRole("button", { name: "前年末の残数を入れる" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/前年末の帳簿残数/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "狩猟用" }));
+    expect(screen.getByRole("button", { name: "前年末の残数を入れる" })).toBeEnabled();
   });
 });

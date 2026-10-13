@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import { buttonVariants } from "@/components/ui/button";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AcquireForm } from "@/features/ammo-ledger/components/acquire-form/acquire-form";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
+import { AmmoLedgerShellLink } from "@/features/ammo-ledger/components/ammo-ledger-shell-link/ammo-ledger-shell-link";
 import { ConsumeFormLazy } from "@/features/ammo-ledger/components/consume-form/consume-form.lazy";
 import { DisposeForm } from "@/features/ammo-ledger/components/dispose-form/dispose-form";
 import { IssueForm } from "@/features/ammo-ledger/components/issue-form/issue-form";
@@ -18,6 +20,7 @@ import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 import { listAcquisitionPermits } from "@/features/ammo-ledger/permit/list-acquisition-permits/list-acquisition-permits";
 import { ledgerCategoryLabels } from "@/features/ammo-ledger/schema/ledger-category";
 import { getLedgerEntryForEdit } from "@/features/ammo-ledger/transactions/get-ledger-entry-for-edit/get-ledger-entry-for-edit";
+import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 
 type PageProps = {
   params: Promise<{ ledgerEntryId: string }>;
@@ -37,17 +40,49 @@ export default async function EditLedgerEntryPage({ params, searchParams }: Page
     return notFound();
   }
 
+  const { inputKind, category, initialValues } = editData;
+  const categoryLabel = ledgerCategoryLabels[category];
+
   const lockState = await getLatestLockState({ userId: user.id });
   const lockResult = checkDatesAgainstLock({
     lockState,
-    dates: [editData.initialValues.occurredOn],
+    dates: [initialValues.occurredOn],
   });
   if (lockResult.blocked) {
-    return redirect("/lab/ammo-ledger/ledger");
+    // 黙って帳簿へ移すと、なぜ編集できないのか分からないため理由と行き先を示す。
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-semibold tracking-tight">{categoryLabel}記録を編集</h1>
+        <AmmoLedgerPanel>
+          <div className="space-y-4 text-sm">
+            <div className="space-y-1">
+              <p className="font-medium">
+                {formatIsoDateForDisplay({ value: lockResult.lockedThrough })}
+                まで確定済みのため編集できません
+              </p>
+              <p className="text-muted-foreground">
+                直す必要があるときは、帳簿の確定・ロックで解除してから編集してください。
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/lab/ammo-ledger/settings/ledger-lock"
+                className={buttonVariants({ variant: "outline", size: "lg" })}
+              >
+                帳簿の確定・ロック
+              </Link>
+              <AmmoLedgerShellLink
+                href="/lab/ammo-ledger/ledger"
+                className={buttonVariants({ variant: "outline", size: "lg" })}
+              >
+                帳簿を見る
+              </AmmoLedgerShellLink>
+            </div>
+          </div>
+        </AmmoLedgerPanel>
+      </div>
+    );
   }
-
-  const { inputKind, category, initialValues } = editData;
-  const categoryLabel = ledgerCategoryLabels[category];
 
   const [guns, ammoTypes, inventoryItems, permits] = await Promise.all([
     inputKind === "consume" ? listGuns({ userId: user.id }) : Promise.resolve([]),

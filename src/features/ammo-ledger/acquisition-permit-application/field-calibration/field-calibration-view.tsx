@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -754,12 +753,6 @@ export function FieldCalibrationView() {
       <AcquisitionPermitApplicationStyles />
 
       <div className="no-print flex flex-wrap items-center gap-1">
-        <Link
-          href="/lab/ammo-ledger/applications/acquisition-permit/print"
-          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-        >
-          ← 印刷プレビュー
-        </Link>
         <Button type="button" variant="outline" size="sm" onClick={handleCopyTypeScript}>
           TypeScript をコピー
         </Button>

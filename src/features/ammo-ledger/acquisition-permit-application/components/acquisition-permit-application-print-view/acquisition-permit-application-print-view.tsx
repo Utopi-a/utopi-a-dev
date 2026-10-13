@@ -43,22 +43,14 @@ export function AcquisitionPermitApplicationPrintView() {
   return (
     <div className="space-y-4">
       <div className="no-print space-y-3">
-        <div className="flex flex-wrap gap-2">
+        {isDevelopmentEnvironment() ? (
           <Link
-            href="/lab/ammo-ledger/applications/acquisition-permit/new"
+            href="/lab/ammo-ledger/applications/acquisition-permit/calibration"
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
-            ← 入力に戻る
+            座標調整
           </Link>
-          {isDevelopmentEnvironment() ? (
-            <Link
-              href="/lab/ammo-ledger/applications/acquisition-permit/calibration"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            >
-              座標調整
-            </Link>
-          ) : null}
-        </div>
+        ) : null}
         <ApplicationPrintButtons supplementPageCount={fieldValues.supplementPageCount} />
         <div className="space-y-1 text-sm text-muted-foreground">
           <p>

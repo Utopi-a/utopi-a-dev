@@ -1,36 +1,43 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { WorkspaceErrorAction } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
-type AmmoLedgerRefreshIndicatorProps = {
-  visible: boolean;
-};
+/** 帳簿の再取得中であることを上部ナビの直下に重ねて示す。本文を押し下げないよう重ねて出す。 */
+export function AmmoLedgerRefreshStatus() {
+  const { isRefreshing } = useAmmoLedgerWorkspace({ revalidateOnMount: false });
 
-export function AmmoLedgerRefreshIndicator({ visible }: AmmoLedgerRefreshIndicatorProps) {
-  const { error, retry } = useAmmoLedgerWorkspace();
-  if (error) {
-    return (
-      <div role="alert" className="flex flex-wrap items-center justify-center gap-2 py-3 text-sm">
-        <p>帳簿の表示を更新できませんでした。</p>
-        <Button type="button" variant="outline" onClick={retry}>
-          再試行
-        </Button>
-      </div>
-    );
-  }
-  if (!visible) {
+  return (
+    <div role="status" aria-live="polite">
+      {isRefreshing ? (
+        <p className="flex items-center gap-2 rounded-full border border-border/60 bg-background px-3 py-1 text-xs text-muted-foreground shadow-sm">
+          <span
+            aria-hidden
+            className="size-3 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground"
+          />
+          帳簿を更新中…
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** 表示済みの帳簿を取り直せなかったことを、画面上部で復旧の操作とともに知らせる。 */
+export function AmmoLedgerRefreshError() {
+  const { workspace, error, retry } = useAmmoLedgerWorkspace({ revalidateOnMount: false });
+  // 一度も取得できていないときは各画面のローダーが失敗を表示する。
+  if (!error || !workspace) {
     return null;
   }
 
   return (
     <div
-      role="status"
-      aria-live="polite"
-      className="flex items-center justify-center gap-2 border-t border-border/50 py-3 text-sm text-muted-foreground"
+      role="alert"
+      className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm"
     >
-      <span className="size-3.5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
-      更新中…
+      <p className="font-medium text-destructive">帳簿の表示を更新できませんでした</p>
+      <p className="text-muted-foreground">表示中の内容は最新でない可能性があります。</p>
+      <WorkspaceErrorAction error={error} onRetry={retry} />
     </div>
   );
 }

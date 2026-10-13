@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
@@ -21,15 +20,7 @@ export default async function EditCounterpartyPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">購入先を編集</h1>
-        <Link
-          href="/lab/ammo-ledger/settings/counterparties"
-          className="text-sm text-muted-foreground"
-        >
-          一覧へ戻る
-        </Link>
-      </div>
+      <h1 className="text-2xl font-semibold tracking-tight">購入先を編集</h1>
       <Card className="border-border/70">
         <CardHeader>
           <CardTitle className="text-base">{counterparty.name}</CardTitle>

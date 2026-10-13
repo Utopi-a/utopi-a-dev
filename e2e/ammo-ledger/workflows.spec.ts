@@ -261,7 +261,7 @@ test("未確定プレビューの確定後に正式帳票を印刷し、解除�
   `;
   expect(lockEvents).toEqual([{ event_kind: "lock", locked_through: `${ledger.year}-12-31` }]);
 
-  await page.getByRole("link", { name: "← 帳簿に戻る" }).click();
+  await page.getByRole("link", { name: "← 帳簿", exact: true }).click();
   await page.getByLabel("対象年").selectOption(String(ledger.year));
   await visibleEntry({ page, id: ledger.consumedEntryId }).click();
   await expect(page.getByText("この期間はロック済みのため編集・取消できません。")).toBeVisible();

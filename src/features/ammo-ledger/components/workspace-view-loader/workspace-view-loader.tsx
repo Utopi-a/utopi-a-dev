@@ -1,6 +1,38 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { AmmoLedgerLoginRequiredError } from "@/features/ammo-ledger/workspace/fetch-ammo-ledger-workspace/fetch-ammo-ledger-workspace";
+
+type WorkspaceErrorActionProps = {
+  error: unknown;
+  onRetry?: () => void;
+};
+
+/** 取得に失敗したときの復旧手段。ログイン切れは再試行しても直らないため、ログイン画面へ案内する。 */
+export function WorkspaceErrorAction({ error, onRetry }: WorkspaceErrorActionProps) {
+  const pathname = usePathname();
+
+  if (error instanceof AmmoLedgerLoginRequiredError) {
+    return (
+      <Link
+        href={`/login?${new URLSearchParams({ next: pathname })}`}
+        className={buttonVariants({ variant: "outline" })}
+      >
+        ログイン画面へ
+      </Link>
+    );
+  }
+  if (!onRetry) {
+    return null;
+  }
+  return (
+    <Button type="button" variant="outline" onClick={onRetry}>
+      再試行
+    </Button>
+  );
+}
 
 type WorkspaceViewLoaderProps = {
   label?: string;
@@ -20,11 +52,7 @@ export function WorkspaceViewLoader({
         className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-sm"
       >
         <p>{error instanceof Error ? error.message : "データを取得できませんでした。"}</p>
-        {onRetry ? (
-          <Button type="button" variant="outline" onClick={onRetry}>
-            再試行
-          </Button>
-        ) : null}
+        <WorkspaceErrorAction error={error} onRetry={onRetry} />
       </div>
     );
   }

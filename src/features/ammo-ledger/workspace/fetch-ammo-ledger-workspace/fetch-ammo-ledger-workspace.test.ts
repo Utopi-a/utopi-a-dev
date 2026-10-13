@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchAmmoLedgerWorkspace } from "./fetch-ammo-ledger-workspace";
+import {
+  AmmoLedgerLoginRequiredError,
+  fetchAmmoLedgerWorkspace,
+} from "./fetch-ammo-ledger-workspace";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -47,5 +50,15 @@ describe("帳簿 GET のデータ契約", () => {
   it("認証リダイレクトではログインを案内する", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ redirected: true }));
     await expect(fetchAmmoLedgerWorkspace()).rejects.toThrow("再度ログイン");
+  });
+
+  it("認証切れを通信失敗と区別できるエラーにする", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ redirected: true }));
+    await expect(fetchAmmoLedgerWorkspace()).rejects.toBeInstanceOf(AmmoLedgerLoginRequiredError);
+
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+    await expect(fetchAmmoLedgerWorkspace()).rejects.not.toBeInstanceOf(
+      AmmoLedgerLoginRequiredError,
+    );
   });
 });

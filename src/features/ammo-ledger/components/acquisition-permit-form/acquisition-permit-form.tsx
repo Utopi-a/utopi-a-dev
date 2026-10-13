@@ -22,12 +22,12 @@ import {
   defaultAcquisitionPermitPurpose,
 } from "@/features/ammo-ledger/schema/acquisition-permit-purpose-options";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
+import { computePeriodEndIsoDate } from "@/lib/date/compute-period-end-iso-date";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 function defaultExpiresOn({ grantedOn }: { grantedOn: string }): string {
-  const date = new Date(`${grantedOn}T00:00:00`);
-  date.setFullYear(date.getFullYear() + 1);
-  return date.toISOString().slice(0, 10);
+  // 譲受許可の有効期間は交付日から1年で、1年後の前日まで有効。
+  return computePeriodEndIsoDate({ startsOn: grantedOn, years: 1 });
 }
 
 export function AcquisitionPermitForm() {

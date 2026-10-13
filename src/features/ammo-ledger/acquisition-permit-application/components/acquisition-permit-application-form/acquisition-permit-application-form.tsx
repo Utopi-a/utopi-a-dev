@@ -40,6 +40,7 @@ import {
 } from "@/features/ammo-ledger/schema/acquisition-permit-purpose-options";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
+import { computePeriodEndIsoDate } from "@/lib/date/compute-period-end-iso-date";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type AcquisitionPermitApplicationFormProps = {
@@ -54,14 +55,7 @@ type AcquisitionPermitApplicationFormProps = {
 };
 
 function defaultValidTo({ validFrom }: { validFrom: string }): string {
-  const [year, month, day] = validFrom.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  date.setFullYear(date.getFullYear() + 1);
-  date.setDate(date.getDate() - 1);
-  const nextYear = date.getFullYear();
-  const nextMonth = String(date.getMonth() + 1).padStart(2, "0");
-  const nextDay = String(date.getDate()).padStart(2, "0");
-  return `${nextYear}-${nextMonth}-${nextDay}`;
+  return computePeriodEndIsoDate({ startsOn: validFrom, years: 1 });
 }
 
 export function AcquisitionPermitApplicationForm({

@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import useSWR, { useSWRConfig } from "swr";
+import { serverActionRateLimitMessage } from "@/features/ammo-ledger/auth/server-action-rate-limit/server-action-rate-limit-error";
 import type {
   MasterPickerData,
   PickerMasterEntry,
@@ -44,10 +45,16 @@ export function useMasterPickerData({
         kind: catalogKind,
         includeRangeCatalog: includeRangeCatalog ? "1" : "0",
       });
+      // 通信断・タイムアウトではブラウザの英語のメッセージになるため、画面に出す文言に包む。
       const response = await fetch(`/api/ammo-ledger/picker?${params}`, {
         cache: "no-store",
         signal: AbortSignal.timeout(30_000),
+      }).catch(() => {
+        throw new Error("一覧を取得できませんでした。通信状態を確認して再試行してください。");
       });
+      if (response.status === 429) {
+        throw new Error(serverActionRateLimitMessage);
+      }
       if (!response.ok || response.redirected)
         throw new Error("一覧を取得できませんでした。再試行してください。");
       return response.json();

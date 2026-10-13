@@ -290,7 +290,13 @@ export function CatalogList({
   }
 
   return (
-    <div data-catalog-list className={cn("flex h-dvh flex-col overflow-hidden py-3", className)}>
+    <div
+      data-catalog-list
+      className={cn(
+        "flex h-[calc(100dvh-var(--ammo-ledger-nav-height))] flex-col overflow-hidden py-3",
+        className,
+      )}
+    >
       <div className="shrink-0 space-y-3 border-b border-border/50 bg-background pb-3">
         <div className="relative">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />

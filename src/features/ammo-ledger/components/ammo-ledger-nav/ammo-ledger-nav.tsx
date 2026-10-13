@@ -3,63 +3,52 @@
 import { usePathname } from "next/navigation";
 import { memo } from "react";
 import { useAmmoLedgerOptimisticNav } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
+import {
+  ammoLedgerNavSections,
+  resolveNavSection,
+} from "@/features/ammo-ledger/navigation/resolve-nav-section/resolve-nav-section";
 import { useAmmoLedgerClientNav } from "@/features/ammo-ledger/navigation/use-ammo-ledger-client-nav/use-ammo-ledger-client-nav";
 import { cn } from "@/lib/cn";
-
-const navItems = [
-  {
-    href: "/lab/ammo-ledger",
-    label: "ホーム",
-    match: (path: string) => path === "/lab/ammo-ledger",
-  },
-  {
-    href: "/lab/ammo-ledger/ledger",
-    label: "帳簿",
-    match: (path: string) => path.startsWith("/lab/ammo-ledger/ledger"),
-  },
-  {
-    href: "/lab/ammo-ledger/inventory",
-    label: "残弾",
-    match: (path: string) => path.startsWith("/lab/ammo-ledger/inventory"),
-  },
-  {
-    href: "/lab/ammo-ledger/settings",
-    label: "設定",
-    match: (path: string) => path.startsWith("/lab/ammo-ledger/settings"),
-  },
-] as const;
 
 export const AmmoLedgerNav = memo(function AmmoLedgerNav() {
   const pathname = usePathname();
   const { activePath } = useAmmoLedgerOptimisticNav();
   const { navigate: navigateClientShell } = useAmmoLedgerClientNav();
   const displayPath = activePath ?? pathname;
+  const activeSection = resolveNavSection({ path: displayPath });
 
   function handleNavigate({ href }: { href: string }) {
     if (href !== displayPath) navigateClientShell({ href });
   }
 
   return (
-    <nav className="grid w-full grid-cols-4 gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
-      {navItems.map((item) => {
-        const isActive = item.match(displayPath);
+    // 長い帳簿や一覧の途中からでも別のタブへ移れるよう、画面上端に固定する。
+    <div className="sticky top-0 z-30 -mx-4 flex h-(--ammo-ledger-nav-height) items-center border-b border-border/60 bg-background px-4 sm:-mx-6 sm:px-6">
+      <nav
+        aria-label="帳簿メニュー"
+        className="grid w-full grid-cols-4 gap-1 rounded-lg bg-muted p-1"
+      >
+        {ammoLedgerNavSections.map((section) => {
+          const isActive = section.id === activeSection?.id;
 
-        return (
-          <button
-            key={item.href}
-            type="button"
-            onClick={() => handleNavigate({ href: item.href })}
-            className={cn(
-              "flex items-center justify-center rounded-md px-1 py-1.5 text-center text-xs font-medium transition-colors sm:py-2 sm:text-sm",
-              isActive
-                ? "bg-background text-foreground shadow-none"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {item.label}
-          </button>
-        );
-      })}
-    </nav>
+          return (
+            <button
+              key={section.href}
+              type="button"
+              aria-current={isActive ? "page" : undefined}
+              onClick={() => handleNavigate({ href: section.href })}
+              className={cn(
+                "flex min-h-11 items-center justify-center rounded-md px-1 text-center text-sm transition-colors",
+                isActive
+                  ? "bg-primary font-semibold text-primary-foreground shadow-sm"
+                  : "font-medium text-muted-foreground hover:bg-background hover:text-foreground",
+              )}
+            >
+              {section.label}
+            </button>
+          );
+        })}
+      </nav>
+    </div>
   );
 });

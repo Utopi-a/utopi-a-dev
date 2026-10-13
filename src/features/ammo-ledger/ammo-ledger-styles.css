@@ -35,3 +35,9 @@
     background: color-mix(in oklch, var(--primary) 60%, transparent);
   }
 }
+
+/* 固定した上部ナビの高さ。全画面の一覧やフォーカス移動で内容がナビの下に隠れないよう、同じ値だけずらす。 */
+:root:has(.ammo-ledger-theme) {
+  --ammo-ledger-nav-height: 4.25rem;
+  scroll-padding-top: var(--ammo-ledger-nav-height);
+}

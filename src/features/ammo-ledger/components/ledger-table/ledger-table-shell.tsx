@@ -17,6 +17,8 @@ type LedgerTableShellProps = {
   permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
   purpose: LedgerPurpose;
   today: string;
+  from: string;
+  to: string;
   permitBalances?: Map<string, number>;
   homeStorageExceededEntryIds?: string[];
   highlightedEntryId?: string | null;
@@ -30,6 +32,8 @@ export function LedgerTableShell({
   permits,
   purpose,
   today,
+  from,
+  to,
   permitBalances,
   homeStorageExceededEntryIds = [],
   highlightedEntryId,
@@ -44,8 +48,10 @@ export function LedgerTableShell({
         permits,
         purpose,
         today,
+        from,
+        to,
       }),
-    [entries, permitEvents, permits, purpose, today],
+    [entries, permitEvents, permits, purpose, today, from, to],
   );
 
   return (

@@ -24,7 +24,10 @@ export function LedgerYearSelect({
       id={id}
       label={label}
       value={String(value)}
-      onChange={(nextValue) => onChange({ year: Number(nextValue) })}
+      onChange={(nextValue) => {
+        // 空の選択肢を選んでも「0年」にしない。
+        if (nextValue) onChange({ year: Number(nextValue) });
+      }}
       options={years.map((year) => ({
         value: String(year),
         label: `${year}年`,

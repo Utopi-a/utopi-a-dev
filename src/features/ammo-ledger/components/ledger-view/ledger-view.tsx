@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { ActivePermitStatus } from "@/features/ammo-ledger/components/active-permit-status/active-permit-status";
 import { AmmoLedgerRefreshIndicator } from "@/features/ammo-ledger/components/ammo-ledger-refresh-indicator/ammo-ledger-refresh-indicator";
 import { HomeStorageWarning } from "@/features/ammo-ledger/components/home-storage-warning/home-storage-warning";
@@ -11,7 +11,10 @@ import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { evaluateHomeStorageLimit } from "@/features/ammo-ledger/ledger/compute-running-home-stock/compute-running-home-stock";
 import { formatStockQuantity } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
-import { buildAvailableYears } from "@/features/ammo-ledger/opening-balance/build-available-years/build-available-years";
+import {
+  buildAvailableYears,
+  buildYearDateRange,
+} from "@/features/ammo-ledger/opening-balance/build-available-years/build-available-years";
 import {
   computeCurrentPermitState,
   computeRunningPermitBalance,
@@ -29,9 +32,10 @@ import { useSavingLedgerChangeCount } from "@/features/ammo-ledger/workspace/pen
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
-function syncPurposeToUrl({ purpose }: { purpose: LedgerPurpose }) {
+function replaceLedgerQuery({ purpose, year }: { purpose: LedgerPurpose; year: number }) {
   const url = new URL(window.location.href);
   url.searchParams.set("purpose", purpose);
+  url.searchParams.set("year", String(year));
   window.history.replaceState(null, "", url);
 }
 
@@ -57,24 +61,53 @@ function LedgerViewContent({
   const purpose = parseLedgerPurpose({ value: searchParams.get("purpose") }) ?? "shooting";
   const today = getTokyoIsoDate();
   const currentYear = Number(today.slice(0, 4));
-  const [printYear, setPrintYear] = useState(currentYear);
   const { entries, permitEvents, permits } = workspace;
-  const entryCounts = useMemo(
-    () => ({
-      shooting: entries.filter((entry) => entry.purpose === "shooting").length,
-      hunting: entries.filter((entry) => entry.purpose === "hunting").length,
-      pest_control: entries.filter((entry) => entry.purpose === "pest_control").length,
-    }),
-    [entries],
-  );
-  const highlightedEntryExists = highlightedEntryId
-    ? entries.some((entry) => entry.id === highlightedEntryId)
-    : false;
 
   const purposeEntries = useMemo(
     () => filterByPurpose({ rows: entries, purpose }),
     [entries, purpose],
   );
+
+  const availableYears = useMemo(() => {
+    const dates = [
+      ...entries.map((entry) => entry.occurredOn),
+      ...permitEvents.map((event) => event.occurredOn),
+    ];
+    // 未来の日付で記録した行も見落とさないよう、その年まで選べるようにする。
+    const latestYear = dates.reduce(
+      (latest, date) => Math.max(latest, Number(date.slice(0, 4))),
+      currentYear,
+    );
+    return buildAvailableYears({ dates: [...dates, today], currentYear: latestYear });
+  }, [entries, permitEvents, currentYear, today]);
+
+  // 保存直後の遷移は年を持たないため、強調する記録の年を開く。
+  const highlightedEntryYear = Number(
+    purposeEntries.find((entry) => entry.id === highlightedEntryId)?.occurredOn.slice(0, 4),
+  );
+  const yearParam = Number(searchParams.get("year"));
+  const year = availableYears.includes(yearParam)
+    ? yearParam
+    : availableYears.includes(highlightedEntryYear)
+      ? highlightedEntryYear
+      : currentYear;
+  const { from, to } = buildYearDateRange({ year });
+
+  const yearEntries = useMemo(
+    () => entries.filter((entry) => entry.occurredOn >= from && entry.occurredOn <= to),
+    [entries, from, to],
+  );
+  const entryCounts = useMemo(
+    () => ({
+      shooting: filterByPurpose({ rows: yearEntries, purpose: "shooting" }).length,
+      hunting: filterByPurpose({ rows: yearEntries, purpose: "hunting" }).length,
+      pest_control: filterByPurpose({ rows: yearEntries, purpose: "pest_control" }).length,
+    }),
+    [yearEntries],
+  );
+  const highlightedEntryExists = highlightedEntryId
+    ? yearEntries.some((entry) => entry.id === highlightedEntryId && entry.purpose === purpose)
+    : false;
 
   const purposePermitEvents = useMemo(
     () => filterByPurpose({ rows: permitEvents, purpose }),
@@ -137,20 +170,8 @@ function LedgerViewContent({
     [entries],
   );
 
-  const availablePrintYears = useMemo(
-    () =>
-      buildAvailableYears({
-        dates: [
-          ...entries.map((entry) => entry.occurredOn),
-          ...permitEvents.map((event) => event.occurredOn),
-        ],
-        currentYear,
-      }),
-    [entries, permitEvents, currentYear],
-  );
-
   function handlePurposeChange({ nextPurpose }: { nextPurpose: LedgerPurpose }) {
-    syncPurposeToUrl({ purpose: nextPurpose });
+    replaceLedgerQuery({ purpose: nextPurpose, year });
   }
 
   return (
@@ -187,7 +208,7 @@ function LedgerViewContent({
           </div>
           <div className="min-w-0">
             <dt className="text-muted-foreground">件数</dt>
-            <dd className="font-medium tabular-nums">{purposeEntries.length}件</dd>
+            <dd className="font-medium tabular-nums">{entryCounts[purpose]}件</dd>
           </div>
           <div className="min-w-0">
             <dt className="text-muted-foreground">帳簿残数（全用途）</dt>
@@ -199,20 +220,18 @@ function LedgerViewContent({
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
           <div className="w-full max-w-[10rem] sm:w-36">
             <LedgerYearSelect
-              years={availablePrintYears}
-              value={printYear}
-              onChange={({ year }) => setPrintYear(year)}
-              id="ledger-print-year"
-              label="印刷する年"
+              years={availableYears}
+              value={year}
+              onChange={({ year: nextYear }) => replaceLedgerQuery({ purpose, year: nextYear })}
             />
           </div>
           <button
             type="button"
             disabled={isSaving}
-            onClick={() => router.push(`/lab/ammo-ledger/ledger/print?year=${printYear}`)}
+            onClick={() => router.push(`/lab/ammo-ledger/ledger/print?year=${year}`)}
             className="shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSaving ? "保存が終わると印刷できます" : `${printYear}年を印刷する →`}
+            {isSaving ? "保存が終わると印刷できます" : `${year}年を印刷する →`}
           </button>
         </div>
       </div>
@@ -238,6 +257,8 @@ function LedgerViewContent({
         permits={permits}
         purpose={purpose}
         today={today}
+        from={from}
+        to={to}
         permitBalances={permitBalances}
         homeStorageExceededEntryIds={homeStorage.exceededEntryIds}
         highlightedEntryId={highlightedEntryId}

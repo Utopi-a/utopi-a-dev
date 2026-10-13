@@ -154,10 +154,9 @@ export function buildLedgerDisplayRows({
       };
     });
 
-  const entryRows: LedgerDisplayRow[] = entries.map((entry) => ({
-    kind: "entry",
-    entry,
-  }));
+  const entryRows: LedgerDisplayRow[] = entries
+    .filter((entry) => isWithinRange({ date: entry.occurredOn, from, to }))
+    .map((entry) => ({ kind: "entry", entry }));
 
   return [...permitCarryovers, ...permitExpiries, ...entryRows].sort((a, b) =>
     compareDisplayRows({ a, b }),

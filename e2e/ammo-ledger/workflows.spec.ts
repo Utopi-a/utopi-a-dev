@@ -189,8 +189,11 @@ test("未確定プレビューの確定後に正式帳票を印刷し、解除�
   await page.goto(consumePath);
   await expect(page.getByRole("heading", { name: "消費した", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "帳簿", exact: true }).click();
+  // 帳簿は今年の記録だけを表示するため、前年の記録は年を選んでから確認する。
+  await expect(visibleEntry({ page, id: ledger.consumedEntryId })).toHaveCount(0);
+  await page.getByLabel("対象年").selectOption(String(ledger.year));
+  await expect(page).toHaveURL(new RegExp(`year=${ledger.year}`));
   await expect(visibleEntry({ page, id: ledger.consumedEntryId })).toBeVisible();
-  await page.getByLabel("印刷する年").selectOption(String(ledger.year));
   await page.getByRole("button", { name: `${ledger.year}年を印刷する →` }).click();
   await page.getByRole("link", { name: "未確定プレビュー", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`year=${ledger.year}&preview=1`));
@@ -259,6 +262,7 @@ test("未確定プレビューの確定後に正式帳票を印刷し、解除�
   expect(lockEvents).toEqual([{ event_kind: "lock", locked_through: `${ledger.year}-12-31` }]);
 
   await page.getByRole("link", { name: "← 帳簿に戻る" }).click();
+  await page.getByLabel("対象年").selectOption(String(ledger.year));
   await visibleEntry({ page, id: ledger.consumedEntryId }).click();
   await expect(page.getByText("この期間はロック済みのため編集・取消できません。")).toBeVisible();
   await expect(page.getByRole("link", { name: "編集", exact: true })).toHaveCount(0);
@@ -274,6 +278,7 @@ test("未確定プレビューの確定後に正式帳票を印刷し、解除�
   await page.getByRole("button", { name: "解除する", exact: true }).click();
   await expect(page.getByText("ロック状態: 未ロック", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "帳簿", exact: true }).click();
+  await page.getByLabel("対象年").selectOption(String(ledger.year));
   await visibleEntry({ page, id: ledger.consumedEntryId }).click();
   await expect(page.getByRole("link", { name: "編集", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "取消", exact: true })).toBeVisible();

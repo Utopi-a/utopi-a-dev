@@ -5,6 +5,7 @@ import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose
 import type { PermitEventKind } from "@/features/ammo-ledger/schema/permit-event-kind";
 
 type PermitEventRow = {
+  permitId?: string | null;
   occurredOn: string;
   eventKind: PermitEventKind;
   quantity: number;
@@ -20,6 +21,29 @@ const permitConsumingCategories: LedgerCategory[] = ["acquire"];
 
 function compareDate({ a, b }: { a: string; b: string }): number {
   return a.localeCompare(b);
+}
+
+/**
+ * 今日使える残数の計算用。失効は用途の残数を0に戻すため、同じ日に付与・繰越された別の許可より先に適用する。
+ * 付与日と有効期限が同じ許可だけは、自分の付与を失効より先に適用する。DBは同日の順序を保証しない。
+ * 帳簿の表（computeRunningPermitBalance）は失効行を同日の記録の後に残数0で表示するため、日付順のままにしている。
+ */
+function sortPermitEvents({ events }: { events: PermitEventRow[] }): PermitEventRow[] {
+  const expiryKeys = new Set(
+    events
+      .filter((event) => event.eventKind === "expiry" && event.permitId)
+      .map((event) => `${event.permitId}:${event.occurredOn}`),
+  );
+  const sameDayRank = (event: PermitEventRow): number => {
+    if (event.eventKind === "expiry") {
+      return 1;
+    }
+    return event.permitId && expiryKeys.has(`${event.permitId}:${event.occurredOn}`) ? 0 : 2;
+  };
+
+  return [...events].sort(
+    (a, b) => compareDate({ a: a.occurredOn, b: b.occurredOn }) || sameDayRank(a) - sameDayRank(b),
+  );
 }
 
 export function computeRunningPermitBalance({
@@ -87,9 +111,7 @@ export function computeCurrentPermitBalance({
   );
   let balance = 0;
 
-  const sortedEvents = [...effectivePermitEvents].sort((a, b) =>
-    compareDate({ a: a.occurredOn, b: b.occurredOn }),
-  );
+  const sortedEvents = sortPermitEvents({ events: effectivePermitEvents });
   const sortedEntries = ledgerEntries
     .filter((entry) => entry.occurredOn <= today)
     .sort((a, b) => compareLedgerEntries({ a, b }));

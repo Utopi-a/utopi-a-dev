@@ -84,6 +84,7 @@ function LedgerViewContent({
   const permitEventRows = useMemo(
     () =>
       purposePermitEvents.map((event) => ({
+        permitId: event.permitId,
         occurredOn: event.occurredOn,
         eventKind: event.eventKind as PermitEventKind,
         quantity: event.quantity,

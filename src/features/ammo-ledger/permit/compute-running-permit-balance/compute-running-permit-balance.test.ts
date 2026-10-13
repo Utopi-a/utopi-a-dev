@@ -93,4 +93,56 @@ describe("computeRunningPermitBalance", () => {
 
     expect(computeCurrentPermitBalance({ permitEvents, ledgerEntries, today })).toBe(70);
   });
+
+  it.each([
+    {
+      order: "付与→失効",
+      sameDayEvents: [
+        { permitId: "new", occurredOn: "2026-06-07", eventKind: "grant" as const, quantity: 500 },
+        { permitId: "old", occurredOn: "2026-06-07", eventKind: "expiry" as const, quantity: 0 },
+      ],
+    },
+    {
+      order: "失効→付与",
+      sameDayEvents: [
+        { permitId: "old", occurredOn: "2026-06-07", eventKind: "expiry" as const, quantity: 0 },
+        { permitId: "new", occurredOn: "2026-06-07", eventKind: "grant" as const, quantity: 500 },
+      ],
+    },
+  ])("旧許可の満了日に付与された新許可は、旧許可の失効で消えない（$order）", ({
+    sameDayEvents,
+  }) => {
+    const permitEvents = [
+      { permitId: "old", occurredOn: "2026-01-01", eventKind: "grant" as const, quantity: 100 },
+      ...sameDayEvents,
+    ];
+    const ledgerEntries = [
+      { id: "e1", occurredOn: "2026-03-01", category: "acquire" as const, quantity: 30 },
+      { id: "e2", occurredOn: "2026-06-08", category: "acquire" as const, quantity: 20 },
+    ];
+
+    expect(computeCurrentPermitBalance({ permitEvents, ledgerEntries, today: "2026-06-07" })).toBe(
+      570,
+    );
+    expect(computeCurrentPermitBalance({ permitEvents, ledgerEntries, today: "2026-06-08" })).toBe(
+      480,
+    );
+  });
+
+  it("付与日と有効期限が同じ許可は、当日だけ残数に入り翌日に失効する", () => {
+    const permitEvents = [
+      { permitId: "one-day", occurredOn: "2026-06-07", eventKind: "expiry" as const, quantity: 0 },
+      { permitId: "one-day", occurredOn: "2026-06-07", eventKind: "grant" as const, quantity: 50 },
+    ];
+    const ledgerEntries = [
+      { id: "e1", occurredOn: "2026-06-08", category: "acquire" as const, quantity: 10 },
+    ];
+
+    expect(computeCurrentPermitBalance({ permitEvents, ledgerEntries, today: "2026-06-07" })).toBe(
+      50,
+    );
+    expect(computeCurrentPermitBalance({ permitEvents, ledgerEntries, today: "2026-06-08" })).toBe(
+      0,
+    );
+  });
 });

@@ -59,7 +59,7 @@ export function ActivePermitStatus({
     <div className="space-y-2">
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
         <span>
-          <span className="text-muted-foreground">残り </span>
+          <span className="text-muted-foreground">今日使える残り </span>
           <span className="text-lg font-semibold tabular-nums">
             {formatStockQuantity({ quantity: permitBalance })}
           </span>

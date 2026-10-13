@@ -11,7 +11,6 @@ const input: AcquisitionPermitApplicationInput = {
   requestedQuantity: 500,
   currentHomeStock: 755,
   permitPurpose: "標的射撃",
-  ledgerPurpose: "shooting",
   validFrom: "2026-09-10",
   validTo: "2027-09-09",
   storageLocation: "自宅装弾ロッカー",

@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { SWRConfig } from "swr";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ammoGun } from "@/db/schema/ammo-ledger";
@@ -35,21 +36,30 @@ const guns: (typeof ammoGun.$inferSelect)[] = ["A", "B"].map((name) => ({
   updatedAt: new Date("2026-09-10"),
 }));
 
-async function renderForm(
-  profile: { ownerFurigana?: string; possessionPermitCertificateNumber?: string } = {},
-) {
+type FormProps = ComponentProps<typeof AcquisitionPermitApplicationForm>;
+
+async function mountForm(profile: Partial<FormProps> = {}) {
   render(
     <SWRConfig value={{ provider: () => new Map() }}>
       <AcquisitionPermitApplicationForm
         ownerName="テスト氏名"
+        ownerFurigana="てすと たろう"
         ownerAddress="テスト住所"
-        currentHomeStock={755}
+        ownerBirthDate="1990-01-01"
+        ownerPhone="000-0000-0000"
+        possessionPermitCertificateNumber="00111111111"
+        totalHomeStock={755}
+        ammoTypeStocks={[{ cartridgeType: "shotgun_shot", caliber: "12番", bookStock: 755 }]}
         guns={guns}
         {...profile}
       />
     </SWRConfig>,
   );
   await screen.findByText("テスト射撃場");
+}
+
+async function renderForm(profile: Partial<FormProps> = {}) {
+  await mountForm(profile);
   fireEvent.change(screen.getByLabelText("申請数量（発）"), { target: { value: "500" } });
 }
 
@@ -84,7 +94,7 @@ describe("譲受許可申請の入力から印刷への引き継ぎ", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it("銃の選択を変えても所持許可証番号を維持し、755発の自然な消費計画と一緒に印刷へ渡す", async () => {
-    await renderForm();
+    await renderForm({ possessionPermitCertificateNumber: undefined });
     const certificateInput = screen.getByLabelText("銃砲所持許可証の番号");
     expect(certificateInput).toHaveValue("");
     fireEvent.change(certificateInput, { target: { value: "00123456789" } });
@@ -110,16 +120,181 @@ describe("譲受許可申請の入力から印刷への引き継ぎ", () => {
     );
   });
 
-  it("許可証番号が未入力なら、選択した銃の番号を印刷しない", async () => {
+  it("印刷プレビューから入力に戻ると、入力・銃・購入先・射撃場の配分を復元する", async () => {
     await renderForm();
+    fireEvent.change(screen.getByLabelText("ふりがな"), { target: { value: "てすと しめい" } });
+    fireEvent.change(screen.getByLabelText("貯蔵又は保管する場所"), {
+      target: { value: "ガンロッカー" },
+    });
+    fireEvent.click(screen.getByRole("checkbox", { name: /テスト銃B/ }));
+    fireEvent.change(screen.getByLabelText("配分の比率（2なら2倍）"), { target: { value: "2" } });
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+
+    cleanup();
+    await mountForm();
+
+    expect(screen.getByLabelText("ふりがな")).toHaveValue("てすと しめい");
+    expect(screen.getByLabelText("貯蔵又は保管する場所")).toHaveValue("ガンロッカー");
+    expect(screen.getByLabelText("申請数量（発）")).toHaveValue(500);
+    expect(screen.getByRole("checkbox", { name: /テスト銃A/ })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /テスト銃B/ })).toBeChecked();
+    expect(screen.getByLabelText("配分の比率（2なら2倍）")).toHaveValue(2);
+    await waitFor(() =>
+      expect(screen.getByLabelText("銃砲火薬店")).toHaveTextContent("テスト銃砲店"),
+    );
+    expect(screen.getByRole("table")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["申請数量（発）", "750"],
+    ["現保有数量（発）", "100"],
+    ["配分の比率（2なら2倍）", "2"],
+  ])("計画を作った後に%sを変えると計画を破棄し、作り直すまで印刷へ進めない", async (label, value) => {
+    await renderForm();
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    expect(screen.getByRole("table")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "入力が変わったので計画を作り直してください",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+    expect(loadAcquisitionPermitApplicationPayload()).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+    const payload = loadAcquisitionPermitApplicationPayload();
+    if (!payload) throw new Error("印刷用データが保存されていません");
+    expect(payload.consumptionPlan.totalAcquisition).toBe(payload.requestedQuantity);
+  });
+
+  it("計画に注意が残っているときは、確認してから印刷へ進む", async () => {
+    await mountForm();
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+
+    const dialog = screen.getByRole("dialog", { name: "消費計画に注意があります" });
+    expect(dialog).toHaveTextContent("複数ページが必要です");
+    fireEvent.click(within(dialog).getByRole("button", { name: "計画を見直す" }));
+    expect(loadAcquisitionPermitApplicationPayload()).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+    fireEvent.click(screen.getByRole("button", { name: "このまま印刷へ進む" }));
+    expect(loadAcquisitionPermitApplicationPayload()?.consumptionPlan.warnings).toContainEqual(
+      expect.stringContaining("複数ページが必要です"),
+    );
+  });
+
+  it("最初からやり直すと、下書きを消してプロフィールの内容と既定値に戻す", async () => {
+    await renderForm({ ownerFurigana: "やまだ たろう" });
+    fireEvent.change(screen.getByLabelText("ふりがな"), { target: { value: "やまだ じろう" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "最初からやり直す" }));
+    const dialog = screen.getByRole("dialog", { name: "入力を最初からやり直しますか？" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "最初からやり直す" }));
+
+    expect(screen.getByLabelText("ふりがな")).toHaveValue("やまだ たろう");
+    expect(screen.getByLabelText("申請数量（発）")).toHaveValue(5000);
+    cleanup();
+    await mountForm({ ownerFurigana: "やまだ たろう" });
+    expect(screen.getByLabelText("ふりがな")).toHaveValue("やまだ たろう");
+  });
+
+  it("火薬類の名称は、様式の実包欄に印字できる実包だけを選べる", async () => {
+    await renderForm();
+    const optionLabels = within(screen.getByLabelText("火薬類の名称"))
+      .getAllByRole("option")
+      .map((option) => option.textContent)
+      .filter((label) => label !== "");
+    expect(optionLabels).toEqual(["12番", "20番", "410番", "実包（ライフル）"]);
+  });
+
+  it("現保有数量は選んだ名称の弾種だけを合計し、手で直すまでは名称の変更に追随する", async () => {
+    await renderForm({
+      totalHomeStock: 600,
+      ammoTypeStocks: [
+        { cartridgeType: "shotgun_shot", caliber: "12番", bookStock: 300 },
+        { cartridgeType: "shotgun_slug", caliber: "12番", bookStock: 100 },
+        { cartridgeType: "rifle", caliber: ".308WIN", bookStock: 200 },
+      ],
+    });
+    const homeStockInput = screen.getByLabelText("現保有数量（発）");
+    expect(homeStockInput).toHaveValue(400);
+
+    fireEvent.change(screen.getByLabelText("火薬類の名称"), {
+      target: { value: "実包（ライフル）" },
+    });
+    expect(homeStockInput).toHaveValue(200);
+
+    fireEvent.change(homeStockInput, { target: { value: "150" } });
+    fireEvent.change(screen.getByLabelText("火薬類の名称"), { target: { value: "20番" } });
+    expect(homeStockInput).toHaveValue(150);
+  });
+
+  it("印刷する保有数量は名称の分だけにし、自宅保管の上限はほかの弾種も含めて計画する", async () => {
+    await renderForm({
+      totalHomeStock: 700,
+      ammoTypeStocks: [
+        { cartridgeType: "shotgun_shot", caliber: "12番", bookStock: 300 },
+        { cartridgeType: "rifle", caliber: ".308WIN", bookStock: 400 },
+      ],
+    });
+    expect(screen.getByText(/ほかの弾種の400発も含めます/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
     fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
 
     const payload = loadAcquisitionPermitApplicationPayload();
     if (!payload) throw new Error("印刷用データが保存されていません");
-    expect(buildApplicationFieldValues({ input: payload }).mainFields.permitCertificateNumber).toBe(
-      "",
+    expect(buildApplicationFieldValues({ input: payload }).mainFields.currentHomeStock).toBe(
+      "12番 300個",
     );
+    expect(payload.consumptionPlan.peakHomeStock).toBeGreaterThanOrEqual(700);
+    expect(payload.consumptionPlan.peakHomeStock).toBeLessThanOrEqual(800);
+  });
+
+  it("提出先はプロフィール住所の都道府県を初期値にする", async () => {
+    await renderForm({ ownerAddress: "北海道札幌市中央区北1条西2丁目" });
+    expect(screen.getByLabelText("提出先（公安委員会）")).toHaveValue("北海道");
+  });
+
+  it("許可証番号が未入力なら、選択した銃の番号で埋めずに入力を求める", async () => {
+    await renderForm({ possessionPermitCertificateNumber: undefined });
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+
+    expect(loadAcquisitionPermitApplicationPayload()).toBeNull();
+    const certificateInput = screen.getByLabelText("銃砲所持許可証の番号");
+    expect(certificateInput).toHaveValue("");
+    expect(certificateInput).toHaveFocus();
+    expect(within(screen.getByRole("alert")).getByRole("button").textContent).toBe(
+      "銃砲所持許可証の番号",
+    );
+  });
+
+  it("様式の必須項目が欠けていれば一覧にして最初の欄へ移り、埋めると印刷へ進める", async () => {
+    await renderForm({ ownerPhone: undefined });
+    expect(screen.getByLabelText("氏名")).toBeRequired();
+    fireEvent.change(screen.getByLabelText("氏名"), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: /テスト銃A/ }));
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+
+    const missingLabels = within(screen.getByRole("alert"))
+      .getAllByRole("button")
+      .map((button) => button.textContent);
+    expect(missingLabels).toEqual(["氏名", "電話番号", "使用銃", "消費計画"]);
+    expect(screen.getByLabelText("氏名")).toHaveFocus();
+    expect(screen.getByLabelText("氏名")).toHaveAttribute("aria-invalid", "true");
+    expect(loadAcquisitionPermitApplicationPayload()).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("氏名"), { target: { value: "テスト氏名" } });
+    fireEvent.change(screen.getByLabelText("電話番号"), { target: { value: "000-0000-0000" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: /テスト銃A/ }));
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    expect(screen.queryByRole("alert")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+    expect(loadAcquisitionPermitApplicationPayload()?.ownerPhone).toBe("000-0000-0000");
   });
 
   it.each([

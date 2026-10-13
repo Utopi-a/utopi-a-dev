@@ -108,7 +108,7 @@ export function ConsumptionPlanRangeAllocationList({
           />
 
           <div className="space-y-2">
-            <Label htmlFor={`range-weight-${row.id}`}>配分 weight</Label>
+            <Label htmlFor={`range-weight-${row.id}`}>配分の比率（2なら2倍）</Label>
             <Input
               id={`range-weight-${row.id}`}
               type="number"

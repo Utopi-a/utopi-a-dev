@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/cn";
 
@@ -12,6 +13,7 @@ type FieldSelectProps = {
   required?: boolean;
   placeholder?: string;
   className?: string;
+  labelSuffix?: ReactNode;
 };
 
 export function FieldSelect({
@@ -23,6 +25,7 @@ export function FieldSelect({
   required,
   placeholder = "選択してください",
   className,
+  labelSuffix,
 }: FieldSelectProps) {
   // 案内文のない選択で空欄を選べると、用途のない記録や「0年」になる。
   // 値がどの選択肢にも当たらないときだけは、別の選択肢が選ばれて見えないよう空欄を残す。
@@ -30,7 +33,10 @@ export function FieldSelect({
   // iOS は16px未満の選択欄を開くと画面を拡大するため、モバイルでは文字を16pxにする。
   return (
     <div className={cn("space-y-2", className)}>
-      <Label htmlFor={id}>{label}</Label>
+      <div className="flex items-center gap-2">
+        <Label htmlFor={id}>{label}</Label>
+        {labelSuffix}
+      </div>
       <select
         id={id}
         required={required}

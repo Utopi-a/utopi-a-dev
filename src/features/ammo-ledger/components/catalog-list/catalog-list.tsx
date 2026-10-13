@@ -211,6 +211,7 @@ export function CatalogList({
         <CatalogFavoriteButton
           catalogKind={entryCatalogKind}
           catalogId={entry.catalogId}
+          name={entry.name}
           isFavorite={favoriteIds.includes(entry.catalogId)}
           onFavoriteChange={({ isFavorite }) => {
             setFavoriteIds((current) => {
@@ -297,6 +298,7 @@ export function CatalogList({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="名前・住所で検索"
+            aria-label="名前・住所で検索"
             className="pl-9"
           />
         </div>

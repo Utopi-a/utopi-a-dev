@@ -167,6 +167,11 @@ describe("MasterPicker の全国一覧からの登録", () => {
     const trigger = screen.getByRole("button", { name: "購入先" });
     expect(trigger).toHaveAccessibleDescription("元の購入先");
     await user.click(trigger);
+    expect(screen.getByRole("button", { name: "閉じる" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "新しい銃砲店をお気に入り" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     await user.click(screen.getByRole("button", { name: /^新しい銃砲店\s*千代田区$/ }));
     return { onSubmit, user, trigger };
   }

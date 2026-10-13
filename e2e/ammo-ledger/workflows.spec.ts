@@ -262,7 +262,12 @@ test("未確定プレビューの確定後に正式帳票を印刷し、解除�
   await visibleEntry({ page, id: ledger.consumedEntryId }).click();
   await expect(page.getByText("この期間はロック済みのため編集・取消できません。")).toBeVisible();
   await expect(page.getByRole("link", { name: "編集", exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: "閉じる", exact: true }).click();
+  // シート下部の「閉じる」を押す（右上の × も同じ名前で読まれる）。
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "閉じる", exact: true })
+    .first()
+    .click();
   await page.getByRole("button", { name: "設定", exact: true }).click();
   await page.getByRole("link", { name: "帳簿の確定・ロック" }).click();
   await page.getByRole("button", { name: "ロックを解除する…", exact: true }).click();
@@ -282,7 +287,12 @@ test("未確定プレビューの確定後に正式帳票を印刷し、解除�
     order by created_at
   `;
   expect(unlocked.map((event) => event.event_kind)).toEqual(["lock", "unlock"]);
-  await page.getByRole("button", { name: "閉じる", exact: true }).click();
+  // シート下部の「閉じる」を押す（右上の × も同じ名前で読まれる）。
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "閉じる", exact: true })
+    .first()
+    .click();
   await page.screenshot({ path: testInfo.outputPath("unlocked-ledger.png"), fullPage: true });
 });
 

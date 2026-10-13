@@ -256,6 +256,7 @@ export function MasterPicker({
           <CatalogFavoriteButton
             catalogKind={entryCatalogKind}
             catalogId={entry.catalogId}
+            name={entry.name}
             isFavorite={favoriteIds.includes(entry.catalogId)}
             onFavoriteChange={({ isFavorite }) => {
               setFavoriteIds((current) => {

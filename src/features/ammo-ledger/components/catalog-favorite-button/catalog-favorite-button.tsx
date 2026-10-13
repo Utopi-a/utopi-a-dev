@@ -12,6 +12,8 @@ import { cn } from "@/lib/cn";
 type CatalogFavoriteButtonProps = {
   catalogKind: CatalogKind;
   catalogId: string;
+  /** 一覧のどの行のボタンかを読み上げで区別するための名称 */
+  name: string;
   isFavorite: boolean;
   onFavoriteChange?: ({ isFavorite }: { isFavorite: boolean }) => void;
   className?: string;
@@ -20,6 +22,7 @@ type CatalogFavoriteButtonProps = {
 export function CatalogFavoriteButton({
   catalogKind,
   catalogId,
+  name,
   isFavorite,
   onFavoriteChange,
   className,
@@ -64,7 +67,8 @@ export function CatalogFavoriteButton({
       type="button"
       variant="ghost"
       size="icon-xs"
-      aria-label={favorite ? "お気に入りを解除" : "お気に入りに追加"}
+      // 名前を状態で変えると押した直後に別のボタンとして読まれるため、状態は aria-pressed だけで伝える。
+      aria-label={`${name}をお気に入り`}
       aria-pressed={favorite}
       disabled={isPending}
       onClick={handleToggle}

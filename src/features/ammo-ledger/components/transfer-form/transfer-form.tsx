@@ -3,7 +3,6 @@
 import { useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoType } from "@/db/schema/ammo-ledger";
 import { useDefaultCounterpartyId } from "@/features/ammo-ledger/catalog/use-default-counterparty-id/use-default-counterparty-id";
@@ -12,6 +11,7 @@ import {
   useMasterPickerData,
 } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import { usePurposeFollowingAmmoType } from "@/features/ammo-ledger/components/purpose-select/use-purpose-following-ammo-type";
@@ -133,15 +133,11 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-occurred-on`}>日付</Label>
-        <IsoDateInput
-          id={`${idPrefix}-occurred-on`}
-          required
-          value={occurredOn}
-          onChange={({ value }) => setOccurredOn(value)}
-        />
-      </div>
+      <LedgerEntryDateField
+        id={`${idPrefix}-occurred-on`}
+        value={occurredOn}
+        onChange={setOccurredOn}
+      />
 
       <FieldSelect
         id={`${idPrefix}-ammo-type`}

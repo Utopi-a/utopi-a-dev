@@ -81,6 +81,21 @@ describe("prepareOptimisticLedgerEntry", () => {
     });
   });
 
+  it("日本時間の今日までは受け付け、未来の日付はサーバーと同じく拒否する", () => {
+    // 日本時間 2026-10-13 00:30（UTC では前日）
+    const justAfterMidnight = new Date("2026-10-12T15:30:00Z");
+    const prepare = (occurredOn: string) =>
+      prepareOptimisticLedgerEntry({
+        workspace: stockedWorkspace,
+        payload: { ...consumePayload, occurredOn },
+        provisionalId: "pending-1",
+        now: justAfterMidnight,
+      });
+
+    expect(prepare("2026-10-13").ok).toBe(true);
+    expect(prepare("2026-10-14")).toEqual({ ok: false, error: "未来の日付は記録できません" });
+  });
+
   it("ロック済みの日付は先行表示せずに拒否する", () => {
     const result = prepareOptimisticLedgerEntry({
       workspace: {

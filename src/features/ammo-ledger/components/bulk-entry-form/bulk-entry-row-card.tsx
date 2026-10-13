@@ -2,7 +2,6 @@
 
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
 import { BulkEntryCopyActions } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-copy-actions";
@@ -15,6 +14,7 @@ import {
   computeBulkEntryRounds,
 } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-row-state";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import {
@@ -158,15 +158,11 @@ export function BulkEntryRowCard({
           placeholder=""
         />
 
-        <div className="space-y-2">
-          <Label htmlFor={`occurred-on-${row.clientId}`}>日付</Label>
-          <IsoDateInput
-            id={`occurred-on-${row.clientId}`}
-            required
-            value={row.occurredOn}
-            onChange={({ value }) => updateRow({ patch: { occurredOn: value } })}
-          />
-        </div>
+        <LedgerEntryDateField
+          id={`occurred-on-${row.clientId}`}
+          value={row.occurredOn}
+          onChange={(value) => updateRow({ patch: { occurredOn: value } })}
+        />
       </div>
 
       <FieldSelect

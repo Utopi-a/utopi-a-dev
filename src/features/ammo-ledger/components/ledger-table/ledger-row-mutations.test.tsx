@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Toaster, toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MasterRowActions } from "@/features/ammo-ledger/components/master-row-actions/master-row-actions";
+import { PendingLedgerChangeAlerts } from "@/features/ammo-ledger/components/pending-ledger-change-alerts/pending-ledger-change-alerts";
 import { reorderLedgerEntryAction } from "@/features/ammo-ledger/transactions/reorder-ledger-entry/reorder-ledger-entry-action";
 import { voidLedgerEntryAction } from "@/features/ammo-ledger/transactions/void-ledger-entry/void-ledger-entry-action";
 import { AmmoLedgerSwrProvider } from "@/features/ammo-ledger/workspace/ammo-ledger-swr-provider/ammo-ledger-swr-provider";
@@ -18,7 +19,10 @@ import { VoidLedgerEntryButton } from "./void-ledger-entry-button";
 
 const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh }),
+  useSearchParams: () => new URLSearchParams(),
+}));
 vi.mock("@/features/ammo-ledger/transactions/void-ledger-entry/void-ledger-entry-action", () => ({
   voidLedgerEntryAction: vi.fn(),
 }));
@@ -124,6 +128,26 @@ describe("帳簿行とマスターの非同期操作", () => {
     expect(await screen.findByText("帳簿行を取消しました")).toBeVisible();
     expect(entryOrder()).toBe("acquire,first");
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("取消の保存待ちは画面上部に件数を表示し、確定すると消える", async () => {
+    const save = deferred<{ ok: true }>();
+    vi.mocked(voidLedgerEntryAction).mockReturnValueOnce(save.promise);
+    vi.mocked(fetch).mockImplementation(() => new Promise(() => {}));
+    renderWithWorkspace(
+      <>
+        <PendingLedgerChangeAlerts />
+        <VoidLedgerEntryButton entry={secondEntry} />
+      </>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "取消" }));
+    fireEvent.click(screen.getByRole("button", { name: "取り消す" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "帳簿への保存を待っている変更が1件あります",
+    );
+    await act(async () => save.resolve({ ok: true }));
+    expect(screen.queryByText(/保存を待っている変更/)).not.toBeInTheDocument();
   });
 
   it("取消が拒否されたら記録を元に戻し、理由を通知する", async () => {

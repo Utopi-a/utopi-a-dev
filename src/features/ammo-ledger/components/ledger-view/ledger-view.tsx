@@ -25,6 +25,7 @@ import {
 import type { PermitEventKind } from "@/features/ammo-ledger/schema/permit-event-kind";
 import { parseLedgerPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import type { AmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-types";
+import { useSavingLedgerChangeCount } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
@@ -51,6 +52,8 @@ function LedgerViewContent({
 }: LedgerViewContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // 帳票は DB から作るため、保存待ちの変更があるうちは印刷へ進ませない。
+  const isSaving = useSavingLedgerChangeCount() > 0;
   const purpose = parseLedgerPurpose({ value: searchParams.get("purpose") }) ?? "shooting";
   const today = getTokyoIsoDate();
   const currentYear = Number(today.slice(0, 4));
@@ -202,10 +205,11 @@ function LedgerViewContent({
           </div>
           <button
             type="button"
+            disabled={isSaving}
             onClick={() => router.push(`/lab/ammo-ledger/ledger/print?year=${printYear}`)}
-            className="shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {printYear}年を印刷する →
+            {isSaving ? "保存が終わると印刷できます" : `${printYear}年を印刷する →`}
           </button>
         </div>
       </div>

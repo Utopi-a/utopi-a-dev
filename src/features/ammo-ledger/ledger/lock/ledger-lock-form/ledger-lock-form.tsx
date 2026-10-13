@@ -19,6 +19,7 @@ import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-l
 import { lockLedgerAction } from "@/features/ammo-ledger/ledger/lock/lock-ledger-action/lock-ledger-action";
 import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
 import { unlockLedgerAction } from "@/features/ammo-ledger/ledger/lock/unlock-ledger-action/unlock-ledger-action";
+import { useSavingLedgerChangeCount } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
 import { useUpdateAmmoLedgerLockState } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
@@ -75,6 +76,8 @@ function LockSection({ lockState }: { lockState: LedgerLockState }) {
   const [lockedThrough, setLockedThrough] = useState(minDate ?? today);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  // 先行表示した変更の保存が終わる前に確定すると、その変更がロック期間で拒否されるため待たせる。
+  const isSaving = useSavingLedgerChangeCount() > 0;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -122,8 +125,8 @@ function LockSection({ lockState }: { lockState: LedgerLockState }) {
           </div>
         </div>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "ロック中…" : "ロックする"}
+        <Button type="submit" disabled={isPending || isSaving}>
+          {isPending ? "ロック中…" : isSaving ? "保存待ちの変更があります" : "ロックする"}
         </Button>
       </form>
     </section>

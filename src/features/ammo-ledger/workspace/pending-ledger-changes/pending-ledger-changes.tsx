@@ -143,6 +143,12 @@ export function usePendingLedgerChanges() {
   return useContext(PendingLedgerChangesContext);
 }
 
+/** 保存の応答を待っている変更の件数。帳簿の確定・印刷はこれが 0 になってから行う */
+export function useSavingLedgerChangeCount() {
+  const { changes } = usePendingLedgerChanges();
+  return changes.filter((change) => change.status === "saving").length;
+}
+
 export type PendingLedgerActionResult =
   | { ok: true; changes: LedgerEntryChanges; message?: string }
   | { ok: false; error: string };

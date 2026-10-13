@@ -15,6 +15,7 @@ import {
 import { LedgerYearSelect } from "@/features/ammo-ledger/components/ledger-year-select/ledger-year-select";
 import type { LedgerLockIssue } from "@/features/ammo-ledger/documents/validate-ledger-for-lock/validate-ledger-for-lock";
 import { lockLedgerAction } from "@/features/ammo-ledger/ledger/lock/lock-ledger-action/lock-ledger-action";
+import { useSavingLedgerChangeCount } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
 import { useUpdateAmmoLedgerLockState } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
@@ -47,6 +48,8 @@ export function LedgerPrintControls({
   const router = useRouter();
   const searchParams = useSearchParams();
   const updateLockState = useUpdateAmmoLedgerLockState();
+  // 帳票は DB から作るため、画面に先行表示した変更の保存が終わるまで印刷・確定させない。
+  const isSaving = useSavingLedgerChangeCount() > 0;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,7 +134,7 @@ export function LedgerPrintControls({
           ← 帳簿に戻る
         </Link>
         {canPrintOfficially && !hasBlockingIssues ? (
-          <Button type="button" size="sm" onClick={() => window.print()}>
+          <Button type="button" size="sm" disabled={isSaving} onClick={() => window.print()}>
             印刷
           </Button>
         ) : null}
@@ -140,7 +143,7 @@ export function LedgerPrintControls({
             type="button"
             size="sm"
             onClick={() => setDialogOpen(true)}
-            disabled={hasBlockingIssues}
+            disabled={hasBlockingIssues || isSaving}
           >
             {lockButtonLabel}
           </Button>

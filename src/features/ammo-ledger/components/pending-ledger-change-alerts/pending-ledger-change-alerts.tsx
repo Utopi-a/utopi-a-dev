@@ -6,6 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import {
   buildRestoreHref,
   usePendingLedgerChanges,
+  useSavingLedgerChangeCount,
 } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
 import { cn } from "@/lib/cn";
 
@@ -13,17 +14,32 @@ import { cn } from "@/lib/cn";
 export function PendingLedgerChangeAlerts() {
   const searchParams = useSearchParams();
   const { changes, remove } = usePendingLedgerChanges();
+  const savingCount = useSavingLedgerChangeCount();
   const restoringId = searchParams.get("restore");
   const failedChanges = changes.filter(
     (change) => change.status === "failed" && change.restore && change.id !== restoringId,
   );
 
-  if (failedChanges.length === 0) {
+  if (failedChanges.length === 0 && savingCount === 0) {
     return null;
   }
 
   return (
     <div className="space-y-2">
+      {/* 取消・並び替えは行に「保存中」が出ないため、保存待ちの有無をここで常に知らせる。 */}
+      {savingCount > 0 ? (
+        <p
+          role="status"
+          className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 text-sm"
+        >
+          <span
+            aria-hidden
+            className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-primary/30 border-t-primary"
+          />
+          帳簿への保存を待っている変更が{savingCount}
+          件あります。保存が終わるまで印刷と帳簿の確定はできません。
+        </p>
+      ) : null}
       {failedChanges.map((change) => (
         <div
           key={change.id}

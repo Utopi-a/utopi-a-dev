@@ -15,7 +15,6 @@ type RangeFormProps = {
   initialValues?: {
     name: string;
     address: string;
-    defaultPurpose?: string | null;
     memo?: string | null;
   };
 };
@@ -26,7 +25,6 @@ export function RangeForm({ recordId, initialValues }: RangeFormProps = {}) {
   const isEdit = Boolean(recordId);
   const [name, setName] = useState(initialValues?.name ?? "");
   const [address, setAddress] = useState(initialValues?.address ?? "");
-  const [defaultPurpose, setDefaultPurpose] = useState(initialValues?.defaultPurpose ?? "");
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -42,7 +40,8 @@ export function RangeForm({ recordId, initialValues }: RangeFormProps = {}) {
       const payload = {
         name,
         address,
-        defaultPurpose: defaultPurpose || undefined,
+        // 指定区分（defaultPurpose）は全国一覧から追加したときの参考値で、どこからも読まないため
+        // 入力欄を置かない。送らなければ更新でも既存の値は消えない。
         memo: memo || undefined,
       };
 
@@ -70,7 +69,6 @@ export function RangeForm({ recordId, initialValues }: RangeFormProps = {}) {
       startListRefresh(() => router.refresh());
       setName("");
       setAddress("");
-      setDefaultPurpose("");
       setMemo("");
     } catch {
       setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
@@ -88,14 +86,6 @@ export function RangeForm({ recordId, initialValues }: RangeFormProps = {}) {
       <div className="space-y-2">
         <Label htmlFor="address">所在地</Label>
         <Input id="address" required value={address} onChange={(e) => setAddress(e.target.value)} />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="default-purpose">よく使う用途</Label>
-        <Input
-          id="default-purpose"
-          value={defaultPurpose}
-          onChange={(e) => setDefaultPurpose(e.target.value)}
-        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="memo">メモ</Label>

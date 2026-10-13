@@ -35,7 +35,6 @@ export default async function EditRangePage({ params }: PageProps) {
             initialValues={{
               name: range.name,
               address: range.address,
-              defaultPurpose: range.defaultPurpose,
               memo: range.memo,
             }}
           />

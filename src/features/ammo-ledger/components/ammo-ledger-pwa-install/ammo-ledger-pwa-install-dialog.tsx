@@ -105,7 +105,7 @@ export function AmmoLedgerPwaInstallDialog({
           <DialogDescription>
             {ammoLedgerPwaConfig.shortName}
             をアプリのように使えます。ブラウザの UI
-            なしで素早く開け、オフラインでも一部画面を表示できます。
+            なしで素早く開けます。記録の保存と帳簿の表示には電波が必要です。
           </DialogDescription>
         </DialogHeader>
 

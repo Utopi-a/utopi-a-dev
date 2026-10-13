@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
+import { AmmoLedgerOfflineNotice } from "@/features/ammo-ledger/components/ammo-ledger-offline-notice/ammo-ledger-offline-notice";
 import { useAmmoLedgerOptimisticNav } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { AmmoLedgerShellLink } from "@/features/ammo-ledger/components/ammo-ledger-shell-link/ammo-ledger-shell-link";
 import { PendingLedgerChangeAlerts } from "@/features/ammo-ledger/components/pending-ledger-change-alerts/pending-ledger-change-alerts";
@@ -34,6 +35,7 @@ export function AmmoLedgerSubpageChrome({ children }: AmmoLedgerSubpageChromePro
   return (
     <div className="space-y-6">
       <AmmoLedgerNav />
+      <AmmoLedgerOfflineNotice />
       <PendingLedgerChangeAlerts />
       {parentPage ? (
         // 44px のタップ領域を保ったまま、見出しとの間を詰める。

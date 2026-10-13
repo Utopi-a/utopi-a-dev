@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
+import { AmmoLedgerOfflineNotice } from "@/features/ammo-ledger/components/ammo-ledger-offline-notice/ammo-ledger-offline-notice";
 import { useAmmoLedgerOptimisticNav } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import {
   AmmoLedgerRefreshError,
@@ -95,6 +96,7 @@ export function AmmoLedgerShell({ children }: AmmoLedgerShellProps) {
     return (
       <div className="space-y-5">
         <AmmoLedgerNav status={showsWorkspace ? <AmmoLedgerRefreshStatus /> : null} />
+        <AmmoLedgerOfflineNotice />
         <PendingLedgerChangeAlerts />
         {showsWorkspace ? <AmmoLedgerRefreshError /> : null}
         <ShellContent route={shellRoute} />
@@ -106,6 +108,7 @@ export function AmmoLedgerShell({ children }: AmmoLedgerShellProps) {
     return (
       <div className="space-y-5">
         <AmmoLedgerNav />
+        <AmmoLedgerOfflineNotice />
         <WorkspaceViewLoader />
       </div>
     );

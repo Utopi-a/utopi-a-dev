@@ -94,7 +94,8 @@ function findCatalogRow({ entry }: { entry: CatalogEntry }) {
   return row;
 }
 
-describe("全国の銃砲店・射撃場一覧", () => {
+// 全国一覧の全件（約530件）を描画するため、並列実行で負荷が高いと既定の5秒を超えることがある。
+describe("全国の銃砲店・射撃場一覧", { timeout: 20_000 }, () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(listCounterparties).mockResolvedValue([

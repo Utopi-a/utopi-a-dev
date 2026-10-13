@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { shouldBypassAmmoLedgerAuth } from "@/features/ammo-ledger/auth/dev-auth-bypass";
+import { isAmmoLedgerServerActionRequest } from "@/features/ammo-ledger/auth/is-ammo-ledger-server-action-request/is-ammo-ledger-server-action-request";
 import { auth } from "@/lib/auth";
 
 function isAmmoLedgerPwaPublicPath({ pathname }: { pathname: string }) {
@@ -43,6 +44,16 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!isProtectedPath({ pathname: request.nextUrl.pathname })) {
+    return withPathnameHeader({ request });
+  }
+
+  if (
+    isAmmoLedgerServerActionRequest({
+      pathname: request.nextUrl.pathname,
+      method: request.method,
+      headers: request.headers,
+    })
+  ) {
     return withPathnameHeader({ request });
   }
 

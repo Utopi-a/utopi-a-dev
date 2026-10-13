@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoType } from "@/db/schema/ammo-ledger";
+import { outflowCounterpartyInputKinds } from "@/features/ammo-ledger/catalog/schema/recent-counterparty-input-kinds";
 import { useDefaultCounterpartyId } from "@/features/ammo-ledger/catalog/use-default-counterparty-id/use-default-counterparty-id";
 import {
   findPickerMaster,
@@ -52,10 +53,12 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
   });
   const initial = restoredValues ?? initialValues;
   const today = getTokyoIsoDate();
-  const { pickerData: counterpartyPickerData } = useMasterPickerData({
-    catalogKind: "gun_shop",
-    enabled: true,
-  });
+  const { pickerData: counterpartyPickerData, error: counterpartyPickerError } =
+    useMasterPickerData({
+      catalogKind: "gun_shop",
+      recentInputKinds: outflowCounterpartyInputKinds,
+      enabled: true,
+    });
 
   const [occurredOn, setOccurredOn] = useState(initial?.occurredOn ?? today);
   const { ammoTypeId, purpose, selectAmmoType, choosePurpose } = usePurposeFollowingAmmoType({
@@ -67,6 +70,9 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
   const { counterpartyId, setCounterpartyId } = useDefaultCounterpartyId({
     initialCounterpartyId: initial?.counterpartyId,
     pickerData: counterpartyPickerData,
+    pickerError: counterpartyPickerError,
+    // 譲渡・交付の相手は記録ごとに違うことが多く、前回の相手を黙って入れると誤記録になる。
+    defaultsToRecent: false,
   });
 
   const [boxCount, setBoxCount] = useState(String(initial?.boxCount ?? 0));
@@ -203,6 +209,7 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
         value={counterpartyId}
         onChange={setCounterpartyId}
         catalogKind="gun_shop"
+        recentInputKinds={outflowCounterpartyInputKinds}
         sheetTitle="譲渡先を選ぶ"
         manualOption={{ value: manualCounterpartyId, label: "手入力" }}
         required

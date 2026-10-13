@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoType } from "@/db/schema/ammo-ledger";
+import { outflowCounterpartyInputKinds } from "@/features/ammo-ledger/catalog/schema/recent-counterparty-input-kinds";
 import { useDefaultCounterpartyId } from "@/features/ammo-ledger/catalog/use-default-counterparty-id/use-default-counterparty-id";
 import {
   findPickerMaster,
@@ -54,10 +55,12 @@ export function IssueForm({ ammoTypes, ledgerEntryId, initialValues }: IssueForm
   });
   const initial = restoredValues ?? initialValues;
   const today = getTokyoIsoDate();
-  const { pickerData: counterpartyPickerData } = useMasterPickerData({
-    catalogKind: "gun_shop",
-    enabled: true,
-  });
+  const { pickerData: counterpartyPickerData, error: counterpartyPickerError } =
+    useMasterPickerData({
+      catalogKind: "gun_shop",
+      recentInputKinds: outflowCounterpartyInputKinds,
+      enabled: true,
+    });
 
   const [occurredOn, setOccurredOn] = useState(initial?.occurredOn ?? today);
   const { ammoTypeId, purpose, selectAmmoType, choosePurpose } = usePurposeFollowingAmmoType({
@@ -69,6 +72,9 @@ export function IssueForm({ ammoTypes, ledgerEntryId, initialValues }: IssueForm
   const { counterpartyId, setCounterpartyId } = useDefaultCounterpartyId({
     initialCounterpartyId: initial?.counterpartyId,
     pickerData: counterpartyPickerData,
+    pickerError: counterpartyPickerError,
+    // 譲渡・交付の相手は記録ごとに違うことが多く、前回の相手を黙って入れると誤記録になる。
+    defaultsToRecent: false,
   });
 
   const [outerBoxCount, setOuterBoxCount] = useState(String(initial?.outerBoxCount ?? 0));
@@ -195,6 +201,7 @@ export function IssueForm({ ammoTypes, ledgerEntryId, initialValues }: IssueForm
         value={counterpartyId}
         onChange={setCounterpartyId}
         catalogKind="gun_shop"
+        recentInputKinds={outflowCounterpartyInputKinds}
         sheetTitle="交付先を選ぶ"
         manualOption={{ value: manualCounterpartyId, label: "手入力" }}
         required

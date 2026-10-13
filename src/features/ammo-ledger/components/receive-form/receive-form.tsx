@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoType } from "@/db/schema/ammo-ledger";
+import { inflowCounterpartyInputKinds } from "@/features/ammo-ledger/catalog/schema/recent-counterparty-input-kinds";
 import { useDefaultCounterpartyId } from "@/features/ammo-ledger/catalog/use-default-counterparty-id/use-default-counterparty-id";
 import {
   findPickerMaster,
@@ -49,11 +50,13 @@ export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: Receive
   });
   const initial = restoredValues ?? initialValues;
   const today = getTokyoIsoDate();
-  const { pickerData: counterpartyPickerData } = useMasterPickerData({
-    catalogKind: "gun_shop",
-    includeRangeCatalog: true,
-    enabled: true,
-  });
+  const { pickerData: counterpartyPickerData, error: counterpartyPickerError } =
+    useMasterPickerData({
+      catalogKind: "gun_shop",
+      includeRangeCatalog: true,
+      recentInputKinds: inflowCounterpartyInputKinds,
+      enabled: true,
+    });
 
   const [occurredOn, setOccurredOn] = useState(initial?.occurredOn ?? today);
   const { ammoTypeId, purpose, selectAmmoType, choosePurpose } = usePurposeFollowingAmmoType({
@@ -65,6 +68,8 @@ export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: Receive
   const { counterpartyId, setCounterpartyId } = useDefaultCounterpartyId({
     initialCounterpartyId: initial?.counterpartyId,
     pickerData: counterpartyPickerData,
+    pickerError: counterpartyPickerError,
+    defaultsToRecent: !ledgerEntryId,
   });
 
   const [outerBoxCount, setOuterBoxCount] = useState(String(initial?.outerBoxCount ?? 0));
@@ -181,6 +186,7 @@ export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: Receive
         value={counterpartyId}
         onChange={setCounterpartyId}
         catalogKind="gun_shop"
+        recentInputKinds={inflowCounterpartyInputKinds}
         includeRangeCatalog
         sheetTitle="交付元を選ぶ"
         manualOption={{ value: manualCounterpartyId, label: "手入力する" }}

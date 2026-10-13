@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
+import { inflowCounterpartyInputKinds } from "@/features/ammo-ledger/catalog/schema/recent-counterparty-input-kinds";
 import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { BulkEntryRowCard } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-row-card";
 import {
@@ -40,6 +41,7 @@ export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryF
   } = useMasterPickerData({
     catalogKind: "gun_shop",
     includeRangeCatalog: true,
+    recentInputKinds: inflowCounterpartyInputKinds,
     enabled: true,
   });
 

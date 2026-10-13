@@ -15,18 +15,21 @@ import type {
 } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import { listCounterparties } from "@/features/ammo-ledger/master/list-counterparties/list-counterparties";
 import { listRanges } from "@/features/ammo-ledger/master/list-ranges/list-ranges";
+import type { InputKind } from "@/features/ammo-ledger/schema/input-kind";
 
 export async function buildCounterpartyPickerData({
   userId,
   includeRangeCatalog = false,
+  recentInputKinds,
 }: {
   userId: string;
   includeRangeCatalog?: boolean;
+  recentInputKinds?: InputKind[];
 }): Promise<MasterPickerData> {
   const [counterparties, recent, gunShopFavoriteCatalogIds, ranges, rangeFavoriteCatalogIds] =
     await Promise.all([
       listCounterparties({ userId }),
-      listRecentCounterparties({ userId }),
+      listRecentCounterparties({ userId, inputKinds: recentInputKinds }),
       listCatalogFavoriteIds({ userId, catalogKind: "gun_shop" }),
       includeRangeCatalog ? listRanges({ userId }) : Promise.resolve([]),
       includeRangeCatalog

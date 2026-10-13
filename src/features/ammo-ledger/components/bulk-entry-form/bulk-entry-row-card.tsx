@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
+import { inflowCounterpartyInputKinds } from "@/features/ammo-ledger/catalog/schema/recent-counterparty-input-kinds";
 import { BulkEntryCopyActions } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-copy-actions";
 import {
   applyAmmoTypeToRow,
@@ -277,6 +278,7 @@ export function BulkEntryRowCard({
             onChange={(value) => updateRow({ patch: { counterpartyId: value } })}
             catalogKind="gun_shop"
             includeRangeCatalog
+            recentInputKinds={inflowCounterpartyInputKinds}
             sheetTitle="購入先を選ぶ"
             manualOption={{ value: manualCounterpartyId, label: "手入力する" }}
             required

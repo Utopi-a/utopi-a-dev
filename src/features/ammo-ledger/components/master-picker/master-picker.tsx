@@ -32,6 +32,7 @@ import { PickerEntryRow } from "@/features/ammo-ledger/components/picker-entry-r
 import { PrefectureSectionHeading } from "@/features/ammo-ledger/components/prefecture-section-heading/prefecture-section-heading";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
+import type { InputKind } from "@/features/ammo-ledger/schema/input-kind";
 import { cn } from "@/lib/cn";
 
 type MasterPickerProps = {
@@ -44,6 +45,7 @@ type MasterPickerProps = {
   catalogKind: CatalogKind;
   pickerData?: MasterPickerData;
   includeRangeCatalog?: boolean;
+  recentInputKinds?: InputKind[];
   sheetTitle: string;
   manualOption?: { value: string; label: string };
 };
@@ -60,6 +62,7 @@ export function MasterPicker({
   catalogKind,
   pickerData: pickerDataProp,
   includeRangeCatalog = false,
+  recentInputKinds,
   sheetTitle,
   manualOption,
 }: MasterPickerProps) {
@@ -73,6 +76,7 @@ export function MasterPicker({
   } = useMasterPickerData({
     catalogKind,
     includeRangeCatalog,
+    recentInputKinds,
     enabled: (open || value !== "") && pickerDataProp === undefined,
   });
   const pickerData = pickerDataProp ?? loadedPickerData;

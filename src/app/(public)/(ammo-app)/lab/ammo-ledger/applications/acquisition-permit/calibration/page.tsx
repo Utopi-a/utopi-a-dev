@@ -13,7 +13,7 @@ export default function AcquisitionPermitFieldCalibrationPage() {
         <h1 className="text-base font-semibold">申請書フィールド座標調整</h1>
         <p className="text-xs text-muted-foreground">開発用 · フル幅編集モード</p>
       </div>
-      <FieldCalibrationViewLazy />
+      <FieldCalibrationViewLazy categoryFilter="acquisition-permit" />
     </div>
   );
 }

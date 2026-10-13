@@ -1,8 +1,7 @@
 "use client";
 
 import { ChevronLeftIcon, ChevronRightIcon, ListIcon } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -80,9 +79,21 @@ export function MasterPicker({
   const [registeredCatalogIds, setRegisteredCatalogIds] = useState<string[]>([]);
   const [resolvedMasters, setResolvedMasters] = useState<PickerMasterEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [registeringName, setRegisteringName] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const invalidatePickerData = useInvalidateMasterPickerData();
   const catalogScrollRef = useRef<HTMLDivElement>(null);
+  const validityInputRef = useRef<HTMLInputElement>(null);
+  const selectionTextId = useId();
+
+  // 登録が終わるまで value は前の選択のままなので、親フォームの送信を止めて旧い相手方で記録させない。
+  useEffect(() => {
+    validityInputRef.current?.setCustomValidity(
+      registeringName
+        ? `${registeringName}を登録しています。登録が終わってから保存してください。`
+        : "",
+    );
+  }, [registeringName]);
 
   useEffect(() => {
     if (!pickerData) {
@@ -166,8 +177,8 @@ export function MasterPicker({
       return;
     }
 
-    setError(null);
     closePicker();
+    setRegisteringName(entry.name);
 
     startTransition(async () => {
       const catalogSource = resolveCatalogSource({ entry });
@@ -180,7 +191,8 @@ export function MasterPicker({
       }));
 
       if (!result.ok) {
-        toast.error(result.error);
+        setRegisteringName(null);
+        setError(result.error);
         return;
       }
 
@@ -214,6 +226,7 @@ export function MasterPicker({
       );
       onChange(result.id);
       onMasterSelect?.(master);
+      setRegisteringName(null);
     });
   }
 
@@ -318,24 +331,48 @@ export function MasterPicker({
       <button
         id={id}
         type="button"
-        onClick={() => setOpen(true)}
+        // ボタンの名前はラベルになるため、選択中の名称と登録中の表示は説明として読ませる。
+        aria-describedby={selectionTextId}
+        aria-busy={registeringName !== null}
+        aria-disabled={registeringName !== null}
+        onClick={() => {
+          // 登録中に別の相手方を選ぶと、後から終わった登録で選択が上書きされるため開かせない。
+          if (registeringName === null) {
+            setOpen(true);
+          }
+        }}
         className={cn(
           "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs",
           "outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+          "aria-disabled:cursor-wait",
         )}
       >
-        <span className={cn("truncate", !selectedLabel && "text-muted-foreground")}>
-          {selectedLabel || "選択してください"}
+        <span
+          id={selectionTextId}
+          className={cn(
+            "truncate",
+            (!selectedLabel || registeringName !== null) && "text-muted-foreground",
+          )}
+        >
+          {registeringName !== null
+            ? `${registeringName}を登録中…`
+            : selectedLabel || "選択してください"}
         </span>
         <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
       </button>
       <input
+        ref={validityInputRef}
         tabIndex={-1}
         className="sr-only"
         value={value}
         required={required}
         onChange={() => undefined}
       />
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
@@ -443,8 +480,6 @@ export function MasterPicker({
                       <PickerEntryRow name={manualOption.label} onSelect={handleManualSelect} />
                     </section>
                   ) : null}
-
-                  {error ? <p className="py-2 text-sm text-destructive">{error}</p> : null}
                 </>
               )}
             </div>

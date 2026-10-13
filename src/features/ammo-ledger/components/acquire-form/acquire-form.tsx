@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +18,15 @@ import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/ma
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import { usePurposeFollowingAmmoType } from "@/features/ammo-ledger/components/purpose-select/use-purpose-following-ammo-type";
+import { computePermitBalanceOnDate } from "@/features/ammo-ledger/permit/compute-permit-balance-on-date/compute-permit-balance-on-date";
 import { hasActiveAcquisitionPermit } from "@/features/ammo-ledger/permit/has-active-acquisition-permit/has-active-acquisition-permit";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { useLedgerTransactionSubmit } from "@/features/ammo-ledger/transactions/use-ledger-transaction-submit/use-ledger-transaction-submit";
+import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+import { cn } from "@/lib/cn";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type AcquireFormProps = {
@@ -106,6 +110,19 @@ export function AcquireForm({
     });
   }, [selectedAmmoType, outerBoxCount, boxCount, looseRounds]);
   const hasValidPermit = hasActiveAcquisitionPermit({ permits, purpose, occurredOn });
+  const { workspace } = useAmmoLedgerWorkspace();
+  const permitBalance =
+    workspace && hasValidPermit
+      ? computePermitBalanceOnDate({
+          permitEvents: workspace.permitEvents,
+          entries: workspace.entries,
+          purpose,
+          occurredOn,
+          excludedEntryId: ledgerEntryId,
+        })
+      : undefined;
+  const permitBalanceAfterEntry =
+    permitBalance === undefined ? undefined : permitBalance - computedRounds;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -175,10 +192,15 @@ export function AcquireForm({
       <PurposeSelect id={`${idPrefix}-purpose`} value={purpose} onChange={choosePurpose} />
 
       {!hasValidPermit ? (
-        <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
-          この譲受日に有効な{ledgerPurposeLabels[purpose]}
-          の譲受許可がありません。用途または許可期間を確認してください。
-        </p>
+        <div className="space-y-1 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+          <p>
+            この譲受日に有効な{ledgerPurposeLabels[purpose]}
+            の譲受許可がありません。用途または許可期間を確認してください。
+          </p>
+          <Link href="/lab/ammo-ledger/settings/permits" className="underline">
+            譲受許可を登録・確認する
+          </Link>
+        </div>
       ) : null}
 
       <PackagingFields
@@ -194,6 +216,19 @@ export function AcquireForm({
       <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
         <p className="text-muted-foreground">譲受数量（法定出力）</p>
         <p className="text-lg font-semibold">{computedRounds}発</p>
+        {permitBalance !== undefined && permitBalanceAfterEntry !== undefined ? (
+          <p
+            className={cn(
+              "mt-1 text-xs tabular-nums",
+              permitBalanceAfterEntry < 0
+                ? "font-medium text-amber-700 dark:text-amber-300"
+                : "text-muted-foreground",
+            )}
+          >
+            許可残 {permitBalance}個 → 記録後 {permitBalanceAfterEntry}個
+            {permitBalanceAfterEntry < 0 ? "（許可数を超えています）" : ""}
+          </p>
+        ) : null}
       </div>
 
       <MasterPicker

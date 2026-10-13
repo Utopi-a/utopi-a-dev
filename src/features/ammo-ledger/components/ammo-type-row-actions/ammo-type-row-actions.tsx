@@ -5,15 +5,17 @@ import { deleteAmmoTypeAction } from "@/features/ammo-ledger/master/delete-ammo-
 
 type AmmoTypeRowActionsProps = {
   ammoTypeId: string;
+  isInUse: boolean;
 };
 
-export function AmmoTypeRowActions({ ammoTypeId }: AmmoTypeRowActionsProps) {
+export function AmmoTypeRowActions({ ammoTypeId, isInUse }: AmmoTypeRowActionsProps) {
   return (
     <MasterRowActions
       editHref={`/lab/ammo-ledger/settings/ammo-types/${ammoTypeId}/edit`}
       recordId={ammoTypeId}
       deletedSubject="弾種"
       deleteNote="帳簿や取引で使っている弾種は削除できません。"
+      deleteDisabledReason={isInUse ? "帳簿で使用中のため削除できません" : undefined}
       deleteAction={deleteAmmoTypeAction}
     />
   );

@@ -1,3 +1,5 @@
+import { resolveScrollBehavior } from "@/lib/resolve-scroll-behavior";
+
 export function scrollToPrefectureSection({
   container,
   prefecture,
@@ -18,5 +20,5 @@ export function scrollToPrefectureSection({
   const sectionTop = section.getBoundingClientRect().top;
   const nextScrollTop = container.scrollTop + (sectionTop - containerTop);
 
-  container.scrollTo({ top: nextScrollTop, behavior: "smooth" });
+  container.scrollTo({ top: nextScrollTop, behavior: resolveScrollBehavior() });
 }

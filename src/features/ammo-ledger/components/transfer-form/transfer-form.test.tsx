@@ -70,7 +70,11 @@ function TransferFormWithWorkspace() {
   return (
     <AmmoLedgerOptimisticNavProvider>
       <AmmoLedgerSwrProvider initialWorkspace={workspacePayload}>
-        <TransferForm ammoTypes={[testAmmoType]} initialValues={{ occurredOn: "2026-08-01" }} />
+        <TransferForm
+          ammoTypes={[testAmmoType]}
+          stockByAmmoTypeId={{}}
+          initialValues={{ occurredOn: "2026-08-01" }}
+        />
       </AmmoLedgerSwrProvider>
     </AmmoLedgerOptimisticNavProvider>
   );
@@ -103,7 +107,7 @@ describe("TransferForm", () => {
     render(<TransferFormWithWorkspace />);
 
     fireEvent.change(screen.getByLabelText("弾"), { target: { value: testAmmoType.id } });
-    fireEvent.change(screen.getByLabelText("箱数"), { target: { value: "2" } });
+    fireEvent.change(screen.getByLabelText("小箱"), { target: { value: "2" } });
 
     expect(screen.getByText("射撃用の残200個 → 記録後 150個")).toBeInTheDocument();
   });

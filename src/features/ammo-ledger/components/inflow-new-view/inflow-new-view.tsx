@@ -15,7 +15,7 @@ import { ReceiveForm } from "@/features/ammo-ledger/components/receive-form/rece
 import { TransferForm } from "@/features/ammo-ledger/components/transfer-form/transfer-form";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { useDraftTransaction } from "@/features/ammo-ledger/transactions/get-draft/use-draft-transaction/use-draft-transaction";
-import { deriveAmmoTypesFromWorkspace } from "@/features/ammo-ledger/workspace/derive-form-workspace-data/derive-form-workspace-data";
+import { deriveFormWorkspaceData } from "@/features/ammo-ledger/workspace/derive-form-workspace-data/derive-form-workspace-data";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 const inflowTabs: InflowTab[] = [
@@ -52,7 +52,7 @@ export function InflowNewView() {
     return <WorkspaceViewLoader error={error ?? draftError} onRetry={error ? retry : retryDraft} />;
   }
 
-  const ammoTypes = deriveAmmoTypesFromWorkspace({ workspace });
+  const { ammoTypes, stockByAmmoTypeId } = deriveFormWorkspaceData({ workspace });
 
   const initialValues = draft
     ? {
@@ -98,6 +98,7 @@ export function InflowNewView() {
             acquireContent={
               <AcquireForm
                 ammoTypes={ammoTypes}
+                stockByAmmoTypeId={stockByAmmoTypeId}
                 permits={workspace.permits}
                 initialValues={tab === "acquire" ? initialValues : undefined}
               />
@@ -105,30 +106,35 @@ export function InflowNewView() {
             disposeContent={
               <DisposeForm
                 ammoTypes={ammoTypes}
+                stockByAmmoTypeId={stockByAmmoTypeId}
                 initialValues={tab === "dispose" ? initialValues : undefined}
               />
             }
             transferContent={
               <TransferForm
                 ammoTypes={ammoTypes}
+                stockByAmmoTypeId={stockByAmmoTypeId}
                 initialValues={tab === "transfer" ? initialValues : undefined}
               />
             }
             manufactureContent={
               <ManufactureForm
                 ammoTypes={ammoTypes}
+                stockByAmmoTypeId={stockByAmmoTypeId}
                 initialValues={tab === "manufacture" ? initialValues : undefined}
               />
             }
             issueContent={
               <IssueForm
                 ammoTypes={ammoTypes}
+                stockByAmmoTypeId={stockByAmmoTypeId}
                 initialValues={tab === "issue" ? initialValues : undefined}
               />
             }
             receiveContent={
               <ReceiveForm
                 ammoTypes={ammoTypes}
+                stockByAmmoTypeId={stockByAmmoTypeId}
                 initialValues={tab === "receive" ? initialValues : undefined}
               />
             }

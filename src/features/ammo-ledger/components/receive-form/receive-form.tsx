@@ -10,7 +10,7 @@ import {
   findPickerMaster,
   useMasterPickerData,
 } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
-import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { AmmoTypeSelect } from "@/features/ammo-ledger/components/ammo-type-select/ammo-type-select";
 import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
 import { LedgerEntrySubmitBar } from "@/features/ammo-ledger/components/ledger-entry-submit-bar/ledger-entry-submit-bar";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
@@ -25,6 +25,7 @@ import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type ReceiveFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
+  stockByAmmoTypeId: Record<string, number>;
   ledgerEntryId?: string;
   initialValues?: ReceiveFormValues;
 };
@@ -43,7 +44,12 @@ type ReceiveFormValues = {
   ledgerNote?: string;
 };
 
-export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: ReceiveFormProps) {
+export function ReceiveForm({
+  ammoTypes,
+  stockByAmmoTypeId,
+  ledgerEntryId,
+  initialValues,
+}: ReceiveFormProps) {
   const { submit, restoredValues } = useLedgerTransactionSubmit<ReceiveFormValues>({
     formKey: "receive",
     ledgerEntryId,
@@ -151,16 +157,12 @@ export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: Receive
         onChange={setOccurredOn}
       />
 
-      <FieldSelect
+      <AmmoTypeSelect
         id={`${idPrefix}-ammo-type`}
-        label="弾"
         value={ammoTypeId}
         onChange={selectAmmoType}
-        options={ammoTypes.map((t) => ({
-          value: t.id,
-          label: `${t.name}（小箱${t.roundsPerBox}発）`,
-        }))}
-        required
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={stockByAmmoTypeId}
       />
 
       <PurposeSelect id={`${idPrefix}-purpose`} value={purpose} onChange={choosePurpose} />
@@ -189,7 +191,7 @@ export function ReceiveForm({ ammoTypes, ledgerEntryId, initialValues }: Receive
         recentInputKinds={inflowCounterpartyInputKinds}
         includeRangeCatalog
         sheetTitle="交付元を選ぶ"
-        manualOption={{ value: manualCounterpartyId, label: "手入力する" }}
+        manualOption={{ value: manualCounterpartyId, label: "手入力" }}
         required
       />
 

@@ -129,6 +129,7 @@ describe("AcquireForm", () => {
     render(
       <AcquireForm
         ammoTypes={[huntingAmmoType]}
+        stockByAmmoTypeId={{}}
         permits={permits}
         initialValues={{ occurredOn: "2026-08-08" }}
       />,
@@ -185,6 +186,7 @@ describe("AcquireForm", () => {
     const { unmount } = render(
       <AcquireForm
         ammoTypes={[huntingAmmoType]}
+        stockByAmmoTypeId={{}}
         permits={permits}
         initialValues={{
           occurredOn: "2026-08-08",
@@ -201,6 +203,7 @@ describe("AcquireForm", () => {
     render(
       <AcquireForm
         ammoTypes={[huntingAmmoType]}
+        stockByAmmoTypeId={{}}
         permits={permits}
         initialValues={{
           occurredOn: "2026-08-08",
@@ -220,6 +223,7 @@ describe("AcquireForm", () => {
     render(
       <AcquireForm
         ammoTypes={[huntingAmmoType]}
+        stockByAmmoTypeId={{}}
         permits={permits}
         ledgerEntryId="ledger-entry-1"
         initialValues={{ occurredOn: "2026-08-08", purpose: "shooting", ammoTypeId: "" }}

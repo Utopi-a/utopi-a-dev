@@ -4,7 +4,7 @@ import { useId, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoType } from "@/db/schema/ammo-ledger";
-import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { AmmoTypeSelect } from "@/features/ammo-ledger/components/ammo-type-select/ammo-type-select";
 import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
 import {
   PurposeStockAfterEntry,
@@ -21,6 +21,7 @@ import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type DisposeFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
+  stockByAmmoTypeId: Record<string, number>;
   ledgerEntryId?: string;
   initialValues?: DisposeFormValues;
 };
@@ -36,7 +37,12 @@ type DisposeFormValues = {
   ledgerNote?: string;
 };
 
-export function DisposeForm({ ammoTypes, ledgerEntryId, initialValues }: DisposeFormProps) {
+export function DisposeForm({
+  ammoTypes,
+  stockByAmmoTypeId,
+  ledgerEntryId,
+  initialValues,
+}: DisposeFormProps) {
   const { submit, restoredValues } = useLedgerTransactionSubmit<DisposeFormValues>({
     formKey: "dispose",
     ledgerEntryId,
@@ -120,16 +126,12 @@ export function DisposeForm({ ammoTypes, ledgerEntryId, initialValues }: Dispose
         onChange={setOccurredOn}
       />
 
-      <FieldSelect
+      <AmmoTypeSelect
         id={`${idPrefix}-ammo-type`}
-        label="弾"
         value={ammoTypeId}
         onChange={selectAmmoType}
-        options={ammoTypes.map((t) => ({
-          value: t.id,
-          label: `${t.name}（1箱${t.roundsPerBox}発）`,
-        }))}
-        required
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={stockByAmmoTypeId}
       />
 
       <PurposeSelect id={`${idPrefix}-purpose`} value={purpose} onChange={choosePurpose} />

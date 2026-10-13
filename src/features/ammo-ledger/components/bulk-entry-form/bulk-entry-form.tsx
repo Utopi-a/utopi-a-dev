@@ -20,7 +20,6 @@ import {
 import { moveBulkEntryRow } from "@/features/ammo-ledger/components/bulk-entry-form/move-bulk-entry-row/move-bulk-entry-row";
 import { LedgerEntrySubmitBar } from "@/features/ammo-ledger/components/ledger-entry-submit-bar/ledger-entry-submit-bar";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
-import { buildAmmoTypeFieldOptions } from "@/features/ammo-ledger/master/build-ammo-type-field-options/build-ammo-type-field-options";
 import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 import { createBulkTransactionsAction } from "@/features/ammo-ledger/transactions/create-bulk-transactions/create-bulk-transactions-action";
@@ -76,16 +75,6 @@ export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryF
 
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
-
-  const ammoTypeOptions = useMemo(
-    () =>
-      buildAmmoTypeFieldOptions({
-        ammoTypes,
-        stockByAmmoTypeId,
-        roundsPerBoxLabel: "小箱",
-      }),
-    [ammoTypes, stockByAmmoTypeId],
-  );
 
   const activeRowCount = useMemo(
     () => rows.filter((row) => hasBulkEntryPackaging({ row })).length,
@@ -218,7 +207,7 @@ export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryF
             rowIndex={rowIndex}
             guns={guns}
             ammoTypes={ammoTypes}
-            ammoTypeOptions={ammoTypeOptions}
+            stockByAmmoTypeId={stockByAmmoTypeId}
             canRemove={rows.length > 1}
             canMoveUp={rowIndex > 0}
             canMoveDown={rowIndex < rows.length - 1}

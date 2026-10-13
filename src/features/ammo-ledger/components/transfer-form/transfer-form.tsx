@@ -10,7 +10,7 @@ import {
   findPickerMaster,
   useMasterPickerData,
 } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
-import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { AmmoTypeSelect } from "@/features/ammo-ledger/components/ammo-type-select/ammo-type-select";
 import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
 import {
   PurposeStockAfterEntry,
@@ -18,6 +18,7 @@ import {
 } from "@/features/ammo-ledger/components/ledger-entry-stock-preview/ledger-entry-stock-preview";
 import { LedgerEntrySubmitBar } from "@/features/ammo-ledger/components/ledger-entry-submit-bar/ledger-entry-submit-bar";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
+import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import { usePurposeFollowingAmmoType } from "@/features/ammo-ledger/components/purpose-select/use-purpose-following-ammo-type";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
@@ -28,6 +29,7 @@ import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type TransferFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
+  stockByAmmoTypeId: Record<string, number>;
   ledgerEntryId?: string;
   initialValues?: TransferFormValues;
 };
@@ -39,13 +41,19 @@ type TransferFormValues = {
   counterpartyId?: string;
   counterpartyName?: string;
   counterpartyAddress?: string;
+  outerBoxCount?: number;
   boxCount?: number;
   looseRounds?: number;
   memo?: string;
   ledgerNote?: string;
 };
 
-export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: TransferFormProps) {
+export function TransferForm({
+  ammoTypes,
+  stockByAmmoTypeId,
+  ledgerEntryId,
+  initialValues,
+}: TransferFormProps) {
   const { submit, restoredValues } = useLedgerTransactionSubmit<TransferFormValues>({
     formKey: "transfer",
     ledgerEntryId,
@@ -74,6 +82,7 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
     defaultsToRecent: false,
   });
 
+  const [outerBoxCount, setOuterBoxCount] = useState(String(initial?.outerBoxCount ?? 0));
   const [boxCount, setBoxCount] = useState(String(initial?.boxCount ?? 0));
   const [looseRounds, setLooseRounds] = useState(String(initial?.looseRounds ?? 0));
   const [counterpartyName, setCounterpartyName] = useState(initial?.counterpartyName ?? "");
@@ -91,17 +100,19 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
   const computedRounds = useMemo(() => {
     if (!selectedAmmoType) return 0;
     return computeRounds({
+      outerBoxCount: Number(outerBoxCount) || 0,
       boxCount: Number(boxCount) || 0,
       looseRounds: Number(looseRounds) || 0,
       roundsPerBox: selectedAmmoType.roundsPerBox,
     });
-  }, [selectedAmmoType, boxCount, looseRounds]);
+  }, [selectedAmmoType, outerBoxCount, boxCount, looseRounds]);
 
   const payload = {
     inputKind: "transfer" as const,
     purpose,
     occurredOn,
     ammoTypeId,
+    outerBoxCount: Number(outerBoxCount) || 0,
     boxCount: Number(boxCount) || 0,
     looseRounds: Number(looseRounds) || 0,
     ...(isManualCounterparty ? { counterpartyName, counterpartyAddress } : { counterpartyId }),
@@ -153,42 +164,25 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
         onChange={setOccurredOn}
       />
 
-      <FieldSelect
+      <AmmoTypeSelect
         id={`${idPrefix}-ammo-type`}
-        label="弾"
         value={ammoTypeId}
         onChange={selectAmmoType}
-        options={ammoTypes.map((t) => ({
-          value: t.id,
-          label: `${t.name}（1箱${t.roundsPerBox}発）`,
-        }))}
-        required
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={stockByAmmoTypeId}
       />
 
       <PurposeSelect id={`${idPrefix}-purpose`} value={purpose} onChange={choosePurpose} />
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-box-count`}>箱数</Label>
-          <Input
-            id={`${idPrefix}-box-count`}
-            type="number"
-            min={0}
-            value={boxCount}
-            onChange={(e) => setBoxCount(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`${idPrefix}-loose-rounds`}>バラ</Label>
-          <Input
-            id={`${idPrefix}-loose-rounds`}
-            type="number"
-            min={0}
-            value={looseRounds}
-            onChange={(e) => setLooseRounds(e.target.value)}
-          />
-        </div>
-      </div>
+      <PackagingFields
+        idPrefix={idPrefix}
+        outerBoxCount={outerBoxCount}
+        boxCount={boxCount}
+        looseRounds={looseRounds}
+        onOuterBoxCountChange={setOuterBoxCount}
+        onBoxCountChange={setBoxCount}
+        onLooseRoundsChange={setLooseRounds}
+      />
 
       <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
         <p className="text-muted-foreground">譲渡数量（法定出力）</p>

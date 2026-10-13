@@ -50,9 +50,7 @@ export default async function EditLedgerEntryPage({ params, searchParams }: Page
   const [guns, ammoTypes, inventoryItems, permits] = await Promise.all([
     inputKind === "consume" ? listGuns({ userId: user.id }) : Promise.resolve([]),
     listAmmoTypes({ userId: user.id }),
-    inputKind === "consume"
-      ? getInventorySummary({ userId: user.id, excludedLedgerEntryId: ledgerEntryId })
-      : Promise.resolve([]),
+    getInventorySummary({ userId: user.id, excludedLedgerEntryId: ledgerEntryId }),
     inputKind === "acquire" ? listAcquisitionPermits({ userId: user.id }) : Promise.resolve([]),
   ]);
 
@@ -99,6 +97,7 @@ export default async function EditLedgerEntryPage({ params, searchParams }: Page
             key={formKey}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
+            stockByAmmoTypeId={stockByAmmoTypeId}
             permits={permits}
             initialValues={initialValues}
           />
@@ -110,6 +109,7 @@ export default async function EditLedgerEntryPage({ params, searchParams }: Page
             key={formKey}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
+            stockByAmmoTypeId={stockByAmmoTypeId}
             initialValues={initialValues}
           />
         );
@@ -120,6 +120,7 @@ export default async function EditLedgerEntryPage({ params, searchParams }: Page
             key={formKey}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
+            stockByAmmoTypeId={stockByAmmoTypeId}
             initialValues={initialValues}
           />
         );
@@ -130,6 +131,7 @@ export default async function EditLedgerEntryPage({ params, searchParams }: Page
             key={formKey}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
+            stockByAmmoTypeId={stockByAmmoTypeId}
             initialValues={initialValues}
           />
         );
@@ -140,6 +142,7 @@ export default async function EditLedgerEntryPage({ params, searchParams }: Page
             key={formKey}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
+            stockByAmmoTypeId={stockByAmmoTypeId}
             initialValues={initialValues}
           />
         );
@@ -150,6 +153,7 @@ export default async function EditLedgerEntryPage({ params, searchParams }: Page
             key={formKey}
             ledgerEntryId={ledgerEntryId}
             ammoTypes={ammoTypes}
+            stockByAmmoTypeId={stockByAmmoTypeId}
             initialValues={initialValues}
           />
         );

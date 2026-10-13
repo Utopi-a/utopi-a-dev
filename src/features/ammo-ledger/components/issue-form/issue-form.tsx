@@ -10,7 +10,7 @@ import {
   findPickerMaster,
   useMasterPickerData,
 } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
-import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { AmmoTypeSelect } from "@/features/ammo-ledger/components/ammo-type-select/ammo-type-select";
 import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
 import {
   PurposeStockAfterEntry,
@@ -29,6 +29,7 @@ import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type IssueFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
+  stockByAmmoTypeId: Record<string, number>;
   ledgerEntryId?: string;
   initialValues?: IssueFormValues;
 };
@@ -47,7 +48,12 @@ type IssueFormValues = {
   ledgerNote?: string;
 };
 
-export function IssueForm({ ammoTypes, ledgerEntryId, initialValues }: IssueFormProps) {
+export function IssueForm({
+  ammoTypes,
+  stockByAmmoTypeId,
+  ledgerEntryId,
+  initialValues,
+}: IssueFormProps) {
   const { submit, restoredValues } = useLedgerTransactionSubmit<IssueFormValues>({
     formKey: "issue",
     ledgerEntryId,
@@ -158,16 +164,12 @@ export function IssueForm({ ammoTypes, ledgerEntryId, initialValues }: IssueForm
         onChange={setOccurredOn}
       />
 
-      <FieldSelect
+      <AmmoTypeSelect
         id={`${idPrefix}-ammo-type`}
-        label="弾"
         value={ammoTypeId}
         onChange={selectAmmoType}
-        options={ammoTypes.map((t) => ({
-          value: t.id,
-          label: `${t.name}（1箱${t.roundsPerBox}発）`,
-        }))}
-        required
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={stockByAmmoTypeId}
       />
 
       <PurposeSelect id={`${idPrefix}-purpose`} value={purpose} onChange={choosePurpose} />

@@ -8,6 +8,7 @@ import {
   findPickerMaster,
   useMasterPickerData,
 } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
+import { AmmoTypeSelect } from "@/features/ammo-ledger/components/ammo-type-select/ammo-type-select";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
 import {
@@ -19,7 +20,6 @@ import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/ma
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import { usePurposeFollowingAmmoType } from "@/features/ammo-ledger/components/purpose-select/use-purpose-following-ammo-type";
-import { buildAmmoTypeFieldOptions } from "@/features/ammo-ledger/master/build-ammo-type-field-options/build-ammo-type-field-options";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { useLedgerTransactionSubmit } from "@/features/ammo-ledger/transactions/use-ledger-transaction-submit/use-ledger-transaction-submit";
@@ -155,11 +155,6 @@ export function ConsumeForm({
     followLocationInputKind({ nextPurpose });
   }
 
-  const ammoTypeOptions = useMemo(
-    () => buildAmmoTypeFieldOptions({ ammoTypes, stockByAmmoTypeId }),
-    [ammoTypes, stockByAmmoTypeId],
-  );
-
   const computedRounds = useMemo(() => {
     if (!selectedAmmoType) return 0;
     return computeRounds({
@@ -220,13 +215,12 @@ export function ConsumeForm({
     <form className="space-y-4" onSubmit={handleSubmit}>
       <LedgerEntryDateField id="occurred-on" value={occurredOn} onChange={setOccurredOn} />
 
-      <FieldSelect
+      <AmmoTypeSelect
         id="ammo-type"
-        label="弾"
         value={ammoTypeId}
         onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
-        options={ammoTypeOptions}
-        required
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={stockByAmmoTypeId}
       />
 
       <PurposeSelect

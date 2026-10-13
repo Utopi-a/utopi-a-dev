@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
 import { inflowCounterpartyInputKinds } from "@/features/ammo-ledger/catalog/schema/recent-counterparty-input-kinds";
+import { AmmoTypeSelect } from "@/features/ammo-ledger/components/ammo-type-select/ammo-type-select";
 import { BulkEntryCopyActions } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-copy-actions";
 import {
   applyAmmoTypeToRow,
@@ -31,7 +32,7 @@ type BulkEntryRowCardProps = {
   rowIndex: number;
   guns: (typeof ammoGun.$inferSelect)[];
   ammoTypes: (typeof ammoType.$inferSelect)[];
-  ammoTypeOptions: { value: string; label: string }[];
+  stockByAmmoTypeId: Record<string, number>;
   canRemove: boolean;
   canMoveUp: boolean;
   canMoveDown: boolean;
@@ -53,7 +54,7 @@ export function BulkEntryRowCard({
   rowIndex,
   guns,
   ammoTypes,
-  ammoTypeOptions,
+  stockByAmmoTypeId,
   canRemove,
   canMoveUp,
   canMoveDown,
@@ -166,13 +167,12 @@ export function BulkEntryRowCard({
         />
       </div>
 
-      <FieldSelect
+      <AmmoTypeSelect
         id={`ammo-type-${row.clientId}`}
-        label="弾"
         value={row.ammoTypeId}
         onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
-        options={ammoTypeOptions}
-        required
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={stockByAmmoTypeId}
       />
 
       <FieldSelect
@@ -280,7 +280,7 @@ export function BulkEntryRowCard({
             includeRangeCatalog
             recentInputKinds={inflowCounterpartyInputKinds}
             sheetTitle="購入先を選ぶ"
-            manualOption={{ value: manualCounterpartyId, label: "手入力する" }}
+            manualOption={{ value: manualCounterpartyId, label: "手入力" }}
             required
           />
 

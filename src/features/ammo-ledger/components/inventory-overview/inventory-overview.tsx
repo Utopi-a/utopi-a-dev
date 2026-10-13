@@ -1,31 +1,42 @@
 "use client";
 
+import Link from "next/link";
 import { type ReactNode, useMemo, useState } from "react";
 import type { InventoryOverview } from "@/features/ammo-ledger/inventory/build-inventory-overview/build-inventory-overview";
 import {
   inventoryGaugeGroups,
   matchesGaugeGroup,
 } from "@/features/ammo-ledger/inventory/inventory-gauge-groups/inventory-gauge-groups";
+import { buildLedgerHref } from "@/features/ammo-ledger/ledger/build-ledger-href/build-ledger-href";
 import { formatStockQuantity } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
+import { useAmmoLedgerClientNav } from "@/features/ammo-ledger/navigation/use-ammo-ledger-client-nav/use-ammo-ledger-client-nav";
 import {
   type LedgerPurpose,
   ledgerPurposeLabels,
 } from "@/features/ammo-ledger/schema/ledger-purpose";
+import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { cn } from "@/lib/cn";
 
 type InventoryViewMode = "all" | "gauge-group" | "gauge" | "purpose";
 
 type InventoryOverviewProps = {
   overview: InventoryOverview;
+  /** 用途ごとの弾種IDごとの帳簿残数 */
+  stockByPurpose: ReadonlyMap<LedgerPurpose, ReadonlyMap<string, number>>;
 };
 
 function formatStockCount({ count }: { count: number }): string {
   return formatStockQuantity({ quantity: count });
 }
 
-export function InventoryOverviewPanel({ overview }: InventoryOverviewProps) {
+export function InventoryOverviewPanel({ overview, stockByPurpose }: InventoryOverviewProps) {
+  const { navigate: navigateClientShell } = useAmmoLedgerClientNav();
   const [viewMode, setViewMode] = useState<InventoryViewMode>("all");
-  const [gaugeGroupId, setGaugeGroupId] = useState(inventoryGaugeGroups[0]?.id ?? "");
+  const visibleGaugeGroups = overview.byGaugeGroup.filter((group) => group.bookStock !== 0);
+  const [selectedGaugeGroupId, setGaugeGroupId] = useState(inventoryGaugeGroups[0]?.id ?? "");
+  const gaugeGroupId = visibleGaugeGroups.some((group) => group.groupId === selectedGaugeGroupId)
+    ? selectedGaugeGroupId
+    : visibleGaugeGroups[0]?.groupId;
   const [gaugeKey, setGaugeKey] = useState(overview.byGauge[0]?.gaugeKey ?? "");
   const [purpose, setPurpose] = useState<LedgerPurpose>("shooting");
 
@@ -46,16 +57,20 @@ export function InventoryOverviewPanel({ overview }: InventoryOverviewProps) {
         return key === gaugeKey;
       });
     }
-    return overview.byAmmoType.filter((item) => item.defaultPurpose === purpose);
-  }, [overview.byAmmoType, viewMode, gaugeGroupId, gaugeKey, purpose]);
+    // 弾種の既定用途で絞るだけだと全用途の合計になるため、その用途の帳簿の残数を出す。
+    const purposeStock = stockByPurpose.get(purpose);
+    return overview.byAmmoType
+      .map((item) => ({ ...item, bookStock: purposeStock?.get(item.ammoTypeId) ?? 0 }))
+      .filter((item) => item.bookStock !== 0 || item.defaultPurpose === purpose);
+  }, [overview.byAmmoType, viewMode, gaugeGroupId, gaugeKey, purpose, stockByPurpose]);
 
   const filteredTotal = filteredAmmoTypes.reduce((sum, item) => sum + item.bookStock, 0);
 
   return (
     <div className="space-y-4">
       <div className="grid gap-2 sm:grid-cols-3">
-        <SummaryChip label="全体" value={formatStockCount({ count: overview.totalStock })} active />
-        {overview.byGaugeGroup.map((group) => (
+        <SummaryChip label="全体" value={formatStockCount({ count: overview.totalStock })} />
+        {visibleGaugeGroups.map((group) => (
           <SummaryChip
             key={group.groupId}
             label={group.label}
@@ -68,12 +83,14 @@ export function InventoryOverviewPanel({ overview }: InventoryOverviewProps) {
         <FilterButton active={viewMode === "all"} onClick={() => setViewMode("all")}>
           すべて
         </FilterButton>
-        <FilterButton
-          active={viewMode === "gauge-group"}
-          onClick={() => setViewMode("gauge-group")}
-        >
-          号数グループ
-        </FilterButton>
+        {visibleGaugeGroups.length > 0 ? (
+          <FilterButton
+            active={viewMode === "gauge-group"}
+            onClick={() => setViewMode("gauge-group")}
+          >
+            号数グループ
+          </FilterButton>
+        ) : null}
         <FilterButton active={viewMode === "gauge"} onClick={() => setViewMode("gauge")}>
           号数
         </FilterButton>
@@ -84,11 +101,11 @@ export function InventoryOverviewPanel({ overview }: InventoryOverviewProps) {
 
       {viewMode === "gauge-group" ? (
         <div className="flex flex-wrap gap-2">
-          {inventoryGaugeGroups.map((group) => (
+          {visibleGaugeGroups.map((group) => (
             <FilterButton
-              key={group.id}
-              active={gaugeGroupId === group.id}
-              onClick={() => setGaugeGroupId(group.id)}
+              key={group.groupId}
+              active={gaugeGroupId === group.groupId}
+              onClick={() => setGaugeGroupId(group.groupId)}
             >
               {group.label}
             </FilterButton>
@@ -151,7 +168,7 @@ export function InventoryOverviewPanel({ overview }: InventoryOverviewProps) {
       ) : null}
 
       <div className="overflow-x-auto rounded-lg border border-border/50">
-        <table className="w-full min-w-[360px] text-sm">
+        <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border/50 bg-muted/20 text-left text-xs text-muted-foreground">
               <th className="px-3 py-2 font-medium">弾種</th>
@@ -167,17 +184,35 @@ export function InventoryOverviewPanel({ overview }: InventoryOverviewProps) {
                 </td>
               </tr>
             ) : (
-              filteredAmmoTypes.map((item) => (
-                <tr key={item.ammoTypeId} className="border-b border-border/40 last:border-0">
-                  <td className="px-3 py-2">{item.ammoTypeName}</td>
-                  <td className="px-3 py-2 text-muted-foreground">
-                    {item.gaugeNumber ? `${item.gaugeNumber}号` : "—"}
-                  </td>
-                  <td className="px-3 py-2 text-right tabular-nums">
-                    {formatStockCount({ count: item.bookStock })}
-                  </td>
-                </tr>
-              ))
+              filteredAmmoTypes.map((item) => {
+                const ledgerHref = buildLedgerHref({
+                  purpose:
+                    viewMode === "purpose"
+                      ? purpose
+                      : resolveDefaultPurpose({ defaultPurpose: item.defaultPurpose }),
+                });
+                return (
+                  <tr key={item.ammoTypeId} className="border-b border-border/40 last:border-0">
+                    <td className="px-3 py-2">
+                      <Link
+                        href={ledgerHref}
+                        onClick={(event) => {
+                          if (navigateClientShell({ href: ledgerHref })) event.preventDefault();
+                        }}
+                        className="underline-offset-4 hover:underline"
+                      >
+                        {item.ammoTypeName}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
+                      {item.gaugeNumber ? `${item.gaugeNumber}号` : "—"}
+                    </td>
+                    <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">
+                      {formatStockCount({ count: item.bookStock })}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -186,22 +221,9 @@ export function InventoryOverviewPanel({ overview }: InventoryOverviewProps) {
   );
 }
 
-function SummaryChip({
-  label,
-  value,
-  active = false,
-}: {
-  label: string;
-  value: string;
-  active?: boolean;
-}) {
+function SummaryChip({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      className={cn(
-        "rounded-lg border px-3 py-2.5",
-        active ? "border-primary/30 bg-primary/5" : "border-border/50 bg-muted/15",
-      )}
-    >
+    <div className="rounded-lg border border-border/50 bg-muted/15 px-3 py-2.5">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-0.5 text-lg font-semibold tabular-nums">{value}</p>
     </div>

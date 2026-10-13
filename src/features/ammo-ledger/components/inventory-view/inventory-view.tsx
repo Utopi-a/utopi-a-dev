@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { AmmoLedgerRefreshIndicator } from "@/features/ammo-ledger/components/ammo-ledger-refresh-indicator/ammo-ledger-refresh-indicator";
@@ -9,7 +10,10 @@ import { StockCheckForm } from "@/features/ammo-ledger/components/stock-check-fo
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { buildInventoryOverview } from "@/features/ammo-ledger/inventory/build-inventory-overview/build-inventory-overview";
 import { evaluateHomeStorageLimit } from "@/features/ammo-ledger/ledger/compute-running-home-stock/compute-running-home-stock";
+import { computeStockByAmmoType } from "@/features/ammo-ledger/ledger/compute-stock/compute-stock";
+import { filterByPurpose } from "@/features/ammo-ledger/permit/compute-running-permit-balance/compute-running-permit-balance";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
+import { ledgerPurposes } from "@/features/ammo-ledger/schema/ledger-purpose";
 import type { AmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-types";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
@@ -47,6 +51,23 @@ function InventoryViewContent({ workspace, isRefreshing }: InventoryViewContentP
 
   const overview = useMemo(() => buildInventoryOverview({ items }), [items]);
 
+  const stockByPurpose = useMemo(
+    () =>
+      new Map(
+        ledgerPurposes.map((purpose) => [
+          purpose,
+          computeStockByAmmoType({
+            entries: filterByPurpose({ rows: entries, purpose }).map((entry) => ({
+              ...entry,
+              category: entry.category as LedgerCategory,
+            })),
+          }),
+        ]),
+      ),
+    [entries],
+  );
+  const unregisteredEntryCount = entries.filter((entry) => entry.ammoTypeId === null).length;
+
   const stockCheckItems = useMemo(
     () =>
       items.map((item) => ({
@@ -73,7 +94,19 @@ function InventoryViewContent({ workspace, isRefreshing }: InventoryViewContentP
       />
 
       <AmmoLedgerPanel title="帳簿残数" description="弾種・号数・グループごとに一覧表示します">
-        <InventoryOverviewPanel overview={overview} />
+        <InventoryOverviewPanel overview={overview} stockByPurpose={stockByPurpose} />
+        {unregisteredEntryCount > 0 ? (
+          <p className="mt-4 text-xs text-muted-foreground">
+            弾種が登録されていない記録が{unregisteredEntryCount}
+            件あり、この一覧の残数には含まれていません（帳簿の「帳簿残数（全用途）」には含まれます）。{" "}
+            <Link
+              href="/lab/ammo-ledger/settings/ammo-types/review"
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              弾種分類の確認 →
+            </Link>
+          </p>
+        ) : null}
       </AmmoLedgerPanel>
 
       <AmmoLedgerPanel

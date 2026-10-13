@@ -520,7 +520,8 @@ describe("ammo ledger server mutations against local PostgreSQL", () => {
       }),
     ).resolves.toEqual({
       ok: false,
-      error: "12番・散弾の在庫が不足しています（残り0発、出庫6発）",
+      error: "12番・散弾の在庫が不足しています（射撃用、2027/01/02時点で残り0発、出庫6発）",
+      shortage: { purpose: "shooting", occurredOn: "2027-01-02" },
     });
     expect(
       await sql`select * from ammo_ledger_entry where user_id = ${fixture.userId} order by id`,
@@ -705,7 +706,8 @@ describe("ammo ledger server mutations against local PostgreSQL", () => {
       }),
     ).resolves.toEqual({
       ok: false,
-      error: "12番・散弾の在庫が不足しています（残り4発、出庫6発）",
+      error: "12番・散弾の在庫が不足しています（射撃用、2026/09/10時点で残り4発、出庫6発）",
+      shortage: { purpose: "shooting", occurredOn: "2026-09-10" },
     });
     expect(await savedCounts(fixture)).toEqual({ transactions: 0, entries: 0 });
   });
@@ -750,7 +752,11 @@ describe("ammo ledger server mutations against local PostgreSQL", () => {
     ]);
     expect(results.filter((result) => result.ok)).toHaveLength(1);
     expect(results.filter((result) => !result.ok)).toEqual([
-      { ok: false, error: "12番・散弾の在庫が不足しています（残り4発、出庫6発）" },
+      {
+        ok: false,
+        error: "12番・散弾の在庫が不足しています（射撃用、2026/09/10時点で残り4発、出庫6発）",
+        shortage: { purpose: "shooting", occurredOn: "2026-09-10" },
+      },
     ]);
     expect(await savedCounts(fixture)).toEqual({ transactions: 1, entries: 1 });
   });

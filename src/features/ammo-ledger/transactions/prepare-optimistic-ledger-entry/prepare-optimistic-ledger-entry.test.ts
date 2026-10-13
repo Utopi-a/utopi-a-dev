@@ -77,7 +77,9 @@ describe("prepareOptimisticLedgerEntry", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: "テスト散弾 7.5号の在庫が不足しています（残り90発、出庫100発）",
+      error:
+        "テスト散弾 7.5号の在庫が不足しています（射撃用、2026/10/13時点で残り90発、出庫100発）",
+      shortage: { purpose: "shooting", occurredOn: "2026-10-13" },
     });
   });
 

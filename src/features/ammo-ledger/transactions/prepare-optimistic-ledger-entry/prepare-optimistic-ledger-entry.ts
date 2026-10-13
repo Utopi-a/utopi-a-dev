@@ -1,5 +1,6 @@
 import { checkDatesAgainstLock } from "@/features/ammo-ledger/ledger/lock/check-dates-against-lock/check-dates-against-lock";
 import { formatLockedDateError } from "@/features/ammo-ledger/ledger/lock/format-locked-date-error/format-locked-date-error";
+import type { StockShortage } from "@/features/ammo-ledger/ledger/validate-stock-timeline/validate-stock-timeline";
 import { hasActiveAcquisitionPermit } from "@/features/ammo-ledger/permit/has-active-acquisition-permit/has-active-acquisition-permit";
 import type { InputKind } from "@/features/ammo-ledger/schema/input-kind";
 import {
@@ -73,7 +74,7 @@ export function prepareOptimisticLedgerEntry({
   ledgerEntryId?: string;
   provisionalId: string;
   now: Date;
-}): { ok: true; entry: LedgerEntryRow } | { ok: false; error: string } {
+}): { ok: true; entry: LedgerEntryRow } | { ok: false; error: string; shortage?: StockShortage } {
   const ammoType = workspace.inventoryItems.find(
     (item) => item.ammoType.id === payload.ammoTypeId,
   )?.ammoType;

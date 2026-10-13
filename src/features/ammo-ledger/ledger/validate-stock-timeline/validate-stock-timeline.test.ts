@@ -99,7 +99,8 @@ describe("validateStockTimeline", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: "12番・散弾の在庫が不足しています（残り40発、出庫50発）",
+      error: "12番・散弾の在庫が不足しています（狩猟用、2026/01/02時点で残り40発、出庫50発）",
+      shortage: { purpose: "hunting", occurredOn: "2026-01-02" },
     });
   });
 
@@ -129,7 +130,8 @@ describe("validateStockTimeline", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: "12番・散弾の在庫が不足しています（残り30発、出庫40発）",
+      error: "12番・散弾の在庫が不足しています（狩猟用、2026/01/02時点で残り30発、出庫40発）",
+      shortage: { purpose: "hunting", occurredOn: "2026-01-02" },
     });
   });
 
@@ -174,7 +176,8 @@ describe("validateStockTimeline", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: "12番・散弾の在庫が不足しています（残り0発、出庫50発）",
+      error: "12番・散弾の在庫が不足しています（狩猟用、2026/01/02時点で残り0発、出庫50発）",
+      shortage: { purpose: "hunting", occurredOn: "2026-01-02" },
     });
   });
 
@@ -198,7 +201,8 @@ describe("validateStockTimeline", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: "12番・散弾の在庫が不足しています（残り5発、出庫10発）",
+      error: "12番・散弾の在庫が不足しています（狩猟用、2026/01/02時点で残り5発、出庫10発）",
+      shortage: { purpose: "hunting", occurredOn: "2026-01-02" },
     });
   });
 
@@ -224,7 +228,8 @@ describe("validateStockTimeline", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: "12番・散弾の在庫が不足しています（残り0発、出庫1発）",
+      error: "12番・散弾の在庫が不足しています（狩猟用、2026/01/02時点で残り0発、出庫1発）",
+      shortage: { purpose: "hunting", occurredOn: "2026-01-02" },
     });
   });
 
@@ -250,7 +255,8 @@ describe("validateStockTimeline", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: "12番・散弾の在庫が不足しています（残り0発、出庫10発）",
+      error: "12番・散弾の在庫が不足しています（狩猟用、2026/01/02時点で残り0発、出庫10発）",
+      shortage: { purpose: "hunting", occurredOn: "2026-01-02" },
     });
   });
 });

@@ -11,6 +11,11 @@ import {
 } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
+import {
+  LedgerEntryCheckNotice,
+  PurposeStockAfterEntry,
+  useLedgerEntryPreview,
+} from "@/features/ammo-ledger/components/ledger-entry-stock-preview/ledger-entry-stock-preview";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
@@ -19,7 +24,6 @@ import { buildAmmoTypeFieldOptions } from "@/features/ammo-ledger/master/build-a
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { useLedgerTransactionSubmit } from "@/features/ammo-ledger/transactions/use-ledger-transaction-submit/use-ledger-transaction-submit";
-import { cn } from "@/lib/cn";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type ConsumeFormProps = {
@@ -152,28 +156,30 @@ export function ConsumeForm({
     });
   }, [selectedAmmoType, outerBoxCount, boxCount, looseRounds]);
 
-  const bookStock = selectedAmmoType ? (stockByAmmoTypeId[selectedAmmoType.id] ?? 0) : undefined;
-  const stockAfterConsumption = bookStock !== undefined ? bookStock - computedRounds : undefined;
+  const usesRange = purpose === "shooting" || locationInputKind === "range";
+  const values = {
+    occurredOn,
+    purpose,
+    ammoTypeId,
+    gunId,
+    rangeId: usesRange ? rangeId : undefined,
+    location: usesRange ? undefined : location,
+    outerBoxCount: Number(outerBoxCount) || 0,
+    boxCount: Number(boxCount) || 0,
+    looseRounds: Number(looseRounds) || 0,
+    memo: memo || undefined,
+    ledgerNote: ledgerNote || undefined,
+  };
+  const preview = useLedgerEntryPreview({
+    payload: selectedAmmoType ? { inputKind: "consume", ...values } : null,
+    ledgerEntryId,
+  });
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setIsPending(true);
     setError(null);
 
-    const usesRange = purpose === "shooting" || locationInputKind === "range";
-    const values = {
-      occurredOn,
-      purpose,
-      ammoTypeId,
-      gunId,
-      rangeId: usesRange ? rangeId : undefined,
-      location: usesRange ? undefined : location,
-      outerBoxCount: Number(outerBoxCount) || 0,
-      boxCount: Number(boxCount) || 0,
-      looseRounds: Number(looseRounds) || 0,
-      memo: memo || undefined,
-      ledgerNote: ledgerNote || undefined,
-    };
     const range = usesRange
       ? findPickerMaster({ pickerData: rangePickerData, id: rangeId })
       : undefined;
@@ -277,18 +283,12 @@ export function ConsumeForm({
       <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
         <p className="text-muted-foreground">実消費（法定出力に使われる数量）</p>
         <p className="text-lg font-semibold tabular-nums">{computedRounds}発</p>
-        {stockAfterConsumption !== undefined ? (
-          <p
-            className={cn(
-              "mt-1 text-xs tabular-nums",
-              stockAfterConsumption < 0
-                ? "font-medium text-amber-700 dark:text-amber-300"
-                : "text-muted-foreground",
-            )}
-          >
-            帳簿残数（全用途）{bookStock}発 → 消費後 {stockAfterConsumption}発
-            {stockAfterConsumption < 0 ? "（残数を超えています）" : ""}
-          </p>
+        {preview ? (
+          <PurposeStockAfterEntry
+            purpose={purpose}
+            purposeStock={preview.purposeStock}
+            rounds={computedRounds}
+          />
         ) : null}
       </div>
 
@@ -319,7 +319,8 @@ export function ConsumeForm({
 
       {/* モバイルでは保存ボタンを画面下に固定し、入力の途中でもすぐ保存できるようにする。 */}
       <div className="sticky bottom-0 z-10 -mx-4 space-y-2 border-t border-border/60 bg-background/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
-        {error ? (
+        <LedgerEntryCheckNotice preview={computedRounds > 0 ? preview : null} />
+        {error && error !== preview?.error ? (
           <p role="alert" className="text-sm text-destructive">
             {error}
           </p>

@@ -7,6 +7,11 @@ import { Label } from "@/components/ui/label";
 import type { ammoType } from "@/db/schema/ammo-ledger";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
+import {
+  LedgerEntryCheckNotice,
+  PurposeStockAfterEntry,
+  useLedgerEntryPreview,
+} from "@/features/ammo-ledger/components/ledger-entry-stock-preview/ledger-entry-stock-preview";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import { usePurposeFollowingAmmoType } from "@/features/ammo-ledger/components/purpose-select/use-purpose-following-ammo-type";
@@ -67,24 +72,28 @@ export function DisposeForm({ ammoTypes, ledgerEntryId, initialValues }: Dispose
     });
   }, [selectedAmmoType, outerBoxCount, boxCount, looseRounds]);
 
+  const payload = {
+    inputKind: "dispose" as const,
+    purpose,
+    occurredOn,
+    ammoTypeId,
+    outerBoxCount: Number(outerBoxCount) || 0,
+    boxCount: Number(boxCount) || 0,
+    looseRounds: Number(looseRounds) || 0,
+    memo: memo || undefined,
+    ledgerNote: ledgerNote || undefined,
+  };
+  const preview = useLedgerEntryPreview({
+    payload: selectedAmmoType ? payload : null,
+    ledgerEntryId,
+  });
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setIsPending(true);
     setError(null);
 
     try {
-      const payload = {
-        inputKind: "dispose" as const,
-        purpose,
-        occurredOn,
-        ammoTypeId,
-        outerBoxCount: Number(outerBoxCount) || 0,
-        boxCount: Number(boxCount) || 0,
-        looseRounds: Number(looseRounds) || 0,
-        memo: memo || undefined,
-        ledgerNote: ledgerNote || undefined,
-      };
-
       const result = await submit({
         payload,
         subject: "廃棄記録",
@@ -139,6 +148,13 @@ export function DisposeForm({ ammoTypes, ledgerEntryId, initialValues }: Dispose
       <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
         <p className="text-muted-foreground">廃棄数量（法定出力）</p>
         <p className="text-lg font-semibold">{computedRounds}発</p>
+        {preview ? (
+          <PurposeStockAfterEntry
+            purpose={purpose}
+            purposeStock={preview.purposeStock}
+            rounds={computedRounds}
+          />
+        ) : null}
       </div>
 
       <div className="space-y-2">
@@ -156,7 +172,8 @@ export function DisposeForm({ ammoTypes, ledgerEntryId, initialValues }: Dispose
         <Input id={`${idPrefix}-memo`} value={memo} onChange={(e) => setMemo(e.target.value)} />
       </div>
 
-      {error ? (
+      <LedgerEntryCheckNotice preview={computedRounds > 0 ? preview : null} />
+      {error && error !== preview?.error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}
         </p>

@@ -1,6 +1,10 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { lockLedgerAction } from "@/features/ammo-ledger/ledger/lock/lock-ledger-action/lock-ledger-action";
+import {
+  PendingLedgerChangesProvider,
+  usePendingLedgerChanges,
+} from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
 import { LedgerPrintControls } from "./ledger-print-controls";
 
 const { push, refresh, navigation } = vi.hoisted(() => ({
@@ -159,5 +163,53 @@ describe("LedgerPrintControls", () => {
     );
     await act(async () => {});
     expect(window.print).not.toHaveBeenCalled();
+  });
+
+  it("保存待ちの変更がある間は自動印刷せず、保存後に帳票を取り直してから一度だけ印刷する", async () => {
+    navigation.search = "year=2026&print=1";
+    let finishSaving = () => {};
+    function SavingChange() {
+      const { begin, remove } = usePendingLedgerChanges();
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            begin({
+              id: "saving-void",
+              marksEntriesSaving: false,
+              summary: "取消",
+              overlay: { upserted: [], removedIds: ["entry-1"] },
+            });
+            finishSaving = () => remove({ id: "saving-void" });
+          }}
+        >
+          保存待ちを作る
+        </button>
+      );
+    }
+    const officialProps = {
+      ...previewProps,
+      isTargetLocked: true,
+      lockedThrough: "2026-09-01",
+      canPrintOfficially: true,
+      isPreview: false,
+    };
+    render(
+      <PendingLedgerChangesProvider>
+        <SavingChange />
+        <LedgerPrintControls {...officialProps} />
+      </PendingLedgerChangesProvider>,
+    );
+    // 初回描画で始まる自動印刷より先に保存待ちを作るため、同期的に操作する。
+    fireEvent.click(screen.getByRole("button", { name: "保存待ちを作る" }));
+    vi.mocked(window.print).mockClear();
+
+    await act(async () => {});
+    expect(window.print).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "印刷" })).toBeDisabled();
+
+    await act(async () => finishSaving());
+    expect(refresh).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(window.print).toHaveBeenCalledTimes(1));
   });
 });

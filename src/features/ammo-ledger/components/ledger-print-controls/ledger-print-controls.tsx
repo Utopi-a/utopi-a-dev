@@ -54,6 +54,8 @@ export function LedgerPrintControls({
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isRefreshingAfterSave, startRefreshAfterSave] = useTransition();
+  const wasSavingRef = useRef(isSaving);
   const [printRequestedFor, setPrintRequestedFor] = useState<string | null>(null);
   const printedRequest = useRef<string | null>(null);
   const targetKey = `${selectedYear}:${targetDate}`;
@@ -65,6 +67,14 @@ export function LedgerPrintControls({
   const hasBlockingIssues = lockIssues.length > 0;
 
   useEffect(() => {
+    // 保存待ちの変更が確定したら、その記録を含む帳票をサーバーから取り直す。
+    if (wasSavingRef.current && !isSaving) {
+      startRefreshAfterSave(() => router.refresh());
+    }
+    wasSavingRef.current = isSaving;
+  }, [isSaving, router]);
+
+  useEffect(() => {
     if (!printRequest) {
       printedRequest.current = null;
       return;
@@ -74,6 +84,8 @@ export function LedgerPrintControls({
       hasBlockingIssues ||
       dialogOpen ||
       isPending ||
+      isSaving ||
+      isRefreshingAfterSave ||
       printedRequest.current === printRequest
     ) {
       return;
@@ -94,7 +106,15 @@ export function LedgerPrintControls({
       cancelled = true;
       if (frame !== undefined) window.cancelAnimationFrame(frame);
     };
-  }, [canPrintOfficially, hasBlockingIssues, dialogOpen, isPending, printRequest]);
+  }, [
+    canPrintOfficially,
+    hasBlockingIssues,
+    dialogOpen,
+    isPending,
+    isSaving,
+    isRefreshingAfterSave,
+    printRequest,
+  ]);
 
   function handleYearChange({ year }: { year: number }) {
     const previewParam = isPreview ? "&preview=1" : "";

@@ -1,14 +1,17 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
+import { createAmmoTypeAction } from "@/features/ammo-ledger/master/create-ammo-type/create-ammo-type-action";
 import type { OpeningBalanceSnapshot } from "@/features/ammo-ledger/opening-balance/get-opening-balance/get-opening-balance";
 import { saveOpeningBalanceAction } from "@/features/ammo-ledger/opening-balance/save-opening-balance/save-opening-balance-action";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { AmmoLedgerSwrProvider } from "@/features/ammo-ledger/workspace/ammo-ledger-swr-provider/ammo-ledger-swr-provider";
 import { OpeningBalanceForm } from "./opening-balance-form";
 
+const { push, refresh } = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({ push, refresh }),
   usePathname: () => "/lab/ammo-ledger/settings/opening-balance",
 }));
 vi.mock(
@@ -30,6 +33,7 @@ type FormOptions = {
   huntingStock?: Record<string, number>;
   formAmmoTypes?: typeof ammoTypes;
   priorYearEndStockByPurpose?: Record<string, Record<string, number>>;
+  years?: number[];
 };
 
 function buildForm({
@@ -37,6 +41,7 @@ function buildForm({
   huntingStock = {},
   formAmmoTypes = ammoTypes,
   priorYearEndStockByPurpose = {},
+  years = [2026],
 }: FormOptions) {
   const snapshotsByPurpose: Record<LedgerPurpose, OpeningBalanceSnapshot> = {
     shooting: { permitCarryovers: [], stockByAmmoType: shootingStock },
@@ -47,7 +52,7 @@ function buildForm({
     <AmmoLedgerOptimisticNavProvider>
       <AmmoLedgerSwrProvider>
         <OpeningBalanceForm
-          years={[2026]}
+          years={years}
           initialYear={2026}
           initialPurpose="shooting"
           ammoTypes={formAmmoTypes}
@@ -67,11 +72,18 @@ function stockInput(name: string) {
   return within(screen.getByRole("row", { name: new RegExp(name) })).getByRole("spinbutton");
 }
 
+const openingBalancePath = "/lab/ammo-ledger/settings/opening-balance";
+
+function currentPath() {
+  return `${window.location.pathname}${window.location.search}`;
+}
+
 describe("OpeningBalanceForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(saveOpeningBalanceAction).mockResolvedValue({ ok: true });
     vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    window.history.replaceState(null, "", openingBalancePath);
   });
 
   afterEach(() => vi.restoreAllMocks());
@@ -206,5 +218,72 @@ describe("OpeningBalanceForm", () => {
     expect(screen.queryByText(/前年末の帳簿残数/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "狩猟用" }));
     expect(screen.getByRole("button", { name: "前年末の残数を入れる" })).toBeEnabled();
+  });
+
+  it("他の用途に保存していない入力があれば、保存後も帳簿へ移らずその用途を知らせる", async () => {
+    renderForm();
+    fireEvent.change(stockInput("12番・散弾"), { target: { value: "40" } });
+    fireEvent.click(screen.getByRole("button", { name: "狩猟用" }));
+    fireEvent.change(stockInput("12番・単弾"), { target: { value: "10" } });
+    fireEvent.click(screen.getByRole("button", { name: "2026年 狩猟 の繰越を保存" }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "狩猟用の繰越を保存しました。射撃用の入力がまだ保存されていません。",
+    );
+    expect(saveOpeningBalanceAction).toHaveBeenCalledWith({
+      year: 2026,
+      purpose: "hunting",
+      permitCarryovers: [],
+      stockByAmmoType: { "ammo-2": 10 },
+    });
+    expect(currentPath()).toBe(openingBalancePath);
+    expect(refresh).toHaveBeenCalled();
+
+    // 保存した狩猟用の入力は、再取得前でも未保存として扱わない。
+    fireEvent.click(screen.getByRole("button", { name: "射撃用" }));
+    expect(stockInput("12番・散弾")).toHaveValue(40);
+    fireEvent.click(screen.getByRole("button", { name: "2026年 射撃 の繰越を保存" }));
+    await waitFor(() => expect(currentPath()).toBe("/lab/ammo-ledger/ledger?purpose=shooting"));
+  });
+
+  it("他の用途の入力を元の値に戻していれば、保存後に帳簿へ移る", async () => {
+    renderForm({ huntingStock: { "ammo-1": 20 } });
+    fireEvent.click(screen.getByRole("button", { name: "狩猟用" }));
+    fireEvent.change(stockInput("12番・散弾"), { target: { value: "25" } });
+    fireEvent.change(stockInput("12番・散弾"), { target: { value: "20" } });
+    fireEvent.click(screen.getByRole("button", { name: "射撃用" }));
+    fireEvent.click(screen.getByRole("button", { name: "2026年 射撃 の繰越を保存" }));
+
+    await waitFor(() => expect(currentPath()).toBe("/lab/ammo-ledger/ledger?purpose=shooting"));
+    expect(screen.queryByText(/まだ保存されていません/)).not.toBeInTheDocument();
+  });
+
+  it("年を切り替えても表示中の用途を保ち、保存していない入力が消えることを示す", () => {
+    renderForm({ years: [2026, 2025] });
+    fireEvent.click(screen.getByRole("button", { name: "狩猟用" }));
+    expect(screen.queryByText(/保存していない入力は消えます/)).not.toBeInTheDocument();
+    fireEvent.change(stockInput("12番・散弾"), { target: { value: "5" } });
+    expect(screen.getByText("年を切り替えると、保存していない入力は消えます。")).toBeVisible();
+
+    fireEvent.change(screen.getByLabelText("対象年"), { target: { value: "2025" } });
+    expect(push).toHaveBeenCalledWith(`${openingBalancePath}?year=2025&purpose=hunting`);
+  });
+
+  it("残数欄は弾種名で読み上げる", () => {
+    renderForm();
+    expect(screen.getByRole("spinbutton", { name: ".308の繰越残数" })).toHaveValue(null);
+  });
+
+  it("弾種追加欄で Enter を押すと弾種を追加し、繰越は保存しない", async () => {
+    vi.mocked(createAmmoTypeAction).mockResolvedValue({ ok: true } as Awaited<
+      ReturnType<typeof createAmmoTypeAction>
+    >);
+    renderForm();
+    fireEvent.click(screen.getByRole("button", { name: "弾種を追加" }));
+    fireEvent.keyDown(screen.getByLabelText("1箱あたり発数"), { key: "Enter" });
+
+    await waitFor(() => expect(createAmmoTypeAction).toHaveBeenCalledTimes(1));
+    expect(saveOpeningBalanceAction).not.toHaveBeenCalled();
+    expect(currentPath()).toBe(openingBalancePath);
   });
 });

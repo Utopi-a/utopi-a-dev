@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { LedgerDisplayRow } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
 import { LedgerTable } from "./ledger-table";
@@ -58,5 +58,27 @@ describe("LedgerTable", () => {
       expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "center" }),
     );
     expect(container.querySelectorAll('[data-ledger-entry-id="entry-1"]')).toHaveLength(2);
+  });
+
+  it("許可残数失効行には、失効を適用した後の許可残数を表示する", () => {
+    const expiryRow: LedgerDisplayRow = {
+      kind: "permit_expiry",
+      id: "permit-expiry-pe-1",
+      eventId: "pe-1",
+      occurredOn: "2026-12-15",
+      permitName: "旧許可",
+      permitPurpose: "標的射撃",
+    };
+
+    render(
+      <LedgerTable
+        rows={[expiryRow]}
+        purpose="shooting"
+        permitBalances={new Map([["pe-1", 5000]])}
+      />,
+    );
+
+    // PC の表とモバイルのカードの両方に出す
+    expect(screen.getAllByText("5000個")).toHaveLength(2);
   });
 });

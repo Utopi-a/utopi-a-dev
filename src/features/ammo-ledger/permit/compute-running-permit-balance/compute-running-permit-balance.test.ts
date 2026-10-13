@@ -259,7 +259,7 @@ describe("computeRunningPermitBalance", () => {
     expect(balances.get("x1")).toBe(0);
   });
 
-  it("許可IDのない旧形式の失効は、用途の残数をすべて0にする", () => {
+  it("許可IDのない旧形式のイベントは1つの許可として数え、旧形式の失効でその残りを消す", () => {
     const permitEvents = [
       permitEvent({
         id: "g1",
@@ -291,6 +291,46 @@ describe("computeRunningPermitBalance", () => {
     expect(balances.get("e1")).toBe(40);
     expect(balances.get("x1")).toBe(0);
     expect(balances.get("e2")).toBe(70);
+  });
+
+  it("旧形式の失効は、同じ日に付与された許可IDのある新許可の残りを消さない", () => {
+    const permitEvents = [
+      permitEvent({
+        id: "legacy-grant",
+        permitId: null,
+        occurredOn: "2026-01-01",
+        eventKind: "grant",
+        quantity: 100,
+      }),
+      permitEvent({
+        id: "new-grant",
+        permitId: "new",
+        occurredOn: "2026-06-07",
+        eventKind: "grant",
+        quantity: 500,
+      }),
+      permitEvent({
+        id: "legacy-expiry",
+        permitId: null,
+        occurredOn: "2026-06-07",
+        eventKind: "expiry",
+      }),
+    ];
+
+    const balances = computeRunningPermitBalance({
+      permitEvents,
+      ledgerEntries: [],
+      today: "2026-06-08",
+    });
+    const state = computeCurrentPermitState({
+      permitEvents,
+      ledgerEntries: [],
+      today: "2026-06-08",
+    });
+
+    expect(balances.get("legacy-expiry")).toBe(500);
+    expect(state.balance).toBe(500);
+    expect(state.remainingByPermitId.get("new")).toBe(500);
   });
 
   it("今日より後の許可イベントは表の残数に反映しない", () => {

@@ -69,7 +69,7 @@ function sumRemaining({
 /**
  * 用途の許可残数を許可ごとに追う。失効はその許可の残りだけを消し、ほかの許可の残りは残す。
  * 譲受記録は許可IDを持たないため、その時点で有効な許可のうち有効期限の早いものから順に差し引く。
- * 許可IDのない旧形式のイベントは1つの許可として扱い、旧形式の失効は用途の残数をすべて消す。
+ * 許可IDのない旧形式のイベントは1つの許可として扱い、旧形式の失効はその残りだけを消す。
  */
 function runPermitLedger({
   permitEvents,
@@ -122,11 +122,7 @@ function runPermitLedger({
     }
 
     if (step.kind === "expiry") {
-      if (step.event.permitId) {
-        remainingByPermitId.delete(step.event.permitId);
-      } else {
-        remainingByPermitId.clear();
-      }
+      remainingByPermitId.delete(step.event.permitId);
       balanceById.set(step.event.id, sumRemaining({ remainingByPermitId }));
       continue;
     }

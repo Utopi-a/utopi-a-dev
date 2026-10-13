@@ -18,7 +18,22 @@ import { ConsumeForm } from "./consume-form";
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
   usePathname: () => "/lab/ammo-ledger/consume/new",
+  useSearchParams: () => new URLSearchParams(),
 }));
+
+const { useMasterPickerDataMock } = vi.hoisted(() => ({
+  useMasterPickerDataMock: vi.fn((): { pickerData?: unknown } => ({ pickerData: undefined })),
+}));
+
+vi.mock(
+  "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data",
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import("@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data")
+    >()),
+    useMasterPickerData: () => useMasterPickerDataMock(),
+  }),
+);
 
 vi.mock("@/features/ammo-ledger/components/master-picker/master-picker", () => ({
   MasterPicker: ({ value }: { value: string }) => <div>選択中の場所: {value}</div>,
@@ -121,6 +136,88 @@ describe("ConsumeForm", () => {
     });
   });
 
+  it("日本時間の0〜9時（UTCでは前日）でも、新規入力の日付は日本時間の当日にする", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-12T16:30:00Z"));
+    try {
+      render(<ConsumeForm guns={guns} ammoTypes={ammoTypes} stockByAmmoTypeId={{}} />);
+      expect(screen.getByLabelText("日付")).toHaveValue("2026/10/13");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("新規入力では最近使った射撃場を初期値にし、編集では元の射撃場を変えない", () => {
+    useMasterPickerDataMock.mockReturnValue({
+      pickerData: {
+        favorites: [],
+        recent: [{ id: "range-recent", name: "最近の射撃場", address: "千葉県", catalogId: null }],
+        registered: [],
+        catalogByPrefecture: [],
+        favoriteCatalogIds: [],
+        registeredCatalogIds: [],
+      },
+    });
+    const { unmount } = render(
+      <ConsumeForm guns={guns} ammoTypes={ammoTypes} stockByAmmoTypeId={{}} />,
+    );
+    expect(screen.getByText("選択中の場所: range-recent")).toBeInTheDocument();
+    unmount();
+
+    render(
+      <ConsumeForm
+        guns={guns}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={{}}
+        ledgerEntryId="ledger-entry-1"
+        initialValues={{ purpose: "shooting", location: "削除済みの射撃場" }}
+      />,
+    );
+    expect(screen.getByText("選択中の場所:")).toBeInTheDocument();
+    useMasterPickerDataMock.mockReturnValue({ pickerData: undefined });
+  });
+
+  it("前回の消費場所と同じ射撃場があれば、最近使った順より優先する", () => {
+    useMasterPickerDataMock.mockReturnValue({
+      pickerData: {
+        favorites: [],
+        recent: [
+          { id: "range-other", name: "別の射撃場", address: "埼玉県", catalogId: null },
+          { id: "range-previous", name: "前回の射撃場", address: "千葉県", catalogId: null },
+        ],
+        registered: [],
+        catalogByPrefecture: [],
+        favoriteCatalogIds: [],
+        registeredCatalogIds: [],
+      },
+    });
+    render(
+      <ConsumeForm
+        guns={guns}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={{}}
+        initialValues={{ purpose: "shooting", location: "前回の射撃場 千葉県" }}
+      />,
+    );
+    expect(screen.getByText("選択中の場所: range-previous")).toBeInTheDocument();
+    useMasterPickerDataMock.mockReturnValue({ pickerData: undefined });
+  });
+
+  it("消費後の帳簿残数を表示し、残数を超える入力に気づけるようにする", () => {
+    render(
+      <ConsumeForm
+        guns={guns}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={{ "ammo-original": 40 }}
+        initialValues={{ ammoTypeId: "ammo-original", boxCount: 1 }}
+      />,
+    );
+    expect(screen.getByText(/帳簿残数（全用途）40発 → 消費後 15発/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("小箱"), { target: { value: "2" } });
+    expect(screen.getByText(/消費後 -10発（残数を超えています）/)).toBeInTheDocument();
+  });
+
   it("編集画面で元記録の銃・用途・射撃場・弾種・数量・注記を初期表示する", () => {
     render(
       <ConsumeForm
@@ -151,7 +248,9 @@ describe("ConsumeForm", () => {
     expect(screen.getByLabelText("小箱")).toHaveValue(2);
     expect(screen.getByLabelText("バラ（±）")).toHaveValue(3);
     expect(screen.getByLabelText("メモ（帳簿には出ません）")).toHaveValue("元のメモ");
-    expect(screen.getByLabelText("帳簿摘要の補足（任意）")).toHaveValue("元の帳簿摘要");
+    expect(screen.getByLabelText("帳簿摘要の補足")).toHaveValue("元の帳簿摘要");
+    // 値がある任意項目は折りたたまずに見せる。
+    expect(screen.getByLabelText("帳簿摘要の補足")).toBeVisible();
   });
 
   it("編集画面で弾種を変更しても元の用途と場所を保持する", () => {

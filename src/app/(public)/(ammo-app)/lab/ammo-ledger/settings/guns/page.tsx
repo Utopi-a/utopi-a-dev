@@ -2,6 +2,7 @@ import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { GunForm } from "@/features/ammo-ledger/components/gun-form/gun-form";
 import { GunRowActions } from "@/features/ammo-ledger/components/gun-row-actions/gun-row-actions";
+import { MasterListItem } from "@/features/ammo-ledger/components/master-list-item/master-list-item";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 
 export default async function GunsSettingsPage() {
@@ -17,7 +18,7 @@ export default async function GunsSettingsPage() {
         ) : (
           <ul className="divide-y divide-border/50 text-sm">
             {guns.map((gun) => (
-              <li
+              <MasterListItem
                 key={gun.id}
                 className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
               >
@@ -25,7 +26,7 @@ export default async function GunsSettingsPage() {
                   {gun.name} — {gun.gunNumber} / {gun.permitNumber}（{gun.gunType} / {gun.caliber}）
                 </span>
                 <GunRowActions gunId={gun.id} />
-              </li>
+              </MasterListItem>
             ))}
           </ul>
         )}

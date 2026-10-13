@@ -2,9 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { AmmoLedgerNav } from "@/features/ammo-ledger/components/ammo-ledger-nav/ammo-ledger-nav";
 import { useAmmoLedgerOptimisticNav } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
+import { PendingLedgerChangeAlerts } from "@/features/ammo-ledger/components/pending-ledger-change-alerts/pending-ledger-change-alerts";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { matchesNavTarget } from "@/features/ammo-ledger/workspace/matches-nav-target/matches-nav-target";
 import { resolveShellRoute } from "@/features/ammo-ledger/workspace/resolve-shell-route/resolve-shell-route";
@@ -41,6 +42,23 @@ const AmmoLedgerSettingsHubView = dynamic(
   { loading: () => <WorkspaceViewLoader /> },
 );
 
+// 保存後に帳簿へ移動した瞬間にビューの読込待ちが出ないよう、アイドル時に先読みする。
+function usePreloadShellViews() {
+  useEffect(() => {
+    function preload() {
+      void import("@/features/ammo-ledger/components/ledger-view/ledger-view");
+      void import("@/features/ammo-ledger/components/inventory-view/inventory-view");
+      void import("@/features/ammo-ledger/components/ammo-ledger-home-view/ammo-ledger-home-view");
+    }
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(preload, { timeout: 3000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const timer = setTimeout(preload, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+}
+
 type AmmoLedgerShellProps = {
   children: ReactNode;
 };
@@ -63,11 +81,13 @@ export function AmmoLedgerShell({ children }: AmmoLedgerShellProps) {
   const { activePath } = useAmmoLedgerOptimisticNav();
   const effectivePath = activePath ?? pathname;
   const shellRoute = resolveShellRoute({ path: effectivePath });
+  usePreloadShellViews();
 
   if (shellRoute) {
     return (
       <div className="space-y-5">
         <AmmoLedgerNav />
+        <PendingLedgerChangeAlerts />
         <ShellContent route={shellRoute} />
       </div>
     );

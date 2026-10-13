@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   type PlannedStockChange,
   validateStockTimeline,
-} from "@/features/ammo-ledger/transactions/check-stock-before-save/check-stock-before-save";
+} from "@/features/ammo-ledger/ledger/validate-stock-timeline/validate-stock-timeline";
 
 function buildEntry({
   category,

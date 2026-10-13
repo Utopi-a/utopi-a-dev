@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useInvalidateMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { createCounterpartyAction } from "@/features/ammo-ledger/master/create-counterparty/create-counterparty-action";
 import { updateCounterpartyAction } from "@/features/ammo-ledger/master/update-counterparty/update-counterparty-action";
@@ -20,12 +21,15 @@ type CounterpartyFormProps = {
 
 export function CounterpartyForm({ recordId, initialValues }: CounterpartyFormProps = {}) {
   const router = useRouter();
+  const invalidatePickerData = useInvalidateMasterPickerData();
   const isEdit = Boolean(recordId);
   const [name, setName] = useState(initialValues?.name ?? "");
   const [address, setAddress] = useState(initialValues?.address ?? "");
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  // 追加した行が一覧に出るまで処理中にし、反映前の二重登録を防ぐ。
+  const [isRefreshingList, startListRefresh] = useTransition();
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -54,13 +58,14 @@ export function CounterpartyForm({ recordId, initialValues }: CounterpartyFormPr
         action: isEdit ? "updated" : "created",
         subject: "購入先",
       });
+      invalidatePickerData();
 
       if (isEdit) {
         router.push("/lab/ammo-ledger/settings/counterparties");
         return;
       }
 
-      router.refresh();
+      startListRefresh(() => router.refresh());
       setName("");
       setAddress("");
       setMemo("");
@@ -100,8 +105,14 @@ export function CounterpartyForm({ recordId, initialValues }: CounterpartyFormPr
           {error}
         </p>
       ) : null}
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "保存中…" : isEdit ? "変更を保存" : "購入先を追加"}
+      <Button type="submit" disabled={isPending || isRefreshingList}>
+        {isPending
+          ? "保存中…"
+          : isRefreshingList
+            ? "一覧を更新中…"
+            : isEdit
+              ? "変更を保存"
+              : "購入先を追加"}
       </Button>
     </form>
   );

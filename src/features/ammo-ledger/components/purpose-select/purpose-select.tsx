@@ -10,12 +10,13 @@ import {
 type PurposeSelectProps = {
   value: LedgerPurpose;
   onChange: (value: LedgerPurpose) => void;
+  id?: string;
 };
 
-export function PurposeSelect({ value, onChange }: PurposeSelectProps) {
+export function PurposeSelect({ value, onChange, id = "purpose" }: PurposeSelectProps) {
   return (
     <FieldSelect
-      id="purpose"
+      id={id}
       label="用途区分"
       value={value}
       onChange={(next) => onChange(next as LedgerPurpose)}

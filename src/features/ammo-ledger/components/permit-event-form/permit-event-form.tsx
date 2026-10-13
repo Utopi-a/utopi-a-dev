@@ -16,10 +16,11 @@ import {
   permitEventKindLabels,
   permitEventKinds,
 } from "@/features/ammo-ledger/schema/permit-event-kind";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 export function PermitEventForm() {
   const navigateAfterMutation = useAmmoLedgerMutationNavigation();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTokyoIsoDate();
 
   const [purpose, setPurpose] = useState<LedgerPurpose>("shooting");
   const [eventKind, setEventKind] = useState<string>(permitEventKinds[0]);

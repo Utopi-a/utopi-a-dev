@@ -6,12 +6,15 @@ import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-p
 import { ConsumeForm } from "@/features/ammo-ledger/components/consume-form/consume-form";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { useDraftTransaction } from "@/features/ammo-ledger/transactions/get-draft/use-draft-transaction/use-draft-transaction";
+import { resolveConsumeDefaults } from "@/features/ammo-ledger/transactions/resolve-consume-defaults/resolve-consume-defaults";
 import { deriveFormWorkspaceData } from "@/features/ammo-ledger/workspace/derive-form-workspace-data/derive-form-workspace-data";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 export function ConsumeNewView() {
   const searchParams = useSearchParams();
   const draftId = searchParams.get("draft");
+  // 保存できなかった入力に戻るたびにフォームを作り直し、その入力値で始める。
+  const restoreId = searchParams.get("restore");
   const { workspace, isLoading: isWorkspaceLoading, error, retry } = useAmmoLedgerWorkspace();
   const {
     draft,
@@ -25,15 +28,23 @@ export function ConsumeNewView() {
   }
 
   const { guns, ammoTypes, stockByAmmoTypeId } = deriveFormWorkspaceData({ workspace });
+  const { fromPreviousEntry, ...defaults } = resolveConsumeDefaults({
+    entries: workspace.entries,
+    gunIds: guns.map((gun) => gun.id),
+    ammoTypes,
+  });
 
   const initialValues = draft
     ? {
+        gunId: defaults.gunId,
         occurredOn: draft.occurredOn,
         ammoTypeId: draft.ammoTypeId ?? undefined,
         boxCount: draft.boxCount,
         looseRounds: draft.looseRounds,
       }
-    : undefined;
+    : defaults;
+  // 保存できなかった入力に戻るときはその値を優先するため、前回の内容の案内を出さない。
+  const showsPreviousDefaults = !draft && !restoreId && fromPreviousEntry;
 
   return (
     <div className="space-y-6">
@@ -42,6 +53,11 @@ export function ConsumeNewView() {
         <p className="text-sm text-muted-foreground">
           箱数・バラで入力できます。帳簿には消費の発数のみ記録されます。
         </p>
+        {showsPreviousDefaults ? (
+          <p className="text-sm text-muted-foreground">
+            前回の消費と同じ銃・弾・場所を入れています。違う場合は選び直してください。
+          </p>
+        ) : null}
         <p className="text-sm text-muted-foreground">
           複数の記録を一度に入力する場合は
           <Link href="/lab/ammo-ledger/bulk/new" className="underline">
@@ -61,7 +77,7 @@ export function ConsumeNewView() {
           </p>
         ) : (
           <ConsumeForm
-            key={draftId ?? "new"}
+            key={`${draftId ?? "new"}:${restoreId ?? ""}`}
             guns={guns}
             ammoTypes={ammoTypes}
             stockByAmmoTypeId={stockByAmmoTypeId}

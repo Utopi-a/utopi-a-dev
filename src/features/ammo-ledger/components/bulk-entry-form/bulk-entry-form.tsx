@@ -22,6 +22,7 @@ import { buildAmmoTypeFieldOptions } from "@/features/ammo-ledger/master/build-a
 import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 import { createBulkTransactionsAction } from "@/features/ammo-ledger/transactions/create-bulk-transactions/create-bulk-transactions-action";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type BulkEntryFormProps = {
   guns: (typeof ammoGun.$inferSelect)[];
@@ -31,8 +32,12 @@ type BulkEntryFormProps = {
 
 export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryFormProps) {
   const navigateAfterMutation = useAmmoLedgerMutationNavigation();
-  const today = new Date().toISOString().slice(0, 10);
-  const { pickerData: counterpartyPickerData } = useMasterPickerData({
+  const today = getTokyoIsoDate();
+  const {
+    pickerData: counterpartyPickerData,
+    error: counterpartyPickerError,
+    retry: retryCounterpartyPicker,
+  } = useMasterPickerData({
     catalogKind: "gun_shop",
     includeRangeCatalog: true,
     enabled: true,
@@ -43,13 +48,14 @@ export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryF
   const rowsInitialized = useRef(false);
 
   useEffect(() => {
-    if (!counterpartyPickerData) {
+    // 一覧の取得に失敗しても入力を始められるよう、相手方は手入力を既定にして行を作る。
+    if (!counterpartyPickerData && !counterpartyPickerError) {
       return;
     }
 
     const nextDefaultCounterpartyId =
-      counterpartyPickerData.recent[0]?.id ??
-      counterpartyPickerData.registered[0]?.id ??
+      counterpartyPickerData?.recent[0]?.id ??
+      counterpartyPickerData?.registered[0]?.id ??
       manualCounterpartyId;
     setDefaultCounterpartyId(nextDefaultCounterpartyId);
 
@@ -63,7 +69,7 @@ export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryF
       ]);
       rowsInitialized.current = true;
     }
-  }, [counterpartyPickerData, today]);
+  }, [counterpartyPickerData, counterpartyPickerError, today]);
 
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -188,6 +194,19 @@ export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryF
 
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
+      {counterpartyPickerError && !counterpartyPickerData ? (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm"
+        >
+          <p className="flex-1">
+            購入先の一覧を取得できなかったため、譲受の相手方は手入力になります。
+          </p>
+          <Button type="button" variant="outline" size="sm" onClick={retryCounterpartyPicker}>
+            再試行
+          </Button>
+        </div>
+      ) : null}
       <div className="space-y-4">
         {rows.map((row, rowIndex) => (
           <BulkEntryRowCard

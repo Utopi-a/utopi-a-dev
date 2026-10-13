@@ -17,6 +17,7 @@ import { AcquireForm } from "./acquire-form";
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
   usePathname: () => "/lab/ammo-ledger/consume/new",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data", () => ({

@@ -25,7 +25,9 @@ import {
 import type { PermitEventKind } from "@/features/ammo-ledger/schema/permit-event-kind";
 import { parseLedgerPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import type { AmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-types";
+import { useSavingLedgerChangeCount } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 function syncPurposeToUrl({ purpose }: { purpose: LedgerPurpose }) {
   const url = new URL(window.location.href);
@@ -35,6 +37,7 @@ function syncPurposeToUrl({ purpose }: { purpose: LedgerPurpose }) {
 
 type LedgerViewContentProps = {
   workspace: AmmoLedgerWorkspace;
+  savingEntryIds: ReadonlySet<string>;
   ownerName: string;
   isRefreshing: boolean;
   highlightedEntryId: string | null;
@@ -42,15 +45,18 @@ type LedgerViewContentProps = {
 
 function LedgerViewContent({
   workspace,
+  savingEntryIds,
   ownerName,
   isRefreshing,
   highlightedEntryId,
 }: LedgerViewContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // 帳票は DB から作るため、保存待ちの変更があるうちは印刷へ進ませない。
+  const isSaving = useSavingLedgerChangeCount() > 0;
   const purpose = parseLedgerPurpose({ value: searchParams.get("purpose") }) ?? "shooting";
-  const today = new Date().toISOString().slice(0, 10);
-  const currentYear = new Date().getFullYear();
+  const today = getTokyoIsoDate();
+  const currentYear = Number(today.slice(0, 4));
   const [printYear, setPrintYear] = useState(currentYear);
   const { entries, permitEvents, permits } = workspace;
   const entryCounts = useMemo(
@@ -199,10 +205,11 @@ function LedgerViewContent({
           </div>
           <button
             type="button"
+            disabled={isSaving}
             onClick={() => router.push(`/lab/ammo-ledger/ledger/print?year=${printYear}`)}
-            className="shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {printYear}年を印刷する →
+            {isSaving ? "保存が終わると印刷できます" : `${printYear}年を印刷する →`}
           </button>
         </div>
       </div>
@@ -213,9 +220,11 @@ function LedgerViewContent({
           aria-live="polite"
         >
           {highlightedEntryExists
-            ? "追加した記録を強調表示しています。"
+            ? savingEntryIds.has(highlightedEntryId)
+              ? "記録を保存しています。保存が終わるまで編集・取消はできません。"
+              : "保存した記録を強調表示しています。"
             : isRefreshing
-              ? "記録は保存済みです。帳簿の表示を更新しています…"
+              ? "帳簿の表示を更新しています…"
               : "指定された記録を表示できません。帳簿を再取得してください。"}
         </p>
       ) : null}
@@ -230,6 +239,7 @@ function LedgerViewContent({
         homeStorageExceededEntryIds={homeStorage.exceededEntryIds}
         highlightedEntryId={highlightedEntryId}
         lockState={workspace.lockState}
+        savingEntryIds={savingEntryIds}
       />
 
       <AmmoLedgerRefreshIndicator visible={isRefreshing} />
@@ -239,7 +249,8 @@ function LedgerViewContent({
 
 export function LedgerView() {
   const searchParams = useSearchParams();
-  const { workspace, ownerName, isLoading, isRefreshing, error, retry } = useAmmoLedgerWorkspace();
+  const { workspace, pendingEntryIds, ownerName, isLoading, isRefreshing, error, retry } =
+    useAmmoLedgerWorkspace();
 
   if (isLoading || !workspace) {
     return <WorkspaceViewLoader error={error} onRetry={retry} />;
@@ -248,6 +259,7 @@ export function LedgerView() {
   return (
     <LedgerViewContent
       workspace={workspace}
+      savingEntryIds={pendingEntryIds}
       ownerName={ownerName || "（未設定）"}
       isRefreshing={isRefreshing}
       highlightedEntryId={searchParams.get("entry")}

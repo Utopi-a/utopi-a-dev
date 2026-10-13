@@ -13,6 +13,7 @@ import {
   listShotGaugeSelectOptions,
   normalizeGaugeNumberForSelect,
 } from "@/features/ammo-ledger/schema/shot-gauge-options";
+import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 const cartridgeTypeFormOptions: { value: CartridgeType; label: string }[] = [
   { value: "rifle", label: "ライフル実包" },
@@ -30,6 +31,7 @@ export function UnconfirmedAmmoTypeRow({ ammoType }: UnconfirmedAmmoTypeRowProps
   const [gaugeNumber, setGaugeNumber] = useState(
     normalizeGaugeNumberForSelect({ gaugeNumber: ammoType.gaugeNumber }),
   );
+  const requestRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,20 +48,27 @@ export function UnconfirmedAmmoTypeRow({ ammoType }: UnconfirmedAmmoTypeRowProps
     setIsPending(true);
     setError(null);
 
-    const result = await confirmClassificationAction({
-      ammoTypeId: ammoType.id,
-      cartridgeType,
-      caliber,
-      gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber || undefined : undefined,
-    });
+    try {
+      const result = await confirmClassificationAction({
+        ammoTypeId: ammoType.id,
+        cartridgeType,
+        caliber,
+        gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber || undefined : undefined,
+      });
 
-    if (!result.ok) {
-      setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+        setIsPending(false);
+        return;
+      }
+
+      // 成功時は再描画でこの行が消えるため、処理中表示を戻さない。
+      showAmmoLedgerToast({ action: "saved", subject: "弾種分類" });
+      requestRevalidation();
+    } catch {
+      setError("通信に失敗しました。保存状況を確認してから再試行してください。");
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({ action: "saved", subject: "弾種分類" });
   }
 
   return (

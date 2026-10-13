@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type {
   ammoAcquisitionPermit,
   ammoLedgerEntry,
@@ -21,6 +21,7 @@ type LedgerTableShellProps = {
   homeStorageExceededEntryIds?: string[];
   highlightedEntryId?: string | null;
   lockState?: LedgerLockState;
+  savingEntryIds?: ReadonlySet<string>;
 };
 
 export function LedgerTableShell({
@@ -33,36 +34,19 @@ export function LedgerTableShell({
   homeStorageExceededEntryIds = [],
   highlightedEntryId,
   lockState,
+  savingEntryIds,
 }: LedgerTableShellProps) {
-  const [voidedEntryIds, setVoidedEntryIds] = useState<string[]>([]);
-  const voidedIdSet = useMemo(() => new Set(voidedEntryIds), [voidedEntryIds]);
-
-  const visibleEntries = useMemo(
-    () => entries.filter((entry) => !voidedIdSet.has(entry.id)),
-    [entries, voidedIdSet],
-  );
-
   const displayRows = useMemo(
     () =>
       buildLedgerDisplayRows({
-        entries: visibleEntries,
+        entries,
         permitEvents,
         permits,
         purpose,
         today,
       }),
-    [visibleEntries, permitEvents, permits, purpose, today],
+    [entries, permitEvents, permits, purpose, today],
   );
-
-  function handleVoided({ ledgerEntryId }: { ledgerEntryId: string }) {
-    setVoidedEntryIds((current) =>
-      current.includes(ledgerEntryId) ? current : [...current, ledgerEntryId],
-    );
-  }
-
-  function handleVoidFailed({ ledgerEntryId }: { ledgerEntryId: string }) {
-    setVoidedEntryIds((current) => current.filter((id) => id !== ledgerEntryId));
-  }
 
   return (
     <LedgerTable
@@ -72,8 +56,7 @@ export function LedgerTableShell({
       homeStorageExceededEntryIds={homeStorageExceededEntryIds}
       highlightedEntryId={highlightedEntryId}
       lockState={lockState}
-      onVoided={handleVoided}
-      onVoidFailed={handleVoidFailed}
+      savingEntryIds={savingEntryIds}
     />
   );
 }

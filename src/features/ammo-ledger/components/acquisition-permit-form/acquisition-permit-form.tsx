@@ -22,6 +22,7 @@ import {
   defaultAcquisitionPermitPurpose,
 } from "@/features/ammo-ledger/schema/acquisition-permit-purpose-options";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 function defaultExpiresOn({ grantedOn }: { grantedOn: string }): string {
   const date = new Date(`${grantedOn}T00:00:00`);
@@ -31,7 +32,7 @@ function defaultExpiresOn({ grantedOn }: { grantedOn: string }): string {
 
 export function AcquisitionPermitForm() {
   const navigateAfterMutation = useAmmoLedgerMutationNavigation();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTokyoIsoDate();
 
   const [ledgerPurpose, setLedgerPurpose] = useState<LedgerPurpose>("shooting");
   const [name, setName] = useState(defaultAcquisitionPermitName);

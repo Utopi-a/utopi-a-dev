@@ -8,6 +8,7 @@ import { validateDraftFromDiff } from "@/features/ammo-ledger/inventory/validate
 import { computeStockByAmmoType } from "@/features/ammo-ledger/ledger/compute-stock/compute-stock";
 import type { InputKind } from "@/features/ammo-ledger/schema/input-kind";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 export async function createDraftFromDiffAction({
   ammoTypeId,
@@ -71,7 +72,7 @@ export async function createDraftFromDiffAction({
   const diff = actualRounds - bookStock;
 
   const transactionId = crypto.randomUUID();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTokyoIsoDate();
 
   await db.insert(ammoTransaction).values({
     id: transactionId,

@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -25,13 +24,10 @@ type InflowRecordTabsProps = {
   receiveContent: ReactNode;
 };
 
-function syncTabToUrl({ tab, draft }: { tab: InflowTab; draft: string | null }) {
-  const params = new URLSearchParams();
-  params.set("tab", tab);
-  if (draft) {
-    params.set("draft", draft);
-  }
-  const url = `/lab/ammo-ledger/inflow/new?${params.toString()}`;
+// 下書き・入力の復元などの指定を保ったまま、タブだけを URL に反映する。
+function syncTabToUrl({ tab }: { tab: InflowTab }) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("tab", tab);
   window.history.replaceState(null, "", url);
 }
 
@@ -44,8 +40,6 @@ export function InflowRecordTabs({
   issueContent,
   receiveContent,
 }: InflowRecordTabsProps) {
-  const searchParams = useSearchParams();
-  const draft = searchParams.get("draft");
   const [activeTab, setActiveTab] = useState<InflowTab>(defaultTab);
 
   useEffect(() => {
@@ -55,9 +49,10 @@ export function InflowRecordTabs({
   function handleTabChange(tab: string) {
     const nextTab = tab as InflowTab;
     setActiveTab(nextTab);
-    syncTabToUrl({ tab: nextTab, draft });
+    syncTabToUrl({ tab: nextTab });
   }
 
+  // 切り替えても入力が消えないよう、全タブのフォームを保持して表示だけを切り替える。
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange}>
       <TabsList className="w-full flex-wrap">
@@ -67,23 +62,28 @@ export function InflowRecordTabs({
           </TabsTrigger>
         ))}
       </TabsList>
-      <TabsContent value="acquire" className="mt-4">
-        {activeTab === "acquire" ? acquireContent : null}
+      <TabsContent value="acquire" forceMount hidden={activeTab !== "acquire"} className="mt-4">
+        {acquireContent}
       </TabsContent>
-      <TabsContent value="dispose" className="mt-4">
-        {activeTab === "dispose" ? disposeContent : null}
+      <TabsContent value="dispose" forceMount hidden={activeTab !== "dispose"} className="mt-4">
+        {disposeContent}
       </TabsContent>
-      <TabsContent value="transfer" className="mt-4">
-        {activeTab === "transfer" ? transferContent : null}
+      <TabsContent value="transfer" forceMount hidden={activeTab !== "transfer"} className="mt-4">
+        {transferContent}
       </TabsContent>
-      <TabsContent value="manufacture" className="mt-4">
-        {activeTab === "manufacture" ? manufactureContent : null}
+      <TabsContent
+        value="manufacture"
+        forceMount
+        hidden={activeTab !== "manufacture"}
+        className="mt-4"
+      >
+        {manufactureContent}
       </TabsContent>
-      <TabsContent value="issue" className="mt-4">
-        {activeTab === "issue" ? issueContent : null}
+      <TabsContent value="issue" forceMount hidden={activeTab !== "issue"} className="mt-4">
+        {issueContent}
       </TabsContent>
-      <TabsContent value="receive" className="mt-4">
-        {activeTab === "receive" ? receiveContent : null}
+      <TabsContent value="receive" forceMount hidden={activeTab !== "receive"} className="mt-4">
+        {receiveContent}
       </TabsContent>
     </Tabs>
   );

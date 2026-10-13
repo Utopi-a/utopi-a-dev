@@ -1,4 +1,5 @@
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type LedgerPrintCoverProps = {
   ownerName: string;
@@ -15,7 +16,7 @@ export function LedgerPrintCover({
   from,
   to,
 }: LedgerPrintCoverProps) {
-  const printedOn = new Date().toISOString().slice(0, 10);
+  const printedOn = getTokyoIsoDate();
 
   return (
     <section className="ledger-print-page ledger-print-cover-page flex flex-col items-center justify-center space-y-8 text-center">

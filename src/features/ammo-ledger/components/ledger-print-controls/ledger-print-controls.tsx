@@ -15,6 +15,7 @@ import {
 import { LedgerYearSelect } from "@/features/ammo-ledger/components/ledger-year-select/ledger-year-select";
 import type { LedgerLockIssue } from "@/features/ammo-ledger/documents/validate-ledger-for-lock/validate-ledger-for-lock";
 import { lockLedgerAction } from "@/features/ammo-ledger/ledger/lock/lock-ledger-action/lock-ledger-action";
+import { useSavingLedgerChangeCount } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
 import { useUpdateAmmoLedgerLockState } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
@@ -47,10 +48,14 @@ export function LedgerPrintControls({
   const router = useRouter();
   const searchParams = useSearchParams();
   const updateLockState = useUpdateAmmoLedgerLockState();
+  // 帳票は DB から作るため、画面に先行表示した変更の保存が終わるまで印刷・確定させない。
+  const isSaving = useSavingLedgerChangeCount() > 0;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isRefreshingAfterSave, startRefreshAfterSave] = useTransition();
+  const wasSavingRef = useRef(isSaving);
   const [printRequestedFor, setPrintRequestedFor] = useState<string | null>(null);
   const printedRequest = useRef<string | null>(null);
   const targetKey = `${selectedYear}:${targetDate}`;
@@ -62,6 +67,14 @@ export function LedgerPrintControls({
   const hasBlockingIssues = lockIssues.length > 0;
 
   useEffect(() => {
+    // 保存待ちの変更が確定したら、その記録を含む帳票をサーバーから取り直す。
+    if (wasSavingRef.current && !isSaving) {
+      startRefreshAfterSave(() => router.refresh());
+    }
+    wasSavingRef.current = isSaving;
+  }, [isSaving, router]);
+
+  useEffect(() => {
     if (!printRequest) {
       printedRequest.current = null;
       return;
@@ -71,6 +84,8 @@ export function LedgerPrintControls({
       hasBlockingIssues ||
       dialogOpen ||
       isPending ||
+      isSaving ||
+      isRefreshingAfterSave ||
       printedRequest.current === printRequest
     ) {
       return;
@@ -91,7 +106,15 @@ export function LedgerPrintControls({
       cancelled = true;
       if (frame !== undefined) window.cancelAnimationFrame(frame);
     };
-  }, [canPrintOfficially, hasBlockingIssues, dialogOpen, isPending, printRequest]);
+  }, [
+    canPrintOfficially,
+    hasBlockingIssues,
+    dialogOpen,
+    isPending,
+    isSaving,
+    isRefreshingAfterSave,
+    printRequest,
+  ]);
 
   function handleYearChange({ year }: { year: number }) {
     const previewParam = isPreview ? "&preview=1" : "";
@@ -131,7 +154,12 @@ export function LedgerPrintControls({
           ← 帳簿に戻る
         </Link>
         {canPrintOfficially && !hasBlockingIssues ? (
-          <Button type="button" size="sm" onClick={() => window.print()}>
+          <Button
+            type="button"
+            size="sm"
+            disabled={isSaving || isRefreshingAfterSave}
+            onClick={() => window.print()}
+          >
             印刷
           </Button>
         ) : null}
@@ -140,7 +168,7 @@ export function LedgerPrintControls({
             type="button"
             size="sm"
             onClick={() => setDialogOpen(true)}
-            disabled={hasBlockingIssues}
+            disabled={hasBlockingIssues || isSaving}
           >
             {lockButtonLabel}
           </Button>

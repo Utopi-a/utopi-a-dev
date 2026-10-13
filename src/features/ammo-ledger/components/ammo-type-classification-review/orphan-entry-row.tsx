@@ -12,6 +12,7 @@ import type { CartridgeType } from "@/features/ammo-ledger/schema/cartridge-type
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import { ledgerCategoryLabels } from "@/features/ammo-ledger/schema/ledger-category";
 import { listShotGaugeSelectOptions } from "@/features/ammo-ledger/schema/shot-gauge-options";
+import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 const cartridgeTypeFormOptions: { value: CartridgeType; label: string }[] = [
   { value: "rifle", label: "ライフル実包" },
@@ -27,6 +28,7 @@ export function OrphanEntryRow({ entry }: OrphanEntryRowProps) {
   const [cartridgeType, setCartridgeType] = useState(entry.ammoCartridgeType ?? "");
   const [caliber, setCaliber] = useState(entry.ammoCaliber ?? "");
   const [gaugeNumber, setGaugeNumber] = useState(entry.ammoGaugeNumber ?? "");
+  const requestRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,20 +47,27 @@ export function OrphanEntryRow({ entry }: OrphanEntryRowProps) {
     setIsPending(true);
     setError(null);
 
-    const result = await correctOrphanEntryAction({
-      ledgerEntryId: entry.id,
-      cartridgeType,
-      caliber,
-      gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber || undefined : undefined,
-    });
+    try {
+      const result = await correctOrphanEntryAction({
+        ledgerEntryId: entry.id,
+        cartridgeType,
+        caliber,
+        gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber || undefined : undefined,
+      });
 
-    if (!result.ok) {
-      setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+        setIsPending(false);
+        return;
+      }
+
+      // 成功時は再描画でこの行が消えるため、処理中表示を戻さない。
+      showAmmoLedgerToast({ action: "saved", subject: "帳簿記録" });
+      requestRevalidation();
+    } catch {
+      setError("通信に失敗しました。保存状況を確認してから再試行してください。");
       setIsPending(false);
-      return;
     }
-
-    showAmmoLedgerToast({ action: "saved", subject: "帳簿記録" });
   }
 
   return (

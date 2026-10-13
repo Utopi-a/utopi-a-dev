@@ -12,6 +12,7 @@ export function AcquisitionPermitRowActions({ permitId }: AcquisitionPermitRowAc
     <MasterRowActions
       recordId={permitId}
       deletedSubject="譲受許可"
+      deleteNote="この許可の取得・繰越の記録も削除され、帳簿の許可残数が変わります。"
       deleteAction={deleteAcquisitionPermitAction}
     />
   );

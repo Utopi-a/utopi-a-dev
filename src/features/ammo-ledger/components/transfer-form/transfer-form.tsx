@@ -1,77 +1,73 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoType } from "@/db/schema/ammo-ledger";
-import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
+import { useDefaultCounterpartyId } from "@/features/ammo-ledger/catalog/use-default-counterparty-id/use-default-counterparty-id";
+import {
+  findPickerMaster,
+  useMasterPickerData,
+} from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
-import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
-import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
 import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
-import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
-import { updateTransactionAction } from "@/features/ammo-ledger/transactions/update-transaction/update-transaction-action";
+import { useLedgerTransactionSubmit } from "@/features/ammo-ledger/transactions/use-ledger-transaction-submit/use-ledger-transaction-submit";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type TransferFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
   ledgerEntryId?: string;
-  initialValues?: {
-    occurredOn?: string;
-    purpose?: LedgerPurpose;
-    ammoTypeId?: string;
-    counterpartyId?: string;
-    counterpartyName?: string;
-    counterpartyAddress?: string;
-    boxCount?: number;
-    looseRounds?: number;
-    memo?: string;
-    ledgerNote?: string;
-  };
+  initialValues?: TransferFormValues;
+};
+
+type TransferFormValues = {
+  occurredOn?: string;
+  purpose?: LedgerPurpose;
+  ammoTypeId?: string;
+  counterpartyId?: string;
+  counterpartyName?: string;
+  counterpartyAddress?: string;
+  boxCount?: number;
+  looseRounds?: number;
+  memo?: string;
+  ledgerNote?: string;
 };
 
 export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: TransferFormProps) {
-  const navigateAfterMutation = useAmmoLedgerMutationNavigation();
-  const today = new Date().toISOString().slice(0, 10);
+  const { submit, restoredValues } = useLedgerTransactionSubmit<TransferFormValues>({
+    formKey: "transfer",
+    ledgerEntryId,
+  });
+  const initial = restoredValues ?? initialValues;
+  const today = getTokyoIsoDate();
   const { pickerData: counterpartyPickerData } = useMasterPickerData({
     catalogKind: "gun_shop",
     enabled: true,
   });
-  const defaultCounterpartyApplied = useRef(!!initialValues?.counterpartyId);
 
-  const [occurredOn, setOccurredOn] = useState(initialValues?.occurredOn ?? today);
-  const [ammoTypeId, setAmmoTypeId] = useState(initialValues?.ammoTypeId ?? "");
-  const [purpose, setPurpose] = useState<LedgerPurpose>(initialValues?.purpose ?? "shooting");
-  const [counterpartyId, setCounterpartyId] = useState(
-    initialValues?.counterpartyId ?? manualCounterpartyId,
-  );
+  const [occurredOn, setOccurredOn] = useState(initial?.occurredOn ?? today);
+  const [ammoTypeId, setAmmoTypeId] = useState(initial?.ammoTypeId ?? "");
+  const [purpose, setPurpose] = useState<LedgerPurpose>(initial?.purpose ?? "shooting");
+  const { counterpartyId, setCounterpartyId } = useDefaultCounterpartyId({
+    initialCounterpartyId: initial?.counterpartyId,
+    pickerData: counterpartyPickerData,
+  });
 
-  useEffect(() => {
-    if (!counterpartyPickerData || defaultCounterpartyApplied.current) {
-      return;
-    }
-
-    const defaultCounterpartyId =
-      counterpartyPickerData.recent[0]?.id ??
-      counterpartyPickerData.registered[0]?.id ??
-      manualCounterpartyId;
-    setCounterpartyId(defaultCounterpartyId);
-    defaultCounterpartyApplied.current = true;
-  }, [counterpartyPickerData]);
-  const [boxCount, setBoxCount] = useState(String(initialValues?.boxCount ?? 0));
-  const [looseRounds, setLooseRounds] = useState(String(initialValues?.looseRounds ?? 0));
-  const [counterpartyName, setCounterpartyName] = useState(initialValues?.counterpartyName ?? "");
+  const [boxCount, setBoxCount] = useState(String(initial?.boxCount ?? 0));
+  const [looseRounds, setLooseRounds] = useState(String(initial?.looseRounds ?? 0));
+  const [counterpartyName, setCounterpartyName] = useState(initial?.counterpartyName ?? "");
   const [counterpartyAddress, setCounterpartyAddress] = useState(
-    initialValues?.counterpartyAddress ?? "",
+    initial?.counterpartyAddress ?? "",
   );
-  const [memo, setMemo] = useState(initialValues?.memo ?? "");
-  const [ledgerNote, setLedgerNote] = useState(initialValues?.ledgerNote ?? "");
+  const [memo, setMemo] = useState(initial?.memo ?? "");
+  const [ledgerNote, setLedgerNote] = useState(initial?.ledgerNote ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -113,43 +109,48 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
         ledgerNote: ledgerNote || undefined,
       };
 
-      const result = ledgerEntryId
-        ? await updateTransactionAction({ ledgerEntryId, ...payload })
-        : await createTransactionAction(payload);
-
-      if (result.ok) {
-        showAmmoLedgerToast({
-          action: ledgerEntryId ? "updated" : "created",
-          subject: "譲渡記録",
-        });
-        navigateAfterMutation({ href: result.redirectPath });
-        return;
+      const counterpartyMaster = isManualCounterparty
+        ? undefined
+        : findPickerMaster({ pickerData: counterpartyPickerData, id: counterpartyId });
+      const result = await submit({
+        payload,
+        display: {
+          counterpartyName: counterpartyMaster?.name,
+          counterpartyAddress: counterpartyMaster?.address,
+        },
+        subject: "譲渡記録",
+        restoreValues: { ...payload, counterpartyId },
+      });
+      // 成功時は帳簿へ移動するため、二重送信を防ぐよう処理中のままにする。
+      if (!result.ok) {
+        setError(result.error);
+        setIsPending(false);
       }
-
-      setError(result.error);
     } catch {
       setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
-    } finally {
       setIsPending(false);
     }
   }
 
+  // 受入画面では全タブのフォームを保持するため、入力欄の id をフォームごとに分ける。
+  const idPrefix = useId();
+
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2">
-        <Label htmlFor="occurred-on">日付</Label>
+        <Label htmlFor={`${idPrefix}-occurred-on`}>日付</Label>
         <IsoDateInput
-          id="occurred-on"
+          id={`${idPrefix}-occurred-on`}
           required
           value={occurredOn}
           onChange={({ value }) => setOccurredOn(value)}
         />
       </div>
 
-      <PurposeSelect value={purpose} onChange={setPurpose} />
+      <PurposeSelect id={`${idPrefix}-purpose`} value={purpose} onChange={setPurpose} />
 
       <FieldSelect
-        id="ammo-type"
+        id={`${idPrefix}-ammo-type`}
         label="弾"
         value={ammoTypeId}
         onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
@@ -162,9 +163,9 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="box-count">箱数</Label>
+          <Label htmlFor={`${idPrefix}-box-count`}>箱数</Label>
           <Input
-            id="box-count"
+            id={`${idPrefix}-box-count`}
             type="number"
             min={0}
             value={boxCount}
@@ -172,9 +173,9 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="loose-rounds">バラ</Label>
+          <Label htmlFor={`${idPrefix}-loose-rounds`}>バラ</Label>
           <Input
-            id="loose-rounds"
+            id={`${idPrefix}-loose-rounds`}
             type="number"
             min={0}
             value={looseRounds}
@@ -189,7 +190,7 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
       </div>
 
       <MasterPicker
-        id="counterparty"
+        id={`${idPrefix}-counterparty`}
         label="譲渡先"
         value={counterpartyId}
         onChange={setCounterpartyId}
@@ -202,18 +203,18 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
       {isManualCounterparty ? (
         <>
           <div className="space-y-2">
-            <Label htmlFor="counterparty-name">相手方氏名</Label>
+            <Label htmlFor={`${idPrefix}-counterparty-name`}>相手方氏名</Label>
             <Input
-              id="counterparty-name"
+              id={`${idPrefix}-counterparty-name`}
               required
               value={counterpartyName}
               onChange={(e) => setCounterpartyName(e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="counterparty-address">相手方住所</Label>
+            <Label htmlFor={`${idPrefix}-counterparty-address`}>相手方住所</Label>
             <Input
-              id="counterparty-address"
+              id={`${idPrefix}-counterparty-address`}
               required
               value={counterpartyAddress}
               onChange={(e) => setCounterpartyAddress(e.target.value)}
@@ -223,9 +224,9 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
       ) : null}
 
       <div className="space-y-2">
-        <Label htmlFor="ledger-note">帳簿摘要の補足（任意）</Label>
+        <Label htmlFor={`${idPrefix}-ledger-note`}>帳簿摘要の補足（任意）</Label>
         <Input
-          id="ledger-note"
+          id={`${idPrefix}-ledger-note`}
           maxLength={500}
           value={ledgerNote}
           onChange={(e) => setLedgerNote(e.target.value)}
@@ -233,8 +234,8 @@ export function TransferForm({ ammoTypes, ledgerEntryId, initialValues }: Transf
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="memo">メモ（帳簿には出ません）</Label>
-        <Input id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} />
+        <Label htmlFor={`${idPrefix}-memo`}>メモ（帳簿には出ません）</Label>
+        <Input id={`${idPrefix}-memo`} value={memo} onChange={(e) => setMemo(e.target.value)} />
       </div>
 
       {error ? (

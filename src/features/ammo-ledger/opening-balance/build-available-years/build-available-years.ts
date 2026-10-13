@@ -1,6 +1,8 @@
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
+
 export function buildAvailableYears({
   dates,
-  currentYear = new Date().getFullYear(),
+  currentYear = Number(getTokyoIsoDate().slice(0, 4)),
 }: {
   dates: string[];
   currentYear?: number;

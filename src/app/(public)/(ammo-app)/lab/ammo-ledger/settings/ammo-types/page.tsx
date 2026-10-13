@@ -3,6 +3,7 @@ import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { AmmoTypeForm } from "@/features/ammo-ledger/components/ammo-type-form/ammo-type-form";
 import { AmmoTypeRowActions } from "@/features/ammo-ledger/components/ammo-type-row-actions/ammo-type-row-actions";
+import { MasterListItem } from "@/features/ammo-ledger/components/master-list-item/master-list-item";
 import { countClassificationReviewStatus } from "@/features/ammo-ledger/master/ammo-type-classification-review/count-classification-review-status";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import type { CartridgeType } from "@/features/ammo-ledger/schema/cartridge-type";
@@ -34,7 +35,7 @@ export default async function AmmoTypesSettingsPage() {
         ) : (
           <ul className="divide-y divide-border/50 text-sm">
             {ammoTypes.map((type) => (
-              <li
+              <MasterListItem
                 key={type.id}
                 className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
               >
@@ -44,7 +45,7 @@ export default async function AmmoTypesSettingsPage() {
                   {type.roundsPerBox}発）
                 </span>
                 <AmmoTypeRowActions ammoTypeId={type.id} />
-              </li>
+              </MasterListItem>
             ))}
           </ul>
         )}

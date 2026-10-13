@@ -14,6 +14,7 @@ import type {
 } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import type { CatalogKind } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
 import { scrollToPrefectureSection } from "@/features/ammo-ledger/catalog/scroll-to-prefecture-section/scroll-to-prefecture-section";
+import { useInvalidateMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { CatalogFavoriteButton } from "@/features/ammo-ledger/components/catalog-favorite-button/catalog-favorite-button";
 import { CatalogScrollPane } from "@/features/ammo-ledger/components/catalog-scroll-pane/catalog-scroll-pane";
 import { PrefectureSectionHeading } from "@/features/ammo-ledger/components/prefecture-section-heading/prefecture-section-heading";
@@ -97,6 +98,7 @@ export function CatalogList({
     kind: "add" | "remove";
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const invalidatePickerData = useInvalidateMasterPickerData();
   const [isPending, startTransition] = useTransition();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -140,10 +142,13 @@ export function CatalogList({
 
     startTransition(async () => {
       const myListAction = resolveMyListAction({ entry, catalogKind, includesRangeCatalog });
-      const result =
-        myListAction === "range"
-          ? await ensureRangeFromCatalog({ catalogId })
-          : await ensureCounterpartyFromCatalog({ catalogId });
+      const result = await (myListAction === "range"
+        ? ensureRangeFromCatalog({ catalogId })
+        : ensureCounterpartyFromCatalog({ catalogId })
+      ).catch(() => ({
+        ok: false as const,
+        error: "マイリストに追加できませんでした。通信状態を確認してください。",
+      }));
 
       setPendingAction(null);
 
@@ -153,6 +158,7 @@ export function CatalogList({
         return;
       }
 
+      invalidatePickerData();
       showAmmoLedgerToast({
         action: "created",
         subject: resolveMyListSubject({ entry, catalogKind, includesRangeCatalog }),
@@ -168,10 +174,13 @@ export function CatalogList({
 
     startTransition(async () => {
       const myListAction = resolveMyListAction({ entry, catalogKind, includesRangeCatalog });
-      const result =
-        myListAction === "range"
-          ? await removeRangeFromMyList({ catalogId })
-          : await removeCounterpartyFromMyList({ catalogId });
+      const result = await (myListAction === "range"
+        ? removeRangeFromMyList({ catalogId })
+        : removeCounterpartyFromMyList({ catalogId })
+      ).catch(() => ({
+        ok: false as const,
+        error: "マイリストから外せませんでした。通信状態を確認してください。",
+      }));
 
       setPendingAction(null);
 
@@ -183,6 +192,7 @@ export function CatalogList({
         return;
       }
 
+      invalidatePickerData();
       showAmmoLedgerToast({
         action: "deleted",
         subject: resolveMyListSubject({ entry, catalogKind, includesRangeCatalog }),

@@ -35,6 +35,7 @@ import {
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type LedgerEntryActionsSheetProps = {
   row: LedgerDisplayRow | null;
@@ -44,8 +45,6 @@ type LedgerEntryActionsSheetProps = {
   lockState?: LedgerLockState;
   open: boolean;
   onOpenChange: ({ open }: { open: boolean }) => void;
-  onVoided?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
-  onVoidFailed?: ({ ledgerEntryId }: { ledgerEntryId: string }) => void;
 };
 
 function isDateLocked({
@@ -69,24 +68,13 @@ export function LedgerEntryActionsSheet({
   lockState,
   open,
   onOpenChange,
-  onVoided,
-  onVoidFailed,
 }: LedgerEntryActionsSheetProps) {
   if (!row) {
     return null;
   }
 
-  function handleVoided({ ledgerEntryId }: { ledgerEntryId: string }) {
-    onOpenChange({ open: false });
-    onVoided?.({ ledgerEntryId });
-  }
-
-  function handleVoidFailed({ ledgerEntryId }: { ledgerEntryId: string }) {
-    onVoidFailed?.({ ledgerEntryId });
-  }
-
   if (row.kind === "permit_carryover") {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getTokyoIsoDate();
     const locked = isDateLocked({ lockState, occurredOn: row.occurredOn });
     const editHref = buildOpeningBalanceHref({
       occurredOn: row.occurredOn,
@@ -242,12 +230,9 @@ export function LedgerEntryActionsSheet({
                 canMoveDown={reorderState.canMoveDown}
               />
               <VoidLedgerEntryButton
-                ledgerEntryId={entry.id}
-                onVoided={handleVoided}
-                onVoidFailed={handleVoidFailed}
-                variant="outline"
-                className="h-11 w-full text-sm text-destructive hover:text-destructive"
-                label="取消"
+                key={entry.id}
+                entry={entry}
+                onVoidStarted={() => onOpenChange({ open: false })}
               />
             </>
           )}

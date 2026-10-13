@@ -52,6 +52,11 @@ function SectionHeading({ title, description }: { title: string; description: st
   );
 }
 
+type OpeningBalanceDraft = {
+  permitCarryoverRows: OpeningBalancePermitCarryoverFormRow[];
+  stockByAmmoType: Record<string, string>;
+};
+
 function toPermitCarryoverRows({
   snapshot,
 }: {
@@ -88,28 +93,20 @@ export function OpeningBalanceForm({
     setPurpose(initialPurpose);
   }, [initialPurpose]);
 
-  const [permitCarryoverRows, setPermitCarryoverRows] = useState<
-    OpeningBalancePermitCarryoverFormRow[]
-  >([]);
-  const [stockByAmmoType, setStockByAmmoType] = useState<Record<string, string>>({});
+  // 入力した値だけを用途ごとに保持し、未入力の欄は最新の snapshot を表示する。
+  // 弾種追加の再描画や用途の切替で、保存前の入力を snapshot で上書きしない。
+  const [draftsByPurpose, setDraftsByPurpose] = useState<
+    Partial<Record<LedgerPurpose, OpeningBalanceDraft>>
+  >({});
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
-  useEffect(() => {
-    const snapshot = snapshotsByPurpose[purpose];
-    setPermitCarryoverRows(toPermitCarryoverRows({ snapshot }));
-    setStockByAmmoType(
-      Object.fromEntries(
-        ammoTypes.map((type) => [
-          type.id,
-          snapshot.stockByAmmoType[type.id] !== undefined
-            ? String(snapshot.stockByAmmoType[type.id])
-            : "",
-        ]),
-      ),
-    );
-  }, [purpose, ammoTypes, snapshotsByPurpose]);
-
+  const snapshot = snapshotsByPurpose[purpose];
+  const draft = draftsByPurpose[purpose];
+  const permitCarryoverRows = useMemo(
+    () => draft?.permitCarryoverRows ?? toPermitCarryoverRows({ snapshot }),
+    [draft, snapshot],
+  );
   const purposeLabel = ledgerPurposeTabLabels[purpose];
   const openingDay = buildYearOpeningDay({ year });
 
@@ -117,20 +114,42 @@ export function OpeningBalanceForm({
     () =>
       ammoTypes.map((type) => ({
         type,
-        value: stockByAmmoType[type.id] ?? "",
+        value:
+          draft?.stockByAmmoType[type.id] ??
+          (snapshot.stockByAmmoType[type.id] !== undefined
+            ? String(snapshot.stockByAmmoType[type.id])
+            : ""),
       })),
-    [ammoTypes, stockByAmmoType],
+    [ammoTypes, draft, snapshot],
   );
+
+  function updateDraft({
+    update,
+  }: {
+    update: (current: OpeningBalanceDraft) => OpeningBalanceDraft;
+  }) {
+    setDraftsByPurpose((current) => ({
+      ...current,
+      [purpose]: update(
+        current[purpose] ?? {
+          permitCarryoverRows: toPermitCarryoverRows({ snapshot }),
+          stockByAmmoType: {},
+        },
+      ),
+    }));
+  }
 
   function handleYearChange({ year: nextYear }: { year: number }) {
     router.push(`/lab/ammo-ledger/settings/opening-balance?year=${nextYear}`);
   }
 
   function handleStockChange({ ammoTypeId, value }: { ammoTypeId: string; value: string }) {
-    setStockByAmmoType((current) => ({
-      ...current,
-      [ammoTypeId]: value,
-    }));
+    updateDraft({
+      update: (current) => ({
+        ...current,
+        stockByAmmoType: { ...current.stockByAmmoType, [ammoTypeId]: value },
+      }),
+    });
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -140,8 +159,8 @@ export function OpeningBalanceForm({
 
     try {
       const parsedStock = Object.fromEntries(
-        ammoTypes.flatMap((type) => {
-          const value = stockByAmmoType[type.id]?.trim() ?? "";
+        stockInputs.flatMap(({ type, value: rawValue }) => {
+          const value = rawValue.trim();
           return value === "" ? [] : [[type.id, Number(value)]];
         }),
       );
@@ -198,7 +217,9 @@ export function OpeningBalanceForm({
           purpose={purpose}
           rows={permitCarryoverRows}
           openingDay={openingDay}
-          onChange={({ rows }) => setPermitCarryoverRows(rows)}
+          onChange={({ rows }) =>
+            updateDraft({ update: (current) => ({ ...current, permitCarryoverRows: rows }) })
+          }
         />
       </section>
 

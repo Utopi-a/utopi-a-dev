@@ -21,6 +21,7 @@ export type LedgerDisplayRow =
   | {
       kind: "permit_expiry";
       id: string;
+      eventId: string;
       occurredOn: string;
       permitName: string;
       permitPurpose: string;
@@ -146,6 +147,7 @@ export function buildLedgerDisplayRows({
       return {
         kind: "permit_expiry" as const,
         id: `permit-expiry-${event.id}`,
+        eventId: event.id,
         occurredOn: event.occurredOn,
         permitName: permit?.name ?? "その他",
         permitPurpose: permit?.permitPurpose ?? "",
@@ -174,7 +176,7 @@ export function resolveDisplayRowPermitBalance({
   }
 
   if (row.kind === "permit_expiry") {
-    return 0;
+    return permitBalances?.get(row.eventId);
   }
 
   return permitBalances?.get(row.entry.id);

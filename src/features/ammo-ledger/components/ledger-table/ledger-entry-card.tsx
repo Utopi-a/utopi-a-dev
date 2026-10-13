@@ -91,7 +91,9 @@ export function LedgerEntryCard({
             <PermitExpiryBadge />
           </div>
           <p className="font-medium leading-snug">{row.permitName}</p>
-          <DetailLine label="許可残数" value={formatPermitBalance({ balance: 0 })} />
+          {permitBalance !== undefined ? (
+            <DetailLine label="許可残数" value={formatPermitBalance({ balance: permitBalance })} />
+          ) : null}
         </div>
       </div>
     );

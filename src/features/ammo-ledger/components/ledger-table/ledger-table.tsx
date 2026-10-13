@@ -243,7 +243,9 @@ export function LedgerTable({
                         className={cn("px-3 py-3 align-top", ledgerTableColumnClass.permitBalance)}
                       >
                         <span className="block font-medium whitespace-nowrap tabular-nums">
-                          {formatPermitBalance({ balance: 0 })}
+                          {permitBalance !== undefined
+                            ? formatPermitBalance({ balance: permitBalance })
+                            : "—"}
                         </span>
                       </td>
                       <td

@@ -7,6 +7,7 @@ import { ammoLedgerWorkspaceQueryKey } from "@/features/ammo-ledger/workspace/am
 import { AmmoLedgerRefreshError, AmmoLedgerRefreshStatus } from "./ammo-ledger-refresh-indicator";
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/lab/ammo-ledger/ledger",
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 

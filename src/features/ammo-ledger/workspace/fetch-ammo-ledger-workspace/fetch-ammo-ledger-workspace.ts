@@ -1,5 +1,13 @@
 import type { AmmoLedgerWorkspacePayload } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-payload/ammo-ledger-workspace-payload";
 
+/** ログインが切れて帳簿を取得できない。再試行では直らないため、画面はログインへ案内する。 */
+export class AmmoLedgerLoginRequiredError extends Error {
+  constructor() {
+    super("ログイン状態を確認して、再度ログインしてください。");
+    this.name = "AmmoLedgerLoginRequiredError";
+  }
+}
+
 export async function fetchAmmoLedgerWorkspace(): Promise<AmmoLedgerWorkspacePayload> {
   const response = await fetch("/api/ammo-ledger/workspace", {
     cache: "no-store",
@@ -8,7 +16,7 @@ export async function fetchAmmoLedgerWorkspace(): Promise<AmmoLedgerWorkspacePay
     throw new Error("帳簿データを取得できませんでした。通信状態を確認して再試行してください。");
   });
   if (response.redirected) {
-    throw new Error("ログイン状態を確認して、再度ログインしてください。");
+    throw new AmmoLedgerLoginRequiredError();
   }
   if (!response.ok) {
     throw new Error("帳簿データを取得できませんでした。再試行してください。");

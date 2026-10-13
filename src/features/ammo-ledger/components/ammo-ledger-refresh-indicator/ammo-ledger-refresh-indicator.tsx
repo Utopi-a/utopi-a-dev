@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { WorkspaceErrorAction } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 /** 帳簿の再取得中であることを上部ナビの直下に重ねて示す。本文を押し下げないよう重ねて出す。 */
@@ -22,7 +22,7 @@ export function AmmoLedgerRefreshStatus() {
   );
 }
 
-/** 表示済みの帳簿を取り直せなかったことを、画面上部で再試行とともに知らせる。 */
+/** 表示済みの帳簿を取り直せなかったことを、画面上部で復旧の操作とともに知らせる。 */
 export function AmmoLedgerRefreshError() {
   const { workspace, error, retry } = useAmmoLedgerWorkspace({ revalidateOnMount: false });
   // 一度も取得できていないときは各画面のローダーが失敗を表示する。
@@ -37,9 +37,7 @@ export function AmmoLedgerRefreshError() {
     >
       <p className="font-medium text-destructive">帳簿の表示を更新できませんでした</p>
       <p className="text-muted-foreground">表示中の内容は最新でない可能性があります。</p>
-      <Button type="button" variant="outline" size="sm" className="h-9" onClick={retry}>
-        再試行
-      </Button>
+      <WorkspaceErrorAction error={error} onRetry={retry} />
     </div>
   );
 }

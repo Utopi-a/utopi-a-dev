@@ -6,6 +6,10 @@ import {
   isPwaInstalled,
   type PwaInstallPlatform,
 } from "@/features/ammo-ledger/pwa/detect-pwa-install-platform/detect-pwa-install-platform";
+import {
+  isBannerSnoozed,
+  resolveBannerDismissedAt,
+} from "@/features/ammo-ledger/pwa/resolve-banner-dismissal/resolve-banner-dismissal";
 
 const bannerDismissStorageKey = "ammo-ledger-pwa-install-banner-dismissed";
 
@@ -35,7 +39,13 @@ function readBannerDismissed(): boolean {
     return false;
   }
 
-  return window.localStorage.getItem(bannerDismissStorageKey) === "true";
+  const now = Date.now();
+  const storedValue = window.localStorage.getItem(bannerDismissStorageKey);
+  const dismissedAt = resolveBannerDismissedAt({ storedValue, now });
+  if (storedValue === "true") {
+    window.localStorage.setItem(bannerDismissStorageKey, String(dismissedAt));
+  }
+  return isBannerSnoozed({ dismissedAt, now });
 }
 
 export function useAmmoLedgerPwaInstall() {
@@ -83,7 +93,7 @@ export function useAmmoLedgerPwaInstall() {
   }, []);
 
   const dismissBanner = useCallback(() => {
-    window.localStorage.setItem(bannerDismissStorageKey, "true");
+    window.localStorage.setItem(bannerDismissStorageKey, String(Date.now()));
     setBannerDismissed(true);
   }, []);
 

@@ -1,9 +1,12 @@
-import { act, cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { AmmoLedgerSwrProvider } from "@/features/ammo-ledger/workspace/ammo-ledger-swr-provider/ammo-ledger-swr-provider";
 import type { AmmoLedgerWorkspacePayload } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-payload/ammo-ledger-workspace-payload";
-import { buildTestWorkspace } from "@/features/ammo-ledger/workspace/build-test-workspace/build-test-workspace";
+import {
+  buildTestEntry,
+  buildTestWorkspace,
+} from "@/features/ammo-ledger/workspace/build-test-workspace/build-test-workspace";
 import { AmmoLedgerHomeView } from "./ammo-ledger-home-view";
 
 vi.mock("next/navigation", () => ({
@@ -120,5 +123,131 @@ describe("AmmoLedgerHomeView のセットアップ手順", () => {
     expect(screen.queryByRole("region", { name: "はじめに登録してください" })).toBeNull();
     expect(screen.queryByRole("alert")).toBeNull();
     expectRecordTilesUsable();
+  });
+});
+
+describe("AmmoLedgerHomeView の状況サマリ", () => {
+  const fetchMock = vi.fn<typeof fetch>();
+  const permitCreatedAt = new Date("2026-01-01T00:00:00Z");
+  const permit = {
+    id: "permit-1",
+    userId: "user-1",
+    ledgerPurpose: "shooting",
+    name: "12番",
+    permitPurpose: "標的射撃",
+    grantedOn: "2026-01-10",
+    expiresOn: "2026-11-01",
+    quantity: 500,
+    memo: null,
+    createdAt: permitCreatedAt,
+    updatedAt: permitCreatedAt,
+  };
+  const permitEvents = [
+    { kind: "grant", occurredOn: permit.grantedOn, quantity: permit.quantity },
+    { kind: "expiry", occurredOn: permit.expiresOn, quantity: 0 },
+  ].map(({ kind, occurredOn, quantity }) => ({
+    id: `${permit.id}-${kind}`,
+    userId: "user-1",
+    permitId: permit.id,
+    purpose: "shooting",
+    eventKind: kind,
+    occurredOn,
+    quantity,
+    memo: null,
+    createdAt: permitCreatedAt,
+    updatedAt: permitCreatedAt,
+  }));
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("matchMedia", () => ({ matches: false }));
+    // 期限までの日数を固定するため、日付だけを固定する。
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-13T03:00:00Z"));
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    window.localStorage.clear();
+  });
+
+  it("帳簿残数・用途ごとの許可の残り・確定済みの日付と注意事項を、該当画面へのリンクで出す", () => {
+    renderHome({
+      initialWorkspace: {
+        ownerName: "架空 太郎",
+        workspace: buildTestWorkspace({
+          profile,
+          permits: [permit],
+          permitEvents,
+          entries: [
+            buildTestEntry({
+              id: "carryover-1",
+              category: "carryover",
+              occurredOn: "2026-01-01",
+              quantity: 100,
+            }),
+          ],
+          lockState: { isLocked: true, lockedThrough: "2025-12-31" },
+        }),
+      },
+    });
+
+    const status = screen.getByRole("region", { name: "いまの状況" });
+    expect(
+      within(status).getByRole("link", { name: /帳簿残数（全用途）\s*100個/ }),
+    ).toHaveAttribute("href", "/lab/ammo-ledger/inventory");
+    expect(
+      within(status).getByRole("link", {
+        name: /今日使える許可の残り（射撃）\s*500個\s*最も近い期限: あと19日/,
+      }),
+    ).toHaveAttribute("href", "/lab/ammo-ledger/ledger?purpose=shooting");
+    expect(
+      within(status).getByRole("link", { name: /帳簿の確定\s*2025\/12\/31まで/ }),
+    ).toHaveAttribute("href", "/lab/ammo-ledger/ledger");
+    const notices = within(status).getByRole("list", { name: "注意事項" });
+    expect(within(notices).getByRole("link")).toHaveTextContent(
+      "射撃用の譲受許可（12番）は有効期限まであと19日です。残り500個。",
+    );
+  });
+
+  it("読み込み中は状況のスケルトンを出す", async () => {
+    fetchMock.mockReturnValue(new Promise<Response>(() => {}));
+    renderHome({});
+    await act(async () => {});
+
+    expect(screen.getByRole("status", { name: "状況を読み込み中" })).toBeVisible();
+    expectRecordTilesUsable();
+  });
+
+  it("状況を取得できなければ知らせ、再試行で取得し直す", async () => {
+    fetchMock.mockRejectedValue(new Error("offline"));
+    renderHome({});
+
+    expect(await screen.findByText("状況を読み込めませんでした。")).toBeVisible();
+    const callsBeforeRetry = fetchMock.mock.calls.length;
+    fireEvent.click(screen.getByRole("button", { name: "再試行" }));
+    await act(async () => {});
+
+    expect(fetchMock.mock.calls.length).toBeGreaterThan(callsBeforeRetry);
+    expectRecordTilesUsable();
+  });
+
+  it("ホーム画面への追加の案内は、記録を入力の下・状況の上に出す", async () => {
+    vi.spyOn(window.navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+    );
+    renderHome({
+      initialWorkspace: { ownerName: "架空 太郎", workspace: buildTestWorkspace({ profile }) },
+    });
+
+    const banner = await screen.findByRole("region", { name: "アプリのインストール" });
+    const lastRecordTile = screen.getByRole("link", { name: /まとめて追加/ });
+    const status = screen.getByRole("region", { name: "いまの状況" });
+    expect(lastRecordTile.compareDocumentPosition(banner)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(banner.compareDocumentPosition(status)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 });

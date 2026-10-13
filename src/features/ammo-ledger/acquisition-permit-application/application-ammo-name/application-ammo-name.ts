@@ -34,8 +34,17 @@ function isAmmoTypeOfName({
   if (cartridgeType === "rifle") {
     return ammoName === "実包（ライフル）";
   }
-  // 番径は手入力なので、全角数字や空白の違いでは別の名称として扱わない。
-  return caliber.normalize("NFKC").replace(/\s/g, "") === ammoName;
+  // 番径は手入力なので、全角数字・空白・「番」や「ga」の有無の違いでは別の名称として扱わない。
+  return normalizeShotgunGauge({ value: caliber }) === normalizeShotgunGauge({ value: ammoName });
+}
+
+function normalizeShotgunGauge({ value }: { value: string }): string {
+  return value
+    .normalize("NFKC")
+    .replace(/\s/g, "")
+    .toLowerCase()
+    .replace(/^\./, "")
+    .replace(/(番|ga|gauge|ゲージ)$/, "");
 }
 
 /** 様式の備考どおり、現に保有している数量は申請する名称に当たる弾種だけを合計する。 */

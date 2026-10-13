@@ -1,4 +1,5 @@
 import { computeStockDiff } from "@/features/ammo-ledger/ledger/compute-stock/compute-stock";
+import { formatStockQuantity } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import type { InputKind } from "@/features/ammo-ledger/schema/input-kind";
 
 export type DraftSuggestion = {
@@ -30,7 +31,7 @@ export function createDraftSuggestionsFromDiff({
       {
         inputKind: "consume",
         quantity,
-        label: `${quantity}発の消費記録を作成`,
+        label: `${formatStockQuantity({ quantity })}の消費記録を作成`,
       },
     ];
 
@@ -44,8 +45,16 @@ export function createDraftSuggestionsFromDiff({
     }
 
     suggestions.push(
-      { inputKind: "dispose", quantity, label: `${quantity}発の廃棄記録を作成` },
-      { inputKind: "transfer", quantity, label: `${quantity}発の譲渡記録を作成` },
+      {
+        inputKind: "dispose",
+        quantity,
+        label: `${formatStockQuantity({ quantity })}の廃棄記録を作成`,
+      },
+      {
+        inputKind: "transfer",
+        quantity,
+        label: `${formatStockQuantity({ quantity })}の譲渡記録を作成`,
+      },
     );
 
     return { diff, suggestions };
@@ -57,7 +66,7 @@ export function createDraftSuggestionsFromDiff({
       {
         inputKind: "acquire",
         quantity,
-        label: `${quantity}発の譲受記録を作成`,
+        label: `${formatStockQuantity({ quantity })}の譲受記録を作成`,
       },
     ],
   };

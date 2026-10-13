@@ -23,7 +23,10 @@ import {
   buildPermitCarryoverLabel,
   type LedgerDisplayRow,
 } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
-import { formatPermitBalance } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
+import {
+  formatEntryQuantity,
+  formatPermitBalance,
+} from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
 import { resolveLedgerEntryReorderState } from "@/features/ammo-ledger/ledger/resolve-ledger-entry-reorder-state/resolve-ledger-entry-reorder-state";
 import { buildOpeningBalanceHref } from "@/features/ammo-ledger/opening-balance/build-opening-balance-href/build-opening-balance-href";
@@ -195,7 +198,8 @@ export function LedgerEntryActionsSheet({
                 <LedgerCategoryBadge category={entry.category} />
               </div>
               <p className="text-sm text-foreground">
-                {entry.ammoTypeName} · {entry.quantity}発
+                {entry.ammoTypeName} ·{" "}
+                {formatEntryQuantity({ category: entry.category, quantity: entry.quantity })}
                 {permitBalance !== undefined
                   ? ` · 許可残 ${formatPermitBalance({ balance: permitBalance })}`
                   : ""}

@@ -9,6 +9,7 @@ import {
   PermitExpiryBadge,
   SavingBadge,
 } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
+import { formatLedgerRemarks } from "@/features/ammo-ledger/documents/format-ledger-remarks/format-ledger-remarks";
 import {
   buildPermitCarryoverLabel,
   isDisplayRowSelectable,
@@ -16,10 +17,11 @@ import {
   resolveDisplayRowId,
   resolveDisplayRowPermitBalance,
 } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
+import type { LedgerRowBalance } from "@/features/ammo-ledger/ledger/build-ledger-row-balances/build-ledger-row-balances";
 import {
-  formatAmmoQuantity,
+  formatEntryQuantity,
   formatPermitBalance,
-  showsAmmoQuantity,
+  formatStockQuantity,
 } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
@@ -28,6 +30,7 @@ import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display"
 
 type LedgerTableProps = {
   rows: LedgerDisplayRow[];
+  rowBalances?: Map<string, LedgerRowBalance>;
   purpose: LedgerPurpose;
   permitBalances?: Map<string, number>;
   homeStorageExceededEntryIds?: string[];
@@ -40,17 +43,23 @@ const ledgerTableColumnClass = {
   date: "min-w-24 whitespace-nowrap",
   category: "w-16 min-w-16 whitespace-nowrap",
   ammoType: "min-w-28",
-  quantity: "min-w-20 whitespace-nowrap text-right",
-  permitBalance: "min-w-24 whitespace-nowrap text-right",
-  location: "min-w-32",
-  counterparty: "min-w-36",
+  quantity: "min-w-16 whitespace-nowrap text-right",
+  balanceByType: "min-w-20 whitespace-nowrap text-right",
+  totalBalance: "min-w-20 whitespace-nowrap text-right",
+  permitBalance: "min-w-20 whitespace-nowrap text-right",
+  remarks: "min-w-36",
   gun: "min-w-28",
 } as const;
 
 const noSavingEntryIds: ReadonlySet<string> = new Set();
 
+function EmptyCell({ className }: { className: string }) {
+  return <td className={cn("px-3 py-3 align-top text-muted-foreground", className)}>—</td>;
+}
+
 export function LedgerTable({
   rows,
+  rowBalances,
   purpose,
   permitBalances,
   homeStorageExceededEntryIds = [],
@@ -126,6 +135,7 @@ export function LedgerTable({
               <LedgerEntryCard
                 row={row}
                 permitBalance={resolveDisplayRowPermitBalance({ row, permitBalances })}
+                balance={row.kind === "entry" ? rowBalances?.get(row.entry.id) : undefined}
                 isHomeStorageExceeded={row.kind === "entry" ? exceededSet.has(row.entry.id) : false}
                 isSaving={row.kind === "entry" && savingEntryIds.has(row.entry.id)}
                 onSelect={handleSelectRow}
@@ -144,11 +154,14 @@ export function LedgerTable({
                 <th className={cn("px-3 py-2.5", ledgerTableColumnClass.category)}>区分</th>
                 <th className={cn("px-3 py-2.5", ledgerTableColumnClass.ammoType)}>種類</th>
                 <th className={cn("px-3 py-2.5", ledgerTableColumnClass.quantity)}>数量</th>
+                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.balanceByType)}>
+                  種類別残
+                </th>
+                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.totalBalance)}>総残数</th>
                 <th className={cn("px-3 py-2.5", ledgerTableColumnClass.permitBalance)}>
                   許可残数
                 </th>
-                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.location)}>場所</th>
-                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.counterparty)}>相手方</th>
+                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.remarks)}>摘要</th>
                 <th className={cn("px-3 py-2.5", ledgerTableColumnClass.gun)}>使用銃</th>
               </tr>
             </thead>
@@ -157,19 +170,24 @@ export function LedgerTable({
                 const permitBalance = resolveDisplayRowPermitBalance({ row, permitBalances });
                 const selectable = isDisplayRowSelectable({ row });
 
-                if (row.kind === "permit_carryover") {
+                if (row.kind !== "entry") {
                   return (
                     <tr
                       key={row.id}
-                      tabIndex={0}
-                      onClick={() => handleSelectRow({ row, permitBalance })}
+                      tabIndex={selectable ? 0 : undefined}
+                      onClick={() =>
+                        selectable ? handleSelectRow({ row, permitBalance }) : undefined
+                      }
                       onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
+                        if (selectable && (event.key === "Enter" || event.key === " ")) {
                           event.preventDefault();
                           handleSelectRow({ row, permitBalance });
                         }
                       }}
-                      className="cursor-pointer border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20"
+                      className={cn(
+                        "border-b border-border/25 last:border-0",
+                        selectable && "cursor-pointer transition-colors hover:bg-muted/20",
+                      )}
                     >
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
                         <span className="whitespace-nowrap tabular-nums">
@@ -177,68 +195,20 @@ export function LedgerTable({
                         </span>
                       </td>
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.category)}>
-                        <PermitCarryoverBadge />
+                        {row.kind === "permit_carryover" ? (
+                          <PermitCarryoverBadge />
+                        ) : (
+                          <PermitExpiryBadge />
+                        )}
                       </td>
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.ammoType)}>
                         <span className="font-medium">
                           {buildPermitCarryoverLabel({ permitName: row.permitName })}
                         </span>
                       </td>
-                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.quantity)}>
-                        <span className="block text-muted-foreground">—</span>
-                      </td>
-                      <td
-                        className={cn("px-3 py-3 align-top", ledgerTableColumnClass.permitBalance)}
-                      >
-                        <span className="block font-medium whitespace-nowrap tabular-nums">
-                          {formatPermitBalance({ balance: row.quantity })}
-                        </span>
-                      </td>
-                      <td
-                        className={cn(
-                          "px-3 py-3 align-top text-muted-foreground",
-                          ledgerTableColumnClass.location,
-                        )}
-                      >
-                        —
-                      </td>
-                      <td
-                        className={cn(
-                          "px-3 py-3 align-top text-muted-foreground",
-                          ledgerTableColumnClass.counterparty,
-                        )}
-                      >
-                        —
-                      </td>
-                      <td
-                        className={cn(
-                          "px-3 py-3 align-top text-muted-foreground",
-                          ledgerTableColumnClass.gun,
-                        )}
-                      >
-                        —
-                      </td>
-                    </tr>
-                  );
-                }
-
-                if (row.kind === "permit_expiry") {
-                  return (
-                    <tr key={row.id} className="border-b border-border/25 last:border-0">
-                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
-                        <span className="whitespace-nowrap tabular-nums">
-                          {formatIsoDateForDisplay({ value: row.occurredOn })}
-                        </span>
-                      </td>
-                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.category)}>
-                        <PermitExpiryBadge />
-                      </td>
-                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.ammoType)}>
-                        <span className="font-medium">{row.permitName}</span>
-                      </td>
-                      <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.quantity)}>
-                        <span className="block text-muted-foreground">—</span>
-                      </td>
+                      <EmptyCell className={ledgerTableColumnClass.quantity} />
+                      <EmptyCell className={ledgerTableColumnClass.balanceByType} />
+                      <EmptyCell className={ledgerTableColumnClass.totalBalance} />
                       <td
                         className={cn("px-3 py-3 align-top", ledgerTableColumnClass.permitBalance)}
                       >
@@ -248,30 +218,8 @@ export function LedgerTable({
                             : "—"}
                         </span>
                       </td>
-                      <td
-                        className={cn(
-                          "px-3 py-3 align-top text-muted-foreground",
-                          ledgerTableColumnClass.location,
-                        )}
-                      >
-                        —
-                      </td>
-                      <td
-                        className={cn(
-                          "px-3 py-3 align-top text-muted-foreground",
-                          ledgerTableColumnClass.counterparty,
-                        )}
-                      >
-                        —
-                      </td>
-                      <td
-                        className={cn(
-                          "px-3 py-3 align-top text-muted-foreground",
-                          ledgerTableColumnClass.gun,
-                        )}
-                      >
-                        —
-                      </td>
+                      <EmptyCell className={ledgerTableColumnClass.remarks} />
+                      <EmptyCell className={ledgerTableColumnClass.gun} />
                     </tr>
                   );
                 }
@@ -279,6 +227,13 @@ export function LedgerTable({
                 const entry = row.entry;
                 const isSaving = savingEntryIds.has(entry.id);
                 const entrySelectable = selectable && !isSaving;
+                const balance = rowBalances?.get(entry.id);
+                const remarks = formatLedgerRemarks({
+                  category: entry.category,
+                  location: entry.location,
+                  ledgerNote: entry.ledgerNote,
+                  counterpartyName: entry.counterpartyName,
+                });
 
                 return (
                   <tr
@@ -324,10 +279,27 @@ export function LedgerTable({
                     </td>
                     <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.quantity)}>
                       <span className="block font-medium whitespace-nowrap tabular-nums">
-                        {showsAmmoQuantity({ row })
-                          ? formatAmmoQuantity({ quantity: entry.quantity })
-                          : "—"}
+                        {formatEntryQuantity({
+                          category: entry.category,
+                          quantity: entry.quantity,
+                        })}
                       </span>
+                    </td>
+                    <td
+                      className={cn(
+                        "px-3 py-3 align-top tabular-nums",
+                        ledgerTableColumnClass.balanceByType,
+                      )}
+                    >
+                      {balance ? formatStockQuantity({ quantity: balance.balanceByType }) : "—"}
+                    </td>
+                    <td
+                      className={cn(
+                        "px-3 py-3 align-top tabular-nums",
+                        ledgerTableColumnClass.totalBalance,
+                      )}
+                    >
+                      {balance ? formatStockQuantity({ quantity: balance.totalBalance }) : "—"}
                     </td>
                     <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.permitBalance)}>
                       <span className="block whitespace-nowrap text-muted-foreground tabular-nums">
@@ -339,29 +311,15 @@ export function LedgerTable({
                     <td
                       className={cn(
                         "px-3 py-3 align-top text-muted-foreground",
-                        ledgerTableColumnClass.location,
+                        ledgerTableColumnClass.remarks,
                       )}
                     >
-                      {entry.location ?? "—"}
-                    </td>
-                    <td
-                      className={cn(
-                        "px-3 py-3 align-top text-muted-foreground",
-                        ledgerTableColumnClass.counterparty,
-                      )}
-                    >
-                      {entry.counterpartyName ? (
-                        <span className="block max-w-[12rem] leading-snug">
-                          {entry.counterpartyName}
-                          {entry.counterpartyAddress ? (
-                            <span className="mt-0.5 block text-xs">
-                              {entry.counterpartyAddress}
-                            </span>
-                          ) : null}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
+                      <span className="block max-w-[14rem] leading-snug">
+                        {remarks || "—"}
+                        {entry.counterpartyAddress ? (
+                          <span className="mt-0.5 block text-xs">{entry.counterpartyAddress}</span>
+                        ) : null}
+                      </span>
                     </td>
                     <td
                       className={cn(
@@ -392,6 +350,9 @@ export function LedgerTable({
           行をクリックすると編集・並び替え・取消ができます。琥珀色の行はその時点で自宅保管の目安（800個）を超えています。
         </p>
       </div>
+      <p className="text-xs text-muted-foreground">
+        種類別残は帳票と同じく、実包の種類（番径・散弾/単弾）ごとの残数です。
+      </p>
 
       <LedgerEntryActionsSheet
         row={selectedRow}

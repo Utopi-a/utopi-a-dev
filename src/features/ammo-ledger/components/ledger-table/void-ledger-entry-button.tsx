@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { formatStockQuantity } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { checkLedgerChangesAgainstStock } from "@/features/ammo-ledger/transactions/check-ledger-changes-against-stock/check-ledger-changes-against-stock";
 import { voidLedgerEntryAction } from "@/features/ammo-ledger/transactions/void-ledger-entry/void-ledger-entry-action";
 import type { LedgerEntryRow } from "@/features/ammo-ledger/workspace/apply-ledger-entry-changes/apply-ledger-entry-changes";
@@ -37,7 +38,7 @@ export function VoidLedgerEntryButton({ entry, onVoidStarted }: VoidLedgerEntryB
       }
     }
 
-    const summary = `${formatIsoDateForDisplay({ value: entry.occurredOn })} ${entry.ammoTypeName} ${entry.quantity}発`;
+    const summary = `${formatIsoDateForDisplay({ value: entry.occurredOn })} ${entry.ammoTypeName} ${formatStockQuantity({ quantity: entry.quantity })}`;
     runPendingChange({
       overlay: changes,
       summary,

@@ -8,6 +8,7 @@ import type {
 } from "@/db/schema/ammo-ledger";
 import { LedgerTable } from "@/features/ammo-ledger/components/ledger-table/ledger-table";
 import { buildLedgerDisplayRows } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
+import { buildLedgerRowBalances } from "@/features/ammo-ledger/ledger/build-ledger-row-balances/build-ledger-row-balances";
 import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 
@@ -53,10 +54,15 @@ export function LedgerTableShell({
       }),
     [entries, permitEvents, permits, purpose, today, from, to],
   );
+  const rowBalances = useMemo(
+    () => buildLedgerRowBalances({ entries, from, to }),
+    [entries, from, to],
+  );
 
   return (
     <LedgerTable
       rows={displayRows}
+      rowBalances={rowBalances}
       purpose={purpose}
       permitBalances={permitBalances}
       homeStorageExceededEntryIds={homeStorageExceededEntryIds}

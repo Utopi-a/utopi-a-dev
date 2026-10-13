@@ -178,6 +178,10 @@ export function resolveDisplayRowPermitBalance({
     return permitBalances?.get(row.eventId);
   }
 
+  // 許可残数が動くのは譲受と許可・繰越の行だけ。消費などの行にまで出すと残弾の数と紛れる。
+  if (row.entry.category !== "acquire" && row.entry.category !== "carryover") {
+    return undefined;
+  }
   return permitBalances?.get(row.entry.id);
 }
 

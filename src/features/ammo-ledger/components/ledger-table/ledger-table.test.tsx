@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { LedgerDisplayRow } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
 import { LedgerTable } from "./ledger-table";
@@ -79,6 +79,53 @@ describe("LedgerTable", () => {
     );
 
     // PC の表とモバイルのカードの両方に出す
-    expect(screen.getAllByText("5000個")).toHaveLength(2);
+    expect(screen.getAllByText("5,000個")).toHaveLength(2);
+  });
+
+  it("数量に受払の符号をつけ、種類別残・総残数・摘要を出し、許可残数は譲受の行だけに出す", () => {
+    const consumeRow: LedgerDisplayRow = {
+      kind: "entry",
+      entry: {
+        ...entryRow.entry,
+        id: "entry-2",
+        category: "consume",
+        occurredOn: "2026-08-09",
+        quantity: 25,
+        location: "テスト射撃場",
+        ledgerNote: "クレー射撃",
+        counterpartyName: null,
+        counterpartyAddress: null,
+      },
+    };
+
+    render(
+      <LedgerTable
+        rows={[entryRow, consumeRow]}
+        purpose="hunting"
+        permitBalances={
+          new Map([
+            ["entry-1", 1150],
+            ["entry-2", 1150],
+          ])
+        }
+        rowBalances={
+          new Map([
+            ["entry-1", { balanceByType: 1050, totalBalance: 1200 }],
+            ["entry-2", { balanceByType: 1025, totalBalance: 1175 }],
+          ])
+        }
+      />,
+    );
+
+    const table = screen.getByRole("table");
+    const [, acquireRow, consumeTableRow] = within(table).getAllByRole("row");
+    expect(within(acquireRow).getByText("+50個")).toBeInTheDocument();
+    expect(within(acquireRow).getByText("1,050個")).toBeInTheDocument();
+    expect(within(acquireRow).getByText("1,150個")).toBeInTheDocument();
+    expect(within(consumeTableRow).getByText("−25個")).toBeInTheDocument();
+    expect(within(consumeTableRow).getByText("1,025個")).toBeInTheDocument();
+    expect(within(consumeTableRow).getByText("1,175個")).toBeInTheDocument();
+    expect(within(consumeTableRow).getByText("テスト射撃場 クレー射撃")).toBeInTheDocument();
+    expect(within(consumeTableRow).queryByText("1,150個")).not.toBeInTheDocument();
   });
 });

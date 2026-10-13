@@ -5,15 +5,18 @@ import {
   PermitExpiryBadge,
   SavingBadge,
 } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
+import { formatLedgerRemarks } from "@/features/ammo-ledger/documents/format-ledger-remarks/format-ledger-remarks";
 import {
   buildPermitCarryoverLabel,
   isDisplayRowSelectable,
   type LedgerDisplayRow,
 } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
+import type { LedgerRowBalance } from "@/features/ammo-ledger/ledger/build-ledger-row-balances/build-ledger-row-balances";
 import {
-  formatAmmoQuantity,
   formatEntryAmmoQuantityLabel,
+  formatEntryQuantity,
   formatPermitBalance,
+  formatStockQuantity,
 } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { formatPermitExpiryLabel } from "@/features/ammo-ledger/permit/compute-permit-expiry/compute-permit-expiry";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
@@ -24,6 +27,7 @@ import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 type LedgerEntryCardProps = {
   row: LedgerDisplayRow;
   permitBalance?: number;
+  balance?: LedgerRowBalance;
   isHomeStorageExceeded?: boolean;
   /** 保存の応答待ち。確定するまで編集・取消を受け付けない */
   isSaving?: boolean;
@@ -42,6 +46,7 @@ function DetailLine({ label, value }: { label: string; value: string }) {
 export function LedgerEntryCard({
   row,
   permitBalance,
+  balance,
   isHomeStorageExceeded = false,
   isSaving = false,
   onSelect,
@@ -100,6 +105,12 @@ export function LedgerEntryCard({
   }
 
   const entry = row.entry;
+  const remarks = formatLedgerRemarks({
+    category: entry.category,
+    location: entry.location,
+    ledgerNote: entry.ledgerNote,
+    counterpartyName: entry.counterpartyName,
+  });
 
   return (
     <button
@@ -128,21 +139,20 @@ export function LedgerEntryCard({
             label={formatEntryAmmoQuantityLabel({
               category: entry.category as LedgerCategory,
             })}
-            value={formatAmmoQuantity({ quantity: entry.quantity })}
+            value={formatEntryQuantity({ category: entry.category, quantity: entry.quantity })}
           />
+          {balance ? (
+            <DetailLine
+              label="種類別残"
+              value={`${formatStockQuantity({ quantity: balance.balanceByType })}／総残数 ${formatStockQuantity({ quantity: balance.totalBalance })}`}
+            />
+          ) : null}
           {permitBalance !== undefined ? (
             <DetailLine label="許可残数" value={formatPermitBalance({ balance: permitBalance })} />
           ) : null}
-          {entry.location ? <DetailLine label="場所" value={entry.location} /> : null}
-          {entry.counterpartyName ? (
-            <DetailLine
-              label="相手方"
-              value={
-                entry.counterpartyAddress
-                  ? `${entry.counterpartyName}（${entry.counterpartyAddress}）`
-                  : entry.counterpartyName
-              }
-            />
+          {remarks ? <DetailLine label="摘要" value={remarks} /> : null}
+          {entry.counterpartyAddress ? (
+            <DetailLine label="相手方の住所" value={entry.counterpartyAddress} />
           ) : null}
           {entry.gunName ? (
             <DetailLine

@@ -19,12 +19,12 @@ describe("createDraftSuggestionsFromDiff", () => {
     expect(result.suggestions).toContainEqual({
       inputKind: "consume",
       quantity: 25,
-      label: "25発の消費記録を作成",
+      label: "25個の消費記録を作成",
     });
     expect(result.suggestions).toContainEqual({
       inputKind: "dispose",
       quantity: 25,
-      label: "25発の廃棄記録を作成",
+      label: "25個の廃棄記録を作成",
     });
   });
 
@@ -39,7 +39,7 @@ describe("createDraftSuggestionsFromDiff", () => {
     expect(result.suggestions[0]).toEqual({
       inputKind: "acquire",
       quantity: 50,
-      label: "50発の譲受記録を作成",
+      label: "50個の譲受記録を作成",
     });
   });
 

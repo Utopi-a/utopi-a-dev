@@ -16,6 +16,8 @@ type PageProps = {
   searchParams: Promise<{ year?: string; purpose?: string }>;
 };
 
+export const metadata = { title: "年初繰越" };
+
 export default async function OpeningBalanceSettingsPage({ searchParams }: PageProps) {
   const user = await requireAmmoUser();
   const { year: yearParam, purpose: purposeParam } = await searchParams;

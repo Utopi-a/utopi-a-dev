@@ -7,6 +7,8 @@ import { getLedgerProfile } from "@/features/ammo-ledger/profile/get-ledger-prof
 import { resolveOwnerName } from "@/features/ammo-ledger/profile/resolve-owner-name/resolve-owner-name";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 
+export const metadata = { title: "譲受許可申請書" };
+
 export default async function AcquisitionPermitApplicationNewPage() {
   const user = await requireAmmoUser();
 

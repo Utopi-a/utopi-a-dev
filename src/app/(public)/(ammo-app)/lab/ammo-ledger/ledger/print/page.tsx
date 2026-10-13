@@ -60,6 +60,8 @@ function resolveTargetDate({ year, today }: { year: number; today: string }): st
   return today;
 }
 
+export const metadata = { title: "帳簿の印刷" };
+
 export default async function LedgerPrintPage({ searchParams }: PageProps) {
   const user = await requireAmmoUser();
   const { year: yearParam, from: fromParam, preview: previewParam } = await searchParams;

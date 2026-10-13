@@ -4,6 +4,8 @@ import { getLatestLockState } from "@/features/ammo-ledger/ledger/lock/get-lates
 import { LedgerLockForm } from "@/features/ammo-ledger/ledger/lock/ledger-lock-form/ledger-lock-form";
 import { listLockEvents } from "@/features/ammo-ledger/ledger/lock/list-lock-events/list-lock-events";
 
+export const metadata = { title: "帳簿の確定・ロック" };
+
 export default async function LedgerLockSettingsPage() {
   const user = await requireAmmoUser();
   const [lockState, events] = await Promise.all([

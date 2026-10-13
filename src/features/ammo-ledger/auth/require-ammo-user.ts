@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { isDevAmmoAuthBypassEnabled } from "@/features/ammo-ledger/auth/dev-auth-bypass";
 import { resolveDevAmmoUser } from "@/features/ammo-ledger/auth/resolve-dev-ammo-user";
 import type { ServerActionRateLimitKind } from "@/features/ammo-ledger/auth/server-action-rate-limit/consume-server-action-rate-limit";
@@ -7,22 +8,27 @@ import {
   serverActionRateLimitErrorResult,
   serverActionRateLimitMessage,
 } from "@/features/ammo-ledger/auth/server-action-rate-limit/server-action-rate-limit-error";
-import { requireSession } from "@/features/auth/require-session/require-session";
+import { unauthenticatedMutationResult } from "@/features/ammo-ledger/auth/unauthenticated-mutation-result/unauthenticated-mutation-result";
+import { getSession } from "@/features/auth/get-session/get-session";
 
 type RequireAmmoUserOptions = {
   rateLimit?: ServerActionRateLimitKind;
 };
 
-export async function requireAmmoUser({ rateLimit }: RequireAmmoUserOptions = {}) {
+async function findAmmoUser() {
   const devEmail = process.env.AMMO_LEDGER_DEV_USER_EMAIL?.trim();
-  const ammoUser =
-    isDevAmmoAuthBypassEnabled() && devEmail
-      ? await resolveDevAmmoUser({ email: devEmail })
-      : (
-          await requireSession({
-            redirectTo: "/login?next=/lab/ammo-ledger",
-          })
-        ).user;
+  if (isDevAmmoAuthBypassEnabled() && devEmail) {
+    return resolveDevAmmoUser({ email: devEmail });
+  }
+  const session = await getSession();
+  return session?.user ?? null;
+}
+
+export async function requireAmmoUser({ rateLimit }: RequireAmmoUserOptions = {}) {
+  const ammoUser = await findAmmoUser();
+  if (!ammoUser) {
+    redirect("/login?next=/lab/ammo-ledger");
+  }
 
   if (rateLimit) {
     assertServerActionRateLimit({ userId: ammoUser.id, kind: rateLimit });
@@ -32,15 +38,23 @@ export async function requireAmmoUser({ rateLimit }: RequireAmmoUserOptions = {}
 }
 
 export async function resolveAmmoUserForMutation() {
+  const user = await findAmmoUser();
+  // 保存の途中で redirect するとルーターがログイン画面へ移って帳簿の画面ごと消え、
+  // 手元に残した入力も失われるため、画面側で扱える失敗として返す。
+  if (!user) {
+    return unauthenticatedMutationResult();
+  }
+
   try {
-    const user = await requireAmmoUser({ rateLimit: "mutation" });
-    return { ok: true as const, user };
+    assertServerActionRateLimit({ userId: user.id, kind: "mutation" });
   } catch (error) {
     if (error instanceof ServerActionRateLimitError) {
       return serverActionRateLimitErrorResult();
     }
     throw error;
   }
+
+  return { ok: true as const, user };
 }
 
 export { serverActionRateLimitMessage };

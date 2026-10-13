@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
+  buildLoginHrefForCurrentPage,
   buildRestoreHref,
   usePendingLedgerChanges,
   useSavingLedgerChangeCount,
@@ -50,11 +51,33 @@ export function PendingLedgerChangeAlerts() {
             {change.failureTitle ?? `${change.summary}を保存できませんでした`}
           </p>
           {change.error ? <p className="text-muted-foreground">{change.error}</p> : null}
+          {change.requiresLogin ? (
+            <p className="text-muted-foreground">
+              入力内容はこのタブに残っています。別のタブでログインしたあと、このタブの「入力に戻る」から保存し直してください。
+            </p>
+          ) : null}
           <div className="flex flex-wrap gap-2">
+            {/* このタブでログイン画面へ移ると帳簿の画面ごと消えて入力も失われるため、別のタブで開く。 */}
+            {change.requiresLogin ? (
+              <a
+                href={buildLoginHrefForCurrentPage()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(buttonVariants({ size: "sm" }), "h-9")}
+              >
+                別のタブでログインする
+              </a>
+            ) : null}
             {change.restore ? (
               <Link
                 href={buildRestoreHref({ href: change.restore.href, changeId: change.id })}
-                className={cn(buttonVariants({ size: "sm" }), "h-9")}
+                className={cn(
+                  buttonVariants({
+                    size: "sm",
+                    variant: change.requiresLogin ? "outline" : "default",
+                  }),
+                  "h-9",
+                )}
               >
                 入力に戻る
               </Link>

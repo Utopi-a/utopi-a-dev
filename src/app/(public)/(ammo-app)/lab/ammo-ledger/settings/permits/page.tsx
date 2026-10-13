@@ -13,6 +13,8 @@ import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
+export const metadata = { title: "譲受許可" };
+
 export default async function AcquisitionPermitsSettingsPage() {
   const user = await requireAmmoUser();
   const permits = await listAcquisitionPermits({ userId: user.id });

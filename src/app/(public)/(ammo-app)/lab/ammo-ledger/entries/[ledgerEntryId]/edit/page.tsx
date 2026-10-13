@@ -24,6 +24,8 @@ type PageProps = {
   searchParams: Promise<{ restore?: string }>;
 };
 
+export const metadata = { title: "記録の編集" };
+
 export default async function EditLedgerEntryPage({ params, searchParams }: PageProps) {
   const user = await requireAmmoUser();
   const { ledgerEntryId } = await params;

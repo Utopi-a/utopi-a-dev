@@ -17,4 +17,18 @@ describe("resolveAuthCallbackURL", () => {
   it("絶対 URL は拒否して /lab", () => {
     expect(resolveAuthCallbackURL({ next: "https://evil.example" })).toBe("/lab");
   });
+
+  it("クエリ付きの相対パスは戻り先として保つ", () => {
+    expect(resolveAuthCallbackURL({ next: "/lab/ammo-ledger/ledger?entry=abc" })).toBe(
+      "/lab/ammo-ledger/ledger?entry=abc",
+    );
+  });
+
+  it("バックスラッシュで別オリジンになる next は拒否して /lab", () => {
+    expect(resolveAuthCallbackURL({ next: "/\\evil.example" })).toBe("/lab");
+  });
+
+  it("タブを挟んで別オリジンになる next は拒否して /lab", () => {
+    expect(resolveAuthCallbackURL({ next: "/\t/evil.example" })).toBe("/lab");
+  });
 });

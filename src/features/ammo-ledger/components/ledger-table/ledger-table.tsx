@@ -30,6 +30,7 @@ import {
 } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
+import { resolveScrollBehavior } from "@/lib/resolve-scroll-behavior";
 
 type LedgerTableProps = {
   rows: LedgerDisplayRow[];
@@ -107,7 +108,7 @@ export function LedgerTable({
       window.innerWidth >= 768
         ? desktopHighlightedEntryRef.current
         : mobileHighlightedEntryRef.current;
-    highlightedEntry?.scrollIntoView({ behavior: "smooth", block: "center" });
+    highlightedEntry?.scrollIntoView({ behavior: resolveScrollBehavior(), block: "center" });
   }, [highlightedEntryExists, highlightedEntryId]);
 
   function handleSelectRow({

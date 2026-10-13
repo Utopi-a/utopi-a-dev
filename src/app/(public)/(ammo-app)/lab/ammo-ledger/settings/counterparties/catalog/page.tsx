@@ -3,6 +3,8 @@ import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { buildCounterpartyPickerData } from "@/features/ammo-ledger/catalog/build-counterparty-picker-data/build-counterparty-picker-data";
 import { CatalogList } from "@/features/ammo-ledger/components/catalog-list/catalog-list";
 
+export const metadata = { title: "全国の銃砲店・射撃場一覧" };
+
 export default async function CounterpartyCatalogPage() {
   const user = await requireAmmoUser();
   const pickerData = await buildCounterpartyPickerData({

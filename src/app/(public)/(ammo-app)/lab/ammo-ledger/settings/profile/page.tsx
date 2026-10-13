@@ -4,6 +4,8 @@ import { LedgerProfileForm } from "@/features/ammo-ledger/components/ledger-prof
 import { getLedgerProfile } from "@/features/ammo-ledger/profile/get-ledger-profile/get-ledger-profile";
 import { resolveOwnerName } from "@/features/ammo-ledger/profile/resolve-owner-name/resolve-owner-name";
 
+export const metadata = { title: "帳簿プロフィール" };
+
 export default async function LedgerProfileSettingsPage() {
   const user = await requireAmmoUser();
   const profile = await getLedgerProfile({ userId: user.id });

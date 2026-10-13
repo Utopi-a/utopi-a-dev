@@ -3,6 +3,8 @@ import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { buildRangePickerData } from "@/features/ammo-ledger/catalog/build-range-picker-data/build-range-picker-data";
 import { CatalogList } from "@/features/ammo-ledger/components/catalog-list/catalog-list";
 
+export const metadata = { title: "全国の射撃場一覧" };
+
 export default async function RangeCatalogPage() {
   const user = await requireAmmoUser();
   const pickerData = await buildRangePickerData({ userId: user.id });

@@ -9,6 +9,8 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
+export const metadata = { title: "購入先の編集" };
+
 export default async function EditCounterpartyPage({ params }: PageProps) {
   const { id } = await params;
   const user = await requireAmmoUser();

@@ -13,6 +13,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
+import { buildLoginHref } from "@/features/ammo-ledger/auth/build-login-href/build-login-href";
 import type { AmmoLedgerWorkspacePayload } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-payload/ammo-ledger-workspace-payload";
 import { ammoLedgerWorkspaceQueryKey } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-query-key/ammo-ledger-workspace-query-key";
 import type { AmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-types";
@@ -39,14 +40,23 @@ export type PendingLedgerChange = {
   summary: string;
   failureTitle?: string;
   error?: string;
+  /** ログインが切れて保存できなかった。別のタブでログインしてから入力に戻れるようにする */
+  requiresLogin?: boolean;
   restore?: PendingLedgerChangeRestore;
+};
+
+type PendingLedgerChangeFailure = {
+  id: string;
+  title: string;
+  error: string;
+  requiresLogin: boolean;
 };
 
 type PendingLedgerChangesContextValue = {
   changes: PendingLedgerChange[];
   begin: (change: Omit<PendingLedgerChange, "status">) => void;
   confirm: ({ id, overlay }: { id: string; overlay: LedgerEntryChanges }) => void;
-  fail: ({ id, title, error }: { id: string; title: string; error: string }) => void;
+  fail: (failure: PendingLedgerChangeFailure) => void;
   remove: ({ id }: { id: string }) => void;
   countSaving: () => number;
   enqueue: <T>(task: () => Promise<T>) => Promise<T>;
@@ -87,7 +97,7 @@ export function PendingLedgerChangesProvider({ children }: { children: ReactNode
         savingIdsRef.current.delete(id);
         update({ id, patch: { status: "confirmed", overlay } });
       },
-      fail: ({ id, title, error }: { id: string; title: string; error: string }) => {
+      fail: ({ id, title, error, requiresLogin }: PendingLedgerChangeFailure) => {
         savingIdsRef.current.delete(id);
         update({
           id,
@@ -95,6 +105,7 @@ export function PendingLedgerChangesProvider({ children }: { children: ReactNode
             status: "failed",
             failureTitle: title,
             error,
+            requiresLogin,
             overlay: { upserted: [], removedIds: [] },
           },
         });
@@ -151,7 +162,12 @@ export function useSavingLedgerChangeCount() {
 
 export type PendingLedgerActionResult =
   | { ok: true; changes: LedgerEntryChanges; message?: string }
-  | { ok: false; error: string };
+  | { ok: false; error: string; code?: "unauthenticated" };
+
+/** 入力を残したこのタブは移動させず、今の画面へ戻るログイン画面を別のタブで開く。 */
+export function buildLoginHrefForCurrentPage(): string {
+  return buildLoginHref({ next: `${window.location.pathname}${window.location.search}` });
+}
 
 const unconfirmedSaveMessage =
   "通信が途切れ、保存できたか確認できませんでした。帳簿に記録が表示されていれば保存済みです。表示されていなければ、入力に戻ってもう一度保存してください（同じ記録が二重に登録されることはありません）。";
@@ -206,8 +222,16 @@ export function useRunPendingLedgerChange() {
         }
       }
 
-      function handleFailure({ title, error }: { title: string; error: string }) {
-        fail({ id, title, error });
+      function handleFailure({
+        title,
+        error,
+        requiresLogin = false,
+      }: {
+        title: string;
+        error: string;
+        requiresLogin?: boolean;
+      }) {
+        fail({ id, title, error, requiresLogin });
         const restoreHref = restore ? buildRestoreHref({ href: restore.href, changeId: id }) : null;
         if (!restoreHref) {
           // 戻す入力がない取消・並び替えは、行を元に戻して通知するだけにする。
@@ -218,9 +242,14 @@ export function useRunPendingLedgerChange() {
           id,
           description: error,
           duration: 10_000,
-          action: restoreHref
-            ? { label: "入力に戻る", onClick: () => router.push(restoreHref) }
-            : undefined,
+          action: requiresLogin
+            ? {
+                label: "別のタブでログイン",
+                onClick: () => window.open(buildLoginHrefForCurrentPage(), "_blank", "noopener"),
+              }
+            : restoreHref
+              ? { label: "入力に戻る", onClick: () => router.push(restoreHref) }
+              : undefined,
         });
       }
 
@@ -247,7 +276,11 @@ export function useRunPendingLedgerChange() {
         }
 
         if (!result.ok) {
-          handleFailure({ title: failureTitle, error: result.error });
+          handleFailure({
+            title: failureTitle,
+            error: result.error,
+            requiresLogin: result.code === "unauthenticated",
+          });
           revalidateWhenIdle();
           return;
         }

@@ -44,6 +44,7 @@ describe("LedgerTable", () => {
   });
 
   it("追加直後の帳簿行を強調して表示位置へスクロールする", async () => {
+    vi.stubGlobal("matchMedia", () => ({ matches: false }));
     const scrollIntoView = vi.fn();
     Object.defineProperty(window.HTMLElement.prototype, "scrollIntoView", {
       configurable: true,
@@ -58,6 +59,23 @@ describe("LedgerTable", () => {
       expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "center" }),
     );
     expect(container.querySelectorAll('[data-ledger-entry-id="entry-1"]')).toHaveLength(2);
+  });
+
+  it("動きを減らす設定では、追加直後の帳簿行へ瞬時にスクロールする", async () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query === "(prefers-reduced-motion: reduce)",
+    }));
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(window.HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    render(<LedgerTable rows={[entryRow]} purpose="hunting" highlightedEntryId="entry-1" />);
+
+    await waitFor(() =>
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "auto", block: "center" }),
+    );
   });
 
   it("許可残数失効行には、失効を適用した後の許可残数を表示する", () => {

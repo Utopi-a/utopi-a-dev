@@ -4,27 +4,40 @@ import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-p
 import { AmmoTypeForm } from "@/features/ammo-ledger/components/ammo-type-form/ammo-type-form";
 import { AmmoTypeRowActions } from "@/features/ammo-ledger/components/ammo-type-row-actions/ammo-type-row-actions";
 import { MasterListItem } from "@/features/ammo-ledger/components/master-list-item/master-list-item";
+import { ReturnToRecordLink } from "@/features/ammo-ledger/components/return-to-record-link/return-to-record-link";
 import { countClassificationReviewStatus } from "@/features/ammo-ledger/master/ammo-type-classification-review/count-classification-review-status";
 import { listAmmoTypeIdsInUse } from "@/features/ammo-ledger/master/list-ammo-type-ids-in-use/list-ammo-type-ids-in-use";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
+import {
+  resolveReturnToPath,
+  returnToSearchParam,
+} from "@/features/ammo-ledger/navigation/resolve-return-to-path/resolve-return-to-path";
 import type { CartridgeType } from "@/features/ammo-ledger/schema/cartridge-type";
 import { cartridgeTypeLabels } from "@/features/ammo-ledger/schema/cartridge-type";
 
 export const metadata = { title: "弾種" };
 
-export default async function AmmoTypesSettingsPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function AmmoTypesSettingsPage({ searchParams }: PageProps) {
   const user = await requireAmmoUser();
-  const [ammoTypes, reviewStatus, ammoTypeIdsInUse] = await Promise.all([
+  const [ammoTypes, reviewStatus, ammoTypeIdsInUse, params] = await Promise.all([
     listAmmoTypes({ userId: user.id }),
     countClassificationReviewStatus({ userId: user.id }),
     listAmmoTypeIdsInUse({ userId: user.id }),
+    searchParams,
   ]);
+  const returnTo = resolveReturnToPath({ value: params[returnToSearchParam] });
 
   const reviewTotal = reviewStatus.unconfirmedCount + reviewStatus.orphanCount;
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">弾種</h1>
+      {/* 追加した直後にトーストやフォームに隠れず見えるよう、一覧より上に置く。 */}
+      {returnTo && ammoTypes.length > 0 ? <ReturnToRecordLink href={returnTo} /> : null}
       {reviewTotal > 0 ? (
         <Link
           href="/lab/ammo-ledger/settings/ammo-types/review"

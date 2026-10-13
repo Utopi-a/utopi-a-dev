@@ -11,6 +11,7 @@ import {
 } from "@/features/ammo-ledger/components/inflow-record-tabs/inflow-record-tabs";
 import { IssueForm } from "@/features/ammo-ledger/components/issue-form/issue-form";
 import { ManufactureForm } from "@/features/ammo-ledger/components/manufacture-form/manufacture-form";
+import { MissingMastersNotice } from "@/features/ammo-ledger/components/missing-masters-notice/missing-masters-notice";
 import { ReceiveForm } from "@/features/ammo-ledger/components/receive-form/receive-form";
 import { TransferForm } from "@/features/ammo-ledger/components/transfer-form/transfer-form";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
@@ -18,6 +19,8 @@ import { useDraftTransaction } from "@/features/ammo-ledger/transactions/get-dra
 import { resolveAmmoTypeDefaults } from "@/features/ammo-ledger/transactions/resolve-ammo-type-defaults/resolve-ammo-type-defaults";
 import { deriveFormWorkspaceData } from "@/features/ammo-ledger/workspace/derive-form-workspace-data/derive-form-workspace-data";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+
+const inflowPath = "/lab/ammo-ledger/inflow/new";
 
 const inflowTabs: InflowTab[] = [
   "acquire",
@@ -74,15 +77,7 @@ export function InflowNewView() {
     return { ammoTypeId, purpose };
   }
 
-  const emptyMasters = (
-    <p className="text-sm text-muted-foreground">
-      弾種マスタを
-      <Link href="/lab/ammo-ledger/settings/ammo-types" className="underline">
-        登録
-      </Link>
-      してください。
-    </p>
-  );
+  const hasPermits = workspace.permits.length > 0;
 
   return (
     <div className="space-y-6">
@@ -101,18 +96,31 @@ export function InflowNewView() {
       </div>
       <AmmoLedgerPanel>
         {ammoTypes.length === 0 ? (
-          emptyMasters
+          <MissingMastersNotice
+            action="譲り受けを記録する"
+            missing={hasPermits ? ["ammo-type"] : ["ammo-type", "permit"]}
+            returnTo={inflowPath}
+          />
         ) : (
           <InflowRecordTabs
             key={`${draftId ?? "new"}:${restoreId ?? ""}`}
             defaultTab={tab}
             acquireContent={
-              <AcquireForm
-                ammoTypes={ammoTypes}
-                stockByAmmoTypeId={stockByAmmoTypeId}
-                permits={workspace.permits}
-                initialValues={initialValuesFor({ formTab: "acquire" })}
-              />
+              hasPermits ? (
+                <AcquireForm
+                  ammoTypes={ammoTypes}
+                  stockByAmmoTypeId={stockByAmmoTypeId}
+                  permits={workspace.permits}
+                  initialValues={initialValuesFor({ formTab: "acquire" })}
+                />
+              ) : (
+                // 有効な許可がないと保存できないため、入力させる前に登録へ案内する。
+                <MissingMastersNotice
+                  action="譲り受けを記録する"
+                  missing={["permit"]}
+                  returnTo={inflowPath}
+                />
+              )
             }
             disposeContent={
               <DisposeForm

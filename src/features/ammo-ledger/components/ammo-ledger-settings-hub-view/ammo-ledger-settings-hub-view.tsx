@@ -9,10 +9,12 @@ export function AmmoLedgerSettingsHubView() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">設定</h1>
-        <p className="text-sm text-muted-foreground">入力を速くするためのマスタと帳簿情報です。</p>
+        <p className="text-sm text-muted-foreground">
+          記録の前に必要な登録と、帳簿の書類・年末の手続きです。
+        </p>
       </div>
-      <AmmoLedgerPwaInstallSettingsPanel />
       <SettingsLinkList groups={settingsHubGroups} />
+      <AmmoLedgerPwaInstallSettingsPanel />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace
 import { evaluateHomeStorageLimit } from "@/features/ammo-ledger/ledger/compute-running-home-stock/compute-running-home-stock";
 import { formatStockQuantity } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { buildAvailableYears } from "@/features/ammo-ledger/opening-balance/build-available-years/build-available-years";
+import { computePermitUsage } from "@/features/ammo-ledger/permit/compute-permit-usage/compute-permit-usage";
 import {
   computeCurrentPermitBalance,
   computeRunningPermitBalance,
@@ -115,6 +116,16 @@ function LedgerViewContent({
     [permitEventRows, ledgerEntryRows, today],
   );
 
+  const usedQuantityByPermitId = useMemo(
+    () =>
+      computePermitUsage({
+        permits: permits.filter((permit) => permit.ledgerPurpose === purpose),
+        ledgerEntries: ledgerEntryRows,
+        today,
+      }),
+    [permits, purpose, ledgerEntryRows, today],
+  );
+
   const permitBalances = useMemo(
     () =>
       computeRunningPermitBalance({
@@ -169,6 +180,7 @@ function LedgerViewContent({
         permits={permits}
         ledgerPurpose={purpose}
         permitBalance={permitBalance}
+        usedQuantityByPermitId={usedQuantityByPermitId}
         today={today}
       />
 

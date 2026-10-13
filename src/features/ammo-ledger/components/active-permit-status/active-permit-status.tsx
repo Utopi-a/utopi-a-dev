@@ -15,6 +15,7 @@ type ActivePermitStatusProps = {
   permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
   ledgerPurpose: LedgerPurpose;
   permitBalance: number;
+  usedQuantityByPermitId: ReadonlyMap<string, number>;
   today: string;
 };
 
@@ -24,20 +25,19 @@ export function ActivePermitStatus({
   permits,
   ledgerPurpose,
   permitBalance,
+  usedQuantityByPermitId,
   today,
 }: ActivePermitStatusProps) {
   const purposePermits = permits.filter((permit) => permit.ledgerPurpose === ledgerPurpose);
-  const activePermits = purposePermits.filter((permit) =>
-    isPermitActive({ grantedOn: permit.grantedOn, expiresOn: permit.expiresOn, today }),
-  );
-  // 期限切れの許可と、残数を使い切った許可は帳簿では出さない（設定の譲受許可で確認できる）。
-  // 許可残数は用途ごとの合計のため、残数が0なら有効期間内の許可も使い切ったものとして扱う。
-  // これから有効になる許可は、まだ残数に入っていないため残す。
-  const visiblePermits = purposePermits.filter(
+  // 期限切れの許可と、数量を使い切った許可は帳簿では出さない（設定の譲受許可で確認できる）。
+  // 用途全体の残数は別の許可の失効でも0になるため、許可ごとの使用数の見積もりで判定する。
+  const usablePermits = purposePermits.filter(
     (permit) =>
-      today < permit.grantedOn ||
-      (permitBalance > 0 &&
-        isPermitActive({ grantedOn: permit.grantedOn, expiresOn: permit.expiresOn, today })),
+      isPermitActive({ grantedOn: permit.grantedOn, expiresOn: permit.expiresOn, today }) &&
+      (usedQuantityByPermitId.get(permit.id) ?? 0) < permit.quantity,
+  );
+  const visiblePermits = purposePermits.filter(
+    (permit) => today < permit.grantedOn || usablePermits.includes(permit),
   );
 
   if (purposePermits.length === 0 && permitBalance <= 0) {
@@ -65,7 +65,7 @@ export function ActivePermitStatus({
           </span>
         </span>
         <span className="text-muted-foreground">
-          有効な許可 {permitBalance > 0 ? activePermits.length : 0}件（
+          有効な許可 {usablePermits.length}件（
           {ledgerPurposeLabels[ledgerPurpose]}）
         </span>
       </div>
@@ -104,7 +104,7 @@ export function ActivePermitStatus({
         </ul>
       ) : null}
 
-      {permitBalance <= 0 && visiblePermits.length === 0 ? (
+      {visiblePermits.length === 0 && permitBalance <= 0 ? (
         <p className="text-sm text-muted-foreground">
           使える譲受許可はありません。新しい許可を受けたら
           <Link href={permitsSettingsHref} className="underline">

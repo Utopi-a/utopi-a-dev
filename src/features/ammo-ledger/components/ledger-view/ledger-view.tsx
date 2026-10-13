@@ -231,6 +231,7 @@ function LedgerViewContent({
       <HomeStorageWarning
         currentStock={homeStorage.currentStock}
         peakStock={homeStorage.peakStock}
+        lastExceededOn={homeStorage.lastExceededOn}
       />
 
       <div className="flex flex-col gap-3 border-b border-border/40 pb-4 sm:flex-row sm:items-end sm:justify-between">

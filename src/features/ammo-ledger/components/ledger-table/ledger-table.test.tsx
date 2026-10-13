@@ -128,4 +128,16 @@ describe("LedgerTable", () => {
     expect(within(consumeTableRow).getByText("テスト射撃場 クレー射撃")).toBeInTheDocument();
     expect(within(consumeTableRow).queryByText("1,150個")).not.toBeInTheDocument();
   });
+
+  it("自宅保管の目安を超えた行は、色だけでなく文字でも示す", () => {
+    render(
+      <LedgerTable rows={[entryRow]} purpose="hunting" homeStorageExceededEntryIds={["entry-1"]} />,
+    );
+
+    const [, row] = within(screen.getByRole("table")).getAllByRole("row");
+    expect(within(row).getByText("目安超え")).toBeInTheDocument();
+    expect(
+      screen.getByText("この時点で全用途の残数が自宅保管の目安（800個）を超えています"),
+    ).toBeInTheDocument();
+  });
 });

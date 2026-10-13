@@ -256,7 +256,7 @@ export function LedgerTable({
                         "cursor-pointer border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20",
                       !entrySelectable && "border-b border-border/25 last:border-0",
                       isSaving && "text-muted-foreground",
-                      exceededSet.has(entry.id) && "bg-amber-500/5",
+                      exceededSet.has(entry.id) && "bg-rose-500/10",
                       entry.id === highlightedEntryId &&
                         "bg-primary/10 ring-2 ring-inset ring-primary",
                     )}
@@ -270,6 +270,9 @@ export function LedgerTable({
                       <div className="flex flex-col items-start gap-1">
                         <LedgerCategoryBadge category={entry.category} />
                         {isSaving ? <SavingBadge /> : null}
+                        {exceededSet.has(entry.id) ? (
+                          <span className="text-xs text-rose-700 dark:text-rose-300">目安超え</span>
+                        ) : null}
                       </div>
                     </td>
                     <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.ammoType)}>
@@ -345,7 +348,7 @@ export function LedgerTable({
           </table>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          行をクリックすると編集・並び替え・取消ができます。琥珀色の行はその時点で自宅保管の目安（800個）を超えています。
+          行をクリックすると編集・並び替え・取消ができます。「目安超え」の行は、その時点で全用途の残数が自宅保管の目安（800個）を超えています。
         </p>
       </div>
       <p className="text-xs text-muted-foreground">

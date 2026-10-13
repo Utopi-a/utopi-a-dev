@@ -121,7 +121,7 @@ export function LedgerEntryCard({
         "flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5 text-left transition-colors",
         selectable && "hover:border-border hover:bg-muted/30 active:bg-muted/40",
         !selectable && "cursor-default",
-        isHomeStorageExceeded && "border-amber-500/30 bg-amber-500/5",
+        isHomeStorageExceeded && "border-rose-500/40 bg-rose-500/5",
         isSaving && "border-dashed",
       )}
     >
@@ -166,8 +166,8 @@ export function LedgerEntryCard({
             />
           ) : null}
           {isHomeStorageExceeded ? (
-            <p className="text-xs text-amber-700 dark:text-amber-300">
-              この時点で自宅保管の目安（800個）を超えています
+            <p className="text-xs text-rose-700 dark:text-rose-300">
+              この時点で全用途の残数が自宅保管の目安（800個）を超えています
             </p>
           ) : null}
         </div>

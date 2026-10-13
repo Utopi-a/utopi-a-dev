@@ -91,6 +91,7 @@ function InventoryViewContent({ workspace, isRefreshing }: InventoryViewContentP
       <HomeStorageWarning
         currentStock={homeStorage.currentStock}
         peakStock={homeStorage.peakStock}
+        lastExceededOn={homeStorage.lastExceededOn}
       />
 
       <AmmoLedgerPanel title="帳簿残数" description="弾種・号数・グループごとに一覧表示します">

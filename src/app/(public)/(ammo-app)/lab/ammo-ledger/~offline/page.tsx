@@ -1,6 +1,5 @@
-"use client";
-
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { AmmoLedgerReloadButton } from "@/features/ammo-ledger/components/ammo-ledger-reload-button/ammo-ledger-reload-button";
 import { AmmoLedgerShellLink } from "@/features/ammo-ledger/components/ammo-ledger-shell-link/ammo-ledger-shell-link";
 import { ammoLedgerPwaConfig } from "@/features/ammo-ledger/pwa/ammo-ledger-pwa-config";
 import { cn } from "@/lib/cn";
@@ -16,9 +15,7 @@ export default function AmmoLedgerOfflinePage() {
       </p>
       <div className="flex flex-wrap justify-center gap-2">
         {/* この案内は開こうとした画面のURLのまま出るため、再読み込みでその画面を取り直せる。 */}
-        <Button type="button" size="lg" onClick={() => window.location.reload()}>
-          再読み込み
-        </Button>
+        <AmmoLedgerReloadButton />
         <AmmoLedgerShellLink
           href={ammoLedgerPwaConfig.startUrl}
           className={cn(buttonVariants({ variant: "outline", size: "lg" }))}

@@ -169,4 +169,25 @@ describe("LedgerView", () => {
     const totalStock = screen.getByText("帳簿残数（全用途）").parentElement as HTMLElement;
     expect(within(totalStock).getByRole("definition")).toHaveTextContent("120個");
   });
+
+  it("確定済みの日付を見出しと行のシートに示し、確定・ロックの設定へ案内する", () => {
+    renderLedgerView({
+      search: "?purpose=shooting&year=2025",
+      workspace: buildTestWorkspace({
+        entries,
+        lockState: { isLocked: true, lockedThrough: "2025-12-31" },
+      }),
+    });
+
+    expect(screen.getByRole("link", { name: "2025/12/31 まで確定済み →" })).toHaveAttribute(
+      "href",
+      "/lab/ammo-ledger/settings/ledger-lock",
+    );
+    fireEvent.click(within(screen.getByRole("table")).getByText("2025/06/15"));
+    const sheet = screen.getByRole("dialog");
+    expect(sheet).toHaveTextContent("この期間はロック済みのため編集・取消できません。");
+    expect(
+      within(sheet).getByRole("link", { name: "2025/12/31 まで確定済み →" }),
+    ).toBeInTheDocument();
+  });
 });

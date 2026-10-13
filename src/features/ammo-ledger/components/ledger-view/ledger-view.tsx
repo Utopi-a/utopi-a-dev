@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { ActivePermitStatus } from "@/features/ammo-ledger/components/active-permit-status/active-permit-status";
 import { AmmoLedgerRefreshIndicator } from "@/features/ammo-ledger/components/ammo-ledger-refresh-indicator/ammo-ledger-refresh-indicator";
 import { HomeStorageWarning } from "@/features/ammo-ledger/components/home-storage-warning/home-storage-warning";
+import { LedgerLockedThroughLink } from "@/features/ammo-ledger/components/ledger-locked-through-link/ledger-locked-through-link";
 import { LedgerTableShell } from "@/features/ammo-ledger/components/ledger-table/ledger-table-shell";
 import { LedgerYearSelect } from "@/features/ammo-ledger/components/ledger-year-select/ledger-year-select";
 import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/purpose-filter";
@@ -179,6 +180,7 @@ function LedgerViewContent({
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">帳簿</h1>
         <p className="text-sm text-muted-foreground">{ledgerPurposeTabLabels[purpose]}の法定記録</p>
+        <LedgerLockedThroughLink lockState={workspace.lockState} />
       </div>
 
       <PurposeFilter

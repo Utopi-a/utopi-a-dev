@@ -9,6 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { LedgerLockedThroughLink } from "@/features/ammo-ledger/components/ledger-locked-through-link/ledger-locked-through-link";
 import {
   buildLedgerEntryEditHref,
   isAmmoCarryoverEntry,
@@ -110,9 +111,10 @@ export function LedgerEntryActionsSheet({
 
           <div className="flex flex-col gap-2 px-4">
             {locked ? (
-              <p className="text-sm text-muted-foreground">
-                この期間はロック済みのため編集できません。
-              </p>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <p>この期間はロック済みのため編集できません。</p>
+                <LedgerLockedThroughLink lockState={lockState} />
+              </div>
             ) : (
               <Link
                 href={editHref}
@@ -210,9 +212,10 @@ export function LedgerEntryActionsSheet({
 
         <div className="flex flex-col gap-2 px-4">
           {locked ? (
-            <p className="text-sm text-muted-foreground">
-              この期間はロック済みのため編集・取消できません。
-            </p>
+            <div className="space-y-1 text-sm text-muted-foreground">
+              <p>この期間はロック済みのため編集・取消できません。</p>
+              <LedgerLockedThroughLink lockState={lockState} />
+            </div>
           ) : (
             <>
               {editable || carryover ? (

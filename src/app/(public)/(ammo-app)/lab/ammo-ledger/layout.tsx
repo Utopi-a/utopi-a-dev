@@ -79,7 +79,8 @@ export default async function AmmoLedgerLayout({ children }: { children: React.R
           </AmmoLedgerOptimisticNavProvider>
         </AmmoLedgerSwrProvider>
       </SerwistProvider>
-      <Toaster />
+      {/* スマホでは記録フォームの保存ボタンが画面下に固定されるため、通知をその上に出して保存し直す操作を隠さない。 */}
+      <Toaster mobileOffset={{ bottom: "calc(5rem + env(safe-area-inset-bottom))" }} />
     </div>
   );
 }

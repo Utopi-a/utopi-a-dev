@@ -43,7 +43,11 @@ async function mountForm(profile: Partial<FormProps> = {}) {
     <SWRConfig value={{ provider: () => new Map() }}>
       <AcquisitionPermitApplicationForm
         ownerName="テスト氏名"
+        ownerFurigana="てすと たろう"
         ownerAddress="テスト住所"
+        ownerBirthDate="1990-01-01"
+        ownerPhone="000-0000-0000"
+        possessionPermitCertificateNumber="00111111111"
         totalHomeStock={755}
         ammoTypeStocks={[{ cartridgeType: "shotgun_shot", caliber: "12番", bookStock: 755 }]}
         guns={guns}
@@ -90,7 +94,7 @@ describe("譲受許可申請の入力から印刷への引き継ぎ", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it("銃の選択を変えても所持許可証番号を維持し、755発の自然な消費計画と一緒に印刷へ渡す", async () => {
-    await renderForm();
+    await renderForm({ possessionPermitCertificateNumber: undefined });
     const certificateInput = screen.getByLabelText("銃砲所持許可証の番号");
     expect(certificateInput).toHaveValue("");
     fireEvent.change(certificateInput, { target: { value: "00123456789" } });
@@ -255,16 +259,42 @@ describe("譲受許可申請の入力から印刷への引き継ぎ", () => {
     expect(screen.getByLabelText("提出先（公安委員会）")).toHaveValue("北海道");
   });
 
-  it("許可証番号が未入力なら、選択した銃の番号を印刷しない", async () => {
-    await renderForm();
+  it("許可証番号が未入力なら、選択した銃の番号で埋めずに入力を求める", async () => {
+    await renderForm({ possessionPermitCertificateNumber: undefined });
     fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
     fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
 
-    const payload = loadAcquisitionPermitApplicationPayload();
-    if (!payload) throw new Error("印刷用データが保存されていません");
-    expect(buildApplicationFieldValues({ input: payload }).mainFields.permitCertificateNumber).toBe(
-      "",
+    expect(loadAcquisitionPermitApplicationPayload()).toBeNull();
+    const certificateInput = screen.getByLabelText("銃砲所持許可証の番号");
+    expect(certificateInput).toHaveValue("");
+    expect(certificateInput).toHaveFocus();
+    expect(within(screen.getByRole("alert")).getByRole("button").textContent).toBe(
+      "銃砲所持許可証の番号",
     );
+  });
+
+  it("様式の必須項目が欠けていれば一覧にして最初の欄へ移り、埋めると印刷へ進める", async () => {
+    await renderForm({ ownerPhone: undefined });
+    expect(screen.getByLabelText("氏名")).toBeRequired();
+    fireEvent.change(screen.getByLabelText("氏名"), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: /テスト銃A/ }));
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+
+    const missingLabels = within(screen.getByRole("alert"))
+      .getAllByRole("button")
+      .map((button) => button.textContent);
+    expect(missingLabels).toEqual(["氏名", "電話番号", "使用銃", "消費計画"]);
+    expect(screen.getByLabelText("氏名")).toHaveFocus();
+    expect(screen.getByLabelText("氏名")).toHaveAttribute("aria-invalid", "true");
+    expect(loadAcquisitionPermitApplicationPayload()).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("氏名"), { target: { value: "テスト氏名" } });
+    fireEvent.change(screen.getByLabelText("電話番号"), { target: { value: "000-0000-0000" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: /テスト銃A/ }));
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    expect(screen.queryByRole("alert")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+    expect(loadAcquisitionPermitApplicationPayload()?.ownerPhone).toBe("000-0000-0000");
   });
 
   it.each([

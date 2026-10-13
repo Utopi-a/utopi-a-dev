@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/cn";
 
@@ -12,6 +13,7 @@ type FieldSelectProps = {
   required?: boolean;
   placeholder?: string;
   className?: string;
+  labelSuffix?: ReactNode;
 };
 
 export function FieldSelect({
@@ -23,10 +25,14 @@ export function FieldSelect({
   required,
   placeholder = "選択してください",
   className,
+  labelSuffix,
 }: FieldSelectProps) {
   return (
     <div className={cn("space-y-2", className)}>
-      <Label htmlFor={id}>{label}</Label>
+      <div className="flex items-center gap-2">
+        <Label htmlFor={id}>{label}</Label>
+        {labelSuffix}
+      </div>
       <select
         id={id}
         required={required}

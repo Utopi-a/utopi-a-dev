@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { IsoDateInput } from "@/components/ui/iso-date-input";
-import { Label } from "@/components/ui/label";
 import type { ammoGun } from "@/db/schema/ammo-ledger";
 import type { AcquisitionPermitApplicationPayload } from "@/features/ammo-ledger/acquisition-permit-application/acquisition-permit-application-types";
 import {
@@ -31,6 +30,18 @@ import {
   saveApplicationFormDraft,
 } from "@/features/ammo-ledger/acquisition-permit-application/application-session/application-form-draft";
 import { saveAcquisitionPermitApplicationPayload } from "@/features/ammo-ledger/acquisition-permit-application/application-session/application-session";
+import {
+  counterpartyFieldId,
+  findMissingApplicationFields,
+  generatePlanFieldId,
+  type RequiredApplicationFieldKey,
+  requiredApplicationFields,
+  selectedGunsFieldId,
+} from "@/features/ammo-ledger/acquisition-permit-application/components/acquisition-permit-application-form/application-form-fields";
+import {
+  RequiredFieldLabel,
+  RequiredMark,
+} from "@/features/ammo-ledger/acquisition-permit-application/components/acquisition-permit-application-form/required-field-label";
 import { ConsumptionPlanPreview } from "@/features/ammo-ledger/acquisition-permit-application/components/consumption-plan-preview/consumption-plan-preview";
 import {
   buildRangeAllocationsFromRows,
@@ -133,6 +144,7 @@ export function AcquisitionPermitApplicationForm({
   const [isDraftRestored, setIsDraftRestored] = useState(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isPlanWarningConfirmOpen, setIsPlanWarningConfirmOpen] = useState(false);
+  const [isMissingFieldsShown, setIsMissingFieldsShown] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function updateDraft(patch: Partial<ApplicationFormDraft>) {
@@ -206,6 +218,32 @@ export function AcquisitionPermitApplicationForm({
   );
   const isPlanOutdated = draft.planInputKey !== null && consumptionPlan === null;
 
+  const missingFields = findMissingApplicationFields({
+    values: { ...draft, homeStock },
+    selectedGunCount: selectedGuns.length,
+    hasCounterparty: draft.counterparty !== null,
+    planStatus:
+      consumptionPlan && consumptionPlan.rows.length > 0
+        ? "ready"
+        : isPlanOutdated
+          ? "outdated"
+          : "missing",
+  });
+  // 一度印刷を試みた後は、入力に合わせて一覧を減らしていく。
+  const shownMissingFields = isMissingFieldsShown ? missingFields : [];
+  const invalidFieldIds = new Set(shownMissingFields.map((field) => field.fieldId));
+
+  function requiredInputProps(key: RequiredApplicationFieldKey) {
+    const { id } = requiredApplicationFields[key];
+    return { id, required: true, "aria-invalid": invalidFieldIds.has(id) || undefined };
+  }
+
+  function focusField({ fieldId }: { fieldId: string }) {
+    const element = document.getElementById(fieldId);
+    element?.scrollIntoView?.({ block: "center" });
+    element?.focus({ preventScroll: true });
+  }
+
   function handleValidFromChange(value: string) {
     updateDraft({ validFrom: value, validTo: defaultValidTo({ validFrom: value }) });
   }
@@ -234,6 +272,7 @@ export function AcquisitionPermitApplicationForm({
         : initialDraft,
     );
     setError(null);
+    setIsMissingFieldsShown(false);
     setIsResetConfirmOpen(false);
   }
 
@@ -256,16 +295,13 @@ export function AcquisitionPermitApplicationForm({
   function handleGoToPrint() {
     setError(null);
 
-    if (!consumptionPlan || consumptionPlan.rows.length === 0) {
-      setError(
-        isPlanOutdated
-          ? "入力が変わったので計画を作り直してください"
-          : "先に消費計画を生成してください",
-      );
+    if (missingFields.length > 0) {
+      setIsMissingFieldsShown(true);
+      focusField({ fieldId: missingFields[0].fieldId });
       return;
     }
 
-    if (consumptionPlan.warnings.length > 0) {
+    if (consumptionPlan && consumptionPlan.warnings.length > 0) {
       setIsPlanWarningConfirmOpen(true);
       return;
     }
@@ -324,9 +360,9 @@ export function AcquisitionPermitApplicationForm({
       <AmmoLedgerPanel title="申請者">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="prefecture-name">提出先（公安委員会）</Label>
+            <RequiredFieldLabel field={requiredApplicationFields.prefectureName} />
             <Input
-              id="prefecture-name"
+              {...requiredInputProps("prefectureName")}
               value={draft.prefectureName}
               onChange={(event) => updateDraft({ prefectureName: event.target.value })}
               placeholder="茨城県"
@@ -336,49 +372,49 @@ export function AcquisitionPermitApplicationForm({
             </p>
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="application-date">申請日</Label>
+            <RequiredFieldLabel field={requiredApplicationFields.applicationDate} />
             <IsoDateInput
-              id="application-date"
+              {...requiredInputProps("applicationDate")}
               value={draft.applicationDate}
               onChange={({ value }) => updateDraft({ applicationDate: value })}
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="owner-name">氏名</Label>
+            <RequiredFieldLabel field={requiredApplicationFields.ownerName} />
             <Input
-              id="owner-name"
+              {...requiredInputProps("ownerName")}
               value={draft.ownerName}
               onChange={(event) => updateDraft({ ownerName: event.target.value })}
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="owner-furigana">ふりがな</Label>
+            <RequiredFieldLabel field={requiredApplicationFields.ownerFurigana} />
             <Input
-              id="owner-furigana"
+              {...requiredInputProps("ownerFurigana")}
               value={draft.ownerFurigana}
               onChange={(event) => updateDraft({ ownerFurigana: event.target.value })}
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="owner-address">住所</Label>
+            <RequiredFieldLabel field={requiredApplicationFields.ownerAddress} />
             <Input
-              id="owner-address"
+              {...requiredInputProps("ownerAddress")}
               value={draft.ownerAddress}
               onChange={(event) => updateDraft({ ownerAddress: event.target.value })}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="owner-birth-date">生年月日</Label>
+            <RequiredFieldLabel field={requiredApplicationFields.ownerBirthDate} />
             <IsoDateInput
-              id="owner-birth-date"
+              {...requiredInputProps("ownerBirthDate")}
               value={draft.ownerBirthDate}
               onChange={({ value }) => updateDraft({ ownerBirthDate: value })}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="owner-phone">電話番号</Label>
+            <RequiredFieldLabel field={requiredApplicationFields.ownerPhone} />
             <Input
-              id="owner-phone"
+              {...requiredInputProps("ownerPhone")}
               value={draft.ownerPhone}
               onChange={(event) => updateDraft({ ownerPhone: event.target.value })}
             />
@@ -389,10 +425,12 @@ export function AcquisitionPermitApplicationForm({
       <AmmoLedgerPanel title="許可内容">
         <div className="space-y-4">
           <FieldSelect
-            id="ammo-name"
-            label="火薬類の名称"
+            id={requiredApplicationFields.ammoName.id}
+            label={requiredApplicationFields.ammoName.label}
+            labelSuffix={<RequiredMark />}
             value={draft.ammoName}
-            onChange={(value) => updateDraft({ ammoName: value as ApplicationAmmoName })}
+            // 空の選択肢を選んでも既定値を保ち、下書きとして読み戻せない値を残さない。
+            onChange={(value) => value && updateDraft({ ammoName: value as ApplicationAmmoName })}
             options={applicationAmmoNameOptions.map((option) => ({
               value: option,
               label: option,
@@ -402,10 +440,13 @@ export function AcquisitionPermitApplicationForm({
           />
 
           <FieldSelect
-            id="permit-purpose"
-            label="譲受の目的"
+            id={requiredApplicationFields.permitPurpose.id}
+            label={requiredApplicationFields.permitPurpose.label}
+            labelSuffix={<RequiredMark />}
             value={draft.permitPurpose}
-            onChange={(value) => updateDraft({ permitPurpose: value as AcquisitionPermitPurpose })}
+            onChange={(value) =>
+              value && updateDraft({ permitPurpose: value as AcquisitionPermitPurpose })
+            }
             options={acquisitionPermitPurposeOptions.map((option) => ({
               value: option,
               label: option,
@@ -416,9 +457,9 @@ export function AcquisitionPermitApplicationForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="requested-quantity">申請数量（発）</Label>
+              <RequiredFieldLabel field={requiredApplicationFields.requestedQuantity} />
               <Input
-                id="requested-quantity"
+                {...requiredInputProps("requestedQuantity")}
                 type="number"
                 min={250}
                 step={250}
@@ -427,9 +468,9 @@ export function AcquisitionPermitApplicationForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="home-stock">現保有数量（発）</Label>
+              <RequiredFieldLabel field={requiredApplicationFields.homeStock} />
               <Input
-                id="home-stock"
+                {...requiredInputProps("homeStock")}
                 type="number"
                 min={0}
                 value={homeStock}
@@ -447,17 +488,17 @@ export function AcquisitionPermitApplicationForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="valid-from">譲受期間（開始）</Label>
+              <RequiredFieldLabel field={requiredApplicationFields.validFrom} />
               <IsoDateInput
-                id="valid-from"
+                {...requiredInputProps("validFrom")}
                 value={draft.validFrom}
                 onChange={({ value }) => handleValidFromChange(value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="valid-to">譲受期間（終了）</Label>
+              <RequiredFieldLabel field={requiredApplicationFields.validTo} />
               <IsoDateInput
-                id="valid-to"
+                {...requiredInputProps("validTo")}
                 value={draft.validTo}
                 min={draft.validFrom}
                 onChange={({ value }) => updateDraft({ validTo: value })}
@@ -466,18 +507,20 @@ export function AcquisitionPermitApplicationForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="storage-location">貯蔵又は保管する場所</Label>
+            <RequiredFieldLabel field={requiredApplicationFields.storageLocation} />
             <Input
-              id="storage-location"
+              {...requiredInputProps("storageLocation")}
               value={draft.storageLocation}
               onChange={(event) => updateDraft({ storageLocation: event.target.value })}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="possession-permit-certificate-number">銃砲所持許可証の番号</Label>
+            <RequiredFieldLabel
+              field={requiredApplicationFields.possessionPermitCertificateNumber}
+            />
             <Input
-              id="possession-permit-certificate-number"
+              {...requiredInputProps("possessionPermitCertificateNumber")}
               value={draft.possessionPermitCertificateNumber}
               onChange={(event) =>
                 updateDraft({ possessionPermitCertificateNumber: event.target.value })
@@ -494,16 +537,20 @@ export function AcquisitionPermitApplicationForm({
         </div>
       </AmmoLedgerPanel>
 
-      <AmmoLedgerPanel title="使用銃">
+      <AmmoLedgerPanel title="使用銃" description="1丁以上選んでください（必須）">
         {guns.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p
+            id={selectedGunsFieldId}
+            tabIndex={-1}
+            className="text-sm text-muted-foreground outline-none"
+          >
             銃が未登録です。
             <Link href="/lab/ammo-ledger/settings/guns" className="underline">
               銃を登録
             </Link>
           </p>
         ) : (
-          <ul className="space-y-2 text-sm">
+          <ul id={selectedGunsFieldId} tabIndex={-1} className="space-y-2 text-sm outline-none">
             {guns.map((gun) => (
               <li key={gun.id}>
                 <label className="flex items-start gap-2">
@@ -522,9 +569,9 @@ export function AcquisitionPermitApplicationForm({
         )}
       </AmmoLedgerPanel>
 
-      <AmmoLedgerPanel title="譲渡者（購入先）">
+      <AmmoLedgerPanel title="譲渡者（購入先）" description="別紙の購入先として記載します（必須）">
         <MasterPicker
-          id="counterparty"
+          id={counterpartyFieldId}
           label="銃砲火薬店"
           value={draft.counterparty?.id ?? ""}
           // 店名と住所が必要なので、ID だけの onChange ではなく onMasterSelect で受け取る。
@@ -547,7 +594,12 @@ export function AcquisitionPermitApplicationForm({
             onRowsChange={(rangeAllocationRows) => updateDraft({ rangeAllocationRows })}
           />
 
-          <Button type="button" variant="outline" onClick={handleGeneratePlan}>
+          <Button
+            id={generatePlanFieldId}
+            type="button"
+            variant="outline"
+            onClick={handleGeneratePlan}
+          >
             消費計画を生成
           </Button>
 
@@ -562,6 +614,28 @@ export function AcquisitionPermitApplicationForm({
       </AmmoLedgerPanel>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+      {shownMissingFields.length > 0 ? (
+        <div
+          role="alert"
+          className="space-y-2 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm"
+        >
+          <p className="font-medium text-destructive">印刷の前に、次の項目を入力してください</p>
+          <ul className="flex flex-wrap gap-x-4 gap-y-1">
+            {shownMissingFields.map((field) => (
+              <li key={field.fieldId}>
+                <button
+                  type="button"
+                  className="text-left underline underline-offset-2"
+                  onClick={() => focusField({ fieldId: field.fieldId })}
+                >
+                  {field.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         <Link

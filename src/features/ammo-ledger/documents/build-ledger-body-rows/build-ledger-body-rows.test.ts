@@ -123,28 +123,71 @@ describe("buildLedgerBodyRows", () => {
     expect(rows[2].totalBalance).toBe(125);
   });
 
-  it("表示名が同じでも異なる弾種IDの残数を混在させない", () => {
+  it("号数違いの弾種でも、印字する実包種類が同じなら種類別残をつなげて数える", () => {
     const entries = [
       makeEntry({
         id: "e1",
-        ammoTypeId: "a1",
-        ammoTypeName: "12番 散弾",
+        ammoTypeId: "a-95",
+        ammoTypeName: "12番 散弾 9.5号",
+        ammoCartridgeType: "shotgun_shot",
+        ammoCaliber: "12番",
+        ammoGaugeNumber: "9.5号",
         quantity: 100,
       }),
       makeEntry({
         id: "e2",
-        ammoTypeId: "a2",
-        ammoTypeName: "12番 散弾",
+        ammoTypeId: "a-75",
+        ammoTypeName: "12番 散弾 7.5号",
+        ammoCartridgeType: "shotgun_shot",
+        ammoCaliber: "12番",
+        ammoGaugeNumber: "7.5号",
         occurredOn: "2026-01-16",
         quantity: 50,
+      }),
+      makeEntry({
+        id: "e3",
+        ammoTypeId: "a-95",
+        ammoTypeName: "12番 散弾 9.5号",
+        ammoCartridgeType: "shotgun_shot",
+        ammoCaliber: "12番",
+        ammoGaugeNumber: "9.5号",
+        category: "consume",
+        occurredOn: "2026-02-01",
+        quantity: 25,
       }),
     ];
 
     const rows = buildLedgerBodyRows({ entries });
 
-    expect(rows[0].balanceByType).toBe(100);
-    expect(rows[1].balanceByType).toBe(50);
-    expect(rows[1].totalBalance).toBe(150);
+    expect(rows.map((row) => row.balanceByType)).toEqual([100, 150, 125]);
+    expect(rows.map((row) => row.totalBalance)).toEqual([100, 150, 125]);
+  });
+
+  it("散弾と単弾は同じ番径でも種類別残を分けて数える", () => {
+    const entries = [
+      makeEntry({
+        id: "e1",
+        ammoTypeId: "a-shot",
+        ammoTypeName: "12番 散弾 7.5号",
+        ammoCartridgeType: "shotgun_shot",
+        ammoCaliber: "12番",
+        quantity: 100,
+      }),
+      makeEntry({
+        id: "e2",
+        ammoTypeId: "a-slug",
+        ammoTypeName: "12番 単弾",
+        ammoCartridgeType: "shotgun_slug",
+        ammoCaliber: "12番",
+        occurredOn: "2026-01-16",
+        quantity: 20,
+      }),
+    ];
+
+    const rows = buildLedgerBodyRows({ entries });
+
+    expect(rows.map((row) => row.balanceByType)).toEqual([100, 20]);
+    expect(rows[1].totalBalance).toBe(120);
   });
 
   it("occurredOn/dayOrder/createdAt/idで時系列ソートする", () => {

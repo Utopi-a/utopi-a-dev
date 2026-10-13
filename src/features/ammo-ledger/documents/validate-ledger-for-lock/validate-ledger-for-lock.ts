@@ -2,6 +2,7 @@ import {
   classifyLedgerEntryFlow,
   isCounterpartyCategory,
 } from "@/features/ammo-ledger/documents/classify-ledger-entry-flow/classify-ledger-entry-flow";
+import { formatAmmoTypeLabel } from "@/features/ammo-ledger/documents/format-ammo-type-label/format-ammo-type-label";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 
 export type LedgerEntryForValidation = {
@@ -30,20 +31,6 @@ export type LedgerLockIssue = {
   occurredOn: string;
   message: string;
 };
-
-function buildAmmoTypeBalanceKey({ entry }: { entry: LedgerEntryForValidation }): string {
-  if (entry.ammoTypeId) {
-    return `id:${entry.ammoTypeId}`;
-  }
-
-  return [
-    "snapshot",
-    entry.ammoCartridgeType ?? "",
-    entry.ammoCaliber ?? "",
-    entry.ammoGaugeNumber ?? "",
-    entry.ammoTypeName,
-  ].join("\u001f");
-}
 
 function compareLedgerEntriesForValidation({
   a,
@@ -100,7 +87,8 @@ export function validateLedgerForLock({
       const absQuantity = Math.abs(entry.quantity);
       const delta = flow === "receive" ? absQuantity : -absQuantity;
 
-      const typeKey = buildAmmoTypeBalanceKey({ entry });
+      // 印刷する帳票と同じ単位（印字する実包種類）で残数の負を検査する。
+      const typeKey = formatAmmoTypeLabel({ snapshot: entry });
       const prevTypeBalance = balanceByType.get(typeKey) ?? 0;
       const newTypeBalance = prevTypeBalance + delta;
       balanceByType.set(typeKey, newTypeBalance);

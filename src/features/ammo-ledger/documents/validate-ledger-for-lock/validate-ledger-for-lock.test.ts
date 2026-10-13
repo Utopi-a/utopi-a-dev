@@ -131,16 +131,45 @@ describe("validateLedgerForLock", () => {
     expect(issues.some((issue) => issue.message.includes("残が負"))).toBe(false);
   });
 
-  it("表示名が同じでも異なる弾種IDの残数を混在させない", () => {
+  it("号数違いの弾種でも、印字する実包種類が同じなら種類別残を合算して検査する", () => {
     const entries = [
       makeEntry({
-        id: "receive-a",
-        ammoTypeId: "ammo-a",
+        id: "receive-95",
+        ammoTypeId: "ammo-95",
         quantity: 100,
       }),
       makeEntry({
-        id: "consume-b",
-        ammoTypeId: "ammo-b",
+        id: "consume-75",
+        ammoTypeId: "ammo-75",
+        ammoTypeName: "12番 散弾 7.5号",
+        ammoGaugeNumber: "7.5",
+        category: "consume",
+        quantity: 10,
+        occurredOn: "2026-01-16",
+        location: "射撃場A",
+        gunNumber: "G001",
+        counterpartyName: null,
+        counterpartyAddress: null,
+      }),
+    ];
+
+    const issues = validateLedgerForLock({ entries, from: "2026-01-01", to: "2026-12-31" });
+    expect(issues.some((issue) => issue.message.includes("残が負"))).toBe(false);
+  });
+
+  it("印字する実包種類が違えば種類別残を分けて検査する", () => {
+    const entries = [
+      makeEntry({
+        id: "receive-shot",
+        ammoTypeId: "ammo-shot",
+        quantity: 100,
+      }),
+      makeEntry({
+        id: "consume-slug",
+        ammoTypeId: "ammo-slug",
+        ammoTypeName: "12番 単弾",
+        ammoCartridgeType: "shotgun_slug",
+        ammoGaugeNumber: null,
         category: "consume",
         quantity: 10,
         occurredOn: "2026-01-16",
@@ -153,8 +182,11 @@ describe("validateLedgerForLock", () => {
 
     const issues = validateLedgerForLock({ entries, from: "2026-01-01", to: "2026-12-31" });
     expect(
-      issues.some((issue) => issue.entryId === "consume-b" && issue.message.includes("-10")),
+      issues.some(
+        (issue) => issue.entryId === "consume-slug" && issue.message.includes("種類別残が負"),
+      ),
     ).toBe(true);
+    expect(issues.some((issue) => issue.message.includes("総残が負"))).toBe(false);
   });
 
   it("consumeでlocation不足を検出する", () => {

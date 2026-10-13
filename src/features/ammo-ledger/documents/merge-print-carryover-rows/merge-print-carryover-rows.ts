@@ -2,17 +2,7 @@ import type { LedgerBodyRow } from "@/features/ammo-ledger/documents/build-ledge
 import { formatAmmoTypeLabel } from "@/features/ammo-ledger/documents/format-ammo-type-label/format-ammo-type-label";
 
 function buildPrintCarryoverKey({ row }: { row: LedgerBodyRow }): string {
-  return [
-    row.entry.occurredOn,
-    formatAmmoTypeLabel({
-      snapshot: {
-        ammoCartridgeType: row.entry.ammoCartridgeType,
-        ammoCaliber: row.entry.ammoCaliber,
-        ammoGaugeNumber: row.entry.ammoGaugeNumber,
-        ammoTypeName: row.entry.ammoTypeName,
-      },
-    }),
-  ].join("\u001f");
+  return [row.entry.occurredOn, formatAmmoTypeLabel({ snapshot: row.entry })].join("\u001f");
 }
 
 function mergeCarryoverGroup({ rows }: { rows: LedgerBodyRow[] }): LedgerBodyRow {
@@ -23,15 +13,14 @@ function mergeCarryoverGroup({ rows }: { rows: LedgerBodyRow[] }): LedgerBodyRow
     return first;
   }
 
+  // 残数は合算後にまとめて数え直すので、ここでは数量だけを合わせる。
   return {
-    no: first.no,
+    ...first,
     flow: "receive",
     entry: {
       ...first.entry,
       quantity,
     },
-    balanceByType: quantity,
-    totalBalance: first.totalBalance,
   };
 }
 
@@ -70,15 +59,21 @@ export function mergePrintCarryoverRows({ rows }: { rows: LedgerBodyRow[] }): Le
     merged.push(mergeCarryoverGroup({ rows: groups.get(key) ?? [row] }));
   }
 
+  // 合算で行の数量が変わるため、種類別残と総残数を印字する順に数え直す。
+  const balanceByType = new Map<string, number>();
   let totalBalance = 0;
   return merged.map((row, index) => {
     const absQuantity = Math.abs(row.entry.quantity);
     const delta = row.flow === "receive" ? absQuantity : -absQuantity;
+    const typeKey = formatAmmoTypeLabel({ snapshot: row.entry });
+    const nextTypeBalance = (balanceByType.get(typeKey) ?? 0) + delta;
+    balanceByType.set(typeKey, nextTypeBalance);
     totalBalance += delta;
 
     return {
       ...row,
       no: index + 1,
+      balanceByType: nextTypeBalance,
       totalBalance,
     };
   });

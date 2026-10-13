@@ -123,8 +123,43 @@ describe("mergePrintCarryoverRows", () => {
 
     expect(rows).toHaveLength(2);
     expect(rows[0].balanceByType).toBe(100);
-    expect(rows[1].balanceByType).toBe(50);
+    expect(rows[1].balanceByType).toBe(150);
     expect(rows[1].totalBalance).toBe(150);
+  });
+
+  it("合算した繰越の後の行は、合算後の種類別残から続けて数える", () => {
+    const rows = mergeFromEntries({
+      entries: [
+        makeEntry({
+          id: "e1",
+          ammoTypeId: "a-95",
+          ammoGaugeNumber: "9.5号",
+          ammoTypeName: "12番 散弾 9.5号",
+          quantity: 100,
+        }),
+        makeEntry({
+          id: "e2",
+          ammoTypeId: "a-75",
+          ammoGaugeNumber: "7.5号",
+          ammoTypeName: "12番 散弾 7.5号",
+          quantity: 50,
+        }),
+        makeEntry({
+          id: "e3",
+          category: "consume",
+          occurredOn: "2026-01-20",
+          ammoTypeId: "a-95",
+          ammoGaugeNumber: "9.5号",
+          ammoTypeName: "12番 散弾 9.5号",
+          quantity: 25,
+        }),
+      ],
+    });
+
+    expect(rows).toHaveLength(2);
+    expect(rows[1].flow).toBe("pay");
+    expect(rows[1].balanceByType).toBe(125);
+    expect(rows[1].totalBalance).toBe(125);
   });
 
   it("間に別ラベルの繰越があっても同じ印刷ラベルは合算する", () => {

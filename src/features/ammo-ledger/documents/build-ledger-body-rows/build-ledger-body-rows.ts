@@ -1,5 +1,6 @@
 import type { ammoLedgerEntry } from "@/db/schema/ammo-ledger";
 import { classifyLedgerEntryFlow } from "@/features/ammo-ledger/documents/classify-ledger-entry-flow/classify-ledger-entry-flow";
+import { formatAmmoTypeLabel } from "@/features/ammo-ledger/documents/format-ammo-type-label/format-ammo-type-label";
 import { compareLedgerEntries } from "@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries";
 
 export type LedgerBodyRow = {
@@ -24,24 +25,6 @@ function compareEntriesWithId({
   return a.id.localeCompare(b.id);
 }
 
-function buildAmmoTypeBalanceKey({
-  entry,
-}: {
-  entry: typeof ammoLedgerEntry.$inferSelect;
-}): string {
-  if (entry.ammoTypeId) {
-    return `id:${entry.ammoTypeId}`;
-  }
-
-  return [
-    "snapshot",
-    entry.ammoCartridgeType ?? "",
-    entry.ammoCaliber ?? "",
-    entry.ammoGaugeNumber ?? "",
-    entry.ammoTypeName,
-  ].join("\u001f");
-}
-
 export function buildLedgerBodyRows({
   entries,
 }: {
@@ -60,7 +43,9 @@ export function buildLedgerBodyRows({
     const absQuantity = Math.abs(entry.quantity);
     const delta = flow === "receive" ? absQuantity : -absQuantity;
 
-    const typeKey = buildAmmoTypeBalanceKey({ entry });
+    // 種類別残は帳票に印字する実包種類（番径・散弾/単弾など）の単位で数える。
+    // 号数違いの弾種を別々に数えると、同じ「12番・散弾」の行どうしで残数がつながらない。
+    const typeKey = formatAmmoTypeLabel({ snapshot: entry });
     const prevTypeBalance = balanceByAmmoType.get(typeKey) ?? 0;
     const newTypeBalance = prevTypeBalance + delta;
     balanceByAmmoType.set(typeKey, newTypeBalance);

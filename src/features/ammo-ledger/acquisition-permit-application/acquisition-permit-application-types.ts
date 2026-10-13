@@ -1,6 +1,5 @@
 import type { AcquisitionPermitName } from "@/features/ammo-ledger/schema/acquisition-permit-name-options";
 import type { AcquisitionPermitPurpose } from "@/features/ammo-ledger/schema/acquisition-permit-purpose-options";
-import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import type { ConsumptionPlan } from "./consumption-plan/consumption-plan-types";
 
 export type AcquisitionPermitApplicationInput = {
@@ -20,7 +19,6 @@ export type AcquisitionPermitApplicationInput = {
   compatibleAmmunition?: string;
   possessionPermitCertificateNumber?: string;
   permitPurpose: AcquisitionPermitPurpose;
-  ledgerPurpose: LedgerPurpose;
   validFrom: string;
   validTo: string;
   storageLocation: string;

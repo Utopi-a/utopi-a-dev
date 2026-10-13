@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { SWRConfig } from "swr";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ammoGun } from "@/db/schema/ammo-ledger";
@@ -36,7 +37,7 @@ const guns: (typeof ammoGun.$inferSelect)[] = ["A", "B"].map((name) => ({
 }));
 
 async function renderForm(
-  profile: { ownerFurigana?: string; possessionPermitCertificateNumber?: string } = {},
+  profile: Partial<ComponentProps<typeof AcquisitionPermitApplicationForm>> = {},
 ) {
   render(
     <SWRConfig value={{ provider: () => new Map() }}>
@@ -117,6 +118,11 @@ describe("譲受許可申請の入力から印刷への引き継ぎ", () => {
       .map((option) => option.textContent)
       .filter((label) => label !== "");
     expect(optionLabels).toEqual(["12番", "20番", "410番", "実包（ライフル）"]);
+  });
+
+  it("提出先はプロフィール住所の都道府県を初期値にする", async () => {
+    await renderForm({ ownerAddress: "北海道札幌市中央区北1条西2丁目" });
+    expect(screen.getByLabelText("提出先（公安委員会）")).toHaveValue("北海道");
   });
 
   it("許可証番号が未入力なら、選択した銃の番号を印刷しない", async () => {

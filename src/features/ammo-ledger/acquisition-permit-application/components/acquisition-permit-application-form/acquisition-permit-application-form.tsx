@@ -24,6 +24,7 @@ import {
 } from "@/features/ammo-ledger/acquisition-permit-application/components/consumption-plan-range-allocation-list/consumption-plan-range-allocation-list";
 import { buildConsumptionPlan } from "@/features/ammo-ledger/acquisition-permit-application/consumption-plan/build-consumption-plan/build-consumption-plan";
 import type { ConsumptionPlan } from "@/features/ammo-ledger/acquisition-permit-application/consumption-plan/consumption-plan-types";
+import { resolveSubmissionPrefecture } from "@/features/ammo-ledger/acquisition-permit-application/resolve-submission-prefecture/resolve-submission-prefecture";
 import type {
   MasterPickerData,
   PickerMasterEntry,
@@ -32,13 +33,11 @@ import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-p
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
-import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
 import {
   type AcquisitionPermitPurpose,
   acquisitionPermitPurposeOptions,
   defaultAcquisitionPermitPurpose,
 } from "@/features/ammo-ledger/schema/acquisition-permit-purpose-options";
-import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
@@ -86,7 +85,9 @@ export function AcquisitionPermitApplicationForm({
   });
   const defaultsApplied = useRef(false);
 
-  const [prefectureName, setPrefectureName] = useState("茨城県");
+  const [prefectureName, setPrefectureName] = useState(() =>
+    resolveSubmissionPrefecture({ ownerAddress }),
+  );
   const [applicationDate, setApplicationDate] = useState(today);
   const [name, setName] = useState(ownerName);
   const [furigana, setFurigana] = useState(ownerFurigana);
@@ -96,7 +97,6 @@ export function AcquisitionPermitApplicationForm({
   const [possessionPermitCertificateNumber, setPossessionPermitCertificateNumber] = useState(
     initialPossessionPermitCertificateNumber,
   );
-  const [ledgerPurpose, setLedgerPurpose] = useState<LedgerPurpose>("shooting");
   const [ammoName, setAmmoName] = useState<ApplicationAmmoName>(defaultApplicationAmmoName);
   const [permitPurpose, setPermitPurpose] = useState(defaultAcquisitionPermitPurpose);
   const [requestedQuantity, setRequestedQuantity] = useState("5000");
@@ -222,7 +222,6 @@ export function AcquisitionPermitApplicationForm({
       possessionPermitCertificateNumber: possessionPermitCertificateNumber.trim() || undefined,
       gunTypeAndCaliber,
       permitPurpose,
-      ledgerPurpose,
       validFrom,
       validTo,
       storageLocation,
@@ -307,8 +306,6 @@ export function AcquisitionPermitApplicationForm({
 
       <AmmoLedgerPanel title="許可内容">
         <div className="space-y-4">
-          <PurposeSelect value={ledgerPurpose} onChange={setLedgerPurpose} />
-
           <FieldSelect
             id="ammo-name"
             label="火薬類の名称"

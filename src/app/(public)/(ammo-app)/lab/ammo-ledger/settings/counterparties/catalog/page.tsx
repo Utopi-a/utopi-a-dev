@@ -32,7 +32,9 @@ export default async function CounterpartyCatalogPage() {
         catalogKind="gun_shop"
         catalogByPrefecture={pickerData.catalogByPrefecture}
         favoriteCatalogIds={pickerData.favoriteCatalogIds}
-        registeredCatalogIds={pickerData.registeredCatalogIds}
+        // ピッカー用の registeredCatalogIds は射撃場マイリストも含む。この一覧の追加・削除は
+        // 購入先に対して行うため、購入先として登録済みのものだけを登録済みとして扱う。
+        registeredCatalogIds={Object.keys(pickerData.counterpartyIdByCatalogId ?? {})}
         includesRangeCatalog
       />
     </>

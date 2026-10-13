@@ -27,6 +27,8 @@ type MasterRowActionsProps = {
   deletedSubject: string;
   /** 削除で帳簿に起きることを確認ダイアログで伝える */
   deleteNote?: string;
+  /** 削除できない理由。指定すると削除ボタンを無効にして理由を出す */
+  deleteDisabledReason?: string;
   deleteAction: (args: { id: string }) => Promise<MasterDeleteResult>;
 };
 
@@ -35,6 +37,7 @@ export function MasterRowActions({
   recordId,
   deletedSubject,
   deleteNote = "帳簿の過去の記録は残ります。",
+  deleteDisabledReason,
   deleteAction,
 }: MasterRowActionsProps) {
   const router = useRouter();
@@ -96,12 +99,17 @@ export function MasterRowActions({
           type="button"
           variant="ghost"
           className="h-9 text-destructive hover:text-destructive"
-          disabled={isDeleting}
+          disabled={isDeleting || deleteDisabledReason !== undefined}
           onClick={() => setIsConfirmOpen(true)}
         >
           削除
         </Button>
       </div>
+      {deleteDisabledReason ? (
+        <span className="max-w-[10rem] text-right text-xs text-muted-foreground">
+          {deleteDisabledReason}
+        </span>
+      ) : null}
       {error ? (
         <span role="alert" className="text-xs text-destructive">
           {error}

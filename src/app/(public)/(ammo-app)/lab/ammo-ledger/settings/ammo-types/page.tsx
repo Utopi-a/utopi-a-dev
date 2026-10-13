@@ -5,6 +5,7 @@ import { AmmoTypeForm } from "@/features/ammo-ledger/components/ammo-type-form/a
 import { AmmoTypeRowActions } from "@/features/ammo-ledger/components/ammo-type-row-actions/ammo-type-row-actions";
 import { MasterListItem } from "@/features/ammo-ledger/components/master-list-item/master-list-item";
 import { countClassificationReviewStatus } from "@/features/ammo-ledger/master/ammo-type-classification-review/count-classification-review-status";
+import { listAmmoTypeIdsInUse } from "@/features/ammo-ledger/master/list-ammo-type-ids-in-use/list-ammo-type-ids-in-use";
 import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/list-ammo-types";
 import type { CartridgeType } from "@/features/ammo-ledger/schema/cartridge-type";
 import { cartridgeTypeLabels } from "@/features/ammo-ledger/schema/cartridge-type";
@@ -13,9 +14,10 @@ export const metadata = { title: "弾種" };
 
 export default async function AmmoTypesSettingsPage() {
   const user = await requireAmmoUser();
-  const [ammoTypes, reviewStatus] = await Promise.all([
+  const [ammoTypes, reviewStatus, ammoTypeIdsInUse] = await Promise.all([
     listAmmoTypes({ userId: user.id }),
     countClassificationReviewStatus({ userId: user.id }),
+    listAmmoTypeIdsInUse({ userId: user.id }),
   ]);
 
   const reviewTotal = reviewStatus.unconfirmedCount + reviewStatus.orphanCount;
@@ -46,7 +48,7 @@ export default async function AmmoTypesSettingsPage() {
                   {cartridgeTypeLabels[type.cartridgeType as CartridgeType]}（1箱
                   {type.roundsPerBox}発）
                 </span>
-                <AmmoTypeRowActions ammoTypeId={type.id} />
+                <AmmoTypeRowActions ammoTypeId={type.id} isInUse={ammoTypeIdsInUse.has(type.id)} />
               </MasterListItem>
             ))}
           </ul>

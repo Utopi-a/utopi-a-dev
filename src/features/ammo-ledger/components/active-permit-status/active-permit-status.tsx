@@ -4,8 +4,8 @@ import { formatStockQuantity } from "@/features/ammo-ledger/ledger/format-ledger
 import {
   computeDaysUntilExpiry,
   formatPermitExpiryLabel,
-  isPermitActive,
 } from "@/features/ammo-ledger/permit/compute-permit-expiry/compute-permit-expiry";
+import { resolvePermitStatus } from "@/features/ammo-ledger/permit/resolve-permit-status/resolve-permit-status";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
@@ -28,15 +28,25 @@ export function ActivePermitStatus({
   remainingByPermitId,
   today,
 }: ActivePermitStatusProps) {
-  const purposePermits = permits.filter((permit) => permit.ledgerPurpose === ledgerPurpose);
+  const purposePermits = permits
+    .filter((permit) => permit.ledgerPurpose === ledgerPurpose)
+    .map((permit) => {
+      const remaining = remainingByPermitId.get(permit.id) ?? 0;
+      return {
+        permit,
+        remaining,
+        status: resolvePermitStatus({
+          grantedOn: permit.grantedOn,
+          expiresOn: permit.expiresOn,
+          remaining,
+          today,
+        }),
+      };
+    });
+  const usablePermitCount = purposePermits.filter(({ status }) => status === "active").length;
   // 期限切れの許可と、数量を使い切った許可は帳簿では出さない（設定の譲受許可で確認できる）。
-  const usablePermits = purposePermits.filter(
-    (permit) =>
-      isPermitActive({ grantedOn: permit.grantedOn, expiresOn: permit.expiresOn, today }) &&
-      (remainingByPermitId.get(permit.id) ?? 0) > 0,
-  );
   const visiblePermits = purposePermits.filter(
-    (permit) => today < permit.grantedOn || usablePermits.includes(permit),
+    ({ status }) => status === "active" || status === "upcoming",
   );
 
   if (purposePermits.length === 0 && permitBalance <= 0) {
@@ -64,15 +74,15 @@ export function ActivePermitStatus({
           </span>
         </span>
         <span className="text-muted-foreground">
-          有効な許可 {usablePermits.length}件（
+          有効な許可 {usablePermitCount}件（
           {ledgerPurposeLabels[ledgerPurpose]}）
         </span>
       </div>
 
       {visiblePermits.length > 0 ? (
         <ul className="flex flex-wrap gap-2">
-          {visiblePermits.map((permit) => {
-            const upcoming = today < permit.grantedOn;
+          {visiblePermits.map(({ permit, remaining, status }) => {
+            const upcoming = status === "upcoming";
             const urgent =
               !upcoming && computeDaysUntilExpiry({ expiresOn: permit.expiresOn, today }) <= 30;
 
@@ -92,10 +102,9 @@ export function ActivePermitStatus({
                   {permit.name} / {permit.permitPurpose}
                 </span>
                 <span className="mt-0.5 block tabular-nums">
-                  {formatStockQuantity({ quantity: permit.quantity })} ·{" "}
                   {upcoming
-                    ? `${formatIsoDateForDisplay({ value: permit.grantedOn })}から有効`
-                    : formatPermitExpiryLabel({ expiresOn: permit.expiresOn, today })}
+                    ? `許可 ${formatStockQuantity({ quantity: permit.quantity })} · ${formatIsoDateForDisplay({ value: permit.grantedOn })}から有効`
+                    : `残り ${remaining.toLocaleString("ja-JP")} / 許可 ${formatStockQuantity({ quantity: permit.quantity })} · ${formatPermitExpiryLabel({ expiresOn: permit.expiresOn, today })}`}
                 </span>
               </li>
             );

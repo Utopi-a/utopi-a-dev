@@ -99,7 +99,7 @@ const active = buildPermit({ id: "active", grantedOn: "2026-03-01", expiresOn: "
 const upcoming = buildPermit({ id: "upcoming", grantedOn: "2026-11-01", expiresOn: "2027-10-31" });
 
 describe("ActivePermitStatus", () => {
-  it("期限切れの許可は表示せず、使い切っていない有効な許可を表示する", () => {
+  it("期限切れの許可は表示せず、使い切っていない有効な許可を残りと許可数量つきで表示する", () => {
     renderWithLedger({
       permits: [expired, active],
       ledgerEntries: [acquire({ id: "e1", occurredOn: "2026-05-01", quantity: 200 })],
@@ -107,6 +107,7 @@ describe("ActivePermitStatus", () => {
     });
 
     expect(screen.getByText(/許可active/)).toBeInTheDocument();
+    expect(screen.getByText(/残り 300 \/ 許可 500個/)).toBeInTheDocument();
     expect(screen.queryByText(/許可expired/)).not.toBeInTheDocument();
     expect(screen.getByText(/有効な許可 1件/)).toBeInTheDocument();
   });
@@ -137,7 +138,7 @@ describe("ActivePermitStatus", () => {
 
     expect(screen.queryByText(/許可active/)).not.toBeInTheDocument();
     expect(screen.getByText(/許可upcoming/)).toBeInTheDocument();
-    expect(screen.getByText(/2026\/11\/01から有効/)).toBeInTheDocument();
+    expect(screen.getByText(/許可 500個 · 2026\/11\/01から有効/)).toBeInTheDocument();
     expect(screen.queryByText(/使える譲受許可はありません/)).not.toBeInTheDocument();
   });
 

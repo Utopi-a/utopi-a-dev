@@ -10,6 +10,10 @@ import { createGunAction } from "@/features/ammo-ledger/master/create-gun/create
 import { updateGunAction } from "@/features/ammo-ledger/master/update-gun/update-gun-action";
 import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
+// 所持許可証の表記がほかにあれば自由に入力できるよう、選択肢ではなく入力候補にする。
+const gunTypeSuggestions = ["散弾銃", "ライフル銃", "空気銃"];
+const caliberSuggestions = ["12番", "20番", "410番"];
+
 type GunFormProps = {
   recordId?: string;
   initialValues?: {
@@ -91,24 +95,39 @@ export function GunForm({ recordId, initialValues }: GunFormProps = {}) {
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
+      <p className="text-sm text-muted-foreground">
+        名称から用途までは、帳簿印刷の別紙1「使用銃の一覧」にそのまま載ります。所持許可証の記載に合わせて入力してください。
+      </p>
       <div className="space-y-2">
         <Label htmlFor="gun-name">名称</Label>
-        <Input id="gun-name" required value={name} onChange={(e) => setName(e.target.value)} />
+        <Input
+          id="gun-name"
+          required
+          placeholder="例: 上下二連（スキート用）"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="gun-number">銃番号</Label>
         <Input
           id="gun-number"
           required
+          placeholder="例: A12345"
           value={gunNumber}
           onChange={(e) => setGunNumber(e.target.value)}
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor="permit-number">許可番号</Label>
+        <p id="permit-number-help" className="text-xs text-muted-foreground">
+          所持許可証の「第」「号」を除いた番号だけを入力します（第12345号なら 12345）。
+        </p>
         <Input
           id="permit-number"
           required
+          placeholder="例: 12345"
+          aria-describedby="permit-number-help"
           value={permitNumber}
           onChange={(e) => setPermitNumber(e.target.value)}
         />
@@ -118,20 +137,47 @@ export function GunForm({ recordId, initialValues }: GunFormProps = {}) {
         <Input
           id="gun-type"
           required
+          list="gun-type-suggestions"
+          placeholder="例: 散弾銃"
           value={gunType}
           onChange={(e) => setGunType(e.target.value)}
         />
+        <datalist id="gun-type-suggestions">
+          {gunTypeSuggestions.map((option) => (
+            <option key={option} value={option} />
+          ))}
+        </datalist>
       </div>
       <div className="space-y-2">
         <Label htmlFor="caliber">番径</Label>
-        <Input id="caliber" required value={caliber} onChange={(e) => setCaliber(e.target.value)} />
+        <p id="caliber-help" className="text-xs text-muted-foreground">
+          散弾銃は番径（例: 12番）、ライフル銃は口径（例: .308WIN）を入力します。
+        </p>
+        <Input
+          id="caliber"
+          required
+          list="gun-caliber-suggestions"
+          aria-describedby="caliber-help"
+          value={caliber}
+          onChange={(e) => setCaliber(e.target.value)}
+        />
+        <datalist id="gun-caliber-suggestions">
+          {caliberSuggestions.map((option) => (
+            <option key={option} value={option} />
+          ))}
+        </datalist>
       </div>
       <div className="space-y-2">
         <Label htmlFor="purpose">用途</Label>
-        <Input id="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} />
+        <Input
+          id="purpose"
+          placeholder="例: 標的射撃、狩猟"
+          value={purpose}
+          onChange={(e) => setPurpose(e.target.value)}
+        />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="memo">メモ</Label>
+        <Label htmlFor="memo">メモ（帳簿には出ません）</Label>
         <Input id="memo" value={memo} onChange={(e) => setMemo(e.target.value)} />
       </div>
       {error ? (

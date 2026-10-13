@@ -30,7 +30,12 @@ function defaultExpiresOn({ grantedOn }: { grantedOn: string }): string {
   return computePeriodEndIsoDate({ startsOn: grantedOn, years: 1 });
 }
 
-export function AcquisitionPermitForm() {
+type AcquisitionPermitFormProps = {
+  /** 記録画面から登録に来たとき、保存後に戻る検証済みのパス */
+  returnTo?: string | null;
+};
+
+export function AcquisitionPermitForm({ returnTo }: AcquisitionPermitFormProps = {}) {
   const navigateAfterMutation = useAmmoLedgerMutationNavigation();
   const today = getTokyoIsoDate();
 
@@ -74,7 +79,7 @@ export function AcquisitionPermitForm() {
       }
 
       showAmmoLedgerToast({ action: "created", subject: "譲受許可" });
-      navigateAfterMutation({ href: buildLedgerHref({ purpose: ledgerPurpose }) });
+      navigateAfterMutation({ href: returnTo ?? buildLedgerHref({ purpose: ledgerPurpose }) });
     } catch {
       setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
     } finally {

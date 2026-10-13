@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { AmmoLedgerSwrProvider } from "@/features/ammo-ledger/workspace/ammo-ledger-swr-provider/ammo-ledger-swr-provider";
+import type { AmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-types";
 import {
   buildTestEntry,
   buildTestWorkspace,
@@ -104,5 +105,44 @@ describe("InventoryView", () => {
       "href",
       "/lab/ammo-ledger/settings/ammo-types/review",
     );
+  });
+});
+
+describe("InventoryView の登録不足の案内", () => {
+  function renderInventory({ workspace }: { workspace: AmmoLedgerWorkspace }) {
+    window.history.replaceState(null, "", "/lab/ammo-ledger/inventory");
+    return render(
+      <AmmoLedgerSwrProvider initialWorkspace={{ ownerName: "架空 太郎", workspace }}>
+        <AmmoLedgerOptimisticNavProvider>
+          <InventoryView />
+        </AmmoLedgerOptimisticNavProvider>
+      </AmmoLedgerSwrProvider>,
+    );
+  }
+
+  beforeEach(() => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(() => new Promise(() => {}));
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("弾種がなければ、残弾の一覧と照合の代わりに弾種の登録へ案内する", () => {
+    renderInventory({ workspace: buildTestWorkspace({ inventoryItems: [] }) });
+
+    expect(screen.getByText("残弾を確認するには、弾種の登録が必要です。")).toBeVisible();
+    expect(screen.getByRole("link", { name: "弾種を登録する" })).toHaveAttribute(
+      "href",
+      "/lab/ammo-ledger/settings/ammo-types?returnTo=%2Flab%2Fammo-ledger%2Finventory",
+    );
+    expect(screen.queryByRole("heading", { name: "実在庫との照合" })).toBeNull();
+  });
+
+  it("弾種があれば残弾の一覧と照合を出す", () => {
+    renderInventory({ workspace: buildTestWorkspace() });
+
+    expect(screen.getByText("実在庫との照合")).toBeVisible();
+    expect(screen.queryByRole("link", { name: "弾種を登録する" })).toBeNull();
   });
 });

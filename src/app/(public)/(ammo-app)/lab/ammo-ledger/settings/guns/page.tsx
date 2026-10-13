@@ -3,13 +3,23 @@ import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-p
 import { GunForm } from "@/features/ammo-ledger/components/gun-form/gun-form";
 import { GunRowActions } from "@/features/ammo-ledger/components/gun-row-actions/gun-row-actions";
 import { MasterListItem } from "@/features/ammo-ledger/components/master-list-item/master-list-item";
+import { ReturnToRecordLink } from "@/features/ammo-ledger/components/return-to-record-link/return-to-record-link";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
+import {
+  resolveReturnToPath,
+  returnToSearchParam,
+} from "@/features/ammo-ledger/navigation/resolve-return-to-path/resolve-return-to-path";
 
 export const metadata = { title: "銃" };
 
-export default async function GunsSettingsPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function GunsSettingsPage({ searchParams }: PageProps) {
   const user = await requireAmmoUser();
-  const guns = await listGuns({ userId: user.id });
+  const [guns, params] = await Promise.all([listGuns({ userId: user.id }), searchParams]);
+  const returnTo = resolveReturnToPath({ value: params[returnToSearchParam] });
 
   return (
     <div className="space-y-6">
@@ -42,6 +52,7 @@ export default async function GunsSettingsPage() {
       <AmmoLedgerPanel title="追加">
         <GunForm />
       </AmmoLedgerPanel>
+      {returnTo && guns.length > 0 ? <ReturnToRecordLink href={returnTo} /> : null}
     </div>
   );
 }

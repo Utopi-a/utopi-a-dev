@@ -5,6 +5,10 @@ import { AcquisitionPermitForm } from "@/features/ammo-ledger/components/acquisi
 import { AcquisitionPermitList } from "@/features/ammo-ledger/components/acquisition-permit-list/acquisition-permit-list";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-entries/list-ledger-entries";
+import {
+  resolveReturnToPath,
+  returnToSearchParam,
+} from "@/features/ammo-ledger/navigation/resolve-return-to-path/resolve-return-to-path";
 import { listAcquisitionPermits } from "@/features/ammo-ledger/permit/list-acquisition-permits/list-acquisition-permits";
 import { listPermitEvents } from "@/features/ammo-ledger/permit/list-permit-events/list-permit-events";
 import { cn } from "@/lib/cn";
@@ -12,13 +16,19 @@ import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 export const metadata = { title: "譲受許可" };
 
-export default async function AcquisitionPermitsSettingsPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function AcquisitionPermitsSettingsPage({ searchParams }: PageProps) {
   const user = await requireAmmoUser();
-  const [permits, permitEvents, ledgerEntries] = await Promise.all([
+  const [permits, permitEvents, ledgerEntries, params] = await Promise.all([
     listAcquisitionPermits({ userId: user.id }),
     listPermitEvents({ userId: user.id }),
     listLedgerEntries({ userId: user.id }),
+    searchParams,
   ]);
+  const returnTo = resolveReturnToPath({ value: params[returnToSearchParam] });
   const today = getTokyoIsoDate();
 
   return (
@@ -28,6 +38,9 @@ export default async function AcquisitionPermitsSettingsPage() {
         <p className="text-sm text-muted-foreground">
           警察から交付された譲受許可を登録します。帳簿の許可残数計算に使われます。
         </p>
+        {returnTo ? (
+          <p className="text-sm text-muted-foreground">許可を保存すると、記録の入力に戻ります。</p>
+        ) : null}
       </div>
 
       <div className="no-print">
@@ -49,7 +62,7 @@ export default async function AcquisitionPermitsSettingsPage() {
       </AmmoLedgerPanel>
 
       <AmmoLedgerPanel title="許可を追加">
-        <AcquisitionPermitForm />
+        <AcquisitionPermitForm returnTo={returnTo} />
       </AmmoLedgerPanel>
     </div>
   );

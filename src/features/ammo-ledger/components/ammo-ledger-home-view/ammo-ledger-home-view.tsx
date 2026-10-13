@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AmmoLedgerActionTile } from "@/features/ammo-ledger/components/ammo-ledger-action-tile/ammo-ledger-action-tile";
 import { AmmoLedgerPwaInstallBanner } from "@/features/ammo-ledger/components/ammo-ledger-pwa-install/ammo-ledger-pwa-install-banner";
+import { AmmoLedgerSetupGuide } from "@/features/ammo-ledger/components/ammo-ledger-setup-guide/ammo-ledger-setup-guide";
+import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 const formEntryPaths = [
   "/lab/ammo-ledger/consume/new",
@@ -13,6 +15,8 @@ const formEntryPaths = [
 
 export function AmmoLedgerHomeView() {
   const router = useRouter();
+  // 読み込み中・失敗時は手順を出さず、記録の入力タイルをそのまま使えるようにする。
+  const { workspace } = useAmmoLedgerWorkspace();
 
   useEffect(() => {
     for (const href of formEntryPaths) {
@@ -24,9 +28,11 @@ export function AmmoLedgerHomeView() {
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">実包管理帳簿</h1>
         <p className="text-sm text-muted-foreground">
-          まず記録を入力し、必要なときに帳簿や残弾を確認します。
+          実包の出入りを記録し、必要なときに帳簿や残弾を確認します。
         </p>
       </div>
+
+      {workspace ? <AmmoLedgerSetupGuide workspace={workspace} /> : null}
 
       <AmmoLedgerPwaInstallBanner />
 

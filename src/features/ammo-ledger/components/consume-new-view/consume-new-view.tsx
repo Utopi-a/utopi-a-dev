@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { ConsumeForm } from "@/features/ammo-ledger/components/consume-form/consume-form";
+import {
+  type MissingMaster,
+  MissingMastersNotice,
+} from "@/features/ammo-ledger/components/missing-masters-notice/missing-masters-notice";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { useDraftTransaction } from "@/features/ammo-ledger/transactions/get-draft/use-draft-transaction/use-draft-transaction";
 import { resolveConsumeDefaults } from "@/features/ammo-ledger/transactions/resolve-consume-defaults/resolve-consume-defaults";
@@ -28,6 +32,10 @@ export function ConsumeNewView() {
   }
 
   const { guns, ammoTypes, stockByAmmoTypeId } = deriveFormWorkspaceData({ workspace });
+  const missingMasters: MissingMaster[] = [
+    ...(guns.length === 0 ? (["gun"] as const) : []),
+    ...(ammoTypes.length === 0 ? (["ammo-type"] as const) : []),
+  ];
   const { fromPreviousEntry, ...defaults } = resolveConsumeDefaults({
     entries: workspace.entries,
     gunIds: guns.map((gun) => gun.id),
@@ -67,14 +75,14 @@ export function ConsumeNewView() {
         </p>
       </div>
       <AmmoLedgerPanel>
-        {guns.length === 0 || ammoTypes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            銃・弾種のマスタを
-            <Link href="/lab/ammo-ledger/settings" className="underline">
-              設定
-            </Link>
-            から登録してください。射撃場は入力時に全国一覧から選べます。
-          </p>
+        {missingMasters.length > 0 ? (
+          <MissingMastersNotice
+            action="消費を記録する"
+            missing={missingMasters}
+            returnTo="/lab/ammo-ledger/consume/new"
+          >
+            射撃場は登録しなくても、入力時に全国一覧から選べます。
+          </MissingMastersNotice>
         ) : (
           <ConsumeForm
             key={`${draftId ?? "new"}:${restoreId ?? ""}`}

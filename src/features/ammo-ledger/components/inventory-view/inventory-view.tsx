@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { HomeStorageWarning } from "@/features/ammo-ledger/components/home-storage-warning/home-storage-warning";
 import { InventoryOverviewPanel } from "@/features/ammo-ledger/components/inventory-overview/inventory-overview";
+import { MissingMastersNotice } from "@/features/ammo-ledger/components/missing-masters-notice/missing-masters-notice";
 import { StockCheckForm } from "@/features/ammo-ledger/components/stock-check-form/stock-check-form";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { buildInventoryOverview } from "@/features/ammo-ledger/inventory/build-inventory-overview/build-inventory-overview";
@@ -92,28 +93,40 @@ function InventoryViewContent({ workspace }: InventoryViewContentProps) {
         lastExceededOn={homeStorage.lastExceededOn}
       />
 
-      <AmmoLedgerPanel title="帳簿残数" description="弾種・号数・グループごとに一覧表示します">
-        <InventoryOverviewPanel overview={overview} stockByPurpose={stockByPurpose} />
-        {unregisteredEntryCount > 0 ? (
-          <p className="mt-4 text-xs text-muted-foreground">
-            弾種が登録されていない記録が{unregisteredEntryCount}
-            件あり、この一覧の残数には含まれていません（帳簿の「帳簿残数（全用途）」には含まれます）。{" "}
-            <Link
-              href="/lab/ammo-ledger/settings/ammo-types/review"
-              className="font-medium text-foreground underline-offset-4 hover:underline"
-            >
-              弾種分類の確認 →
-            </Link>
-          </p>
-        ) : null}
-      </AmmoLedgerPanel>
+      {items.length === 0 ? (
+        <AmmoLedgerPanel>
+          <MissingMastersNotice
+            action="残弾を確認する"
+            missing={["ammo-type"]}
+            returnTo="/lab/ammo-ledger/inventory"
+          />
+        </AmmoLedgerPanel>
+      ) : (
+        <>
+          <AmmoLedgerPanel title="帳簿残数" description="弾種・号数・グループごとに一覧表示します">
+            <InventoryOverviewPanel overview={overview} stockByPurpose={stockByPurpose} />
+            {unregisteredEntryCount > 0 ? (
+              <p className="mt-4 text-xs text-muted-foreground">
+                弾種が登録されていない記録が{unregisteredEntryCount}
+                件あり、この一覧の残数には含まれていません（帳簿の「帳簿残数（全用途）」には含まれます）。{" "}
+                <Link
+                  href="/lab/ammo-ledger/settings/ammo-types/review"
+                  className="font-medium text-foreground underline-offset-4 hover:underline"
+                >
+                  弾種分類の確認 →
+                </Link>
+              </p>
+            ) : null}
+          </AmmoLedgerPanel>
 
-      <AmmoLedgerPanel
-        title="実在庫との照合"
-        description="差分は調整行にせず、記録の下書きに変換します"
-      >
-        <StockCheckForm items={stockCheckItems} />
-      </AmmoLedgerPanel>
+          <AmmoLedgerPanel
+            title="実在庫との照合"
+            description="差分は調整行にせず、記録の下書きに変換します"
+          >
+            <StockCheckForm items={stockCheckItems} />
+          </AmmoLedgerPanel>
+        </>
+      )}
     </div>
   );
 }

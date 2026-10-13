@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { BulkEntryForm } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-form";
+import {
+  type MissingMaster,
+  MissingMastersNotice,
+} from "@/features/ammo-ledger/components/missing-masters-notice/missing-masters-notice";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { resolveConsumeDefaults } from "@/features/ammo-ledger/transactions/resolve-consume-defaults/resolve-consume-defaults";
 import { deriveFormWorkspaceData } from "@/features/ammo-ledger/workspace/derive-form-workspace-data/derive-form-workspace-data";
@@ -20,6 +25,10 @@ export function BulkNewView() {
     gunIds: guns.map((gun) => gun.id),
     ammoTypes,
   });
+  const missingMasters: MissingMaster[] = [
+    ...(guns.length === 0 ? (["gun"] as const) : []),
+    ...(ammoTypes.length === 0 ? (["ammo-type"] as const) : []),
+  ];
 
   return (
     <div className="space-y-6">
@@ -40,14 +49,14 @@ export function BulkNewView() {
           から入力してください。
         </p>
       </div>
-      {guns.length === 0 || ammoTypes.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          銃・弾種のマスタを
-          <Link href="/lab/ammo-ledger/settings" className="underline">
-            設定
-          </Link>
-          から登録してください。
-        </p>
+      {missingMasters.length > 0 ? (
+        <AmmoLedgerPanel>
+          <MissingMastersNotice
+            action="まとめて記録する"
+            missing={missingMasters}
+            returnTo="/lab/ammo-ledger/bulk/new"
+          />
+        </AmmoLedgerPanel>
       ) : (
         <BulkEntryForm
           guns={guns}

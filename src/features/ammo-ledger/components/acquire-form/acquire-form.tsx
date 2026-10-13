@@ -1,31 +1,37 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoAcquisitionPermit, ammoType } from "@/db/schema/ammo-ledger";
+import { inflowCounterpartyInputKinds } from "@/features/ammo-ledger/catalog/schema/recent-counterparty-input-kinds";
 import { useDefaultCounterpartyId } from "@/features/ammo-ledger/catalog/use-default-counterparty-id/use-default-counterparty-id";
 import {
   findPickerMaster,
   useMasterPickerData,
 } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
-import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { AmmoTypeSelect } from "@/features/ammo-ledger/components/ammo-type-select/ammo-type-select";
+import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
+import { LedgerEntrySubmitBar } from "@/features/ammo-ledger/components/ledger-entry-submit-bar/ledger-entry-submit-bar";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
+import { usePurposeFollowingAmmoType } from "@/features/ammo-ledger/components/purpose-select/use-purpose-following-ammo-type";
+import { computePermitBalanceOnDate } from "@/features/ammo-ledger/permit/compute-permit-balance-on-date/compute-permit-balance-on-date";
 import { hasActiveAcquisitionPermit } from "@/features/ammo-ledger/permit/has-active-acquisition-permit/has-active-acquisition-permit";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
-import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 import { useLedgerTransactionSubmit } from "@/features/ammo-ledger/transactions/use-ledger-transaction-submit/use-ledger-transaction-submit";
+import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
+import { cn } from "@/lib/cn";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
 type AcquireFormProps = {
   ammoTypes: (typeof ammoType.$inferSelect)[];
+  stockByAmmoTypeId: Record<string, number>;
   permits: (typeof ammoAcquisitionPermit.$inferSelect)[];
   ledgerEntryId?: string;
   initialValues?: AcquireFormValues;
@@ -48,6 +54,7 @@ type AcquireFormValues = {
 export function AcquireForm({
   permits,
   ammoTypes,
+  stockByAmmoTypeId,
   ledgerEntryId,
   initialValues,
 }: AcquireFormProps) {
@@ -57,17 +64,26 @@ export function AcquireForm({
   });
   const initial = restoredValues ?? initialValues;
   const today = getTokyoIsoDate();
-  const { pickerData: counterpartyPickerData } = useMasterPickerData({
-    catalogKind: "gun_shop",
-    includeRangeCatalog: true,
-    enabled: true,
-  });
+  const { pickerData: counterpartyPickerData, error: counterpartyPickerError } =
+    useMasterPickerData({
+      catalogKind: "gun_shop",
+      includeRangeCatalog: true,
+      recentInputKinds: inflowCounterpartyInputKinds,
+      enabled: true,
+    });
 
   const [occurredOn, setOccurredOn] = useState(initial?.occurredOn ?? today);
-  const [ammoTypeId, setAmmoTypeId] = useState(initial?.ammoTypeId ?? "");
+  const { ammoTypeId, purpose, selectAmmoType, choosePurpose } = usePurposeFollowingAmmoType({
+    ammoTypes,
+    initialAmmoTypeId: initial?.ammoTypeId,
+    initialPurpose: initial?.purpose,
+    keepsPurpose: Boolean(ledgerEntryId || restoredValues),
+  });
   const { counterpartyId, setCounterpartyId } = useDefaultCounterpartyId({
     initialCounterpartyId: initial?.counterpartyId,
     pickerData: counterpartyPickerData,
+    pickerError: counterpartyPickerError,
+    defaultsToRecent: !ledgerEntryId,
   });
 
   const [outerBoxCount, setOuterBoxCount] = useState(String(initial?.outerBoxCount ?? 0));
@@ -77,7 +93,6 @@ export function AcquireForm({
   const [counterpartyAddress, setCounterpartyAddress] = useState(
     initial?.counterpartyAddress ?? "",
   );
-  const [purpose, setPurpose] = useState<LedgerPurpose>(initial?.purpose ?? "shooting");
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [ledgerNote, setLedgerNote] = useState(initial?.ledgerNote ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -85,13 +100,6 @@ export function AcquireForm({
 
   const selectedAmmoType = ammoTypes.find((t) => t.id === ammoTypeId);
 
-  function handleAmmoTypeChange({ nextAmmoTypeId }: { nextAmmoTypeId: string }) {
-    setAmmoTypeId(nextAmmoTypeId);
-    const nextType = ammoTypes.find((t) => t.id === nextAmmoTypeId);
-    if (nextType) {
-      setPurpose(resolveDefaultPurpose({ defaultPurpose: nextType.defaultPurpose }));
-    }
-  }
   const isManualCounterparty = counterpartyId === manualCounterpartyId;
 
   const computedRounds = useMemo(() => {
@@ -104,6 +112,19 @@ export function AcquireForm({
     });
   }, [selectedAmmoType, outerBoxCount, boxCount, looseRounds]);
   const hasValidPermit = hasActiveAcquisitionPermit({ permits, purpose, occurredOn });
+  const { workspace } = useAmmoLedgerWorkspace();
+  const permitBalance =
+    workspace && hasValidPermit
+      ? computePermitBalanceOnDate({
+          permitEvents: workspace.permitEvents,
+          entries: workspace.entries,
+          purpose,
+          occurredOn,
+          excludedEntryId: ledgerEntryId,
+        })
+      : undefined;
+  const permitBalanceAfterEntry =
+    permitBalance === undefined ? undefined : permitBalance - computedRounds;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -133,7 +154,7 @@ export function AcquireForm({
           counterpartyName: counterpartyMaster?.name,
           counterpartyAddress: counterpartyMaster?.address,
         },
-        subject: "取得記録",
+        subject: "譲受記録",
         restoreValues: { ...payload, counterpartyId },
       });
       // 成功時は帳簿へ移動するため、二重送信を防ぐよう処理中のままにする。
@@ -152,35 +173,32 @@ export function AcquireForm({
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
-      <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}-occurred-on`}>日付</Label>
-        <IsoDateInput
-          id={`${idPrefix}-occurred-on`}
-          required
-          value={occurredOn}
-          onChange={({ value }) => setOccurredOn(value)}
-        />
-      </div>
-
-      <FieldSelect
-        id={`${idPrefix}-ammo-type`}
-        label="弾"
-        value={ammoTypeId}
-        onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
-        options={ammoTypes.map((t) => ({
-          value: t.id,
-          label: `${t.name}（小箱${t.roundsPerBox}発）`,
-        }))}
-        required
+      <LedgerEntryDateField
+        id={`${idPrefix}-occurred-on`}
+        value={occurredOn}
+        onChange={setOccurredOn}
       />
 
-      <PurposeSelect id={`${idPrefix}-purpose`} value={purpose} onChange={setPurpose} />
+      <AmmoTypeSelect
+        id={`${idPrefix}-ammo-type`}
+        value={ammoTypeId}
+        onChange={selectAmmoType}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={stockByAmmoTypeId}
+      />
+
+      <PurposeSelect id={`${idPrefix}-purpose`} value={purpose} onChange={choosePurpose} />
 
       {!hasValidPermit ? (
-        <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
-          この譲受日に有効な{ledgerPurposeLabels[purpose]}
-          の譲受許可がありません。用途または許可期間を確認してください。
-        </p>
+        <div className="space-y-1 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+          <p>
+            この譲受日に有効な{ledgerPurposeLabels[purpose]}
+            の譲受許可がありません。用途または許可期間を確認してください。
+          </p>
+          <Link href="/lab/ammo-ledger/settings/permits" className="underline">
+            譲受許可を登録・確認する
+          </Link>
+        </div>
       ) : null}
 
       <PackagingFields
@@ -196,6 +214,19 @@ export function AcquireForm({
       <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm">
         <p className="text-muted-foreground">譲受数量（法定出力）</p>
         <p className="text-lg font-semibold">{computedRounds}発</p>
+        {permitBalance !== undefined && permitBalanceAfterEntry !== undefined ? (
+          <p
+            className={cn(
+              "mt-1 text-xs tabular-nums",
+              permitBalanceAfterEntry < 0
+                ? "font-medium text-amber-700 dark:text-amber-300"
+                : "text-muted-foreground",
+            )}
+          >
+            許可残 {permitBalance}個 → 記録後 {permitBalanceAfterEntry}個
+            {permitBalanceAfterEntry < 0 ? "（許可数を超えています）" : ""}
+          </p>
+        ) : null}
       </div>
 
       <MasterPicker
@@ -204,9 +235,10 @@ export function AcquireForm({
         value={counterpartyId}
         onChange={setCounterpartyId}
         catalogKind="gun_shop"
+        recentInputKinds={inflowCounterpartyInputKinds}
         includeRangeCatalog
         sheetTitle="購入先を選ぶ"
-        manualOption={{ value: manualCounterpartyId, label: "手入力する" }}
+        manualOption={{ value: manualCounterpartyId, label: "手入力" }}
         required
       />
 
@@ -248,15 +280,12 @@ export function AcquireForm({
         <Input id={`${idPrefix}-memo`} value={memo} onChange={(e) => setMemo(e.target.value)} />
       </div>
 
-      {error ? (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
-
-      <Button type="submit" disabled={isPending || computedRounds <= 0 || !hasValidPermit}>
-        {isPending ? "保存中…" : ledgerEntryId ? "更新" : "保存"}
-      </Button>
+      <LedgerEntrySubmitBar
+        label={ledgerEntryId ? "更新" : "保存"}
+        isPending={isPending}
+        disabled={computedRounds <= 0 || !hasValidPermit}
+        error={error}
+      />
     </form>
   );
 }

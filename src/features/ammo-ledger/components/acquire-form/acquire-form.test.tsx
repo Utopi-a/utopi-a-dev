@@ -1,17 +1,25 @@
 import type { ReactNode } from "react";
 import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { AmmoLedgerSwrProvider } from "@/features/ammo-ledger/workspace/ammo-ledger-swr-provider/ammo-ledger-swr-provider";
+import type { AmmoLedgerWorkspacePayload } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-payload/ammo-ledger-workspace-payload";
 
-function render(ui: ReactNode) {
+function render(
+  ui: ReactNode,
+  { initialWorkspace }: { initialWorkspace?: AmmoLedgerWorkspacePayload } = {},
+) {
   return renderBase(
     <AmmoLedgerOptimisticNavProvider>
-      <AmmoLedgerSwrProvider>{ui}</AmmoLedgerSwrProvider>
+      <AmmoLedgerSwrProvider initialWorkspace={initialWorkspace}>{ui}</AmmoLedgerSwrProvider>
     </AmmoLedgerOptimisticNavProvider>,
   );
 }
 
 import { fireEvent, render as renderBase, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import {
+  buildTestEntry,
+  buildTestWorkspace,
+} from "@/features/ammo-ledger/workspace/build-test-workspace/build-test-workspace";
 import { AcquireForm } from "./acquire-form";
 
 vi.mock("next/navigation", () => ({
@@ -121,6 +129,7 @@ describe("AcquireForm", () => {
     render(
       <AcquireForm
         ammoTypes={[huntingAmmoType]}
+        stockByAmmoTypeId={{}}
         permits={permits}
         initialValues={{ occurredOn: "2026-08-08" }}
       />,
@@ -135,9 +144,94 @@ describe("AcquireForm", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "譲受許可を登録・確認する" })).toHaveAttribute(
+      "href",
+      "/lab/ammo-ledger/settings/permits",
+    );
 
     fireEvent.change(screen.getByLabelText("用途区分"), { target: { value: "shooting" } });
 
     expect(screen.queryByText(/この譲受日に有効な狩猟用/)).not.toBeInTheDocument();
+  });
+
+  it("譲受日・用途の許可残と記録後の残数を示し、許可数を超えると警告する", () => {
+    const permitEvents = [
+      {
+        id: "grant",
+        userId: "user-1",
+        permitId: "permit-shooting",
+        purpose: "shooting",
+        eventKind: "grant",
+        occurredOn: "2026-01-01",
+        quantity: 100,
+        memo: null,
+        createdAt: new Date("2026-01-01T00:00:00Z"),
+        updatedAt: new Date("2026-01-01T00:00:00Z"),
+      },
+    ];
+    const initialWorkspace = {
+      ownerName: "テスト利用者",
+      workspace: buildTestWorkspace({
+        entries: [
+          buildTestEntry({
+            id: "acquire-1",
+            category: "acquire",
+            occurredOn: "2026-03-01",
+            quantity: 50,
+          }),
+        ],
+        permitEvents,
+      }),
+    };
+    const { unmount } = render(
+      <AcquireForm
+        ammoTypes={[huntingAmmoType]}
+        stockByAmmoTypeId={{}}
+        permits={permits}
+        initialValues={{
+          occurredOn: "2026-08-08",
+          purpose: "shooting",
+          ammoTypeId: "ammo-hunting",
+          boxCount: 1,
+        }}
+      />,
+      { initialWorkspace },
+    );
+    expect(screen.getByText("許可残 50個 → 記録後 25個")).toBeInTheDocument();
+    unmount();
+
+    render(
+      <AcquireForm
+        ammoTypes={[huntingAmmoType]}
+        stockByAmmoTypeId={{}}
+        permits={permits}
+        initialValues={{
+          occurredOn: "2026-08-08",
+          purpose: "shooting",
+          ammoTypeId: "ammo-hunting",
+          boxCount: 3,
+        }}
+      />,
+      { initialWorkspace },
+    );
+    expect(
+      screen.getByText("許可残 50個 → 記録後 -25個（許可数を超えています）"),
+    ).toBeInTheDocument();
+  });
+
+  it("編集では弾を選び直しても元の用途を保つ", () => {
+    render(
+      <AcquireForm
+        ammoTypes={[huntingAmmoType]}
+        stockByAmmoTypeId={{}}
+        permits={permits}
+        ledgerEntryId="ledger-entry-1"
+        initialValues={{ occurredOn: "2026-08-08", purpose: "shooting", ammoTypeId: "" }}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("弾"), { target: { value: "ammo-hunting" } });
+
+    expect(screen.getByLabelText("用途区分")).toHaveValue("shooting");
   });
 });

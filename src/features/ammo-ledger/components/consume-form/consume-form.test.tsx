@@ -13,6 +13,11 @@ function render(ui: ReactNode) {
 import { fireEvent, render as renderBase, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { updateTransactionAction } from "@/features/ammo-ledger/transactions/update-transaction/update-transaction-action";
+import {
+  buildTestEntry,
+  buildTestWorkspace,
+} from "@/features/ammo-ledger/workspace/build-test-workspace/build-test-workspace";
+import { computeInventoryItems } from "@/features/ammo-ledger/workspace/compute-inventory-items/compute-inventory-items";
 import { ConsumeForm } from "./consume-form";
 
 vi.mock("next/navigation", () => ({
@@ -203,19 +208,109 @@ describe("ConsumeForm", () => {
     useMasterPickerDataMock.mockReturnValue({ pickerData: undefined });
   });
 
-  it("消費後の帳簿残数を表示し、残数を超える入力に気づけるようにする", () => {
+  it("前回の狩猟の消費が射撃場なら、射撃場の名前を手入力欄に入れず射撃場を選ぶ", () => {
+    useMasterPickerDataMock.mockReturnValue({
+      pickerData: {
+        favorites: [],
+        recent: [
+          { id: "range-previous", name: "前回の射撃場", address: "千葉県", catalogId: null },
+        ],
+        registered: [],
+        catalogByPrefecture: [],
+        favoriteCatalogIds: [],
+        registeredCatalogIds: [],
+      },
+    });
     render(
       <ConsumeForm
         guns={guns}
         ammoTypes={ammoTypes}
-        stockByAmmoTypeId={{ "ammo-original": 40 }}
-        initialValues={{ ammoTypeId: "ammo-original", boxCount: 1 }}
+        stockByAmmoTypeId={{}}
+        initialValues={{ purpose: "hunting", location: "前回の射撃場 千葉県" }}
       />,
     );
-    expect(screen.getByText(/帳簿残数（全用途）40発 → 消費後 15発/)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("小箱"), { target: { value: "2" } });
-    expect(screen.getByText(/消費後 -10発（残数を超えています）/)).toBeInTheDocument();
+    expect(screen.getByLabelText("消費場所")).toHaveValue("range");
+    expect(screen.getByText("選択中の場所: range-previous")).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("前回の射撃場 千葉県")).not.toBeInTheDocument();
+    useMasterPickerDataMock.mockReturnValue({ pickerData: undefined });
+  });
+
+  it("前回の狩猟場所が射撃場でなければ、手入力欄に前回の場所を入れる", () => {
+    useMasterPickerDataMock.mockReturnValue({
+      pickerData: {
+        favorites: [],
+        recent: [{ id: "range-other", name: "別の射撃場", address: "埼玉県", catalogId: null }],
+        registered: [],
+        catalogByPrefecture: [],
+        favoriteCatalogIds: [],
+        registeredCatalogIds: [],
+      },
+    });
+    render(
+      <ConsumeForm
+        guns={guns}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={{}}
+        initialValues={{ purpose: "hunting", location: "千葉県○○猟場" }}
+      />,
+    );
+
+    expect(screen.getByLabelText("消費場所")).toHaveValue("manual");
+    expect(screen.getByLabelText("場所")).toHaveValue("千葉県○○猟場");
+    useMasterPickerDataMock.mockReturnValue({ pickerData: undefined });
+  });
+
+  it("選んだ用途の残数と消費後の残数を表示し、用途の在庫不足を保存前に知らせる", () => {
+    // 射撃用に40発あり、狩猟用には在庫がない
+    const entries = [
+      buildTestEntry({
+        id: "shooting-carryover",
+        category: "carryover",
+        occurredOn: "2026-01-01",
+        quantity: 40,
+        ammoTypeId: "ammo-original",
+        ammoTypeName: "元記録の弾",
+      }),
+    ];
+    renderBase(
+      <AmmoLedgerOptimisticNavProvider>
+        <AmmoLedgerSwrProvider
+          initialWorkspace={{
+            ownerName: "テスト利用者",
+            workspace: buildTestWorkspace({
+              entries,
+              inventoryItems: computeInventoryItems({ entries, ammoTypes }),
+            }),
+          }}
+        >
+          <ConsumeForm
+            guns={guns}
+            ammoTypes={ammoTypes}
+            stockByAmmoTypeId={{ "ammo-original": 40 }}
+            initialValues={{
+              occurredOn: "2026-08-01",
+              purpose: "shooting",
+              ammoTypeId: "ammo-original",
+              boxCount: 1,
+            }}
+          />
+        </AmmoLedgerSwrProvider>
+      </AmmoLedgerOptimisticNavProvider>,
+    );
+    expect(screen.getByText("射撃用の残40個 → 記録後 15個")).toBeInTheDocument();
+    expect(screen.queryByText(/在庫が不足しています/)).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("用途区分"), { target: { value: "hunting" } });
+
+    expect(screen.getByText("狩猟用の残0個 → 記録後 -25個")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "元記録の弾の在庫が不足しています（狩猟用、2026/08/01時点で残り0発、出庫25発）",
+    );
+    expect(screen.getByRole("link", { name: "年初繰越を確認する" })).toHaveAttribute(
+      "href",
+      "/lab/ammo-ledger/settings/opening-balance?year=2026&purpose=hunting",
+    );
   });
 
   it("編集画面で元記録の銃・用途・射撃場・弾種・数量・注記を初期表示する", () => {
@@ -283,6 +378,22 @@ describe("ConsumeForm", () => {
     fireEvent.change(screen.getByLabelText("弾"), { target: { value: "ammo-hunting" } });
 
     expect(screen.getByLabelText("用途区分")).toHaveValue("hunting");
+  });
+
+  it("新規作成でも、先に選んだ用途を弾の選択で上書きしない", () => {
+    render(
+      <ConsumeForm
+        guns={guns}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={{ "ammo-original": 100, "ammo-hunting": 100 }}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("用途区分"), { target: { value: "hunting" } });
+    fireEvent.change(screen.getByLabelText("弾"), { target: { value: "ammo-original" } });
+
+    expect(screen.getByLabelText("用途区分")).toHaveValue("hunting");
+    expect(screen.getByLabelText("消費場所")).toHaveValue("manual");
   });
 
   it("狩猟用の弾種を変更しても選択済みの射撃場を保持する", () => {

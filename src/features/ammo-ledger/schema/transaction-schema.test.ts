@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { transactionInputSchema } from "./transaction-schema";
 
 describe("transactionInputSchema", () => {
@@ -159,5 +159,42 @@ describe("transactionInputSchema", () => {
       looseRounds: 0,
     });
     expect(result.success).toBe(false);
+  });
+
+  describe("未来の日付", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function parseDispose({ occurredOn }: { occurredOn: string }) {
+      return transactionInputSchema.safeParse({
+        inputKind: "dispose",
+        purpose: "shooting",
+        occurredOn,
+        ammoTypeId: "ammo-1",
+        boxCount: 1,
+        looseRounds: 0,
+      });
+    }
+
+    it("日本時間の0〜9時（UTC では前日）でも、日本時間の今日の記録を受け付ける", () => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date("2026-10-12T15:30:00Z"));
+
+      expect(parseDispose({ occurredOn: "2026-10-13" }).success).toBe(true);
+      expect(parseDispose({ occurredOn: "2026-10-14" }).success).toBe(false);
+    });
+
+    it("日本時間の23時台（UTC では同日）でも、翌日の記録は拒否する", () => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date("2026-10-13T14:59:59Z"));
+
+      expect(parseDispose({ occurredOn: "2026-10-13" }).success).toBe(true);
+      const tomorrow = parseDispose({ occurredOn: "2026-10-14" });
+      expect(tomorrow.success).toBe(false);
+      expect(tomorrow.error?.issues.map((issue) => issue.message)).toContain(
+        "未来の日付は記録できません",
+      );
+    });
   });
 });

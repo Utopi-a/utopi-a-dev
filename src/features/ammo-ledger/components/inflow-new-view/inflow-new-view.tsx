@@ -15,7 +15,8 @@ import { ReceiveForm } from "@/features/ammo-ledger/components/receive-form/rece
 import { TransferForm } from "@/features/ammo-ledger/components/transfer-form/transfer-form";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { useDraftTransaction } from "@/features/ammo-ledger/transactions/get-draft/use-draft-transaction/use-draft-transaction";
-import { deriveAmmoTypesFromWorkspace } from "@/features/ammo-ledger/workspace/derive-form-workspace-data/derive-form-workspace-data";
+import { resolveAmmoTypeDefaults } from "@/features/ammo-ledger/transactions/resolve-ammo-type-defaults/resolve-ammo-type-defaults";
+import { deriveFormWorkspaceData } from "@/features/ammo-ledger/workspace/derive-form-workspace-data/derive-form-workspace-data";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 const inflowTabs: InflowTab[] = [
@@ -52,16 +53,26 @@ export function InflowNewView() {
     return <WorkspaceViewLoader error={error ?? draftError} onRetry={error ? retry : retryDraft} />;
   }
 
-  const ammoTypes = deriveAmmoTypesFromWorkspace({ workspace });
+  const { ammoTypes, stockByAmmoTypeId } = deriveFormWorkspaceData({ workspace });
 
-  const initialValues = draft
-    ? {
+  const entries = workspace.entries;
+  // 下書きは開いたタブに入れ、ほかは同じ区分の前回の記録から弾と用途を初期値にする。
+  function initialValuesFor({ formTab }: { formTab: InflowTab }) {
+    if (draft && formTab === tab) {
+      return {
         occurredOn: draft.occurredOn,
         ammoTypeId: draft.ammoTypeId ?? undefined,
         boxCount: draft.boxCount,
         looseRounds: draft.looseRounds,
-      }
-    : undefined;
+      };
+    }
+    const { ammoTypeId, purpose } = resolveAmmoTypeDefaults({
+      entries,
+      category: formTab,
+      ammoTypes,
+    });
+    return { ammoTypeId, purpose };
+  }
 
   const emptyMasters = (
     <p className="text-sm text-muted-foreground">
@@ -98,38 +109,44 @@ export function InflowNewView() {
             acquireContent={
               <AcquireForm
                 ammoTypes={ammoTypes}
+                stockByAmmoTypeId={stockByAmmoTypeId}
                 permits={workspace.permits}
-                initialValues={tab === "acquire" ? initialValues : undefined}
+                initialValues={initialValuesFor({ formTab: "acquire" })}
               />
             }
             disposeContent={
               <DisposeForm
                 ammoTypes={ammoTypes}
-                initialValues={tab === "dispose" ? initialValues : undefined}
+                stockByAmmoTypeId={stockByAmmoTypeId}
+                initialValues={initialValuesFor({ formTab: "dispose" })}
               />
             }
             transferContent={
               <TransferForm
                 ammoTypes={ammoTypes}
-                initialValues={tab === "transfer" ? initialValues : undefined}
+                stockByAmmoTypeId={stockByAmmoTypeId}
+                initialValues={initialValuesFor({ formTab: "transfer" })}
               />
             }
             manufactureContent={
               <ManufactureForm
                 ammoTypes={ammoTypes}
-                initialValues={tab === "manufacture" ? initialValues : undefined}
+                stockByAmmoTypeId={stockByAmmoTypeId}
+                initialValues={initialValuesFor({ formTab: "manufacture" })}
               />
             }
             issueContent={
               <IssueForm
                 ammoTypes={ammoTypes}
-                initialValues={tab === "issue" ? initialValues : undefined}
+                stockByAmmoTypeId={stockByAmmoTypeId}
+                initialValues={initialValuesFor({ formTab: "issue" })}
               />
             }
             receiveContent={
               <ReceiveForm
                 ammoTypes={ammoTypes}
-                initialValues={tab === "receive" ? initialValues : undefined}
+                stockByAmmoTypeId={stockByAmmoTypeId}
+                initialValues={initialValuesFor({ formTab: "receive" })}
               />
             }
           />

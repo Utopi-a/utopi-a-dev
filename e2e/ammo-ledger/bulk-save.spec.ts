@@ -17,7 +17,7 @@ test("一括消費の在庫不足は全件を保存せず、訂正後は同日�
       .getByRole("button", { name: /E2E架空射撃場/ })
       .first()
       .click();
-    await row.locator('input[id="box-count"]').fill("2");
+    await row.getByLabel("小箱", { exact: true }).fill("2");
   }
 
   await page.getByRole("button", { name: "2件をまとめて保存", exact: true }).click();
@@ -34,7 +34,7 @@ test("一括消費の在庫不足は全件を保存せず、訂正後は同日�
   `;
   expect(rejectedTransactions).toEqual([{ computed_rounds: 10 }]);
 
-  await page.getByRole("article").nth(1).locator('input[id="box-count"]').fill("1");
+  await page.getByRole("article").nth(1).getByLabel("小箱", { exact: true }).fill("1");
   await page.getByRole("button", { name: "2件をまとめて保存", exact: true }).click();
   await expect(page).toHaveURL(/\/ledger\?purpose=shooting$/);
   // 用途タブの件数は表示中の年の件数を出すため、保存した記録の年を選ぶ。

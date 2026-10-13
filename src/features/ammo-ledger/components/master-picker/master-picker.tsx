@@ -31,6 +31,7 @@ import { PickerEntryRow } from "@/features/ammo-ledger/components/picker-entry-r
 import { PrefectureSectionHeading } from "@/features/ammo-ledger/components/prefecture-section-heading/prefecture-section-heading";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
+import type { InputKind } from "@/features/ammo-ledger/schema/input-kind";
 import { cn } from "@/lib/cn";
 
 type MasterPickerProps = {
@@ -43,6 +44,7 @@ type MasterPickerProps = {
   catalogKind: CatalogKind;
   pickerData?: MasterPickerData;
   includeRangeCatalog?: boolean;
+  recentInputKinds?: InputKind[];
   sheetTitle: string;
   manualOption?: { value: string; label: string };
 };
@@ -59,6 +61,7 @@ export function MasterPicker({
   catalogKind,
   pickerData: pickerDataProp,
   includeRangeCatalog = false,
+  recentInputKinds,
   sheetTitle,
   manualOption,
 }: MasterPickerProps) {
@@ -72,6 +75,7 @@ export function MasterPicker({
   } = useMasterPickerData({
     catalogKind,
     includeRangeCatalog,
+    recentInputKinds,
     enabled: (open || value !== "") && pickerDataProp === undefined,
   });
   const pickerData = pickerDataProp ?? loadedPickerData;
@@ -343,7 +347,7 @@ export function MasterPicker({
           }
         }}
         className={cn(
-          "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs",
+          "flex h-11 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs sm:h-9 sm:text-sm",
           "outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
           "aria-disabled:cursor-wait",
         )}

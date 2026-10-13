@@ -1,4 +1,7 @@
-import { validateStockTimeline } from "@/features/ammo-ledger/ledger/validate-stock-timeline/validate-stock-timeline";
+import {
+  type StockShortage,
+  validateStockTimeline,
+} from "@/features/ammo-ledger/ledger/validate-stock-timeline/validate-stock-timeline";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import type {
   LedgerEntryChanges,
@@ -15,7 +18,7 @@ export function checkLedgerChangesAgainstStock({
 }: {
   entries: LedgerEntryRow[];
   changes: LedgerEntryChanges;
-}): { ok: true } | { ok: false; error: string } {
+}): { ok: true } | { ok: false; error: string; shortage: StockShortage } {
   const replacedIds = new Set([
     ...changes.removedIds,
     ...changes.upserted.map((entry) => entry.id),

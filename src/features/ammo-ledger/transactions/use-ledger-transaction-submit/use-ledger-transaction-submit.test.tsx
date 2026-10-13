@@ -194,7 +194,9 @@ describe("useLedgerTransactionSubmit", () => {
 
     expect(submitResult).toEqual({
       ok: false,
-      error: "テスト散弾 7.5号の在庫が不足しています（残り100発、出庫125発）",
+      error:
+        "テスト散弾 7.5号の在庫が不足しています（射撃用、2026/10/13時点で残り100発、出庫125発）",
+      shortage: { purpose: "shooting", occurredOn: "2026-10-13" },
     });
     expect(createTransactionAction).not.toHaveBeenCalled();
     expect(window.location.pathname).toBe("/lab/ammo-ledger/consume/new");

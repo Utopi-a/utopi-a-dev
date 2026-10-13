@@ -2,9 +2,10 @@
 
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
+import { inflowCounterpartyInputKinds } from "@/features/ammo-ledger/catalog/schema/recent-counterparty-input-kinds";
+import { AmmoTypeSelect } from "@/features/ammo-ledger/components/ammo-type-select/ammo-type-select";
 import { BulkEntryCopyActions } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-copy-actions";
 import {
   applyAmmoTypeToRow,
@@ -15,6 +16,7 @@ import {
   computeBulkEntryRounds,
 } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-row-state";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
+import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import {
@@ -30,7 +32,7 @@ type BulkEntryRowCardProps = {
   rowIndex: number;
   guns: (typeof ammoGun.$inferSelect)[];
   ammoTypes: (typeof ammoType.$inferSelect)[];
-  ammoTypeOptions: { value: string; label: string }[];
+  stockByAmmoTypeId: Record<string, number>;
   canRemove: boolean;
   canMoveUp: boolean;
   canMoveDown: boolean;
@@ -52,7 +54,7 @@ export function BulkEntryRowCard({
   rowIndex,
   guns,
   ammoTypes,
-  ammoTypeOptions,
+  stockByAmmoTypeId,
   canRemove,
   canMoveUp,
   canMoveDown,
@@ -88,6 +90,7 @@ export function BulkEntryRowCard({
     updateRow({
       patch: {
         purpose: nextPurpose,
+        isPurposeChosen: true,
         locationInputKind:
           nextPurpose === "shooting"
             ? "range"
@@ -153,19 +156,24 @@ export function BulkEntryRowCard({
             { value: "consume", label: "消費" },
             { value: "acquire", label: "譲り受け" },
           ]}
+          required
           placeholder=""
         />
 
-        <div className="space-y-2">
-          <Label htmlFor={`occurred-on-${row.clientId}`}>日付</Label>
-          <IsoDateInput
-            id={`occurred-on-${row.clientId}`}
-            required
-            value={row.occurredOn}
-            onChange={({ value }) => updateRow({ patch: { occurredOn: value } })}
-          />
-        </div>
+        <LedgerEntryDateField
+          id={`occurred-on-${row.clientId}`}
+          value={row.occurredOn}
+          onChange={(value) => updateRow({ patch: { occurredOn: value } })}
+        />
       </div>
+
+      <AmmoTypeSelect
+        id={`ammo-type-${row.clientId}`}
+        value={row.ammoTypeId}
+        onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={stockByAmmoTypeId}
+      />
 
       <FieldSelect
         id={`purpose-${row.clientId}`}
@@ -180,16 +188,8 @@ export function BulkEntryRowCard({
         placeholder=""
       />
 
-      <FieldSelect
-        id={`ammo-type-${row.clientId}`}
-        label="弾"
-        value={row.ammoTypeId}
-        onChange={(value) => handleAmmoTypeChange({ nextAmmoTypeId: value })}
-        options={ammoTypeOptions}
-        required
-      />
-
       <PackagingFields
+        idPrefix={row.clientId}
         outerBoxCount={row.outerBoxCount}
         boxCount={row.boxCount}
         looseRounds={row.looseRounds}
@@ -278,8 +278,9 @@ export function BulkEntryRowCard({
             onChange={(value) => updateRow({ patch: { counterpartyId: value } })}
             catalogKind="gun_shop"
             includeRangeCatalog
+            recentInputKinds={inflowCounterpartyInputKinds}
             sheetTitle="購入先を選ぶ"
-            manualOption={{ value: manualCounterpartyId, label: "手入力する" }}
+            manualOption={{ value: manualCounterpartyId, label: "手入力" }}
             required
           />
 

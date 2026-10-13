@@ -1,11 +1,16 @@
 import { checkDatesAgainstLock } from "@/features/ammo-ledger/ledger/lock/check-dates-against-lock/check-dates-against-lock";
 import { formatLockedDateError } from "@/features/ammo-ledger/ledger/lock/format-locked-date-error/format-locked-date-error";
+import type { StockShortage } from "@/features/ammo-ledger/ledger/validate-stock-timeline/validate-stock-timeline";
 import { hasActiveAcquisitionPermit } from "@/features/ammo-ledger/permit/has-active-acquisition-permit/has-active-acquisition-permit";
 import type { InputKind } from "@/features/ammo-ledger/schema/input-kind";
 import {
   type LedgerPurpose,
   ledgerPurposeLabels,
 } from "@/features/ammo-ledger/schema/ledger-purpose";
+import {
+  futureOccurredOnError,
+  isFutureOccurredOn,
+} from "@/features/ammo-ledger/schema/transaction-schema";
 import { checkLedgerChangesAgainstStock } from "@/features/ammo-ledger/transactions/check-ledger-changes-against-stock/check-ledger-changes-against-stock";
 import { normalizeTransaction } from "@/features/ammo-ledger/transactions/normalize-transaction/normalize-transaction";
 import type { AmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/ammo-ledger-workspace-types";
@@ -52,7 +57,7 @@ function resolveNextDayOrder({
 }
 
 /**
- * 保存前に、サーバーと同じ条件（ロック・譲受許可・時系列の在庫）を画面のデータで確かめ、
+ * 保存前に、サーバーと同じ条件（未来日・ロック・譲受許可・時系列の在庫）を画面のデータで確かめ、
  * 帳簿に先行表示する行を組み立てる。最終的な判定と保存はサーバーで行う。
  */
 export function prepareOptimisticLedgerEntry({
@@ -69,7 +74,7 @@ export function prepareOptimisticLedgerEntry({
   ledgerEntryId?: string;
   provisionalId: string;
   now: Date;
-}): { ok: true; entry: LedgerEntryRow } | { ok: false; error: string } {
+}): { ok: true; entry: LedgerEntryRow } | { ok: false; error: string; shortage?: StockShortage } {
   const ammoType = workspace.inventoryItems.find(
     (item) => item.ammoType.id === payload.ammoTypeId,
   )?.ammoType;
@@ -82,6 +87,10 @@ export function prepareOptimisticLedgerEntry({
     : undefined;
   if (ledgerEntryId && !currentEntry) {
     return { ok: false, error: "記録が見つかりません。帳簿を開き直してください" };
+  }
+
+  if (isFutureOccurredOn({ occurredOn: payload.occurredOn, now })) {
+    return { ok: false, error: futureOccurredOnError };
   }
 
   const lockCheck = checkDatesAgainstLock({

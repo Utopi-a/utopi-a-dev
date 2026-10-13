@@ -78,9 +78,9 @@ describe("InflowRecordTabs", () => {
           <InflowRecordTabs
             defaultTab="dispose"
             acquireContent={<Memo label="譲受の入力" />}
-            disposeContent={<DisposeForm ammoTypes={ammoTypes} />}
+            disposeContent={<DisposeForm ammoTypes={ammoTypes} stockByAmmoTypeId={{}} />}
             transferContent={<Memo label="譲渡の入力" />}
-            manufactureContent={<ManufactureForm ammoTypes={ammoTypes} />}
+            manufactureContent={<ManufactureForm ammoTypes={ammoTypes} stockByAmmoTypeId={{}} />}
             issueContent={<Memo label="交付の入力" />}
             receiveContent={<Memo label="被交付の入力" />}
           />

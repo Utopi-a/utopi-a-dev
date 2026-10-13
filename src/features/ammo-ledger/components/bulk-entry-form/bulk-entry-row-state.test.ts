@@ -134,6 +134,77 @@ describe("bulk-entry-row-state", () => {
     expect(result.rangeId).toBe("range-1");
   });
 
+  it("行で用途を選んだ後は、弾を選び直しても用途を変えない", () => {
+    const createdAt = new Date("2026-01-01T00:00:00.000Z");
+    const shootingAmmoType = {
+      id: "ammo-shooting",
+      userId: "user-1",
+      name: "射撃用の弾",
+      caliber: "12番",
+      cartridgeType: "shotgun_shot",
+      classificationConfirmedAt: createdAt,
+      gaugeNumber: "7.5号",
+      roundsPerBox: 25,
+      defaultPurpose: "shooting",
+      memo: null,
+      createdAt,
+      updatedAt: createdAt,
+    };
+    const row = {
+      ...createBulkEntryRow({
+        inputKind: "consume",
+        occurredOn: "2026-06-07",
+        defaultCounterpartyId: manualCounterpartyId,
+      }),
+      purpose: "hunting" as const,
+      isPurposeChosen: true,
+      locationInputKind: "manual" as const,
+    };
+
+    const result = applyAmmoTypeToRow({
+      row,
+      ammoTypeId: "ammo-shooting",
+      ammoTypes: [shootingAmmoType],
+    });
+
+    expect(result.ammoTypeId).toBe("ammo-shooting");
+    expect(result.purpose).toBe("hunting");
+    expect(result.locationInputKind).toBe("manual");
+  });
+
+  it("新しい行は引き継いだ銃・弾・用途で始め、用途を選んだかも引き継ぐ", () => {
+    const fromPreviousConsume = createBulkEntryRow({
+      inputKind: "consume",
+      occurredOn: "2026-06-07",
+      defaultCounterpartyId: manualCounterpartyId,
+      carryOver: { gunId: "gun-1", ammoTypeId: "ammo-1", purpose: "hunting" },
+    });
+    expect(fromPreviousConsume).toMatchObject({
+      gunId: "gun-1",
+      ammoTypeId: "ammo-1",
+      purpose: "hunting",
+      isPurposeChosen: false,
+      locationInputKind: "manual",
+    });
+
+    const fromRowAbove = createBulkEntryRow({
+      inputKind: "consume",
+      occurredOn: "2026-06-07",
+      defaultCounterpartyId: manualCounterpartyId,
+      carryOver: {
+        ...fromPreviousConsume,
+        isPurposeChosen: true,
+        locationInputKind: "range",
+      },
+    });
+    expect(fromRowAbove).toMatchObject({
+      purpose: "hunting",
+      isPurposeChosen: true,
+      locationInputKind: "range",
+      boxCount: "",
+    });
+  });
+
   it("copies selected fields from the row above", () => {
     const source = {
       ...createBulkEntryRow({

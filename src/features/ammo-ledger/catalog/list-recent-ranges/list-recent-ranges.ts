@@ -1,4 +1,4 @@
-import { and, desc, eq, max } from "drizzle-orm";
+import { and, desc, eq, max, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { ammoRange, ammoTransaction } from "@/db/schema/ammo-ledger";
 import type { PickerMasterEntry } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
@@ -22,7 +22,7 @@ export async function listRecentRanges({
       ammoRange,
       and(eq(ammoTransaction.rangeId, ammoRange.id), eq(ammoRange.userId, userId)),
     )
-    .where(eq(ammoTransaction.userId, userId))
+    .where(and(eq(ammoTransaction.userId, userId), ne(ammoTransaction.status, "voided")))
     .groupBy(ammoRange.id)
     .orderBy(desc(max(ammoTransaction.occurredOn)))
     .limit(limit);

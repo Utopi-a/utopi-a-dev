@@ -8,6 +8,7 @@ import type {
   PickerMasterEntry,
 } from "@/features/ammo-ledger/catalog/schema/catalog-entry";
 import type { CatalogKind } from "@/features/ammo-ledger/catalog/schema/catalog-kind";
+import type { InputKind } from "@/features/ammo-ledger/schema/input-kind";
 
 const pickerDataSwrOptions = {
   revalidateOnFocus: false,
@@ -20,23 +21,33 @@ const pickerDataQueryKeyPrefix = ["ammo-ledger", "picker-data"] as const;
 function buildPickerDataQueryKey({
   catalogKind,
   includeRangeCatalog,
+  recentInputKinds,
 }: {
   catalogKind: CatalogKind;
   includeRangeCatalog: boolean;
+  recentInputKinds: string;
 }) {
-  return [...pickerDataQueryKeyPrefix, catalogKind, includeRangeCatalog] as const;
+  return [...pickerDataQueryKeyPrefix, catalogKind, includeRangeCatalog, recentInputKinds] as const;
 }
 
 export function useMasterPickerData({
   catalogKind,
   includeRangeCatalog = false,
+  recentInputKinds,
   enabled,
 }: {
   catalogKind: CatalogKind;
   includeRangeCatalog?: boolean;
+  /** 「最近使った」に出す相手を、この区分の記録で使った相手に絞る */
+  recentInputKinds?: InputKind[];
   enabled: boolean;
 }) {
-  const queryKey = buildPickerDataQueryKey({ catalogKind, includeRangeCatalog });
+  const recentInputKindsParam = recentInputKinds?.join(",") ?? "";
+  const queryKey = buildPickerDataQueryKey({
+    catalogKind,
+    includeRangeCatalog,
+    recentInputKinds: recentInputKindsParam,
+  });
 
   const { data, isLoading, error, mutate } = useSWR<MasterPickerData>(
     enabled ? queryKey : null,
@@ -44,6 +55,7 @@ export function useMasterPickerData({
       const params = new URLSearchParams({
         kind: catalogKind,
         includeRangeCatalog: includeRangeCatalog ? "1" : "0",
+        recentInputKinds: recentInputKindsParam,
       });
       // 通信断・タイムアウトではブラウザの英語のメッセージになるため、画面に出す文言に包む。
       const response = await fetch(`/api/ammo-ledger/picker?${params}`, {

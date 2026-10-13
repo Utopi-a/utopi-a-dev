@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { BulkEntryForm } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-form";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
+import { resolveConsumeDefaults } from "@/features/ammo-ledger/transactions/resolve-consume-defaults/resolve-consume-defaults";
 import { deriveFormWorkspaceData } from "@/features/ammo-ledger/workspace/derive-form-workspace-data/derive-form-workspace-data";
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
@@ -14,6 +15,11 @@ export function BulkNewView() {
   }
 
   const { guns, ammoTypes, stockByAmmoTypeId } = deriveFormWorkspaceData({ workspace });
+  const { gunId, ammoTypeId, purpose } = resolveConsumeDefaults({
+    entries: workspace.entries,
+    gunIds: guns.map((gun) => gun.id),
+    ammoTypes,
+  });
 
   return (
     <div className="space-y-6">
@@ -43,7 +49,12 @@ export function BulkNewView() {
           から登録してください。
         </p>
       ) : (
-        <BulkEntryForm guns={guns} ammoTypes={ammoTypes} stockByAmmoTypeId={stockByAmmoTypeId} />
+        <BulkEntryForm
+          guns={guns}
+          ammoTypes={ammoTypes}
+          stockByAmmoTypeId={stockByAmmoTypeId}
+          firstRowCarryOver={{ gunId, ammoTypeId, purpose }}
+        />
       )}
     </div>
   );

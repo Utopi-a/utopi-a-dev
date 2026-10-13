@@ -1,13 +1,30 @@
 import { z } from "zod";
+import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 import type { InputKind, inputKinds } from "./input-kind";
 import { ledgerPurposes } from "./ledger-purpose";
 
 export const transactionStatuses = ["draft", "confirmed", "voided"] as const;
 export type TransactionStatus = (typeof transactionStatuses)[number];
 
+export const futureOccurredOnError = "未来の日付は記録できません";
+
+/** 記録日は日本時間の今日まで。サーバーは UTC で動くため、UTC の日付で比べると朝の記録を拒否してしまう。 */
+export function isFutureOccurredOn({
+  occurredOn,
+  now = new Date(),
+}: {
+  occurredOn: string;
+  now?: Date;
+}): boolean {
+  return occurredOn > getTokyoIsoDate({ now });
+}
+
 const baseTransactionSchema = z.object({
   purpose: z.enum(ledgerPurposes),
-  occurredOn: z.string().date(),
+  occurredOn: z
+    .string()
+    .date()
+    .refine((occurredOn) => !isFutureOccurredOn({ occurredOn }), futureOccurredOnError),
   ammoTypeId: z.string().min(1),
   outerBoxCount: z.number().int().min(0).default(0),
   boxCount: z.number().int().min(0).default(0),

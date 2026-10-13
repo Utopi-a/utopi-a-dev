@@ -1,7 +1,7 @@
 import type { ammoType } from "@/db/schema/ammo-ledger";
+import { resolvePurposeForAmmoType } from "@/features/ammo-ledger/components/purpose-select/use-purpose-following-ammo-type";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { manualCounterpartyId } from "@/features/ammo-ledger/schema/manual-counterparty-id";
-import { resolveDefaultPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import type { LedgerTransactionInput } from "@/features/ammo-ledger/schema/transaction-schema";
 import { computeRounds } from "@/features/ammo-ledger/transactions/compute-rounds/compute-rounds";
 
@@ -13,6 +13,8 @@ export type BulkEntryRowState = {
   inputKind: BulkEntryRowKind;
   occurredOn: string;
   purpose: LedgerPurpose;
+  /** 利用者が用途を選んだか。選んだ後は弾を選び直しても用途を変えない */
+  isPurposeChosen: boolean;
   ammoTypeId: string;
   outerBoxCount: string;
   boxCount: string;
@@ -35,26 +37,39 @@ export type BulkEntryCopyField =
   | "gunId"
   | "counterparty";
 
+/** 新しい行に引き継ぐ値。直前の行（なければ前回の消費）と同じ銃・弾・用途で始める */
+export type BulkEntryRowCarryOver = Partial<
+  Pick<
+    BulkEntryRowState,
+    "gunId" | "ammoTypeId" | "purpose" | "isPurposeChosen" | "locationInputKind"
+  >
+>;
+
 export function createBulkEntryRow({
   inputKind,
   occurredOn,
   defaultCounterpartyId,
+  carryOver,
 }: {
   inputKind: BulkEntryRowKind;
   occurredOn: string;
   defaultCounterpartyId: string;
+  carryOver?: BulkEntryRowCarryOver;
 }): BulkEntryRowState {
+  const purpose = carryOver?.purpose ?? "shooting";
   return {
     clientId: crypto.randomUUID(),
     inputKind,
     occurredOn,
-    purpose: "shooting",
-    ammoTypeId: "",
+    purpose,
+    isPurposeChosen: carryOver?.isPurposeChosen ?? false,
+    ammoTypeId: carryOver?.ammoTypeId ?? "",
     outerBoxCount: "",
     boxCount: "",
     looseRounds: "",
-    gunId: "",
-    locationInputKind: "range",
+    gunId: carryOver?.gunId ?? "",
+    locationInputKind:
+      carryOver?.locationInputKind ?? (purpose === "shooting" ? "range" : "manual"),
     rangeId: "",
     location: "",
     counterpartyId: defaultCounterpartyId,
@@ -76,7 +91,7 @@ export function copyBulkEntryField({
     case "occurredOn":
       return { ...target, occurredOn: source.occurredOn };
     case "purpose":
-      return { ...target, purpose: source.purpose };
+      return { ...target, purpose: source.purpose, isPurposeChosen: true };
     case "ammoTypeId":
       return { ...target, ammoTypeId: source.ammoTypeId };
     case "packaging":
@@ -125,10 +140,11 @@ export function applyAmmoTypeToRow({
   ammoTypeId: string;
   ammoTypes: (typeof ammoType.$inferSelect)[];
 }): BulkEntryRowState {
-  const nextType = ammoTypes.find((type) => type.id === ammoTypeId);
-  const nextPurpose = nextType
-    ? resolveDefaultPurpose({ defaultPurpose: nextType.defaultPurpose })
-    : row.purpose;
+  const nextPurpose = resolvePurposeForAmmoType({
+    purpose: row.purpose,
+    isPurposeChosen: row.isPurposeChosen,
+    ammoType: ammoTypes.find((type) => type.id === ammoTypeId),
+  });
   return {
     ...row,
     ammoTypeId,

@@ -26,7 +26,7 @@ export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageP
   const hasError = Boolean(error);
 
   return (
-    <PublicPageShell width="content">
+    <PublicPageShell>
       <VerifyEmailStatus isVerified={isVerified} hasError={hasError} />
       <div className="mx-auto w-full max-w-md">
         <Card className="border-border/70 shadow-sm">

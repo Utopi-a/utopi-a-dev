@@ -8,12 +8,6 @@ export type LabEntry = {
 
 export const labEntries: LabEntry[] = [
   {
-    id: "theme",
-    title: "ブラッシュ・ノワール",
-    description: "サイト全体の配色は固定テーマ。ダークモード切替はありません。",
-    status: "active",
-  },
-  {
     id: "auth-studio",
     title: "認証 Studio",
     description: "Better Auth（メール / SSO）とログイン後エリア。Lab 上部の Studio から入る。",

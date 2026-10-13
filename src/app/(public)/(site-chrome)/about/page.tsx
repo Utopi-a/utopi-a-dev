@@ -3,7 +3,7 @@ import { AboutView } from "@/features/portfolio/about-view/about-view";
 
 export default function AboutPage() {
   return (
-    <PublicPageShell width="content">
+    <PublicPageShell>
       <AboutView />
     </PublicPageShell>
   );

@@ -3,7 +3,7 @@ import { LocalLlmChatView } from "@/features/local-llm/local-llm-chat-view/local
 
 export default function LocalLlmLabPage() {
   return (
-    <PublicPageShell width="content">
+    <PublicPageShell>
       <LocalLlmChatView />
     </PublicPageShell>
   );

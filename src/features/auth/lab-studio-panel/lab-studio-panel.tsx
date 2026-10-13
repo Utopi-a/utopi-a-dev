@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAuthEmailConfigured } from "@/features/auth/auth-email-env";
 import { getSession } from "@/features/auth/get-session/get-session";
 import { ResendVerificationForm } from "@/features/auth/resend-verification-form/resend-verification-form";
@@ -20,53 +19,52 @@ export async function LabStudioPanel() {
 
   if (!session) {
     return (
-      <Card className="border-border/70 bg-card/70 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base">ログインエリア</CardTitle>
-          <CardDescription>
+      <section className="flex flex-col items-start gap-4">
+        <div className="space-y-1">
+          <h2 className="font-bold">ログインエリア</h2>
+          <p className="text-sm leading-relaxed text-muted-foreground">
             認証・ブログ管理・課金まわりの試作は Lab 内から利用します。
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link href="/login?next=/lab" className={cn(buttonVariants({ variant: "default" }))}>
-            ログイン
-          </Link>
-        </CardContent>
-      </Card>
+          </p>
+        </div>
+        <Link
+          href="/login?next=/lab"
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        >
+          ログイン
+        </Link>
+      </section>
     );
   }
 
   return (
-    <Card className="border-primary/20 bg-card/80 shadow-sm">
-      <CardHeader className="gap-2">
-        <CardTitle className="text-base">Studio</CardTitle>
-        <CardDescription>
+    <section className="flex flex-col items-start gap-4">
+      <div className="space-y-1">
+        <h2 className="font-bold">Studio</h2>
+        <p className="text-sm text-muted-foreground">
           ログイン中: {session.user.email}
           {session.user.emailVerified ? "（確認済み）" : "（メール未確認）"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {!session.user.emailVerified && emailConfigured ? (
-          <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3">
-            <p className="mb-2 text-sm text-muted-foreground">
-              確認メールのリンクを開くと Studio をフルに使えます。
-            </p>
-            <ResendVerificationForm email={session.user.email} />
-          </div>
-        ) : null}
-        <nav className="flex flex-wrap gap-2">
-          {studioLinks.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <SignOutButton variant="ghost" className="w-fit px-2" />
-      </CardContent>
-    </Card>
+        </p>
+      </div>
+      {!session.user.emailVerified && emailConfigured ? (
+        <div className="w-full rounded-lg bg-muted px-4 py-3">
+          <p className="mb-2 text-sm text-muted-foreground">
+            確認メールのリンクを開くと Studio をフルに使えます。
+          </p>
+          <ResendVerificationForm email={session.user.email} />
+        </div>
+      ) : null}
+      <nav className="flex flex-wrap gap-2" aria-label="Studio">
+        {studioLinks.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+      <SignOutButton variant="ghost" className="-ml-2.5 w-fit text-muted-foreground" />
+    </section>
   );
 }

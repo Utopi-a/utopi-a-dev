@@ -31,7 +31,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   }
 
   return (
-    <PublicPageShell width="content">
+    <PublicPageShell>
       <LoginView
         callbackURL={callbackURL}
         signUpAllowed={isSignUpAllowed()}

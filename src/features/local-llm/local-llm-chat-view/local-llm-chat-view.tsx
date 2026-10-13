@@ -309,7 +309,7 @@ export function LocalLlmChatView() {
     return (
       <div className="flex flex-col gap-8">
         <PageHeader
-          eyebrow="Lab"
+          parent={{ href: "/lab", label: "Lab" }}
           title="ローカル LLM チャット"
           description="WebGPU の利用可否を確認しています。"
         />
@@ -324,7 +324,7 @@ export function LocalLlmChatView() {
     return (
       <div className="flex flex-col gap-8">
         <PageHeader
-          eyebrow="Lab"
+          parent={{ href: "/lab", label: "Lab" }}
           title="ローカル LLM チャット"
           description="WebGPU が利用できないため、このブラウザでは実行できません。Chrome、Edge、Safari 26+ などをお試しください。"
         />
@@ -342,7 +342,7 @@ export function LocalLlmChatView() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        eyebrow="Lab"
+        parent={{ href: "/lab", label: "Lab" }}
         title="ローカル LLM チャット"
         description="WebGPU + Transformers.js で端末内推論する実験です。会話内容はサーバーに送信されません。"
       />

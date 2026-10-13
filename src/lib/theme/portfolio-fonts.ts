@@ -1,15 +1,10 @@
-import { DM_Sans } from "next/font/google";
-import { zenKakuGothicNew } from "@/lib/theme/zen-kaku-font";
+import { LINE_Seed_JP } from "next/font/google";
 
-export const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+export const lineSeedJp = LINE_Seed_JP({
+  variable: "--font-line-seed-jp",
   subsets: ["latin"],
-  weight: ["400", "700"],
+  weight: ["400", "700", "800"],
   display: "swap",
 });
 
-export const portfolioFontClassName = [
-  zenKakuGothicNew.variable,
-  dmSans.variable,
-  "font-sans",
-].join(" ");
+export const portfolioFontClassName = [lineSeedJp.variable, "font-sans"].join(" ");

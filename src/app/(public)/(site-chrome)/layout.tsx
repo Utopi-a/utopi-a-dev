@@ -6,7 +6,9 @@ import { ThemeProvider } from "@/lib/theme/theme-provider";
 export default function SiteChromeLayout({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
-      <div className={`${portfolioFontClassName} flex min-h-0 flex-1 flex-col`}>
+      <div
+        className={`${portfolioFontClassName} flex min-h-0 flex-1 flex-col [overflow-wrap:break-word] [word-break:auto-phrase] selection:bg-primary/20`}
+      >
         <SiteHeader />
         <main className="flex min-h-0 flex-1 flex-col">{children}</main>
         <SiteFooter />

@@ -7,7 +7,7 @@ export default function ForgotPasswordPage() {
   const usesResend = isAuthEmailConfigured();
 
   return (
-    <PublicPageShell width="content">
+    <PublicPageShell>
       <div className="mx-auto w-full max-w-md">
         <Card className="border-border/70 shadow-sm">
           <CardHeader className="space-y-2">

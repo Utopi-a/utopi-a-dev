@@ -208,6 +208,59 @@ describe("ConsumeForm", () => {
     useMasterPickerDataMock.mockReturnValue({ pickerData: undefined });
   });
 
+  it("前回の狩猟の消費が射撃場なら、射撃場の名前を手入力欄に入れず射撃場を選ぶ", () => {
+    useMasterPickerDataMock.mockReturnValue({
+      pickerData: {
+        favorites: [],
+        recent: [
+          { id: "range-previous", name: "前回の射撃場", address: "千葉県", catalogId: null },
+        ],
+        registered: [],
+        catalogByPrefecture: [],
+        favoriteCatalogIds: [],
+        registeredCatalogIds: [],
+      },
+    });
+    render(
+      <ConsumeForm
+        guns={guns}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={{}}
+        initialValues={{ purpose: "hunting", location: "前回の射撃場 千葉県" }}
+      />,
+    );
+
+    expect(screen.getByLabelText("消費場所")).toHaveValue("range");
+    expect(screen.getByText("選択中の場所: range-previous")).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("前回の射撃場 千葉県")).not.toBeInTheDocument();
+    useMasterPickerDataMock.mockReturnValue({ pickerData: undefined });
+  });
+
+  it("前回の狩猟場所が射撃場でなければ、手入力欄に前回の場所を入れる", () => {
+    useMasterPickerDataMock.mockReturnValue({
+      pickerData: {
+        favorites: [],
+        recent: [{ id: "range-other", name: "別の射撃場", address: "埼玉県", catalogId: null }],
+        registered: [],
+        catalogByPrefecture: [],
+        favoriteCatalogIds: [],
+        registeredCatalogIds: [],
+      },
+    });
+    render(
+      <ConsumeForm
+        guns={guns}
+        ammoTypes={ammoTypes}
+        stockByAmmoTypeId={{}}
+        initialValues={{ purpose: "hunting", location: "千葉県○○猟場" }}
+      />,
+    );
+
+    expect(screen.getByLabelText("消費場所")).toHaveValue("manual");
+    expect(screen.getByLabelText("場所")).toHaveValue("千葉県○○猟場");
+    useMasterPickerDataMock.mockReturnValue({ pickerData: undefined });
+  });
+
   it("選んだ用途の残数と消費後の残数を表示し、用途の在庫不足を保存前に知らせる", () => {
     // 射撃用に40発あり、狩猟用には在庫がない
     const entries = [

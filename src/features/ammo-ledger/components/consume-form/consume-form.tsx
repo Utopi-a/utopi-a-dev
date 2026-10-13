@@ -80,8 +80,8 @@ export function ConsumeForm({
     initial?.rangeId || !initial?.purpose || initial.purpose === "shooting" ? "range" : "manual",
   );
   const [rangeId, setRangeId] = useState(initial?.rangeId ?? "");
-  // 新規入力では最近使った射撃場を初期値にする。編集・入力の復元・利用者の選択は上書きしない。
-  const isRangeDecided = useRef(Boolean(initial?.rangeId || ledgerEntryId || restoredValues));
+  // 新規入力では最近使った射撃場を初期値にする。編集・入力の復元・利用者が選んだ場所は上書きしない。
+  const isPlaceDecided = useRef(Boolean(initial?.rangeId || ledgerEntryId || restoredValues));
   const [previousLocation] = useState(initial?.location);
   // 射撃場で消費した前回の場所は、手入力欄には入れず射撃場の選択に使う。
   const [location, setLocation] = useState(
@@ -96,10 +96,10 @@ export function ConsumeForm({
   const [isPending, setIsPending] = useState(false);
 
   useEffect(() => {
-    if (!rangePickerData || isRangeDecided.current) {
+    if (!rangePickerData || isPlaceDecided.current) {
       return;
     }
-    isRangeDecided.current = true;
+    isPlaceDecided.current = true;
     const previousRange = previousLocation
       ? [...rangePickerData.recent, ...rangePickerData.registered].find(
           (range) =>
@@ -114,11 +114,26 @@ export function ConsumeForm({
     if (defaultRangeId) {
       setRangeId(defaultRangeId);
     }
+    // 前回の狩猟・駆除が射撃場での消費なら、射撃場の名前を手入力欄に残さず射撃場の選択に戻す。
+    if (previousRange) {
+      setLocationInputKind("range");
+      setLocation((current) => (current === previousLocation ? "" : current));
+    }
   }, [rangePickerData, previousLocation]);
 
   function handleRangeChange(nextRangeId: string) {
-    isRangeDecided.current = true;
+    isPlaceDecided.current = true;
     setRangeId(nextRangeId);
+  }
+
+  function handleLocationInputKindChange(nextKind: ConsumptionLocationInputKind) {
+    isPlaceDecided.current = true;
+    setLocationInputKind(nextKind);
+  }
+
+  function handleLocationChange(nextLocation: string) {
+    isPlaceDecided.current = true;
+    setLocation(nextLocation);
   }
 
   const selectedAmmoType = ammoTypes.find((t) => t.id === ammoTypeId);
@@ -225,7 +240,7 @@ export function ConsumeForm({
           id="location-input-kind"
           label="消費場所"
           value={locationInputKind}
-          onChange={(value) => setLocationInputKind(value as ConsumptionLocationInputKind)}
+          onChange={(value) => handleLocationInputKindChange(value as ConsumptionLocationInputKind)}
           options={[
             { value: "manual", label: "狩猟・駆除場所" },
             { value: "range", label: "射撃場" },
@@ -252,7 +267,7 @@ export function ConsumeForm({
             id="location"
             required
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => handleLocationChange(e.target.value)}
             placeholder={purpose === "hunting" ? "狩猟場所" : "有害鳥獣駆除場所"}
           />
         </div>

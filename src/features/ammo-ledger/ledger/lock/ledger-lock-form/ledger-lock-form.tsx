@@ -15,7 +15,10 @@ import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { ammoLedgerLockEvent } from "@/db/schema/ammo-ledger";
+import { LedgerLockIssueList } from "@/features/ammo-ledger/components/ledger-lock-issue-list/ledger-lock-issue-list";
+import type { LedgerLockIssue } from "@/features/ammo-ledger/documents/validate-ledger-for-lock/validate-ledger-for-lock";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
+import { LedgerLockConfirmDialog } from "@/features/ammo-ledger/ledger/lock/ledger-lock-confirm-dialog/ledger-lock-confirm-dialog";
 import { lockLedgerAction } from "@/features/ammo-ledger/ledger/lock/lock-ledger-action/lock-ledger-action";
 import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
 import { unlockLedgerAction } from "@/features/ammo-ledger/ledger/lock/unlock-ledger-action/unlock-ledger-action";
@@ -74,27 +77,52 @@ function LockSection({ lockState }: { lockState: LedgerLockState }) {
       : undefined;
 
   const [lockedThrough, setLockedThrough] = useState(minDate ?? today);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [issues, setIssues] = useState<LedgerLockIssue[]>([]);
   const [isPending, setIsPending] = useState(false);
   // 先行表示した変更の保存が終わる前に確定すると、その変更がロック期間で拒否されるため待たせる。
   const isSaving = useSavingLedgerChangeCount() > 0;
 
-  async function handleSubmit(event: React.FormEvent) {
+  if (minDate !== undefined && minDate > today) {
+    return (
+      <section className="space-y-1">
+        <h2 className="text-base font-semibold">ロック期間を延長</h2>
+        <p className="text-sm text-muted-foreground">
+          本日まで確定済みです。明日以降に、その日までの記録を確定できます。
+        </p>
+      </section>
+    );
+  }
+
+  function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    setDialogError(null);
+    setDialogOpen(true);
+  }
+
+  async function handleLock() {
     setIsPending(true);
+    setDialogError(null);
     setError(null);
+    setIssues([]);
 
     try {
       const result = await lockLedgerAction({ lockedThrough });
       if (!result.ok) {
+        // 直す画面へのリンクを選べるよう、確認を閉じて理由を一覧で示す。
+        setDialogOpen(false);
         setError(result.error);
+        setIssues(result.issues ?? []);
         return;
       }
 
+      setDialogOpen(false);
       updateLockState({ lockState: result.lockState });
       showAmmoLedgerToast({ action: "saved", subject: "帳簿ロック" });
     } catch {
-      setError("帳簿のロック結果を確認できませんでした。時間をおいて再度お試しください。");
+      setDialogError("帳簿のロック結果を確認できませんでした。時間をおいて再度お試しください。");
     } finally {
       setIsPending(false);
     }
@@ -125,10 +153,22 @@ function LockSection({ lockState }: { lockState: LedgerLockState }) {
           </div>
         </div>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {issues.length > 0 ? <LedgerLockIssueList issues={issues} /> : null}
         <Button type="submit" disabled={isPending || isSaving}>
           {isPending ? "ロック中…" : isSaving ? "保存待ちの変更があります" : "ロックする"}
         </Button>
       </form>
+      <LedgerLockConfirmDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        title="帳簿を確定"
+        summary={`${formatIsoDateForDisplay({ value: lockedThrough })}までの帳簿を確定します。`}
+        lockedThrough={lockedThrough}
+        confirmLabel="確定する"
+        isPending={isPending}
+        error={dialogError}
+        onConfirm={handleLock}
+      />
     </section>
   );
 }
@@ -180,7 +220,7 @@ function UnlockSection({ lockedThrough }: { lockedThrough: string }) {
       <div>
         <h2 className="text-base font-semibold text-destructive">ロックを解除</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          ロックを解除すると、すべての日付の帳簿が再び変更可能になります。この操作は慎重に行ってください。
+          解除すると、すべての日付の記録を再び追加・編集・取消・並べ替えできるようになります。解除した日付と理由はロック履歴に残り、修正したあとにもう一度確定できます。
         </p>
       </div>
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
@@ -198,7 +238,7 @@ function UnlockSection({ lockedThrough }: { lockedThrough: string }) {
           <DialogHeader>
             <DialogTitle>帳簿ロックの解除</DialogTitle>
             <DialogDescription>
-              この操作は取り消せません。解除するには以下をすべて入力してください。
+              解除の記録はロック履歴に残ります。修正したあとは、もう一度確定できます。解除するには以下をすべて入力してください。
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

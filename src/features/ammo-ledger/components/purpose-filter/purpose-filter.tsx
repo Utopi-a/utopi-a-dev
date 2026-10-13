@@ -16,7 +16,8 @@ type PurposeFilterProps = {
 
 export function PurposeFilter({ current, entryCounts, onPurposeChange }: PurposeFilterProps) {
   return (
-    <nav className="grid w-full grid-cols-3 gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
+    <fieldset className="grid w-full min-w-0 grid-cols-3 gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
+      <legend className="sr-only">用途</legend>
       {ledgerPurposes.map((purpose) => {
         const isActive = purpose === current;
 
@@ -24,6 +25,7 @@ export function PurposeFilter({ current, entryCounts, onPurposeChange }: Purpose
           <button
             key={purpose}
             type="button"
+            aria-pressed={isActive}
             aria-label={
               entryCounts
                 ? `${ledgerPurposeLabels[purpose]} ${entryCounts[purpose]}件`
@@ -37,16 +39,7 @@ export function PurposeFilter({ current, entryCounts, onPurposeChange }: Purpose
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <span>
-              {purpose === "pest_control" ? (
-                <>
-                  <span className="sm:hidden">有害駆除</span>
-                  <span className="hidden sm:inline">{ledgerPurposeTabLabels[purpose]}</span>
-                </>
-              ) : (
-                ledgerPurposeTabLabels[purpose]
-              )}
-            </span>
+            <span>{ledgerPurposeTabLabels[purpose]}</span>
             {entryCounts ? (
               <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] tabular-nums sm:text-xs">
                 {entryCounts[purpose]}
@@ -55,6 +48,6 @@ export function PurposeFilter({ current, entryCounts, onPurposeChange }: Purpose
           </button>
         );
       })}
-    </nav>
+    </fieldset>
   );
 }

@@ -99,22 +99,12 @@ export default async function LedgerPrintPage({ searchParams }: PageProps) {
   const yearEntries = allEntries.filter(
     (entry) => entry.occurredOn >= from && entry.occurredOn <= targetDate,
   );
-  const lockIssues = [
-    ...validateLedgerForLock({
-      entries: yearEntries,
-      from,
-      to: targetDate,
-    }),
-    ...(classificationReviewStatus.unconfirmedCount > 0
-      ? [
-          {
-            entryId: "classification-review",
-            occurredOn: targetDate,
-            message: `未確認の弾種が${classificationReviewStatus.unconfirmedCount}件あります`,
-          },
-        ]
-      : []),
-  ];
+  const lockIssues = validateLedgerForLock({
+    entries: allEntries,
+    from,
+    to: targetDate,
+    unconfirmedAmmoTypeCount: classificationReviewStatus.unconfirmedCount,
+  });
   const canPrintOfficially = isTargetLocked && lockIssues.length === 0;
   const isPreview = previewParam === "1" && !canPrintOfficially;
   const printTo = isTargetLocked ? officialTo : to;

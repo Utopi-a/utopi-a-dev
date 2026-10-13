@@ -4,16 +4,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { LedgerLockIssueList } from "@/features/ammo-ledger/components/ledger-lock-issue-list/ledger-lock-issue-list";
 import { LedgerYearSelect } from "@/features/ammo-ledger/components/ledger-year-select/ledger-year-select";
 import type { LedgerLockIssue } from "@/features/ammo-ledger/documents/validate-ledger-for-lock/validate-ledger-for-lock";
+import { LedgerLockConfirmDialog } from "@/features/ammo-ledger/ledger/lock/ledger-lock-confirm-dialog/ledger-lock-confirm-dialog";
 import { lockLedgerAction } from "@/features/ammo-ledger/ledger/lock/lock-ledger-action/lock-ledger-action";
 import { useSavingLedgerChangeCount } from "@/features/ammo-ledger/workspace/pending-ledger-changes/pending-ledger-changes";
 import { useUpdateAmmoLedgerLockState } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
@@ -51,7 +45,6 @@ export function LedgerPrintControls({
   // 帳票は DB から作るため、画面に先行表示した変更の保存が終わるまで印刷・確定させない。
   const isSaving = useSavingLedgerChangeCount() > 0;
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isRefreshingAfterSave, startRefreshAfterSave] = useTransition();
@@ -134,7 +127,6 @@ export function LedgerPrintControls({
         }
         updateLockState({ lockState: result.lockState });
         setDialogOpen(false);
-        setConfirmed(false);
         // Actionが返す正式帳票のpropsを受け取ってから印刷する。
         setPrintRequestedFor(targetKey);
       } catch {
@@ -217,59 +209,29 @@ export function LedgerPrintControls({
               ? "ロックを解除し、以下の問題を修正してから印刷してください"
               : "以下の問題を修正してから確定してください"}
           </p>
-          <ul className="mt-2 space-y-1 text-xs text-destructive/90">
-            {lockIssues.map((issue) => (
-              <li key={`${issue.entryId}-${issue.message}`}>
-                {formatIsoDateForDisplay({ value: issue.occurredOn })}: {issue.message}
-              </li>
-            ))}
-          </ul>
+          {isTargetLocked ? (
+            <Link
+              href="/lab/ammo-ledger/settings/ledger-lock"
+              className="mt-1 inline-block text-xs font-medium text-destructive underline underline-offset-2"
+            >
+              帳簿の確定・ロックを開く
+            </Link>
+          ) : null}
+          <LedgerLockIssueList issues={lockIssues} />
         </div>
       ) : null}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>帳簿を確定して印刷</DialogTitle>
-            <DialogDescription>
-              {selectedYear}年の記録（{entryCount}件）を
-              {formatIsoDateForDisplay({ value: targetDate })}
-              まで確定します。
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 text-sm">
-            <p>
-              確定後は、対象期間（{formatIsoDateForDisplay({ value: targetDate })}
-              以前）の記録を編集できなくなります。
-            </p>
-            <p className="text-muted-foreground">
-              解除が必要な場合は設定画面から理由を記入して行えます。
-            </p>
-
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={confirmed}
-                onChange={(e) => setConfirmed(e.target.checked)}
-                className="mt-0.5"
-              />
-              <span>上記を理解し、確定します</span>
-            </label>
-
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              キャンセル
-            </Button>
-            <Button onClick={handleLockAndPrint} disabled={!confirmed || isPending}>
-              {isPending ? "確定中…" : "確定して印刷"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <LedgerLockConfirmDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        title="帳簿を確定して印刷"
+        summary={`${selectedYear}年の記録（${entryCount}件）を${formatIsoDateForDisplay({ value: targetDate })}まで確定します。`}
+        lockedThrough={targetDate}
+        confirmLabel="確定して印刷"
+        isPending={isPending}
+        error={error}
+        onConfirm={handleLockAndPrint}
+      />
     </div>
   );
 }

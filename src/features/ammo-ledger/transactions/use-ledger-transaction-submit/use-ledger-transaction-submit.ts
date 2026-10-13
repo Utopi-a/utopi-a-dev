@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { formatStockQuantity } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { useAmmoLedgerClientNav } from "@/features/ammo-ledger/navigation/use-ammo-ledger-client-nav/use-ammo-ledger-client-nav";
 import { buildLedgerEntryRedirectPath } from "@/features/ammo-ledger/transactions/build-ledger-entry-redirect-path/build-ledger-entry-redirect-path";
 import { createTransactionAction } from "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action";
@@ -157,7 +158,7 @@ export function useLedgerTransactionSubmit<TValues>({
     const { entry } = prepared;
     runPendingChange({
       overlay: { upserted: [entry], removedIds: [] },
-      summary: `${subject}（${formatIsoDateForDisplay({ value: entry.occurredOn })} ${entry.ammoTypeName} ${entry.quantity}発）`,
+      summary: `${subject}（${formatIsoDateForDisplay({ value: entry.occurredOn })} ${entry.ammoTypeName} ${formatStockQuantity({ quantity: entry.quantity })}）`,
       restore: {
         formKey,
         href: currentHrefWithoutRestore(),

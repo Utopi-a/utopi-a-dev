@@ -9,6 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { LedgerLockedThroughLink } from "@/features/ammo-ledger/components/ledger-locked-through-link/ledger-locked-through-link";
 import {
   buildLedgerEntryEditHref,
   isAmmoCarryoverEntry,
@@ -23,7 +24,10 @@ import {
   buildPermitCarryoverLabel,
   type LedgerDisplayRow,
 } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
-import { formatPermitBalance } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
+import {
+  formatEntryQuantity,
+  formatPermitBalance,
+} from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
 import { resolveLedgerEntryReorderState } from "@/features/ammo-ledger/ledger/resolve-ledger-entry-reorder-state/resolve-ledger-entry-reorder-state";
 import { buildOpeningBalanceHref } from "@/features/ammo-ledger/opening-balance/build-opening-balance-href/build-opening-balance-href";
@@ -107,9 +111,10 @@ export function LedgerEntryActionsSheet({
 
           <div className="flex flex-col gap-2 px-4">
             {locked ? (
-              <p className="text-sm text-muted-foreground">
-                この期間はロック済みのため編集できません。
-              </p>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <p>この期間はロック済みのため編集できません。</p>
+                <LedgerLockedThroughLink lockState={lockState} />
+              </div>
             ) : (
               <Link
                 href={editHref}
@@ -195,7 +200,8 @@ export function LedgerEntryActionsSheet({
                 <LedgerCategoryBadge category={entry.category} />
               </div>
               <p className="text-sm text-foreground">
-                {entry.ammoTypeName} · {entry.quantity}発
+                {entry.ammoTypeName} ·{" "}
+                {formatEntryQuantity({ category: entry.category, quantity: entry.quantity })}
                 {permitBalance !== undefined
                   ? ` · 許可残 ${formatPermitBalance({ balance: permitBalance })}`
                   : ""}
@@ -206,9 +212,10 @@ export function LedgerEntryActionsSheet({
 
         <div className="flex flex-col gap-2 px-4">
           {locked ? (
-            <p className="text-sm text-muted-foreground">
-              この期間はロック済みのため編集・取消できません。
-            </p>
+            <div className="space-y-1 text-sm text-muted-foreground">
+              <p>この期間はロック済みのため編集・取消できません。</p>
+              <LedgerLockedThroughLink lockState={lockState} />
+            </div>
           ) : (
             <>
               {editable || carryover ? (

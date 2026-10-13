@@ -44,6 +44,12 @@ function renderForm({ lockState }: { lockState: LedgerLockState }) {
   );
 }
 
+function confirmLock() {
+  fireEvent.click(screen.getByRole("button", { name: "ロックする" }));
+  fireEvent.click(screen.getByRole("checkbox", { name: "上記を理解し、確定します" }));
+  fireEvent.click(screen.getByRole("button", { name: "確定する" }));
+}
+
 describe("LedgerLockForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -60,12 +66,52 @@ describe("LedgerLockForm", () => {
   it("ロック通信に失敗してもエラーを表示し、再操作できる", async () => {
     vi.mocked(lockLedgerAction).mockRejectedValueOnce(new Error("network unavailable"));
     renderForm({ lockState: { isLocked: false, lockedThrough: null } });
-    fireEvent.click(screen.getByRole("button", { name: "ロックする" }));
+    confirmLock();
 
     expect(await screen.findByText(/帳簿のロック結果を確認できませんでした/)).toBeVisible();
-    expect(screen.getByRole("button", { name: "ロックする" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "確定する" })).toBeEnabled();
     expect(screen.getByText("帳簿画面: 編集可能")).toBeVisible();
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("確定できない理由をすべて用途ごとに示し、直す画面へリンクする", async () => {
+    vi.mocked(lockLedgerAction).mockResolvedValueOnce({
+      ok: false,
+      error: "帳簿に2件の問題があるため確定できません",
+      issues: [
+        {
+          kind: "missing_carryover",
+          purpose: "shooting",
+          entryId: null,
+          occurredOn: "2026-01-01",
+          message: "2026年の年初繰越が未登録です（前年末の帳簿残数 90個）",
+          href: "/lab/ammo-ledger/settings/opening-balance?year=2026&purpose=shooting",
+        },
+        {
+          kind: "negative_total_balance",
+          purpose: "shooting",
+          entryId: "entry-1",
+          occurredOn: "2026-02-01",
+          message: "総残数が-25個になります",
+          href: "/lab/ammo-ledger/ledger?purpose=shooting&entry=entry-1",
+        },
+      ],
+    });
+    renderForm({ lockState: { isLocked: false, lockedThrough: null } });
+    confirmLock();
+
+    expect(await screen.findByText("帳簿に2件の問題があるため確定できません")).toBeVisible();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "2026年の年初繰越が未登録です（前年末の帳簿残数 90個）" }),
+    ).toHaveAttribute(
+      "href",
+      "/lab/ammo-ledger/settings/opening-balance?year=2026&purpose=shooting",
+    );
+    expect(
+      screen.getByRole("link", { name: "2026/02/01: 総残数が-25個になります" }),
+    ).toHaveAttribute("href", "/lab/ammo-ledger/ledger?purpose=shooting&entry=entry-1");
+    expect(screen.getByText("帳簿画面: 編集可能")).toBeVisible();
   });
 
   it("ロック成功後は帳簿画面にも確定した日付を反映する", async () => {
@@ -74,10 +120,48 @@ describe("LedgerLockForm", () => {
       lockState: { isLocked: true, lockedThrough: "2026-09-01" },
     });
     renderForm({ lockState: { isLocked: false, lockedThrough: null } });
-    fireEvent.click(screen.getByRole("button", { name: "ロックする" }));
+    confirmLock();
 
     expect(await screen.findByText("帳簿画面: 2026-09-01")).toBeVisible();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("ロックする前に対象日とできなくなる操作を確認し、やめると確定しない", () => {
+    renderForm({ lockState: { isLocked: true, lockedThrough: "2026-08-01" } });
+    fireEvent.click(screen.getByRole("button", { name: "ロックする" }));
+
+    const dialog = screen.getByRole("dialog", { name: "帳簿を確定" });
+    expect(dialog).toHaveTextContent("2026/08/02までの帳簿を確定します。");
+    expect(dialog).toHaveTextContent(
+      "確定すると、2026/08/02までの記録の追加・編集・取消・並べ替えができなくなります。",
+    );
+    expect(screen.getByRole("button", { name: "確定する" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "キャンセル" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(lockLedgerAction).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "ロックする" }));
+    expect(screen.getByRole("checkbox", { name: "上記を理解し、確定します" })).not.toBeChecked();
+  });
+
+  it("本日まで確定済みなら、選べる日のない延長フォームの代わりにそのことを示す", () => {
+    renderForm({ lockState: { isLocked: true, lockedThrough: "2026-09-01" } });
+
+    expect(
+      screen.getByText("本日まで確定済みです。明日以降に、その日までの記録を確定できます。"),
+    ).toBeVisible();
+    expect(screen.queryByRole("button", { name: "ロックする" })).not.toBeInTheDocument();
+  });
+
+  it("解除の説明は、解除が履歴に残り再び確定できることを伝える", () => {
+    renderForm({ lockState: { isLocked: true, lockedThrough: "2026-09-01" } });
+    fireEvent.click(screen.getByRole("button", { name: "ロックを解除する…" }));
+
+    const dialog = screen.getByRole("dialog", { name: "帳簿ロックの解除" });
+    expect(dialog).toHaveTextContent("解除の記録はロック履歴に残ります。");
+    expect(dialog).toHaveTextContent("もう一度確定できます。");
+    expect(dialog).not.toHaveTextContent("取り消せません");
   });
 
   it("解除通信に失敗してもエラーを表示し、解除を再操作できる", async () => {

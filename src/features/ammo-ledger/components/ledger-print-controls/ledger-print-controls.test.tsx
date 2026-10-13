@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { lockLedgerAction } from "@/features/ammo-ledger/ledger/lock/lock-ledger-action/lock-ledger-action";
 import {
@@ -48,6 +48,24 @@ describe("LedgerPrintControls", () => {
   });
 
   afterEach(() => vi.restoreAllMocks());
+
+  it("確定の確認で対象日とできなくなる操作を示し、開き直すと確認をやり直す", () => {
+    render(<LedgerPrintControls {...previewProps} />);
+    fireEvent.click(screen.getByRole("button", { name: "2026/09/01まで確定して印刷" }));
+
+    const dialog = screen.getByRole("dialog", { name: "帳簿を確定して印刷" });
+    expect(dialog).toHaveTextContent("2026年の記録（3件）を2026/09/01まで確定します。");
+    expect(dialog).toHaveTextContent(
+      "確定すると、2026/09/01までの記録の追加・編集・取消・並べ替えができなくなります。",
+    );
+    fireEvent.click(screen.getByRole("checkbox", { name: "上記を理解し、確定します" }));
+    fireEvent.click(screen.getByRole("button", { name: "キャンセル" }));
+    fireEvent.click(screen.getByRole("button", { name: "2026/09/01まで確定して印刷" }));
+
+    expect(screen.getByRole("checkbox", { name: "上記を理解し、確定します" })).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "確定して印刷" })).toBeDisabled();
+    expect(lockLedgerAction).not.toHaveBeenCalled();
+  });
 
   it("確定通信に失敗してもエラーを表示し、再操作できる", async () => {
     vi.mocked(lockLedgerAction).mockRejectedValueOnce(new Error("network unavailable"));
@@ -158,7 +176,16 @@ describe("LedgerPrintControls", () => {
       <LedgerPrintControls
         {...previewProps}
         isTargetLocked
-        lockIssues={[{ entryId: "entry-1", occurredOn: "2026-09-01", message: "種類別残が負" }]}
+        lockIssues={[
+          {
+            kind: "negative_type_balance",
+            purpose: "shooting",
+            entryId: "entry-1",
+            occurredOn: "2026-09-01",
+            message: "12番・散弾の種類別残が-25個になります",
+            href: "/lab/ammo-ledger/ledger?purpose=shooting&entry=entry-1",
+          },
+        ]}
       />,
     );
     await act(async () => {});
@@ -211,5 +238,94 @@ describe("LedgerPrintControls", () => {
     await act(async () => finishSaving());
     expect(refresh).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(window.print).toHaveBeenCalledTimes(1));
+  });
+
+  it("確定前の問題を用途ごとにまとめ、直す画面へリンクする", () => {
+    render(
+      <LedgerPrintControls
+        {...previewProps}
+        selectedYear={2027}
+        targetDate="2027-03-01"
+        lockIssues={[
+          {
+            kind: "unconfirmed_classification",
+            purpose: null,
+            entryId: null,
+            occurredOn: "2027-03-01",
+            message: "未確認の弾種が1件あります",
+            href: "/lab/ammo-ledger/settings/ammo-types/review",
+          },
+          {
+            kind: "missing_carryover",
+            purpose: "hunting",
+            entryId: null,
+            occurredOn: "2027-01-01",
+            message: "2027年の年初繰越が未登録です（前年末の帳簿残数 50個）",
+            href: "/lab/ammo-ledger/settings/opening-balance?year=2027&purpose=hunting",
+          },
+          {
+            kind: "negative_total_balance",
+            purpose: "hunting",
+            entryId: "entry-1",
+            occurredOn: "2027-02-01",
+            message: "総残数が-25個になります",
+            href: "/lab/ammo-ledger/ledger?purpose=hunting&entry=entry-1",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "2027/03/01まで確定して印刷" })).toBeDisabled();
+    const hunting = screen.getByRole("region", { name: "狩猟用の問題" });
+    expect(within(hunting).getByRole("heading")).toHaveTextContent("狩猟用（2件）");
+    expect(
+      within(hunting).getByRole("link", {
+        name: "2027年の年初繰越が未登録です（前年末の帳簿残数 50個）",
+      }),
+    ).toHaveAttribute(
+      "href",
+      "/lab/ammo-ledger/settings/opening-balance?year=2027&purpose=hunting",
+    );
+    expect(
+      within(hunting).getByRole("link", { name: "2027/02/01: 総残数が-25個になります" }),
+    ).toHaveAttribute("href", "/lab/ammo-ledger/ledger?purpose=hunting&entry=entry-1");
+    expect(
+      within(screen.getByRole("region", { name: "用途共通の問題" })).getByRole("link", {
+        name: "未確認の弾種が1件あります",
+      }),
+    ).toHaveAttribute("href", "/lab/ammo-ledger/settings/ammo-types/review");
+    expect(screen.queryByRole("region", { name: "射撃用の問題" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "帳簿の確定・ロックを開く" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("確定済みの期間に問題があれば、解除するためのロック設定へ案内する", () => {
+    render(
+      <LedgerPrintControls
+        {...previewProps}
+        isTargetLocked
+        lockedThrough="2026-09-01"
+        isPreview={false}
+        lockIssues={[
+          {
+            kind: "missing_entry_detail",
+            purpose: "shooting",
+            entryId: "entry-1",
+            occurredOn: "2026-08-01",
+            message: "相手方住所が未設定",
+            href: "/lab/ammo-ledger/ledger?purpose=shooting&entry=entry-1",
+          },
+        ]}
+      />,
+    );
+
+    expect(
+      screen.getByText("ロックを解除し、以下の問題を修正してから印刷してください"),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "帳簿の確定・ロックを開く" })).toHaveAttribute(
+      "href",
+      "/lab/ammo-ledger/settings/ledger-lock",
+    );
   });
 });

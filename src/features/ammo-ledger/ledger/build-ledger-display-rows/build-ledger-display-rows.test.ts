@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computeRunningPermitBalance } from "@/features/ammo-ledger/permit/compute-running-permit-balance/compute-running-permit-balance";
+import { buildTestEntry } from "@/features/ammo-ledger/workspace/build-test-workspace/build-test-workspace";
 import {
   buildLedgerDisplayRows,
   isDisplayRowSelectable,
@@ -258,6 +259,39 @@ describe("buildLedgerDisplayRows", () => {
     });
 
     expect(rows).toHaveLength(0);
+  });
+
+  it("期間外の帳簿記録は含めない", () => {
+    const rows = buildLedgerDisplayRows({
+      purpose: "shooting",
+      today,
+      permits: [],
+      permitEvents: [],
+      from: "2026-01-01",
+      to: "2026-12-31",
+      entries: [
+        buildTestEntry({
+          id: "e-2025",
+          category: "consume",
+          occurredOn: "2025-12-31",
+          quantity: 5,
+        }),
+        buildTestEntry({
+          id: "e-2026",
+          category: "consume",
+          occurredOn: "2026-01-01",
+          quantity: 5,
+        }),
+        buildTestEntry({
+          id: "e-2027",
+          category: "consume",
+          occurredOn: "2027-01-01",
+          quantity: 5,
+        }),
+      ],
+    });
+
+    expect(rows.map((row) => (row.kind === "entry" ? row.entry.id : row.id))).toEqual(["e-2026"]);
   });
 
   it("未来の許可残数失効行は帳簿に含めない", () => {

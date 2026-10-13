@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { LedgerDisplayRow } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
 import { LedgerTable } from "./ledger-table";
@@ -79,6 +79,76 @@ describe("LedgerTable", () => {
     );
 
     // PC の表とモバイルのカードの両方に出す
-    expect(screen.getAllByText("5000個")).toHaveLength(2);
+    expect(screen.getAllByText("5,000個")).toHaveLength(2);
+  });
+
+  it("数量に受払の符号をつけ、種類別残・総残数・摘要を出し、許可残数は譲受の行だけに出す", () => {
+    const consumeRow: LedgerDisplayRow = {
+      kind: "entry",
+      entry: {
+        ...entryRow.entry,
+        id: "entry-2",
+        category: "consume",
+        occurredOn: "2026-08-09",
+        quantity: 25,
+        location: "テスト射撃場",
+        ledgerNote: "クレー射撃",
+        counterpartyName: null,
+        counterpartyAddress: null,
+      },
+    };
+
+    render(
+      <LedgerTable
+        rows={[entryRow, consumeRow]}
+        purpose="hunting"
+        permitBalances={
+          new Map([
+            ["entry-1", 1150],
+            ["entry-2", 1150],
+          ])
+        }
+        rowBalances={
+          new Map([
+            ["entry-1", { balanceByType: 1050, totalBalance: 1200 }],
+            ["entry-2", { balanceByType: 1025, totalBalance: 1175 }],
+          ])
+        }
+      />,
+    );
+
+    const table = screen.getByRole("table");
+    const [, acquireRow, consumeTableRow] = within(table).getAllByRole("row");
+    expect(within(acquireRow).getByText("+50個")).toBeInTheDocument();
+    expect(within(acquireRow).getByText("1,050個")).toBeInTheDocument();
+    expect(within(acquireRow).getByText("1,150個")).toBeInTheDocument();
+    expect(within(consumeTableRow).getByText("−25個")).toBeInTheDocument();
+    expect(within(consumeTableRow).getByText("1,025個")).toBeInTheDocument();
+    expect(within(consumeTableRow).getByText("1,175個")).toBeInTheDocument();
+    expect(within(consumeTableRow).getByText("テスト射撃場 クレー射撃")).toBeInTheDocument();
+    expect(within(consumeTableRow).queryByText("1,150個")).not.toBeInTheDocument();
+  });
+
+  it("表に見出しと列の範囲を持たせ、カードの操作ボタンは日付・区分・数だけの名前にする", () => {
+    render(<LedgerTable rows={[entryRow]} purpose="hunting" />);
+
+    const table = screen.getByRole("table", { name: "狩猟用の帳簿" });
+    expect(within(table).getByRole("columnheader", { name: "種類別残" })).toHaveAttribute(
+      "scope",
+      "col",
+    );
+    expect(screen.getByRole("button", { name: "2026/08/08 譲受 50個 の操作" })).toBeInTheDocument();
+  });
+
+  it("自宅保管の目安を超えた行は、色だけでなく文字でも示す", () => {
+    render(
+      <LedgerTable rows={[entryRow]} purpose="hunting" homeStorageExceededEntryIds={["entry-1"]} />,
+    );
+
+    const [, row] = within(screen.getByRole("table")).getAllByRole("row");
+    expect(within(row).getByText("目安超え")).toBeInTheDocument();
+    expect(
+      screen.getByText("この時点で全用途の残数が自宅保管の目安（800個）を超えています"),
+    ).toBeInTheDocument();
   });
 });

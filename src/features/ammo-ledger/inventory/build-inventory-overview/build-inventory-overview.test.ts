@@ -45,4 +45,24 @@ describe("buildInventoryOverview", () => {
       { groupId: "9-9.5", label: "9号・9.5号", bookStock: 125 },
     ]);
   });
+
+  it("号数を数の小さい順に並べ、号数未設定は最後にする", () => {
+    const result = buildInventoryOverview({
+      items: ["10", null, "7.5", "9"].map((gaugeNumber, index) => ({
+        ammoTypeId: `a${index}`,
+        ammoTypeName: `弾種${index}`,
+        gaugeNumber,
+        defaultPurpose: "shooting",
+        roundsPerBox: 25,
+        bookStock: 25,
+      })),
+    });
+
+    expect(result.byGauge.map((gauge) => gauge.label)).toEqual([
+      "7.5号",
+      "9号",
+      "10号",
+      "号数未設定",
+    ]);
+  });
 });

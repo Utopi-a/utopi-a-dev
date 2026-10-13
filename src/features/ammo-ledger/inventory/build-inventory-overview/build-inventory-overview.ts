@@ -59,7 +59,8 @@ export function buildInventoryOverview({
       }),
       bookStock,
     }))
-    .sort((a, b) => a.label.localeCompare(b.label, "ja"));
+    // 7.5号・9号・10号を数の順に並べる（文字の順だと10号が先に来る）。
+    .sort((a, b) => a.label.localeCompare(b.label, "ja", { numeric: true }));
 
   const byGaugeGroup = inventoryGaugeGroups.map((group) => ({
     groupId: group.id,

@@ -136,6 +136,7 @@ describe("evaluateHomeStorageLimit", () => {
     expect(result.currentStock).toBe(700);
     expect(result.isCurrentlyExceeded).toBe(false);
     expect(result.exceededEntryIds).toEqual(["e2"]);
+    expect(result.lastExceededOn).toBe("2026-02-01");
   });
 
   it("800発以下なら警告対象にならない", () => {
@@ -162,5 +163,6 @@ describe("evaluateHomeStorageLimit", () => {
 
     expect(result.hasExceededBefore).toBe(false);
     expect(result.currentStock).toBe(500);
+    expect(result.lastExceededOn).toBeNull();
   });
 });

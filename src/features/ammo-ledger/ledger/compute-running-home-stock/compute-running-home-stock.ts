@@ -40,6 +40,7 @@ export function evaluateHomeStorageLimit({
     peakStock = Math.max(peakStock, stock);
     if (stock > limit) exceededEntryIds.push(id);
   }
+  const lastExceededEntryId = exceededEntryIds.at(-1);
 
   return {
     currentStock,
@@ -48,5 +49,6 @@ export function evaluateHomeStorageLimit({
     isCurrentlyExceeded: currentStock > limit,
     hasExceededBefore: peakStock > limit,
     exceededEntryIds,
+    lastExceededOn: entries.find((entry) => entry.id === lastExceededEntryId)?.occurredOn ?? null,
   };
 }

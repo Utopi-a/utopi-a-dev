@@ -14,15 +14,20 @@ import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { buildLedgerHref } from "@/features/ammo-ledger/ledger/build-ledger-href/build-ledger-href";
 import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
+import { buildOpeningBalanceHref } from "@/features/ammo-ledger/opening-balance/build-opening-balance-href/build-opening-balance-href";
 import { buildYearOpeningDay } from "@/features/ammo-ledger/opening-balance/build-year-day/build-year-day";
+import type { PriorYearEndStock } from "@/features/ammo-ledger/opening-balance/compute-prior-year-end-stock/compute-prior-year-end-stock";
 import type { OpeningBalanceSnapshot } from "@/features/ammo-ledger/opening-balance/get-opening-balance/get-opening-balance";
 import { saveOpeningBalanceAction } from "@/features/ammo-ledger/opening-balance/save-opening-balance/save-opening-balance-action";
 import type { AcquisitionPermitName } from "@/features/ammo-ledger/schema/acquisition-permit-name-options";
 import type { AcquisitionPermitPurpose } from "@/features/ammo-ledger/schema/acquisition-permit-purpose-options";
 import {
   type LedgerPurpose,
+  ledgerPurposeLabels,
+  ledgerPurposes,
   ledgerPurposeTabLabels,
 } from "@/features/ammo-ledger/schema/ledger-purpose";
+import { useRequestAmmoLedgerWorkspaceRevalidation } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 
 type OpeningBalanceAmmoType = {
   id: string;
@@ -37,6 +42,7 @@ type OpeningBalanceFormProps = {
   initialPurpose: LedgerPurpose;
   ammoTypes: OpeningBalanceAmmoType[];
   snapshotsByPurpose: Record<LedgerPurpose, OpeningBalanceSnapshot>;
+  priorYearEndStockByPurpose: PriorYearEndStock;
 };
 
 function formatGauge({ gaugeNumber }: { gaugeNumber: string | null }): string {
@@ -72,15 +78,61 @@ function toPermitCarryoverRows({
   }));
 }
 
+function resolveStockInputValue({
+  ammoTypeId,
+  draft,
+  snapshot,
+}: {
+  ammoTypeId: string;
+  draft: OpeningBalanceDraft | undefined;
+  snapshot: OpeningBalanceSnapshot;
+}): string {
+  return (
+    draft?.stockByAmmoType[ammoTypeId] ??
+    (snapshot.stockByAmmoType[ammoTypeId] !== undefined
+      ? String(snapshot.stockByAmmoType[ammoTypeId])
+      : "")
+  );
+}
+
+function buildOpeningBalanceInput({
+  ammoTypes,
+  draft,
+  snapshot,
+}: {
+  ammoTypes: OpeningBalanceAmmoType[];
+  draft: OpeningBalanceDraft | undefined;
+  snapshot: OpeningBalanceSnapshot;
+}) {
+  const permitCarryoverRows = draft?.permitCarryoverRows ?? toPermitCarryoverRows({ snapshot });
+  return {
+    permitCarryovers: permitCarryoverRows.map((row) => ({
+      permitId: row.permitId,
+      name: row.name,
+      permitPurpose: row.permitPurpose,
+      quantity: Number(row.quantity) || 0,
+      expiresOn: row.expiresOn,
+    })),
+    stockByAmmoType: Object.fromEntries(
+      ammoTypes.flatMap((type) => {
+        const value = resolveStockInputValue({ ammoTypeId: type.id, draft, snapshot }).trim();
+        return value === "" ? [] : [[type.id, Number(value)]];
+      }),
+    ) as Record<string, number>,
+  };
+}
+
 export function OpeningBalanceForm({
   years,
   initialYear,
   initialPurpose,
   ammoTypes,
   snapshotsByPurpose,
+  priorYearEndStockByPurpose,
 }: OpeningBalanceFormProps) {
   const router = useRouter();
   const navigateAfterMutation = useAmmoLedgerMutationNavigation();
+  const requestRevalidation = useRequestAmmoLedgerWorkspaceRevalidation();
   const [year, setYear] = useState(initialYear);
 
   useEffect(() => {
@@ -99,9 +151,16 @@ export function OpeningBalanceForm({
     Partial<Record<LedgerPurpose, OpeningBalanceDraft>>
   >({});
   const [error, setError] = useState<string | null>(null);
+  const [fillNotice, setFillNotice] = useState<string | null>(null);
+  const [unsavedNotice, setUnsavedNotice] = useState<string | null>(null);
+  // 帳簿へ移らずに保存したとき、再取得した snapshot が届くまでの比較元にする。
+  const [savedInputByPurpose, setSavedInputByPurpose] = useState<
+    Partial<Record<LedgerPurpose, string>>
+  >({});
   const [isPending, setIsPending] = useState(false);
 
   const snapshot = snapshotsByPurpose[purpose];
+  const priorYearEndStock = priorYearEndStockByPurpose[purpose] ?? {};
   const draft = draftsByPurpose[purpose];
   const permitCarryoverRows = useMemo(
     () => draft?.permitCarryoverRows ?? toPermitCarryoverRows({ snapshot }),
@@ -114,14 +173,29 @@ export function OpeningBalanceForm({
     () =>
       ammoTypes.map((type) => ({
         type,
-        value:
-          draft?.stockByAmmoType[type.id] ??
-          (snapshot.stockByAmmoType[type.id] !== undefined
-            ? String(snapshot.stockByAmmoType[type.id])
-            : ""),
+        value: resolveStockInputValue({ ammoTypeId: type.id, draft, snapshot }),
       })),
     [ammoTypes, draft, snapshot],
   );
+  const unsavedPurposes = ledgerPurposes.filter((target) => {
+    const targetDraft = draftsByPurpose[target];
+    if (!targetDraft) return false;
+    const targetSnapshot = snapshotsByPurpose[target];
+    const savedInput =
+      savedInputByPurpose[target] ??
+      JSON.stringify(
+        buildOpeningBalanceInput({ ammoTypes, draft: undefined, snapshot: targetSnapshot }),
+      );
+    return (
+      JSON.stringify(
+        buildOpeningBalanceInput({ ammoTypes, draft: targetDraft, snapshot: targetSnapshot }),
+      ) !== savedInput
+    );
+  });
+  // 残数0の弾種は繰り越す実包がないため、空欄（繰越なし）のままにする。
+  const fillableAmmoTypeIds = stockInputs
+    .filter(({ type, value }) => value.trim() === "" && (priorYearEndStock[type.id] ?? 0) > 0)
+    .map(({ type }) => type.id);
 
   function updateDraft({
     update,
@@ -140,7 +214,9 @@ export function OpeningBalanceForm({
   }
 
   function handleYearChange({ year: nextYear }: { year: number }) {
-    router.push(`/lab/ammo-ledger/settings/opening-balance?year=${nextYear}`);
+    router.push(
+      buildOpeningBalanceHref({ occurredOn: buildYearOpeningDay({ year: nextYear }), purpose }),
+    );
   }
 
   function handleStockChange({ ammoTypeId, value }: { ammoTypeId: string; value: string }) {
@@ -152,33 +228,35 @@ export function OpeningBalanceForm({
     });
   }
 
+  function handleFillPriorYearEndStock() {
+    updateDraft({
+      update: (current) => ({
+        ...current,
+        stockByAmmoType: {
+          ...current.stockByAmmoType,
+          ...Object.fromEntries(
+            fillableAmmoTypeIds.map((ammoTypeId) => [
+              ammoTypeId,
+              String(priorYearEndStock[ammoTypeId]),
+            ]),
+          ),
+        },
+      }),
+    });
+    setFillNotice(
+      `${fillableAmmoTypeIds.length}件の弾種に前年末の残数を入れました。保存すると繰越として登録します。`,
+    );
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setIsPending(true);
     setError(null);
+    setUnsavedNotice(null);
 
     try {
-      const parsedStock = Object.fromEntries(
-        stockInputs.flatMap(({ type, value: rawValue }) => {
-          const value = rawValue.trim();
-          return value === "" ? [] : [[type.id, Number(value)]];
-        }),
-      );
-
-      const parsedPermitCarryovers = permitCarryoverRows.map((row) => ({
-        permitId: row.permitId,
-        name: row.name,
-        permitPurpose: row.permitPurpose,
-        quantity: Number(row.quantity) || 0,
-        expiresOn: row.expiresOn,
-      }));
-
-      const result = await saveOpeningBalanceAction({
-        year,
-        purpose,
-        permitCarryovers: parsedPermitCarryovers,
-        stockByAmmoType: parsedStock,
-      });
+      const input = buildOpeningBalanceInput({ ammoTypes, draft, snapshot });
+      const result = await saveOpeningBalanceAction({ year, purpose, ...input });
 
       if (!result.ok) {
         setError(result.error);
@@ -187,6 +265,19 @@ export function OpeningBalanceForm({
       }
 
       showAmmoLedgerToast({ action: "saved", subject: "年初繰越" });
+      // 保存は表示中の用途だけなので、他の用途の入力を残したまま帳簿へ移らない。
+      const otherUnsavedPurposes = unsavedPurposes.filter((target) => target !== purpose);
+      if (otherUnsavedPurposes.length > 0) {
+        setSavedInputByPurpose((current) => ({ ...current, [purpose]: JSON.stringify(input) }));
+        setUnsavedNotice(
+          `${ledgerPurposeLabels[purpose]}の繰越を保存しました。${otherUnsavedPurposes
+            .map((target) => ledgerPurposeLabels[target])
+            .join("・")}の入力がまだ保存されていません。`,
+        );
+        requestRevalidation();
+        router.refresh();
+        return;
+      }
       navigateAfterMutation({ href: buildLedgerHref({ purpose }) });
     } catch {
       setError("通信に失敗しました。帳簿で保存状況を確認してから、再試行してください。");
@@ -200,11 +291,19 @@ export function OpeningBalanceForm({
       <div className="max-w-xs">
         <LedgerYearSelect years={years} value={year} onChange={handleYearChange} label="対象年" />
         <p className="mt-2 text-xs text-muted-foreground">各年の1月1日付で繰越を登録します。</p>
+        {unsavedPurposes.length > 0 ? (
+          <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+            年を切り替えると、保存していない入力は消えます。
+          </p>
+        ) : null}
       </div>
 
       <PurposeFilter
         current={purpose}
-        onPurposeChange={({ nextPurpose }) => setPurpose(nextPurpose)}
+        onPurposeChange={({ nextPurpose }) => {
+          setPurpose(nextPurpose);
+          setFillNotice(null);
+        }}
       />
 
       <section className="space-y-3">
@@ -226,8 +325,31 @@ export function OpeningBalanceForm({
       <section className="space-y-3">
         <SectionHeading
           title={`${year}年 ${purposeLabel} — 残弾数`}
-          description="その年の最初の残数を入力します。0は残数を0に設定し、空欄は繰越を登録しません（登録済みの繰越は取り消します）。"
+          description="アプリで記録を続けている場合は前年末の残数を入れて保存します。紙の帳簿から移行する場合は1月1日時点の残数を入力します。空欄の弾種は繰越を登録しません（登録済みの繰越は取り消します）。0を入れると残数0として登録します。"
         />
+
+        {Object.keys(priorYearEndStock).length > 0 ? (
+          <div className="space-y-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={fillableAmmoTypeIds.length === 0}
+              onClick={handleFillPriorYearEndStock}
+            >
+              前年末の残数を入れる
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              空欄の弾種に、{year - 1}
+              年末の帳簿残数を入れます。入力済みの弾種と残数0の弾種はそのままです。
+            </p>
+            {fillNotice ? (
+              <p role="status" className="text-xs font-medium">
+                {fillNotice}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         {ammoTypes.length === 0 ? (
           <p className="text-sm text-muted-foreground">
@@ -235,19 +357,20 @@ export function OpeningBalanceForm({
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[480px] text-sm">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/50 text-left text-xs text-muted-foreground">
                   <th className="px-1 py-2 font-medium">弾種</th>
-                  <th className="px-1 py-2 font-medium">号数</th>
-                  <th className="px-1 py-2 text-right font-medium">繰越残数（個）</th>
+                  {/* 弾種名に号数が入るため、狭い画面では号数の列を省いて横にはみ出さないようにする。 */}
+                  <th className="hidden px-1 py-2 font-medium sm:table-cell">号数</th>
+                  <th className="w-36 px-1 py-2 text-right font-medium">繰越残数（個）</th>
                 </tr>
               </thead>
               <tbody>
                 {stockInputs.map(({ type, value }) => (
                   <tr key={type.id} className="border-b border-border/40 last:border-0">
-                    <td className="px-1 py-2 font-medium">{type.name}</td>
-                    <td className="px-1 py-2 text-muted-foreground">
+                    <td className="px-1 py-2 font-medium break-words">{type.name}</td>
+                    <td className="hidden px-1 py-2 text-muted-foreground sm:table-cell">
                       {formatGauge({ gaugeNumber: type.gaugeNumber })}
                     </td>
                     <td className="px-1 py-2">
@@ -256,11 +379,17 @@ export function OpeningBalanceForm({
                         min={0}
                         inputMode="numeric"
                         value={value}
+                        aria-label={`${type.name}の繰越残数`}
                         onChange={(event) =>
                           handleStockChange({ ammoTypeId: type.id, value: event.target.value })
                         }
                         className="ml-auto max-w-32 text-right tabular-nums"
                       />
+                      {priorYearEndStock[type.id] !== undefined ? (
+                        <p className="mt-1 text-right text-xs text-muted-foreground tabular-nums">
+                          前年末の帳簿残数 {priorYearEndStock[type.id]}個
+                        </p>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -275,6 +404,11 @@ export function OpeningBalanceForm({
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}
+        </p>
+      ) : null}
+      {unsavedNotice ? (
+        <p role="status" className="text-sm font-medium text-amber-700 dark:text-amber-400">
+          {unsavedNotice}
         </p>
       ) : null}
 

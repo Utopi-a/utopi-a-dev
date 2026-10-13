@@ -37,6 +37,8 @@ test("一括消費の在庫不足は全件を保存せず、訂正後は同日�
   await page.getByRole("article").nth(1).locator('input[id="box-count"]').fill("1");
   await page.getByRole("button", { name: "2件をまとめて保存", exact: true }).click();
   await expect(page).toHaveURL(/\/ledger\?purpose=shooting$/);
+  // 用途タブの件数は表示中の年の件数を出すため、保存した記録の年を選ぶ。
+  await page.getByLabel("対象年").selectOption(String(ledger.year));
   await expect(page.getByRole("button", { name: "射撃用 4件", exact: true })).toBeVisible();
   const saved = await ledger.sql`
     select quantity, day_order from ammo_ledger_entry

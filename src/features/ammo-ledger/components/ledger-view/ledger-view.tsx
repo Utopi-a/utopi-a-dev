@@ -1,17 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { ActivePermitStatus } from "@/features/ammo-ledger/components/active-permit-status/active-permit-status";
 import { AmmoLedgerRefreshIndicator } from "@/features/ammo-ledger/components/ammo-ledger-refresh-indicator/ammo-ledger-refresh-indicator";
 import { HomeStorageWarning } from "@/features/ammo-ledger/components/home-storage-warning/home-storage-warning";
+import { LedgerLockedThroughLink } from "@/features/ammo-ledger/components/ledger-locked-through-link/ledger-locked-through-link";
 import { LedgerTableShell } from "@/features/ammo-ledger/components/ledger-table/ledger-table-shell";
 import { LedgerYearSelect } from "@/features/ammo-ledger/components/ledger-year-select/ledger-year-select";
 import { PurposeFilter } from "@/features/ammo-ledger/components/purpose-filter/purpose-filter";
 import { WorkspaceViewLoader } from "@/features/ammo-ledger/components/workspace-view-loader/workspace-view-loader";
 import { evaluateHomeStorageLimit } from "@/features/ammo-ledger/ledger/compute-running-home-stock/compute-running-home-stock";
 import { formatStockQuantity } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
-import { buildAvailableYears } from "@/features/ammo-ledger/opening-balance/build-available-years/build-available-years";
+import {
+  buildAvailableYears,
+  buildYearDateRange,
+} from "@/features/ammo-ledger/opening-balance/build-available-years/build-available-years";
+import { buildOpeningBalanceHref } from "@/features/ammo-ledger/opening-balance/build-opening-balance-href/build-opening-balance-href";
 import {
   computeCurrentPermitState,
   computeRunningPermitBalance,
@@ -20,6 +26,7 @@ import {
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import {
   type LedgerPurpose,
+  ledgerPurposeLabels,
   ledgerPurposeTabLabels,
 } from "@/features/ammo-ledger/schema/ledger-purpose";
 import type { PermitEventKind } from "@/features/ammo-ledger/schema/permit-event-kind";
@@ -29,11 +36,30 @@ import { useSavingLedgerChangeCount } from "@/features/ammo-ledger/workspace/pen
 import { useAmmoLedgerWorkspace } from "@/features/ammo-ledger/workspace/use-ammo-ledger-workspace/use-ammo-ledger-workspace";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
-function syncPurposeToUrl({ purpose }: { purpose: LedgerPurpose }) {
+function replaceLedgerQuery({ purpose, year }: { purpose: LedgerPurpose; year: number }) {
   const url = new URL(window.location.href);
   url.searchParams.set("purpose", purpose);
+  url.searchParams.set("year", String(year));
+  // 強調表示は保存直後の記録を示すためのもので、表示を切り替えたら外す。
+  url.searchParams.delete("entry");
   window.history.replaceState(null, "", url);
 }
+
+const lastLedgerPurposeStorageKey = "ammo-ledger:last-ledger-purpose";
+
+function readLastLedgerPurpose(): LedgerPurpose | null {
+  try {
+    return parseLedgerPurpose({ value: window.localStorage.getItem(lastLedgerPurposeStorageKey) });
+  } catch {
+    return null;
+  }
+}
+
+function subscribeToNothing() {
+  return () => {};
+}
+
+const ledgerEmptyStateLinkClass = "font-medium text-foreground underline-offset-4 hover:underline";
 
 type LedgerViewContentProps = {
   workspace: AmmoLedgerWorkspace;
@@ -54,27 +80,66 @@ function LedgerViewContent({
   const searchParams = useSearchParams();
   // 帳票は DB から作るため、保存待ちの変更があるうちは印刷へ進ませない。
   const isSaving = useSavingLedgerChangeCount() > 0;
-  const purpose = parseLedgerPurpose({ value: searchParams.get("purpose") }) ?? "shooting";
+  // サーバー描画では読めないため、描画後に最後に見た用途へ切り替える。
+  const lastPurpose = useSyncExternalStore(subscribeToNothing, readLastLedgerPurpose, () => null);
+  const purpose =
+    parseLedgerPurpose({ value: searchParams.get("purpose") }) ?? lastPurpose ?? "shooting";
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(lastLedgerPurposeStorageKey, purpose);
+    } catch {
+      // 保存できない環境では毎回射撃で開く。
+    }
+  }, [purpose]);
   const today = getTokyoIsoDate();
   const currentYear = Number(today.slice(0, 4));
-  const [printYear, setPrintYear] = useState(currentYear);
   const { entries, permitEvents, permits } = workspace;
-  const entryCounts = useMemo(
-    () => ({
-      shooting: entries.filter((entry) => entry.purpose === "shooting").length,
-      hunting: entries.filter((entry) => entry.purpose === "hunting").length,
-      pest_control: entries.filter((entry) => entry.purpose === "pest_control").length,
-    }),
-    [entries],
-  );
-  const highlightedEntryExists = highlightedEntryId
-    ? entries.some((entry) => entry.id === highlightedEntryId)
-    : false;
 
   const purposeEntries = useMemo(
     () => filterByPurpose({ rows: entries, purpose }),
     [entries, purpose],
   );
+
+  const availableYears = useMemo(() => {
+    const dates = [
+      ...entries.map((entry) => entry.occurredOn),
+      ...permitEvents.map((event) => event.occurredOn),
+    ];
+    // 未来の日付で記録した行も見落とさないよう、その年まで選べるようにする。
+    const latestYear = dates.reduce(
+      (latest, date) => Math.max(latest, Number(date.slice(0, 4))),
+      currentYear,
+    );
+    return buildAvailableYears({ dates: [...dates, today], currentYear: latestYear });
+  }, [entries, permitEvents, currentYear, today]);
+
+  // 保存直後の遷移は年を持たないため、強調する記録の年を開く。
+  const highlightedEntryYear = Number(
+    purposeEntries.find((entry) => entry.id === highlightedEntryId)?.occurredOn.slice(0, 4),
+  );
+  const yearParam = Number(searchParams.get("year"));
+  const year = availableYears.includes(yearParam)
+    ? yearParam
+    : availableYears.includes(highlightedEntryYear)
+      ? highlightedEntryYear
+      : currentYear;
+  const { from, to } = buildYearDateRange({ year });
+
+  const yearEntries = useMemo(
+    () => entries.filter((entry) => entry.occurredOn >= from && entry.occurredOn <= to),
+    [entries, from, to],
+  );
+  const entryCounts = useMemo(
+    () => ({
+      shooting: filterByPurpose({ rows: yearEntries, purpose: "shooting" }).length,
+      hunting: filterByPurpose({ rows: yearEntries, purpose: "hunting" }).length,
+      pest_control: filterByPurpose({ rows: yearEntries, purpose: "pest_control" }).length,
+    }),
+    [yearEntries],
+  );
+  const highlightedEntryExists = highlightedEntryId
+    ? yearEntries.some((entry) => entry.id === highlightedEntryId && entry.purpose === purpose)
+    : false;
 
   const purposePermitEvents = useMemo(
     () => filterByPurpose({ rows: permitEvents, purpose }),
@@ -137,20 +202,8 @@ function LedgerViewContent({
     [entries],
   );
 
-  const availablePrintYears = useMemo(
-    () =>
-      buildAvailableYears({
-        dates: [
-          ...entries.map((entry) => entry.occurredOn),
-          ...permitEvents.map((event) => event.occurredOn),
-        ],
-        currentYear,
-      }),
-    [entries, permitEvents, currentYear],
-  );
-
   function handlePurposeChange({ nextPurpose }: { nextPurpose: LedgerPurpose }) {
-    syncPurposeToUrl({ purpose: nextPurpose });
+    replaceLedgerQuery({ purpose: nextPurpose, year });
   }
 
   return (
@@ -158,6 +211,7 @@ function LedgerViewContent({
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">帳簿</h1>
         <p className="text-sm text-muted-foreground">{ledgerPurposeTabLabels[purpose]}の法定記録</p>
+        <LedgerLockedThroughLink lockState={workspace.lockState} />
       </div>
 
       <PurposeFilter
@@ -177,6 +231,7 @@ function LedgerViewContent({
       <HomeStorageWarning
         currentStock={homeStorage.currentStock}
         peakStock={homeStorage.peakStock}
+        lastExceededOn={homeStorage.lastExceededOn}
       />
 
       <div className="flex flex-col gap-3 border-b border-border/40 pb-4 sm:flex-row sm:items-end sm:justify-between">
@@ -187,7 +242,7 @@ function LedgerViewContent({
           </div>
           <div className="min-w-0">
             <dt className="text-muted-foreground">件数</dt>
-            <dd className="font-medium tabular-nums">{purposeEntries.length}件</dd>
+            <dd className="font-medium tabular-nums">{entryCounts[purpose]}件</dd>
           </div>
           <div className="min-w-0">
             <dt className="text-muted-foreground">帳簿残数（全用途）</dt>
@@ -199,37 +254,41 @@ function LedgerViewContent({
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
           <div className="w-full max-w-[10rem] sm:w-36">
             <LedgerYearSelect
-              years={availablePrintYears}
-              value={printYear}
-              onChange={({ year }) => setPrintYear(year)}
-              id="ledger-print-year"
-              label="印刷する年"
+              years={availableYears}
+              value={year}
+              onChange={({ year: nextYear }) => replaceLedgerQuery({ purpose, year: nextYear })}
             />
           </div>
           <button
             type="button"
             disabled={isSaving}
-            onClick={() => router.push(`/lab/ammo-ledger/ledger/print?year=${printYear}`)}
+            onClick={() => router.push(`/lab/ammo-ledger/ledger/print?year=${year}`)}
             className="shrink-0 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSaving ? "保存が終わると印刷できます" : `${printYear}年を印刷する →`}
+            {isSaving ? "保存が終わると印刷できます" : `${year}年を印刷する →`}
           </button>
         </div>
       </div>
 
       {highlightedEntryId ? (
-        <p
-          className="rounded-lg border border-primary/25 bg-primary/5 px-3 py-2 text-sm text-foreground"
-          aria-live="polite"
-        >
-          {highlightedEntryExists
-            ? savingEntryIds.has(highlightedEntryId)
-              ? "記録を保存しています。保存が終わるまで編集・取消はできません。"
-              : "保存した記録を強調表示しています。"
-            : isRefreshing
-              ? "帳簿の表示を更新しています…"
-              : "指定された記録を表示できません。帳簿を再取得してください。"}
-        </p>
+        <div className="flex items-start justify-between gap-3 rounded-lg border border-primary/25 bg-primary/5 px-3 py-2 text-sm text-foreground">
+          <p aria-live="polite">
+            {highlightedEntryExists
+              ? savingEntryIds.has(highlightedEntryId)
+                ? "記録を保存しています。保存が終わるまで編集・取消はできません。"
+                : "保存した記録を強調表示しています。"
+              : isRefreshing
+                ? "帳簿の表示を更新しています…"
+                : "指定された記録を表示できません。帳簿を再取得してください。"}
+          </p>
+          <button
+            type="button"
+            onClick={() => replaceLedgerQuery({ purpose, year })}
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+          >
+            強調を解除
+          </button>
+        </div>
       ) : null}
 
       <LedgerTableShell
@@ -238,11 +297,36 @@ function LedgerViewContent({
         permits={permits}
         purpose={purpose}
         today={today}
+        from={from}
+        to={to}
         permitBalances={permitBalances}
         homeStorageExceededEntryIds={homeStorage.exceededEntryIds}
         highlightedEntryId={highlightedEntryId}
         lockState={workspace.lockState}
         savingEntryIds={savingEntryIds}
+        emptyState={
+          <div className="space-y-3 py-10 text-center text-sm text-muted-foreground">
+            <p>
+              {purposeEntries.length === 0
+                ? `${ledgerPurposeLabels[purpose]}の記録はまだありません。`
+                : `${year}年の${ledgerPurposeLabels[purpose]}の記録はありません。`}
+            </p>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+              <Link
+                href={buildOpeningBalanceHref({ occurredOn: from, purpose })}
+                className={ledgerEmptyStateLinkClass}
+              >
+                {year}年の年初繰越を登録する
+              </Link>
+              <Link href="/lab/ammo-ledger/consume/new" className={ledgerEmptyStateLinkClass}>
+                消費を記録する
+              </Link>
+              <Link href="/lab/ammo-ledger/inflow/new" className={ledgerEmptyStateLinkClass}>
+                譲り受けを記録する
+              </Link>
+            </div>
+          </div>
+        }
       />
 
       <AmmoLedgerRefreshIndicator visible={isRefreshing} />

@@ -256,7 +256,7 @@ describe("useLedgerTransactionSubmit", () => {
 
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent(
-      "消費記録（2026/10/13 テスト散弾 7.5号 50発）を保存できたか確認できませんでした",
+      "消費記録（2026/10/13 テスト散弾 7.5号 50個）を保存できたか確認できませんでした",
     );
     expect(alert).toHaveTextContent("二重に登録されることはありません");
     const firstEntryId = (

@@ -20,7 +20,7 @@ export const settingsHubGroups = [
       {
         href: "/lab/ammo-ledger/settings/opening-balance",
         label: "年初繰越",
-        description: "紙の帳簿から移行するときの残弾数・許可残数",
+        description: "1月1日時点の残弾数・許可残数（前年からの繰越・紙の帳簿からの移行）",
       },
       {
         href: "/lab/ammo-ledger/settings/ledger-lock",

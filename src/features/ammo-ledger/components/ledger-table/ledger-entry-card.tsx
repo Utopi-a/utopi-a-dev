@@ -5,18 +5,24 @@ import {
   PermitExpiryBadge,
   SavingBadge,
 } from "@/features/ammo-ledger/components/ledger-table/ledger-entry-display";
+import { formatLedgerRemarks } from "@/features/ammo-ledger/documents/format-ledger-remarks/format-ledger-remarks";
 import {
   buildPermitCarryoverLabel,
   isDisplayRowSelectable,
   type LedgerDisplayRow,
 } from "@/features/ammo-ledger/ledger/build-ledger-display-rows/build-ledger-display-rows";
+import type { LedgerRowBalance } from "@/features/ammo-ledger/ledger/build-ledger-row-balances/build-ledger-row-balances";
 import {
-  formatAmmoQuantity,
   formatEntryAmmoQuantityLabel,
+  formatEntryQuantity,
   formatPermitBalance,
+  formatStockQuantity,
 } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { formatPermitExpiryLabel } from "@/features/ammo-ledger/permit/compute-permit-expiry/compute-permit-expiry";
-import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
+import {
+  type LedgerCategory,
+  ledgerCategoryLabels,
+} from "@/features/ammo-ledger/schema/ledger-category";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
@@ -24,11 +30,20 @@ import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 type LedgerEntryCardProps = {
   row: LedgerDisplayRow;
   permitBalance?: number;
+  balance?: LedgerRowBalance;
   isHomeStorageExceeded?: boolean;
   /** 保存の応答待ち。確定するまで編集・取消を受け付けない */
   isSaving?: boolean;
   onSelect: ({ row, permitBalance }: { row: LedgerDisplayRow; permitBalance?: number }) => void;
 };
+
+const cardFocusClass =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+
+// カード全体を読み上げると長いため、操作ボタンの名前は日付・区分・数だけにする。
+function buildRowActionLabel({ occurredOn, subject }: { occurredOn: string; subject: string }) {
+  return `${formatIsoDateForDisplay({ value: occurredOn })} ${subject} の操作`;
+}
 
 function DetailLine({ label, value }: { label: string; value: string }) {
   return (
@@ -42,6 +57,7 @@ function DetailLine({ label, value }: { label: string; value: string }) {
 export function LedgerEntryCard({
   row,
   permitBalance,
+  balance,
   isHomeStorageExceeded = false,
   isSaving = false,
   onSelect,
@@ -54,8 +70,15 @@ export function LedgerEntryCard({
     return (
       <button
         type="button"
+        aria-label={buildRowActionLabel({
+          occurredOn: row.occurredOn,
+          subject: `繰越 ${row.permitName}`,
+        })}
         onClick={() => onSelect({ row, permitBalance })}
-        className="flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5 text-left transition-colors hover:border-border hover:bg-muted/30 active:bg-muted/40"
+        className={cn(
+          "flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5 text-left transition-colors hover:border-border hover:bg-muted/30 active:bg-muted/40",
+          cardFocusClass,
+        )}
       >
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -100,17 +123,28 @@ export function LedgerEntryCard({
   }
 
   const entry = row.entry;
+  const remarks = formatLedgerRemarks({
+    category: entry.category,
+    location: entry.location,
+    ledgerNote: entry.ledgerNote,
+    counterpartyName: entry.counterpartyName,
+  });
 
   return (
     <button
       type="button"
       disabled={!selectable}
+      aria-label={buildRowActionLabel({
+        occurredOn: entry.occurredOn,
+        subject: `${ledgerCategoryLabels[entry.category as LedgerCategory] ?? entry.category} ${formatStockQuantity({ quantity: entry.quantity })}`,
+      })}
       onClick={() => selectable && onSelect({ row, permitBalance })}
       className={cn(
         "flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5 text-left transition-colors",
+        cardFocusClass,
         selectable && "hover:border-border hover:bg-muted/30 active:bg-muted/40",
         !selectable && "cursor-default",
-        isHomeStorageExceeded && "border-amber-500/30 bg-amber-500/5",
+        isHomeStorageExceeded && "border-rose-500/40 bg-rose-500/5",
         isSaving && "border-dashed",
       )}
     >
@@ -128,21 +162,20 @@ export function LedgerEntryCard({
             label={formatEntryAmmoQuantityLabel({
               category: entry.category as LedgerCategory,
             })}
-            value={formatAmmoQuantity({ quantity: entry.quantity })}
+            value={formatEntryQuantity({ category: entry.category, quantity: entry.quantity })}
           />
+          {balance ? (
+            <DetailLine
+              label="種類別残"
+              value={`${formatStockQuantity({ quantity: balance.balanceByType })}／総残数 ${formatStockQuantity({ quantity: balance.totalBalance })}`}
+            />
+          ) : null}
           {permitBalance !== undefined ? (
             <DetailLine label="許可残数" value={formatPermitBalance({ balance: permitBalance })} />
           ) : null}
-          {entry.location ? <DetailLine label="場所" value={entry.location} /> : null}
-          {entry.counterpartyName ? (
-            <DetailLine
-              label="相手方"
-              value={
-                entry.counterpartyAddress
-                  ? `${entry.counterpartyName}（${entry.counterpartyAddress}）`
-                  : entry.counterpartyName
-              }
-            />
+          {remarks ? <DetailLine label="摘要" value={remarks} /> : null}
+          {entry.counterpartyAddress ? (
+            <DetailLine label="相手方の住所" value={entry.counterpartyAddress} />
           ) : null}
           {entry.gunName ? (
             <DetailLine
@@ -156,8 +189,8 @@ export function LedgerEntryCard({
             />
           ) : null}
           {isHomeStorageExceeded ? (
-            <p className="text-xs text-amber-700 dark:text-amber-300">
-              この時点で自宅保管の目安（800個）を超えています
+            <p className="text-xs text-rose-700 dark:text-rose-300">
+              この時点で全用途の残数が自宅保管の目安（800個）を超えています
             </p>
           ) : null}
         </div>

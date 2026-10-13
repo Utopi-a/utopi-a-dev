@@ -89,6 +89,13 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
     }
   }
 
+  // この欄は年初繰越のフォームの中にあるため、Enter で繰越全体を保存せず弾種の追加として扱う。
+  function handleEnterToAdd(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "Enter" || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    if (!isPending) void handleAdd();
+  }
+
   if (!isOpen) {
     return (
       <Button type="button" variant="outline" size="sm" onClick={() => setIsOpen(true)}>
@@ -107,6 +114,7 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
             id="add-caliber"
             value={caliber}
             onChange={(event) => setCaliber(event.target.value)}
+            onKeyDown={handleEnterToAdd}
           />
         </div>
         <FieldSelect
@@ -135,6 +143,7 @@ export function OpeningBalanceAmmoTypeAdd({ defaultPurpose }: OpeningBalanceAmmo
             min={1}
             value={roundsPerBox}
             onChange={(event) => setRoundsPerBox(event.target.value)}
+            onKeyDown={handleEnterToAdd}
           />
         </div>
       </div>

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
 import { ClassificationReviewStatus } from "@/features/ammo-ledger/components/ammo-type-classification-review/classification-review-status";
@@ -20,12 +19,7 @@ export default async function AmmoTypeClassificationReviewPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">弾種分類の確認</h1>
-        <Link href="/lab/ammo-ledger/settings/ammo-types" className="text-sm text-muted-foreground">
-          弾種一覧へ戻る
-        </Link>
-      </div>
+      <h1 className="text-2xl font-semibold tracking-tight">弾種分類の確認</h1>
 
       <ClassificationReviewStatus
         unconfirmedCount={status.unconfirmedCount}

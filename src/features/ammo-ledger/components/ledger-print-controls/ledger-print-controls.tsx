@@ -17,7 +17,6 @@ import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display"
 type LedgerPrintControlsProps = {
   years: number[];
   selectedYear: number;
-  backHref?: string;
   lockedThrough?: string | null;
   isTargetLocked: boolean;
   canPrintOfficially: boolean;
@@ -30,7 +29,6 @@ type LedgerPrintControlsProps = {
 export function LedgerPrintControls({
   years,
   selectedYear,
-  backHref = "/lab/ammo-ledger/ledger",
   lockedThrough,
   isTargetLocked,
   canPrintOfficially,
@@ -142,9 +140,6 @@ export function LedgerPrintControls({
   return (
     <div className="no-print space-y-4">
       <div className="flex flex-wrap gap-2">
-        <Link href={backHref} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-          ← 帳簿に戻る
-        </Link>
         {canPrintOfficially && !hasBlockingIssues ? (
           <Button
             type="button"

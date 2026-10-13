@@ -1,6 +1,9 @@
 import { compareLedgerEntries } from "@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
-import { parseLedgerPurpose } from "@/features/ammo-ledger/schema/resolve-default-purpose";
+import {
+  parseLedgerPurpose,
+  resolveDefaultPurpose,
+} from "@/features/ammo-ledger/schema/resolve-default-purpose";
 import type { LedgerEntryRow } from "@/features/ammo-ledger/workspace/apply-ledger-entry-changes/apply-ledger-entry-changes";
 
 export type ConsumeDefaults = {
@@ -15,12 +18,12 @@ export type ConsumeDefaults = {
 
 /**
  * 新しい消費記録の初期値を決める。直前の消費と同じ銃・弾・用途を使い、
- * 前回がない・削除済みの場合は、登録が1件だけの銃・弾を選ぶ。
+ * 前回がない・削除済みの場合は、登録が1件だけの銃・弾を選ぶ（用途はその弾の既定用途）。
  */
 export function resolveConsumeDefaults({
   entries,
   gunIds,
-  ammoTypeIds,
+  ammoTypes,
 }: {
   entries: Pick<
     LedgerEntryRow,
@@ -34,7 +37,7 @@ export function resolveConsumeDefaults({
     | "createdAt"
   >[];
   gunIds: string[];
-  ammoTypeIds: string[];
+  ammoTypes: { id: string; defaultPurpose: string | null }[];
 }): ConsumeDefaults {
   const previous = entries
     .filter((entry) => entry.category === "consume")
@@ -43,14 +46,22 @@ export function resolveConsumeDefaults({
   const previousGunId =
     previous?.gunId && gunIds.includes(previous.gunId) ? previous.gunId : undefined;
   const previousAmmoTypeId =
-    previous?.ammoTypeId && ammoTypeIds.includes(previous.ammoTypeId)
+    previous?.ammoTypeId && ammoTypes.some((type) => type.id === previous.ammoTypeId)
       ? previous.ammoTypeId
       : undefined;
+  const onlyAmmoType = ammoTypes.length === 1 ? ammoTypes[0] : undefined;
+  const previousPurpose = previous
+    ? (parseLedgerPurpose({ value: previous.purpose }) ?? undefined)
+    : undefined;
 
   return {
     gunId: previousGunId ?? (gunIds.length === 1 ? gunIds[0] : undefined),
-    ammoTypeId: previousAmmoTypeId ?? (ammoTypeIds.length === 1 ? ammoTypeIds[0] : undefined),
-    purpose: previous ? (parseLedgerPurpose({ value: previous.purpose }) ?? undefined) : undefined,
+    ammoTypeId: previousAmmoTypeId ?? onlyAmmoType?.id,
+    // 弾を自動で選んだときは、手で選んだときと同じくその弾の既定用途にそろえる。
+    purpose:
+      !previousAmmoTypeId && onlyAmmoType
+        ? resolveDefaultPurpose({ defaultPurpose: onlyAmmoType.defaultPurpose })
+        : previousPurpose,
     location: previous?.location ?? undefined,
     fromPreviousEntry: Boolean(previousGunId || previousAmmoTypeId),
   };

@@ -31,7 +31,7 @@ export function ConsumeNewView() {
   const { fromPreviousEntry, ...defaults } = resolveConsumeDefaults({
     entries: workspace.entries,
     gunIds: guns.map((gun) => gun.id),
-    ammoTypeIds: ammoTypes.map((type) => type.id),
+    ammoTypes,
   });
 
   const initialValues = draft

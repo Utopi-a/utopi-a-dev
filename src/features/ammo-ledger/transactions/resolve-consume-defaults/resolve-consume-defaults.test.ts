@@ -34,7 +34,10 @@ describe("resolveConsumeDefaults", () => {
         }),
       ],
       gunIds: ["gun-a", "gun-b"],
-      ammoTypeIds: ["ammo-a", "ammo-b"],
+      ammoTypes: [
+        { id: "ammo-a", defaultPurpose: "shooting" },
+        { id: "ammo-b", defaultPurpose: "shooting" },
+      ],
     });
 
     expect(result).toEqual({
@@ -59,7 +62,10 @@ describe("resolveConsumeDefaults", () => {
         }),
       ],
       gunIds: ["only-gun"],
-      ammoTypeIds: ["ammo-a", "ammo-b"],
+      ammoTypes: [
+        { id: "ammo-a", defaultPurpose: "shooting" },
+        { id: "ammo-b", defaultPurpose: "shooting" },
+      ],
     });
 
     expect(result).toEqual({
@@ -71,13 +77,36 @@ describe("resolveConsumeDefaults", () => {
     });
   });
 
-  it("消費記録がなければ用途は決めない", () => {
+  it("消費記録がなく弾が複数なら、弾も用途も決めない", () => {
     expect(
-      resolveConsumeDefaults({ entries: [], gunIds: ["gun-a", "gun-b"], ammoTypeIds: ["ammo-a"] }),
+      resolveConsumeDefaults({
+        entries: [],
+        gunIds: ["gun-a", "gun-b"],
+        ammoTypes: [
+          { id: "ammo-a", defaultPurpose: "shooting" },
+          { id: "ammo-b", defaultPurpose: "hunting" },
+        ],
+      }),
     ).toEqual({
       gunId: undefined,
-      ammoTypeId: "ammo-a",
+      ammoTypeId: undefined,
       purpose: undefined,
+      location: undefined,
+      fromPreviousEntry: false,
+    });
+  });
+
+  it("消費記録がなく弾が1件だけなら、その弾の既定用途を初期値にする", () => {
+    expect(
+      resolveConsumeDefaults({
+        entries: [],
+        gunIds: ["gun-a"],
+        ammoTypes: [{ id: "ammo-hunting", defaultPurpose: "hunting" }],
+      }),
+    ).toEqual({
+      gunId: "gun-a",
+      ammoTypeId: "ammo-hunting",
+      purpose: "hunting",
       location: undefined,
       fromPreviousEntry: false,
     });

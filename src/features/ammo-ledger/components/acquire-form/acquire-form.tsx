@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useId, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoAcquisitionPermit, ammoType } from "@/db/schema/ammo-ledger";
@@ -14,6 +13,7 @@ import {
 } from "@/features/ammo-ledger/catalog/use-master-picker-data/use-master-picker-data";
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
+import { LedgerEntrySubmitBar } from "@/features/ammo-ledger/components/ledger-entry-submit-bar/ledger-entry-submit-bar";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
@@ -282,15 +282,12 @@ export function AcquireForm({
         <Input id={`${idPrefix}-memo`} value={memo} onChange={(e) => setMemo(e.target.value)} />
       </div>
 
-      {error ? (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
-
-      <Button type="submit" disabled={isPending || computedRounds <= 0 || !hasValidPermit}>
-        {isPending ? "保存中…" : ledgerEntryId ? "更新" : "保存"}
-      </Button>
+      <LedgerEntrySubmitBar
+        label={ledgerEntryId ? "更新" : "保存"}
+        isPending={isPending}
+        disabled={computedRounds <= 0 || !hasValidPermit}
+        error={error}
+      />
     </form>
   );
 }

@@ -324,7 +324,7 @@ export function MasterPicker({
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs",
+          "flex h-11 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs sm:h-9 sm:text-sm",
           "outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
         )}
       >

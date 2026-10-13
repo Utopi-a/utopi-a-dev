@@ -27,6 +27,7 @@ export function FieldSelect({
   // 案内文のない選択で空欄を選べると、用途のない記録や「0年」になる。
   // 値がどの選択肢にも当たらないときだけは、別の選択肢が選ばれて見えないよう空欄を残す。
   const showsEmptyOption = placeholder !== "" || !options.some((option) => option.value === value);
+  // iOS は16px未満の選択欄を開くと画面を拡大するため、モバイルでは文字を16pxにする。
   return (
     <div className={cn("space-y-2", className)}>
       <Label htmlFor={id}>{label}</Label>
@@ -35,7 +36,7 @@ export function FieldSelect({
         required={required}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        className="flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:h-9 sm:text-sm"
       >
         {showsEmptyOption ? <option value="">{placeholder}</option> : null}
         {options.map((option) => (

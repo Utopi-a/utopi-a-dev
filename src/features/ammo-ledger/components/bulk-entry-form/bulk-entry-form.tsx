@@ -18,6 +18,7 @@ import {
   hasBulkEntryPackaging,
 } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-row-state";
 import { moveBulkEntryRow } from "@/features/ammo-ledger/components/bulk-entry-form/move-bulk-entry-row/move-bulk-entry-row";
+import { LedgerEntrySubmitBar } from "@/features/ammo-ledger/components/ledger-entry-submit-bar/ledger-entry-submit-bar";
 import { showAmmoLedgerToast } from "@/features/ammo-ledger/feedback/show-ammo-ledger-toast/show-ammo-ledger-toast";
 import { buildAmmoTypeFieldOptions } from "@/features/ammo-ledger/master/build-ammo-type-field-options/build-ammo-type-field-options";
 import { useAmmoLedgerMutationNavigation } from "@/features/ammo-ledger/navigation/use-ammo-ledger-mutation-navigation/use-ammo-ledger-mutation-navigation";
@@ -247,15 +248,12 @@ export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryF
         </p>
       </div>
 
-      {error ? (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
-
-      <Button type="submit" disabled={isPending || activeRowCount === 0}>
-        {isPending ? "保存中…" : `${activeRowCount}件をまとめて保存`}
-      </Button>
+      <LedgerEntrySubmitBar
+        label={`${activeRowCount}件をまとめて保存`}
+        isPending={isPending}
+        disabled={activeRowCount === 0}
+        error={error}
+      />
     </form>
   );
 }

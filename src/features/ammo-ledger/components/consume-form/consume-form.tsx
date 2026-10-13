@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun, ammoType } from "@/db/schema/ammo-ledger";
@@ -12,10 +11,10 @@ import {
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { LedgerEntryDateField } from "@/features/ammo-ledger/components/ledger-entry-date-field/ledger-entry-date-field";
 import {
-  LedgerEntryCheckNotice,
   PurposeStockAfterEntry,
   useLedgerEntryPreview,
 } from "@/features/ammo-ledger/components/ledger-entry-stock-preview/ledger-entry-stock-preview";
+import { LedgerEntrySubmitBar } from "@/features/ammo-ledger/components/ledger-entry-submit-bar/ledger-entry-submit-bar";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PackagingFields } from "@/features/ammo-ledger/components/packaging-fields/packaging-fields";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
@@ -332,22 +331,13 @@ export function ConsumeForm({
         </div>
       </details>
 
-      {/* モバイルでは保存ボタンを画面下に固定し、入力の途中でもすぐ保存できるようにする。 */}
-      <div className="sticky bottom-0 z-10 -mx-4 space-y-2 border-t border-border/60 bg-background/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
-        <LedgerEntryCheckNotice preview={computedRounds > 0 ? preview : null} />
-        {error && error !== preview?.error ? (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        ) : null}
-        <Button
-          type="submit"
-          className="h-12 w-full text-base sm:h-9 sm:w-auto sm:text-sm"
-          disabled={isPending || computedRounds <= 0}
-        >
-          {isPending ? "保存中…" : ledgerEntryId ? "更新" : "保存"}
-        </Button>
-      </div>
+      <LedgerEntrySubmitBar
+        label={ledgerEntryId ? "更新" : "保存"}
+        isPending={isPending}
+        disabled={computedRounds <= 0}
+        error={error}
+        preview={computedRounds > 0 ? preview : null}
+      />
     </form>
   );
 }

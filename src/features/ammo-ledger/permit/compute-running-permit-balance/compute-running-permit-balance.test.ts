@@ -66,4 +66,31 @@ describe("computeRunningPermitBalance", () => {
 
     expect(computeCurrentPermitBalance({ permitEvents, ledgerEntries, today })).toBe(70);
   });
+
+  it("有効期限の当日は失効前の残数を返し、翌日に0になる", () => {
+    const permitEvents = [
+      { occurredOn: "2026-01-01", eventKind: "grant" as const, quantity: 100 },
+      { occurredOn: "2026-06-07", eventKind: "expiry" as const, quantity: 0 },
+    ];
+    const ledgerEntries = [
+      { id: "e1", occurredOn: "2026-03-01", category: "acquire" as const, quantity: 30 },
+    ];
+
+    expect(computeCurrentPermitBalance({ permitEvents, ledgerEntries, today: "2026-06-07" })).toBe(
+      70,
+    );
+    expect(computeCurrentPermitBalance({ permitEvents, ledgerEntries, today: "2026-06-08" })).toBe(
+      0,
+    );
+  });
+
+  it("今日より後の日付の譲受は現在残数から差し引かない", () => {
+    const permitEvents = [{ occurredOn: "2026-01-01", eventKind: "grant" as const, quantity: 100 }];
+    const ledgerEntries = [
+      { id: "e1", occurredOn: "2026-06-07", category: "acquire" as const, quantity: 30 },
+      { id: "e2", occurredOn: "2026-06-08", category: "acquire" as const, quantity: 70 },
+    ];
+
+    expect(computeCurrentPermitBalance({ permitEvents, ledgerEntries, today })).toBe(70);
+  });
 });

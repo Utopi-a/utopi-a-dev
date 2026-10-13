@@ -67,6 +67,10 @@ export function computeRunningPermitBalance({
   return balanceByEntryId;
 }
 
+/**
+ * 今日時点で使える許可残数。許可の有効判定・譲受入力と同じく有効期限の当日は有効とし、
+ * 今日より後の日付の譲受記録は差し引かない。
+ */
 export function computeCurrentPermitBalance({
   permitEvents,
   ledgerEntries,
@@ -77,14 +81,18 @@ export function computeCurrentPermitBalance({
   today: string;
 }): number {
   const effectivePermitEvents = permitEvents.filter((event) =>
-    isPermitEventOnOrBeforeToday({ occurredOn: event.occurredOn, today }),
+    event.eventKind === "expiry"
+      ? event.occurredOn < today
+      : isPermitEventOnOrBeforeToday({ occurredOn: event.occurredOn, today }),
   );
   let balance = 0;
 
   const sortedEvents = [...effectivePermitEvents].sort((a, b) =>
     compareDate({ a: a.occurredOn, b: b.occurredOn }),
   );
-  const sortedEntries = [...ledgerEntries].sort((a, b) => compareLedgerEntries({ a, b }));
+  const sortedEntries = ledgerEntries
+    .filter((entry) => entry.occurredOn <= today)
+    .sort((a, b) => compareLedgerEntries({ a, b }));
 
   let eventIndex = 0;
 

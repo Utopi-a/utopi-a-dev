@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { computeCurrentPermitBalance } from "@/features/ammo-ledger/permit/compute-running-permit-balance/compute-running-permit-balance";
 import { ActivePermitStatus } from "./active-permit-status";
 
 const createdAt = new Date("2026-01-01T00:00:00Z");
@@ -87,6 +88,39 @@ describe("ActivePermitStatus", () => {
     expect(screen.getByText(/許可upcoming/)).toBeInTheDocument();
     expect(screen.getByText(/2026\/11\/01から有効/)).toBeInTheDocument();
     expect(screen.queryByText(/使える譲受許可はありません/)).not.toBeInTheDocument();
+  });
+
+  it("有効期限の当日は、残数があれば「本日まで」として表示する", () => {
+    const expiringToday = buildPermit({
+      id: "expiring",
+      grantedOn: "2025-10-14",
+      expiresOn: today,
+    });
+    const permitBalance = computeCurrentPermitBalance({
+      permitEvents: [
+        { occurredOn: expiringToday.grantedOn, eventKind: "grant", quantity: 500 },
+        { occurredOn: expiringToday.expiresOn, eventKind: "expiry", quantity: 0 },
+      ],
+      ledgerEntries: [
+        { id: "e1", occurredOn: "2026-05-01", category: "acquire", quantity: 200 },
+        // 今日より後の日付で入力済みの譲受は、今日使える残数を減らさない
+        { id: "e2", occurredOn: "2026-10-20", category: "acquire", quantity: 300 },
+      ],
+      today,
+    });
+
+    render(
+      <ActivePermitStatus
+        permits={[expiringToday]}
+        ledgerPurpose="shooting"
+        permitBalance={permitBalance}
+        today={today}
+      />,
+    );
+
+    expect(screen.getByText(/許可expiring/)).toBeInTheDocument();
+    expect(screen.getByText(/本日まで/)).toBeInTheDocument();
+    expect(screen.getByText(/有効な許可 1件/)).toBeInTheDocument();
   });
 
   it("別の用途の許可は表示しない", () => {

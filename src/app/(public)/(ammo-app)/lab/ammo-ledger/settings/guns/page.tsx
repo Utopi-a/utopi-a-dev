@@ -24,6 +24,8 @@ export default async function GunsSettingsPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">銃</h1>
+      {/* 追加した直後にトーストやフォームに隠れず見えるよう、一覧より上に置く。 */}
+      {returnTo && guns.length > 0 ? <ReturnToRecordLink href={returnTo} /> : null}
       <AmmoLedgerPanel title="登録済み">
         {guns.length === 0 ? (
           <p className="text-sm text-muted-foreground">まだ登録がありません。</p>
@@ -52,7 +54,6 @@ export default async function GunsSettingsPage({ searchParams }: PageProps) {
       <AmmoLedgerPanel title="追加">
         <GunForm />
       </AmmoLedgerPanel>
-      {returnTo && guns.length > 0 ? <ReturnToRecordLink href={returnTo} /> : null}
     </div>
   );
 }

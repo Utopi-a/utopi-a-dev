@@ -36,6 +36,8 @@ export default async function AmmoTypesSettingsPage({ searchParams }: PageProps)
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">弾種</h1>
+      {/* 追加した直後にトーストやフォームに隠れず見えるよう、一覧より上に置く。 */}
+      {returnTo && ammoTypes.length > 0 ? <ReturnToRecordLink href={returnTo} /> : null}
       {reviewTotal > 0 ? (
         <Link
           href="/lab/ammo-ledger/settings/ammo-types/review"
@@ -68,7 +70,6 @@ export default async function AmmoTypesSettingsPage({ searchParams }: PageProps)
       <AmmoLedgerPanel title="追加">
         <AmmoTypeForm />
       </AmmoLedgerPanel>
-      {returnTo && ammoTypes.length > 0 ? <ReturnToRecordLink href={returnTo} /> : null}
     </div>
   );
 }

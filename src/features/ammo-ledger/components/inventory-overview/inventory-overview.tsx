@@ -147,10 +147,15 @@ export function InventoryOverviewPanel({ overview, stockByPurpose }: InventoryOv
       {overview.byGauge.length > 0 ? (
         <div className="overflow-x-auto rounded-lg border border-border/50">
           <table className="w-full min-w-[280px] text-sm">
+            <caption className="sr-only">号数ごとの帳簿残数</caption>
             <thead>
               <tr className="border-b border-border/50 bg-muted/20 text-left text-xs text-muted-foreground">
-                <th className="px-3 py-2 font-medium">号数</th>
-                <th className="px-3 py-2 text-right font-medium">帳簿残数</th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  号数
+                </th>
+                <th scope="col" className="px-3 py-2 text-right font-medium">
+                  帳簿残数
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -169,11 +174,18 @@ export function InventoryOverviewPanel({ overview, stockByPurpose }: InventoryOv
 
       <div className="overflow-x-auto rounded-lg border border-border/50">
         <table className="w-full text-sm">
+          <caption className="sr-only">弾種ごとの帳簿残数</caption>
           <thead>
             <tr className="border-b border-border/50 bg-muted/20 text-left text-xs text-muted-foreground">
-              <th className="px-3 py-2 font-medium">弾種</th>
-              <th className="px-3 py-2 font-medium">号数</th>
-              <th className="px-3 py-2 text-right font-medium">帳簿残数</th>
+              <th scope="col" className="px-3 py-2 font-medium">
+                弾種
+              </th>
+              <th scope="col" className="px-3 py-2 font-medium">
+                号数
+              </th>
+              <th scope="col" className="px-3 py-2 text-right font-medium">
+                帳簿残数
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -242,6 +254,7 @@ function FilterButton({
   return (
     <button
       type="button"
+      aria-pressed={active}
       onClick={onClick}
       className={cn(
         "rounded-md border px-3 py-1.5 text-sm transition-colors",

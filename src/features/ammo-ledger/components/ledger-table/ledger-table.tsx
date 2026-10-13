@@ -24,7 +24,10 @@ import {
   formatStockQuantity,
 } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import type { LedgerLockState } from "@/features/ammo-ledger/ledger/lock/lock-state-types";
-import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
+import {
+  type LedgerPurpose,
+  ledgerPurposeLabels,
+} from "@/features/ammo-ledger/schema/ledger-purpose";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 
@@ -52,7 +55,22 @@ const ledgerTableColumnClass = {
   gun: "min-w-28",
 } as const;
 
+const ledgerTableHeaders = [
+  ["date", "日付"],
+  ["category", "区分"],
+  ["ammoType", "種類"],
+  ["quantity", "数量"],
+  ["balanceByType", "種類別残"],
+  ["totalBalance", "総残数"],
+  ["permitBalance", "許可残数"],
+  ["remarks", "摘要"],
+  ["gun", "使用銃"],
+] as const;
+
 const noSavingEntryIds: ReadonlySet<string> = new Set();
+
+const rowFocusClass =
+  "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
 
 function EmptyCell({ className }: { className: string }) {
   return <td className={cn("px-3 py-3 align-top text-muted-foreground", className)}>—</td>;
@@ -146,21 +164,18 @@ export function LedgerTable({
       <div className="hidden md:block">
         <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <table className="w-max min-w-full text-sm">
+            <caption className="sr-only">{ledgerPurposeLabels[purpose]}の帳簿</caption>
             <thead>
               <tr className="border-b border-border/40 text-left text-xs font-medium text-muted-foreground">
-                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.date)}>日付</th>
-                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.category)}>区分</th>
-                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.ammoType)}>種類</th>
-                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.quantity)}>数量</th>
-                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.balanceByType)}>
-                  種類別残
-                </th>
-                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.totalBalance)}>総残数</th>
-                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.permitBalance)}>
-                  許可残数
-                </th>
-                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.remarks)}>摘要</th>
-                <th className={cn("px-3 py-2.5", ledgerTableColumnClass.gun)}>使用銃</th>
+                {ledgerTableHeaders.map(([column, label]) => (
+                  <th
+                    key={column}
+                    scope="col"
+                    className={cn("px-3 py-2.5", ledgerTableColumnClass[column])}
+                  >
+                    {label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -185,6 +200,7 @@ export function LedgerTable({
                       className={cn(
                         "border-b border-border/25 last:border-0",
                         selectable && "cursor-pointer transition-colors hover:bg-muted/20",
+                        rowFocusClass,
                       )}
                     >
                       <td className={cn("px-3 py-3 align-top", ledgerTableColumnClass.date)}>
@@ -255,6 +271,7 @@ export function LedgerTable({
                       entrySelectable &&
                         "cursor-pointer border-b border-border/25 transition-colors last:border-0 hover:bg-muted/20",
                       !entrySelectable && "border-b border-border/25 last:border-0",
+                      rowFocusClass,
                       isSaving && "text-muted-foreground",
                       exceededSet.has(entry.id) && "bg-rose-500/10",
                       entry.id === highlightedEntryId &&

@@ -129,6 +129,17 @@ describe("LedgerTable", () => {
     expect(within(consumeTableRow).queryByText("1,150個")).not.toBeInTheDocument();
   });
 
+  it("表に見出しと列の範囲を持たせ、カードの操作ボタンは日付・区分・数だけの名前にする", () => {
+    render(<LedgerTable rows={[entryRow]} purpose="hunting" />);
+
+    const table = screen.getByRole("table", { name: "狩猟用の帳簿" });
+    expect(within(table).getByRole("columnheader", { name: "種類別残" })).toHaveAttribute(
+      "scope",
+      "col",
+    );
+    expect(screen.getByRole("button", { name: "2026/08/08 譲受 50個 の操作" })).toBeInTheDocument();
+  });
+
   it("自宅保管の目安を超えた行は、色だけでなく文字でも示す", () => {
     render(
       <LedgerTable rows={[entryRow]} purpose="hunting" homeStorageExceededEntryIds={["entry-1"]} />,

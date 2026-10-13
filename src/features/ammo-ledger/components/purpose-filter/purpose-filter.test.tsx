@@ -16,4 +16,13 @@ describe("PurposeFilter", () => {
     expect(screen.getByRole("button", { name: "狩猟用 2件" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "有害鳥獣駆除用 0件" })).toBeInTheDocument();
   });
+
+  it("選んでいる用途を押下状態で伝え、表示名を読み上げ名に含める", () => {
+    render(<PurposeFilter current="pest_control" onPurposeChange={vi.fn()} />);
+
+    const pestControl = screen.getByRole("button", { name: "有害鳥獣駆除用" });
+    expect(pestControl).toHaveAttribute("aria-pressed", "true");
+    expect(pestControl).toHaveTextContent("有害鳥獣駆除");
+    expect(screen.getByRole("button", { name: "射撃用" })).toHaveAttribute("aria-pressed", "false");
+  });
 });

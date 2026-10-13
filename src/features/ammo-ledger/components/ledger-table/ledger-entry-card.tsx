@@ -19,7 +19,10 @@ import {
   formatStockQuantity,
 } from "@/features/ammo-ledger/ledger/format-ledger-quantity/format-ledger-quantity";
 import { formatPermitExpiryLabel } from "@/features/ammo-ledger/permit/compute-permit-expiry/compute-permit-expiry";
-import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
+import {
+  type LedgerCategory,
+  ledgerCategoryLabels,
+} from "@/features/ammo-ledger/schema/ledger-category";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
@@ -33,6 +36,14 @@ type LedgerEntryCardProps = {
   isSaving?: boolean;
   onSelect: ({ row, permitBalance }: { row: LedgerDisplayRow; permitBalance?: number }) => void;
 };
+
+const cardFocusClass =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+
+// カード全体を読み上げると長いため、操作ボタンの名前は日付・区分・数だけにする。
+function buildRowActionLabel({ occurredOn, subject }: { occurredOn: string; subject: string }) {
+  return `${formatIsoDateForDisplay({ value: occurredOn })} ${subject} の操作`;
+}
 
 function DetailLine({ label, value }: { label: string; value: string }) {
   return (
@@ -59,8 +70,15 @@ export function LedgerEntryCard({
     return (
       <button
         type="button"
+        aria-label={buildRowActionLabel({
+          occurredOn: row.occurredOn,
+          subject: `繰越 ${row.permitName}`,
+        })}
         onClick={() => onSelect({ row, permitBalance })}
-        className="flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5 text-left transition-colors hover:border-border hover:bg-muted/30 active:bg-muted/40"
+        className={cn(
+          "flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5 text-left transition-colors hover:border-border hover:bg-muted/30 active:bg-muted/40",
+          cardFocusClass,
+        )}
       >
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -116,9 +134,14 @@ export function LedgerEntryCard({
     <button
       type="button"
       disabled={!selectable}
+      aria-label={buildRowActionLabel({
+        occurredOn: entry.occurredOn,
+        subject: `${ledgerCategoryLabels[entry.category as LedgerCategory] ?? entry.category} ${formatStockQuantity({ quantity: entry.quantity })}`,
+      })}
       onClick={() => selectable && onSelect({ row, permitBalance })}
       className={cn(
         "flex w-full items-start gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3.5 text-left transition-colors",
+        cardFocusClass,
         selectable && "hover:border-border hover:bg-muted/30 active:bg-muted/40",
         !selectable && "cursor-default",
         isHomeStorageExceeded && "border-rose-500/40 bg-rose-500/5",

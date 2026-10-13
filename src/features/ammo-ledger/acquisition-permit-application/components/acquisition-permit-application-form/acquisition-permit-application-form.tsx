@@ -9,6 +9,11 @@ import { IsoDateInput } from "@/components/ui/iso-date-input";
 import { Label } from "@/components/ui/label";
 import type { ammoGun } from "@/db/schema/ammo-ledger";
 import type { AcquisitionPermitApplicationPayload } from "@/features/ammo-ledger/acquisition-permit-application/acquisition-permit-application-types";
+import {
+  type ApplicationAmmoName,
+  applicationAmmoNameOptions,
+  defaultApplicationAmmoName,
+} from "@/features/ammo-ledger/acquisition-permit-application/application-ammo-name/application-ammo-name";
 import { saveAcquisitionPermitApplicationPayload } from "@/features/ammo-ledger/acquisition-permit-application/application-session/application-session";
 import { ConsumptionPlanPreview } from "@/features/ammo-ledger/acquisition-permit-application/components/consumption-plan-preview/consumption-plan-preview";
 import {
@@ -28,11 +33,6 @@ import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-p
 import { FieldSelect } from "@/features/ammo-ledger/components/field-select";
 import { MasterPicker } from "@/features/ammo-ledger/components/master-picker/master-picker";
 import { PurposeSelect } from "@/features/ammo-ledger/components/purpose-select/purpose-select";
-import {
-  type AcquisitionPermitName,
-  acquisitionPermitNameOptions,
-  defaultAcquisitionPermitName,
-} from "@/features/ammo-ledger/schema/acquisition-permit-name-options";
 import {
   type AcquisitionPermitPurpose,
   acquisitionPermitPurposeOptions,
@@ -97,7 +97,7 @@ export function AcquisitionPermitApplicationForm({
     initialPossessionPermitCertificateNumber,
   );
   const [ledgerPurpose, setLedgerPurpose] = useState<LedgerPurpose>("shooting");
-  const [ammoName, setAmmoName] = useState<AcquisitionPermitName>(defaultAcquisitionPermitName);
+  const [ammoName, setAmmoName] = useState<ApplicationAmmoName>(defaultApplicationAmmoName);
   const [permitPurpose, setPermitPurpose] = useState(defaultAcquisitionPermitPurpose);
   const [requestedQuantity, setRequestedQuantity] = useState("5000");
   const [homeStock, setHomeStock] = useState(String(currentHomeStock));
@@ -313,8 +313,8 @@ export function AcquisitionPermitApplicationForm({
             id="ammo-name"
             label="火薬類の名称"
             value={ammoName}
-            onChange={(value) => setAmmoName(value as AcquisitionPermitName)}
-            options={acquisitionPermitNameOptions.map((option) => ({
+            onChange={(value) => setAmmoName(value as ApplicationAmmoName)}
+            options={applicationAmmoNameOptions.map((option) => ({
               value: option,
               label: option,
             }))}

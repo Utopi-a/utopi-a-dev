@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { SWRConfig } from "swr";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ammoGun } from "@/db/schema/ammo-ledger";
@@ -108,6 +108,15 @@ describe("譲受許可申請の入力から印刷への引き継ぎ", () => {
     expect(fields.supplementRows.map((row) => row.values.period)).toEqual(
       payload.consumptionPlan.rows.map((row) => row.scheduledPeriod.period[0]),
     );
+  });
+
+  it("火薬類の名称は、様式の実包欄に印字できる実包だけを選べる", async () => {
+    await renderForm();
+    const optionLabels = within(screen.getByLabelText("火薬類の名称"))
+      .getAllByRole("option")
+      .map((option) => option.textContent)
+      .filter((label) => label !== "");
+    expect(optionLabels).toEqual(["12番", "20番", "410番", "実包（ライフル）"]);
   });
 
   it("許可証番号が未入力なら、選択した銃の番号を印刷しない", async () => {

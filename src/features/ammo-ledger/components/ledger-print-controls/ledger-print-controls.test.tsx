@@ -49,6 +49,24 @@ describe("LedgerPrintControls", () => {
 
   afterEach(() => vi.restoreAllMocks());
 
+  it("確定の確認で対象日とできなくなる操作を示し、開き直すと確認をやり直す", () => {
+    render(<LedgerPrintControls {...previewProps} />);
+    fireEvent.click(screen.getByRole("button", { name: "2026/09/01まで確定して印刷" }));
+
+    const dialog = screen.getByRole("dialog", { name: "帳簿を確定して印刷" });
+    expect(dialog).toHaveTextContent("2026年の記録（3件）を2026/09/01まで確定します。");
+    expect(dialog).toHaveTextContent(
+      "確定すると、2026/09/01までの記録の追加・編集・取消・並べ替えができなくなります。",
+    );
+    fireEvent.click(screen.getByRole("checkbox", { name: "上記を理解し、確定します" }));
+    fireEvent.click(screen.getByRole("button", { name: "キャンセル" }));
+    fireEvent.click(screen.getByRole("button", { name: "2026/09/01まで確定して印刷" }));
+
+    expect(screen.getByRole("checkbox", { name: "上記を理解し、確定します" })).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "確定して印刷" })).toBeDisabled();
+    expect(lockLedgerAction).not.toHaveBeenCalled();
+  });
+
   it("確定通信に失敗してもエラーを表示し、再操作できる", async () => {
     vi.mocked(lockLedgerAction).mockRejectedValueOnce(new Error("network unavailable"));
     render(<LedgerPrintControls {...previewProps} />);

@@ -16,7 +16,7 @@ export default async function LedgerLockSettingsPage() {
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">帳簿の確定・ロック</h1>
         <p className="text-sm text-muted-foreground">
-          帳簿の特定期間を確定し、変更不可にします。ロック期間の帳簿は編集・取消・並び替えができなくなります。
+          帳簿の特定期間を確定し、変更不可にします。ロック期間の記録は追加・編集・取消・並べ替えができなくなります。
         </p>
       </div>
       <AmmoLedgerPanel>

@@ -317,9 +317,10 @@ describe("computeRunningPermitBalance", () => {
       }),
     ];
 
+    const ledgerEntries = [acquire({ id: "e1", occurredOn: "2026-06-08", quantity: 20 })];
     const balances = computeRunningPermitBalance({
       permitEvents,
-      ledgerEntries: [],
+      ledgerEntries,
       today: "2026-06-08",
     });
     const state = computeCurrentPermitState({
@@ -328,9 +329,41 @@ describe("computeRunningPermitBalance", () => {
       today: "2026-06-08",
     });
 
-    expect(balances.get("legacy-expiry")).toBe(500);
+    expect(balances.get("e1")).toBe(480);
     expect(state.balance).toBe(500);
     expect(state.remainingByPermitId.get("new")).toBe(500);
+  });
+
+  it.each([
+    { order: "失効→付与", reverse: false },
+    { order: "付与→失効", reverse: true },
+  ])("旧形式の同じ日の失効と付与は、失効を先に適用する（$order）", ({ reverse }) => {
+    const sameDayEvents = [
+      permitEvent({ id: "x1", permitId: null, occurredOn: "2026-06-07", eventKind: "expiry" }),
+      permitEvent({
+        id: "g2",
+        permitId: null,
+        occurredOn: "2026-06-07",
+        eventKind: "grant",
+        quantity: 500,
+      }),
+    ];
+    const permitEvents = [
+      permitEvent({
+        id: "g1",
+        permitId: null,
+        occurredOn: "2026-01-01",
+        eventKind: "grant",
+        quantity: 100,
+      }),
+      ...(reverse ? [...sameDayEvents].reverse() : sameDayEvents),
+    ];
+    const ledgerEntries = [acquire({ id: "e1", occurredOn: "2026-06-07", quantity: 30 })];
+
+    expect(computeRunningPermitBalance({ permitEvents, ledgerEntries, today }).get("e1")).toBe(470);
+    expect(
+      computeCurrentPermitState({ permitEvents, ledgerEntries: [], today: "2026-06-08" }).balance,
+    ).toBe(500);
   });
 
   it("今日より後の許可イベントは表の残数に反映しない", () => {

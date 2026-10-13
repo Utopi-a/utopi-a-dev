@@ -28,7 +28,17 @@ type PermitLedgerStep =
 
 // 同じ日は「付与・繰越 → 記録 → 失効」の順に適用する。許可は有効期限の当日まで使え、
 // 帳簿の表も失効行を同日の記録の後に並べるため。
-const stepOrderInDay: Record<PermitLedgerStep["kind"], number> = { open: 0, entry: 1, expiry: 2 };
+// 許可IDのない旧形式の失効だけは、従来どおり日の初めに適用する（表には失効行を出さない）。
+function resolveStepOrderInDay({ step }: { step: PermitLedgerStep }): number {
+  switch (step.kind) {
+    case "open":
+      return 0;
+    case "entry":
+      return 1;
+    case "expiry":
+      return step.event.permitId ? 2 : -1;
+  }
+}
 
 function resolveStepDate({ step }: { step: PermitLedgerStep }): string {
   return step.kind === "entry" ? step.entry.occurredOn : step.event.occurredOn;
@@ -39,7 +49,7 @@ function compareSteps({ a, b }: { a: PermitLedgerStep; b: PermitLedgerStep }): n
   if (dateCompare !== 0) {
     return dateCompare;
   }
-  const orderCompare = stepOrderInDay[a.kind] - stepOrderInDay[b.kind];
+  const orderCompare = resolveStepOrderInDay({ step: a }) - resolveStepOrderInDay({ step: b });
   if (orderCompare !== 0) {
     return orderCompare;
   }

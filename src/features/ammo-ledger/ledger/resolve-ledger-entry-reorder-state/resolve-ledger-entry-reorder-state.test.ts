@@ -33,4 +33,49 @@ describe("resolveLedgerEntryReorderState", () => {
       canMoveDown: false,
     });
   });
+
+  it("繰越の直後の記録は上へ、繰越は下へ移動できない", () => {
+    const rows = [
+      {
+        kind: "entry" as const,
+        entry: {
+          id: "carryover",
+          category: "carryover",
+          occurredOn: "2026-01-01",
+          dayOrder: -1,
+          createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+      },
+      {
+        kind: "entry" as const,
+        entry: {
+          id: "acquire",
+          category: "acquire",
+          occurredOn: "2026-01-01",
+          dayOrder: 0,
+          createdAt: new Date("2026-01-01T01:00:00.000Z"),
+        },
+      },
+      {
+        kind: "entry" as const,
+        entry: {
+          id: "consume",
+          category: "consume",
+          occurredOn: "2026-01-01",
+          dayOrder: 1,
+          createdAt: new Date("2026-01-01T02:00:00.000Z"),
+        },
+      },
+    ];
+
+    expect(
+      resolveLedgerEntryReorderState({ rows: rows as never, ledgerEntryId: "carryover" }),
+    ).toEqual({ canMoveUp: false, canMoveDown: false });
+    expect(
+      resolveLedgerEntryReorderState({ rows: rows as never, ledgerEntryId: "acquire" }),
+    ).toEqual({ canMoveUp: false, canMoveDown: true });
+    expect(
+      resolveLedgerEntryReorderState({ rows: rows as never, ledgerEntryId: "consume" }),
+    ).toEqual({ canMoveUp: true, canMoveDown: false });
+  });
 });

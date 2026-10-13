@@ -1,10 +1,8 @@
-import { compareLedgerEntries } from "@/features/ammo-ledger/ledger/compare-ledger-entries/compare-ledger-entries";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import {
-  parseLedgerPurpose,
-  resolveDefaultPurpose,
-} from "@/features/ammo-ledger/schema/resolve-default-purpose";
-import type { LedgerEntryRow } from "@/features/ammo-ledger/workspace/apply-ledger-entry-changes/apply-ledger-entry-changes";
+  type AmmoTypeDefaultsEntry,
+  resolveAmmoTypeDefaults,
+} from "@/features/ammo-ledger/transactions/resolve-ammo-type-defaults/resolve-ammo-type-defaults";
 
 export type ConsumeDefaults = {
   gunId?: string;
@@ -25,44 +23,23 @@ export function resolveConsumeDefaults({
   gunIds,
   ammoTypes,
 }: {
-  entries: Pick<
-    LedgerEntryRow,
-    | "category"
-    | "gunId"
-    | "ammoTypeId"
-    | "purpose"
-    | "location"
-    | "occurredOn"
-    | "dayOrder"
-    | "createdAt"
-  >[];
+  entries: AmmoTypeDefaultsEntry[];
   gunIds: string[];
   ammoTypes: { id: string; defaultPurpose: string | null }[];
 }): ConsumeDefaults {
-  const previous = entries
-    .filter((entry) => entry.category === "consume")
-    .sort((a, b) => compareLedgerEntries({ a: b, b: a }))[0];
-
+  const { previous, ammoTypeId, purpose, isAmmoTypeFromPrevious } = resolveAmmoTypeDefaults({
+    entries,
+    category: "consume",
+    ammoTypes,
+  });
   const previousGunId =
     previous?.gunId && gunIds.includes(previous.gunId) ? previous.gunId : undefined;
-  const previousAmmoTypeId =
-    previous?.ammoTypeId && ammoTypes.some((type) => type.id === previous.ammoTypeId)
-      ? previous.ammoTypeId
-      : undefined;
-  const onlyAmmoType = ammoTypes.length === 1 ? ammoTypes[0] : undefined;
-  const previousPurpose = previous
-    ? (parseLedgerPurpose({ value: previous.purpose }) ?? undefined)
-    : undefined;
 
   return {
     gunId: previousGunId ?? (gunIds.length === 1 ? gunIds[0] : undefined),
-    ammoTypeId: previousAmmoTypeId ?? onlyAmmoType?.id,
-    // 弾を自動で選んだときは、手で選んだときと同じくその弾の既定用途にそろえる。
-    purpose:
-      !previousAmmoTypeId && onlyAmmoType
-        ? resolveDefaultPurpose({ defaultPurpose: onlyAmmoType.defaultPurpose })
-        : previousPurpose,
+    ammoTypeId,
+    purpose,
     location: previous?.location ?? undefined,
-    fromPreviousEntry: Boolean(previousGunId || previousAmmoTypeId),
+    fromPreviousEntry: Boolean(previousGunId || isAmmoTypeFromPrevious),
   };
 }

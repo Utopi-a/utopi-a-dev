@@ -172,6 +172,39 @@ describe("bulk-entry-row-state", () => {
     expect(result.locationInputKind).toBe("manual");
   });
 
+  it("新しい行は引き継いだ銃・弾・用途で始め、用途を選んだかも引き継ぐ", () => {
+    const fromPreviousConsume = createBulkEntryRow({
+      inputKind: "consume",
+      occurredOn: "2026-06-07",
+      defaultCounterpartyId: manualCounterpartyId,
+      carryOver: { gunId: "gun-1", ammoTypeId: "ammo-1", purpose: "hunting" },
+    });
+    expect(fromPreviousConsume).toMatchObject({
+      gunId: "gun-1",
+      ammoTypeId: "ammo-1",
+      purpose: "hunting",
+      isPurposeChosen: false,
+      locationInputKind: "manual",
+    });
+
+    const fromRowAbove = createBulkEntryRow({
+      inputKind: "consume",
+      occurredOn: "2026-06-07",
+      defaultCounterpartyId: manualCounterpartyId,
+      carryOver: {
+        ...fromPreviousConsume,
+        isPurposeChosen: true,
+        locationInputKind: "range",
+      },
+    });
+    expect(fromRowAbove).toMatchObject({
+      purpose: "hunting",
+      isPurposeChosen: true,
+      locationInputKind: "range",
+      boxCount: "",
+    });
+  });
+
   it("copies selected fields from the row above", () => {
     const source = {
       ...createBulkEntryRow({

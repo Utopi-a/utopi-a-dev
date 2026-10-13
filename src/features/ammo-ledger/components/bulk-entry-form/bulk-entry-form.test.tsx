@@ -2,6 +2,10 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { AmmoLedgerSwrProvider } from "@/features/ammo-ledger/workspace/ammo-ledger-swr-provider/ammo-ledger-swr-provider";
+import {
+  testAmmoType,
+  testGun,
+} from "@/features/ammo-ledger/workspace/build-test-workspace/build-test-workspace";
 import { BulkEntryForm } from "./bulk-entry-form";
 
 const { retry } = vi.hoisted(() => ({ retry: vi.fn() }));
@@ -58,5 +62,32 @@ describe("BulkEntryForm", () => {
 
     expect(within(firstRow).getByLabelText("小箱")).toHaveValue(null);
     expect(within(secondRow).getByLabelText("小箱")).toHaveValue(3);
+  });
+
+  it("最初の行は前回の消費、追加した行は直前の行の銃・弾・用途で始める", () => {
+    render(
+      <AmmoLedgerOptimisticNavProvider>
+        <AmmoLedgerSwrProvider>
+          <BulkEntryForm
+            guns={[testGun]}
+            ammoTypes={[testAmmoType]}
+            stockByAmmoTypeId={{}}
+            firstRowCarryOver={{ gunId: testGun.id, ammoTypeId: testAmmoType.id }}
+          />
+        </AmmoLedgerSwrProvider>
+      </AmmoLedgerOptimisticNavProvider>,
+    );
+
+    const [firstRow] = screen.getAllByRole("article");
+    expect(within(firstRow).getByLabelText("弾")).toHaveValue(testAmmoType.id);
+    fireEvent.change(within(firstRow).getByLabelText("用途区分"), {
+      target: { value: "hunting" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "+ 消費を追加" }));
+
+    const secondRow = screen.getAllByRole("article")[1];
+    expect(within(secondRow).getByLabelText("銃")).toHaveValue(testGun.id);
+    expect(within(secondRow).getByLabelText("弾")).toHaveValue(testAmmoType.id);
+    expect(within(secondRow).getByLabelText("用途区分")).toHaveValue("hunting");
   });
 });

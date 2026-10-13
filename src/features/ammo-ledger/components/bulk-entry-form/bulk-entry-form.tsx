@@ -8,6 +8,7 @@ import { useMasterPickerData } from "@/features/ammo-ledger/catalog/use-master-p
 import { BulkEntryRowCard } from "@/features/ammo-ledger/components/bulk-entry-form/bulk-entry-row-card";
 import {
   type BulkEntryCopyField,
+  type BulkEntryRowCarryOver,
   type BulkEntryRowKind,
   type BulkEntryRowState,
   buildBulkEntryPayload,
@@ -29,9 +30,16 @@ type BulkEntryFormProps = {
   guns: (typeof ammoGun.$inferSelect)[];
   ammoTypes: (typeof ammoType.$inferSelect)[];
   stockByAmmoTypeId: Record<string, number>;
+  /** 最初の行の銃・弾・用途（前回の消費と同じ） */
+  firstRowCarryOver?: BulkEntryRowCarryOver;
 };
 
-export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryFormProps) {
+export function BulkEntryForm({
+  guns,
+  ammoTypes,
+  stockByAmmoTypeId,
+  firstRowCarryOver,
+}: BulkEntryFormProps) {
   const navigateAfterMutation = useAmmoLedgerMutationNavigation();
   const today = getTokyoIsoDate();
   const {
@@ -67,11 +75,12 @@ export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryF
           inputKind: "consume",
           occurredOn: today,
           defaultCounterpartyId: nextDefaultCounterpartyId,
+          carryOver: firstRowCarryOver,
         }),
       ]);
       rowsInitialized.current = true;
     }
-  }, [counterpartyPickerData, counterpartyPickerError, today]);
+  }, [counterpartyPickerData, counterpartyPickerError, today, firstRowCarryOver]);
 
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -98,6 +107,7 @@ export function BulkEntryForm({ guns, ammoTypes, stockByAmmoTypeId }: BulkEntryF
         inputKind,
         occurredOn: previousRow?.occurredOn ?? today,
         defaultCounterpartyId,
+        carryOver: previousRow ?? firstRowCarryOver,
       }),
     ]);
   }

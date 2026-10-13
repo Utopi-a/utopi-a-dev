@@ -37,27 +37,39 @@ export type BulkEntryCopyField =
   | "gunId"
   | "counterparty";
 
+/** 新しい行に引き継ぐ値。直前の行（なければ前回の消費）と同じ銃・弾・用途で始める */
+export type BulkEntryRowCarryOver = Partial<
+  Pick<
+    BulkEntryRowState,
+    "gunId" | "ammoTypeId" | "purpose" | "isPurposeChosen" | "locationInputKind"
+  >
+>;
+
 export function createBulkEntryRow({
   inputKind,
   occurredOn,
   defaultCounterpartyId,
+  carryOver,
 }: {
   inputKind: BulkEntryRowKind;
   occurredOn: string;
   defaultCounterpartyId: string;
+  carryOver?: BulkEntryRowCarryOver;
 }): BulkEntryRowState {
+  const purpose = carryOver?.purpose ?? "shooting";
   return {
     clientId: crypto.randomUUID(),
     inputKind,
     occurredOn,
-    purpose: "shooting",
-    isPurposeChosen: false,
-    ammoTypeId: "",
+    purpose,
+    isPurposeChosen: carryOver?.isPurposeChosen ?? false,
+    ammoTypeId: carryOver?.ammoTypeId ?? "",
     outerBoxCount: "",
     boxCount: "",
     looseRounds: "",
-    gunId: "",
-    locationInputKind: "range",
+    gunId: carryOver?.gunId ?? "",
+    locationInputKind:
+      carryOver?.locationInputKind ?? (purpose === "shooting" ? "range" : "manual"),
     rangeId: "",
     location: "",
     counterpartyId: defaultCounterpartyId,

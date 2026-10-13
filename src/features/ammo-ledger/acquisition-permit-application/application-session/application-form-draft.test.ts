@@ -28,6 +28,7 @@ const draft: ApplicationFormDraft = {
   rangeAllocationRows: [
     { id: "row-1", rangeId: "range-1", rangeName: "テスト射撃場", rangeAddress: "", weight: "2" },
   ],
+  planInputKey: null,
 };
 
 describe("申請書の入力下書き", () => {

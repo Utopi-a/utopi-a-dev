@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { SWRConfig } from "swr";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -135,7 +135,51 @@ describe("譲受許可申請の入力から印刷への引き継ぎ", () => {
     expect(screen.getByRole("checkbox", { name: /テスト銃A/ })).toBeChecked();
     expect(screen.getByRole("checkbox", { name: /テスト銃B/ })).toBeChecked();
     expect(screen.getByLabelText("配分の比率（2なら2倍）")).toHaveValue(2);
-    expect(await screen.findByText("テスト銃砲店")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByLabelText("銃砲火薬店")).toHaveTextContent("テスト銃砲店"),
+    );
+    expect(screen.getByRole("table")).toBeInTheDocument();
+  });
+
+  it.each([
+    ["申請数量（発）", "750"],
+    ["現保有数量（発）", "100"],
+    ["配分の比率（2なら2倍）", "2"],
+  ])("計画を作った後に%sを変えると計画を破棄し、作り直すまで印刷へ進めない", async (label, value) => {
+    await renderForm();
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    expect(screen.getByRole("table")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "入力が変わったので計画を作り直してください",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+    expect(loadAcquisitionPermitApplicationPayload()).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+    const payload = loadAcquisitionPermitApplicationPayload();
+    if (!payload) throw new Error("印刷用データが保存されていません");
+    expect(payload.consumptionPlan.totalAcquisition).toBe(payload.requestedQuantity);
+  });
+
+  it("計画に注意が残っているときは、確認してから印刷へ進む", async () => {
+    await mountForm();
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+
+    const dialog = screen.getByRole("dialog", { name: "消費計画に注意があります" });
+    expect(dialog).toHaveTextContent("複数ページが必要です");
+    fireEvent.click(within(dialog).getByRole("button", { name: "計画を見直す" }));
+    expect(loadAcquisitionPermitApplicationPayload()).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+    fireEvent.click(screen.getByRole("button", { name: "このまま印刷へ進む" }));
+    expect(loadAcquisitionPermitApplicationPayload()?.consumptionPlan.warnings).toContainEqual(
+      expect.stringContaining("複数ページが必要です"),
+    );
   });
 
   it("最初からやり直すと、下書きを消してプロフィールの内容と既定値に戻す", async () => {

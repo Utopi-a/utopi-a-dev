@@ -31,6 +31,8 @@ const applicationFormDraftSchema = z.object({
       weight: z.string(),
     }),
   ),
+  /** 消費計画を生成したときの計画入力。今の入力と一致する間だけ計画を有効にする。 */
+  planInputKey: z.string().nullable(),
 });
 
 /** 申請書の入力画面の状態。印刷画面から戻ったときに入力を続けられるよう保存する。 */

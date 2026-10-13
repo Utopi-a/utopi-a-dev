@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -36,7 +36,7 @@ import {
   createInitialRangeAllocationRows,
 } from "@/features/ammo-ledger/acquisition-permit-application/components/consumption-plan-range-allocation-list/consumption-plan-range-allocation-list";
 import { buildConsumptionPlan } from "@/features/ammo-ledger/acquisition-permit-application/consumption-plan/build-consumption-plan/build-consumption-plan";
-import type { ConsumptionPlan } from "@/features/ammo-ledger/acquisition-permit-application/consumption-plan/consumption-plan-types";
+import type { BuildConsumptionPlanInput } from "@/features/ammo-ledger/acquisition-permit-application/consumption-plan/consumption-plan-types";
 import { resolveSubmissionPrefecture } from "@/features/ammo-ledger/acquisition-permit-application/resolve-submission-prefecture/resolve-submission-prefecture";
 import type {
   MasterPickerData,
@@ -119,13 +119,14 @@ export function AcquisitionPermitApplicationForm({
       selectedGunIds: guns.length > 0 ? [guns[0].id] : [],
       counterparty: null,
       rangeAllocationRows: [],
+      planInputKey: null,
     };
   }
 
   const [draft, setDraft] = useState(createInitialDraft);
   const [isDraftRestored, setIsDraftRestored] = useState(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
-  const [consumptionPlan, setConsumptionPlan] = useState<ConsumptionPlan | null>(null);
+  const [isPlanWarningConfirmOpen, setIsPlanWarningConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function updateDraft(patch: Partial<ApplicationFormDraft>) {
@@ -168,6 +169,33 @@ export function AcquisitionPermitApplicationForm({
   const compatibleAmmunition = draft.ammoName;
   const gunTypeAndCaliber = selectedGuns.map((gun) => `${gun.gunType} ${gun.caliber}`).join("、");
 
+  const rangeAllocations = buildRangeAllocationsFromRows({
+    rows: draft.rangeAllocationRows,
+    permitPurpose: draft.permitPurpose,
+  });
+  const planInput: BuildConsumptionPlanInput | null =
+    draft.counterparty && rangeAllocations.length > 0
+      ? {
+          requestedQuantity: Number(draft.requestedQuantity) || 0,
+          periodFrom: draft.validFrom,
+          periodTo: draft.validTo,
+          currentHomeStock: Number(draft.homeStock) || 0,
+          rangeAllocations,
+          counterpartyName: draft.counterparty.name,
+          counterpartyAddress: draft.counterparty.address,
+        }
+      : null;
+  const planInputKey = planInput ? JSON.stringify(planInput) : null;
+  // 生成したときの入力と今の入力が一致する間だけ計画を使い、古い計画のまま印刷させない。
+  const consumptionPlan = useMemo(
+    () =>
+      planInputKey !== null && planInputKey === draft.planInputKey
+        ? buildConsumptionPlan(JSON.parse(planInputKey) as BuildConsumptionPlanInput)
+        : null,
+    [planInputKey, draft.planInputKey],
+  );
+  const isPlanOutdated = draft.planInputKey !== null && consumptionPlan === null;
+
   function handleValidFromChange(value: string) {
     updateDraft({ validFrom: value, validTo: defaultValidTo({ validFrom: value }) });
   }
@@ -195,17 +223,12 @@ export function AcquisitionPermitApplicationForm({
         ? fillPickerDefaults({ draft: initialDraft, counterpartyPickerData, rangePickerData })
         : initialDraft,
     );
-    setConsumptionPlan(null);
     setError(null);
     setIsResetConfirmOpen(false);
   }
 
   function handleGeneratePlan() {
     setError(null);
-    const rangeAllocations = buildRangeAllocationsFromRows({
-      rows: draft.rangeAllocationRows,
-      permitPurpose: draft.permitPurpose,
-    });
 
     if (rangeAllocations.length === 0) {
       setError("消費計画用の射撃場を選んでください");
@@ -217,29 +240,31 @@ export function AcquisitionPermitApplicationForm({
       return;
     }
 
-    const plan = buildConsumptionPlan({
-      requestedQuantity: Number(draft.requestedQuantity) || 0,
-      periodFrom: draft.validFrom,
-      periodTo: draft.validTo,
-      currentHomeStock: Number(draft.homeStock) || 0,
-      rangeAllocations,
-      counterpartyName: draft.counterparty.name,
-      counterpartyAddress: draft.counterparty.address,
-    });
-
-    setConsumptionPlan(plan);
+    updateDraft({ planInputKey });
   }
 
   function handleGoToPrint() {
     setError(null);
 
     if (!consumptionPlan || consumptionPlan.rows.length === 0) {
-      setError("先に消費計画を生成してください");
+      setError(
+        isPlanOutdated
+          ? "入力が変わったので計画を作り直してください"
+          : "先に消費計画を生成してください",
+      );
       return;
     }
 
-    if (!draft.counterparty) {
-      setError("譲渡者（購入先）を選んでください");
+    if (consumptionPlan.warnings.length > 0) {
+      setIsPlanWarningConfirmOpen(true);
+      return;
+    }
+
+    goToPrint();
+  }
+
+  function goToPrint() {
+    if (!consumptionPlan || !draft.counterparty) {
       return;
     }
 
@@ -509,6 +534,12 @@ export function AcquisitionPermitApplicationForm({
             消費計画を生成
           </Button>
 
+          {isPlanOutdated ? (
+            <p role="status" className="text-sm text-amber-700 dark:text-amber-300">
+              入力が変わったので計画を作り直してください
+            </p>
+          ) : null}
+
           <ConsumptionPlanPreview plan={consumptionPlan} />
         </div>
       </AmmoLedgerPanel>
@@ -529,6 +560,34 @@ export function AcquisitionPermitApplicationForm({
           印刷プレビューへ
         </Button>
       </div>
+
+      <Dialog open={isPlanWarningConfirmOpen} onOpenChange={setIsPlanWarningConfirmOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>消費計画に注意があります</DialogTitle>
+            <DialogDescription>
+              次の点が残ったまま別紙を作ります。内容を確かめてから印刷へ進んでください。
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="list-disc space-y-1 pl-5 text-sm">
+            {consumptionPlan?.warnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsPlanWarningConfirmOpen(false)}
+            >
+              計画を見直す
+            </Button>
+            <Button type="button" onClick={goToPrint}>
+              このまま印刷へ進む
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isResetConfirmOpen} onOpenChange={setIsResetConfirmOpen}>
         <DialogContent showCloseButton={false}>

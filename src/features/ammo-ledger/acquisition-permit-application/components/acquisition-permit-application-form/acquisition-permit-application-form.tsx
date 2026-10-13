@@ -560,7 +560,7 @@ export function AcquisitionPermitApplicationForm({
                     onChange={() => toggleGunId({ gunId: gun.id })}
                   />
                   <span>
-                    {gun.name}（{gun.gunType} / {gun.caliber} / 第{gun.permitNumber}号）
+                    {gun.name}（{gun.gunType} / {gun.caliber} / 許可番号 {gun.permitNumber}）
                   </span>
                 </label>
               </li>

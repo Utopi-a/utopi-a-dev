@@ -7,6 +7,8 @@ import { shouldGuardAmmoLedgerLayout } from "@/features/ammo-ledger/auth/should-
 import { AmmoLedgerOptimisticNavProvider } from "@/features/ammo-ledger/components/ammo-ledger-optimistic-nav/ammo-ledger-optimistic-nav";
 import { AmmoLedgerShell } from "@/features/ammo-ledger/components/ammo-ledger-shell/ammo-ledger-shell";
 import { AmmoLedgerSubpageChrome } from "@/features/ammo-ledger/components/ammo-ledger-subpage-chrome/ammo-ledger-subpage-chrome";
+import { ammoLedgerTitleTemplate } from "@/features/ammo-ledger/navigation/ammo-ledger-document-title/ammo-ledger-document-title";
+import { AmmoLedgerShellDocumentTitle } from "@/features/ammo-ledger/navigation/ammo-ledger-document-title/ammo-ledger-shell-document-title";
 import {
   ammoLedgerPwaConfig,
   ammoLedgerPwaIcons,
@@ -19,7 +21,7 @@ import { labFontClassName } from "@/lib/theme/lab-fonts";
 
 export const metadata: Metadata = {
   applicationName: ammoLedgerPwaConfig.shortName,
-  title: ammoLedgerPwaConfig.name,
+  title: { default: ammoLedgerPwaConfig.name, template: ammoLedgerTitleTemplate },
   description: ammoLedgerPwaConfig.description,
   manifest: ammoLedgerPwaConfig.manifestPath,
   icons: {
@@ -66,21 +68,24 @@ export default async function AmmoLedgerLayout({ children }: { children: React.R
   }
 
   return (
-    <div
-      className={`${labFontClassName} ammo-ledger-theme mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 pt-5 pb-6 sm:px-6 sm:pt-6 sm:pb-8`}
-    >
-      <SerwistProvider swUrl="/serwist/sw.js">
-        <AmmoLedgerSwrProvider initialWorkspace={initialWorkspace}>
-          <AmmoLedgerOptimisticNavProvider>
-            <AmmoLedgerWorkspaceSubscription />
-            <AmmoLedgerShell>
-              <AmmoLedgerSubpageChrome>{children}</AmmoLedgerSubpageChrome>
-            </AmmoLedgerShell>
-          </AmmoLedgerOptimisticNavProvider>
-        </AmmoLedgerSwrProvider>
-      </SerwistProvider>
+    <>
+      <main
+        className={`${labFontClassName} ammo-ledger-theme mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 pt-5 pb-6 sm:px-6 sm:pt-6 sm:pb-8`}
+      >
+        <SerwistProvider swUrl="/serwist/sw.js">
+          <AmmoLedgerSwrProvider initialWorkspace={initialWorkspace}>
+            <AmmoLedgerOptimisticNavProvider>
+              <AmmoLedgerShellDocumentTitle />
+              <AmmoLedgerWorkspaceSubscription />
+              <AmmoLedgerShell>
+                <AmmoLedgerSubpageChrome>{children}</AmmoLedgerSubpageChrome>
+              </AmmoLedgerShell>
+            </AmmoLedgerOptimisticNavProvider>
+          </AmmoLedgerSwrProvider>
+        </SerwistProvider>
+      </main>
       {/* スマホでは記録フォームの保存ボタンが画面下に固定されるため、通知をその上に出して保存し直す操作を隠さない。 */}
       <Toaster mobileOffset={{ bottom: "calc(5rem + env(safe-area-inset-bottom))" }} />
-    </div>
+    </>
   );
 }

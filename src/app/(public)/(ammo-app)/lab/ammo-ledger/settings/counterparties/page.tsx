@@ -6,6 +6,8 @@ import { CounterpartyRowActions } from "@/features/ammo-ledger/components/counte
 import { MasterListItem } from "@/features/ammo-ledger/components/master-list-item/master-list-item";
 import { listCounterparties } from "@/features/ammo-ledger/master/list-counterparties/list-counterparties";
 
+export const metadata = { title: "購入先・譲渡先" };
+
 export default async function CounterpartiesSettingsPage() {
   const user = await requireAmmoUser();
   const counterparties = await listCounterparties({ userId: user.id });

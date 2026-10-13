@@ -6,6 +6,8 @@ import { RangeForm } from "@/features/ammo-ledger/components/range-form/range-fo
 import { RangeRowActions } from "@/features/ammo-ledger/components/range-row-actions/range-row-actions";
 import { listRanges } from "@/features/ammo-ledger/master/list-ranges/list-ranges";
 
+export const metadata = { title: "射撃場" };
+
 export default async function RangesSettingsPage() {
   const user = await requireAmmoUser();
   const ranges = await listRanges({ userId: user.id });

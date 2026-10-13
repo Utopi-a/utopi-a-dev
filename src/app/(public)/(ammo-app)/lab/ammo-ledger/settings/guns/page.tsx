@@ -5,6 +5,8 @@ import { GunRowActions } from "@/features/ammo-ledger/components/gun-row-actions
 import { MasterListItem } from "@/features/ammo-ledger/components/master-list-item/master-list-item";
 import { listGuns } from "@/features/ammo-ledger/master/list-guns/list-guns";
 
+export const metadata = { title: "銃" };
+
 export default async function GunsSettingsPage() {
   const user = await requireAmmoUser();
   const guns = await listGuns({ userId: user.id });

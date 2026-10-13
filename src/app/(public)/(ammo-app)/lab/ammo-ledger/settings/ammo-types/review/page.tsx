@@ -8,6 +8,8 @@ import { countClassificationReviewStatus } from "@/features/ammo-ledger/master/a
 import { listOrphanLedgerEntries } from "@/features/ammo-ledger/master/ammo-type-classification-review/list-orphan-ledger-entries";
 import { listUnconfirmedAmmoTypes } from "@/features/ammo-ledger/master/ammo-type-classification-review/list-unconfirmed-ammo-types";
 
+export const metadata = { title: "弾種分類の確認" };
+
 export default async function AmmoTypeClassificationReviewPage() {
   const user = await requireAmmoUser();
   const [unconfirmedTypes, orphanEntries, status] = await Promise.all([

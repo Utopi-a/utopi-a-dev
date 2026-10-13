@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ammoLedgerPwaConfig } from "@/features/ammo-ledger/pwa/ammo-ledger-pwa-config";
 
+export const metadata = { title: "オフライン" };
+
 export default function AmmoLedgerOfflinePage() {
   return (
     <div className="mx-auto flex min-h-[50vh] max-w-md flex-col items-center justify-center gap-4 px-4 text-center">

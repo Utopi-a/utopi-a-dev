@@ -9,6 +9,8 @@ import { listAmmoTypes } from "@/features/ammo-ledger/master/list-ammo-types/lis
 import type { CartridgeType } from "@/features/ammo-ledger/schema/cartridge-type";
 import { cartridgeTypeLabels } from "@/features/ammo-ledger/schema/cartridge-type";
 
+export const metadata = { title: "弾種" };
+
 export default async function AmmoTypesSettingsPage() {
   const user = await requireAmmoUser();
   const [ammoTypes, reviewStatus] = await Promise.all([

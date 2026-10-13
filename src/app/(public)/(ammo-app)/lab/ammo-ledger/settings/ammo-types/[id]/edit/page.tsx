@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AmmoTypeForm } from "@/features/ammo-ledger/components/ammo-type-form/ammo-type-form";
 import { getAmmoType } from "@/features/ammo-ledger/master/get-ammo-type/get-ammo-type";
+import type { CartridgeType } from "@/features/ammo-ledger/schema/cartridge-type";
+import { extractCustomAmmoTypeName } from "@/features/ammo-ledger/schema/extract-custom-ammo-type-name";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -28,12 +30,20 @@ export default async function EditAmmoTypePage({ params }: PageProps) {
       <Card className="border-border/70">
         <CardHeader>
           <CardTitle className="text-base">{ammoType.name}</CardTitle>
+          <CardDescription>
+            ここで変更しても、記録済みの帳簿の弾種名は変わりません。
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <AmmoTypeForm
             recordId={ammoType.id}
             initialValues={{
-              name: ammoType.name,
+              name: extractCustomAmmoTypeName({
+                name: ammoType.name,
+                caliber: ammoType.caliber,
+                cartridgeType: ammoType.cartridgeType as CartridgeType,
+                gaugeNumber: ammoType.gaugeNumber,
+              }),
               caliber: ammoType.caliber,
               cartridgeType: ammoType.cartridgeType,
               gaugeNumber: ammoType.gaugeNumber,

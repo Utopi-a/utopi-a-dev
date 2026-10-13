@@ -9,6 +9,7 @@ import { acquireLedgerAdvisoryLock } from "@/features/ammo-ledger/ledger/lock/ac
 import { assertDatesNotLocked } from "@/features/ammo-ledger/ledger/lock/assert-dates-not-locked/assert-dates-not-locked";
 import { buildAmmoTypeLabel } from "@/features/ammo-ledger/schema/build-ammo-type-label";
 import type { CartridgeType } from "@/features/ammo-ledger/schema/cartridge-type";
+import { extractCustomAmmoTypeName } from "@/features/ammo-ledger/schema/extract-custom-ammo-type-name";
 import { confirmClassificationSchema } from "./classification-review-schema";
 
 export async function confirmClassificationAction(input: unknown) {
@@ -31,7 +32,13 @@ export async function confirmClassificationAction(input: unknown) {
     await acquireLedgerAdvisoryLock({ tx, userId: user.id });
 
     const [existing] = await tx
-      .select({ id: ammoType.id, name: ammoType.name })
+      .select({
+        id: ammoType.id,
+        name: ammoType.name,
+        caliber: ammoType.caliber,
+        cartridgeType: ammoType.cartridgeType,
+        gaugeNumber: ammoType.gaugeNumber,
+      })
       .from(ammoType)
       .where(and(eq(ammoType.id, ammoTypeId), eq(ammoType.userId, user.id)));
 
@@ -53,8 +60,14 @@ export async function confirmClassificationAction(input: unknown) {
       return lockCheck;
     }
 
+    // 自動で作った名前のままなら、確認した分類から名前を作り直す。
     const resolvedName = buildAmmoTypeLabel({
-      name: existing.name,
+      name: extractCustomAmmoTypeName({
+        name: existing.name,
+        caliber: existing.caliber,
+        cartridgeType: existing.cartridgeType as CartridgeType,
+        gaugeNumber: existing.gaugeNumber,
+      }),
       caliber,
       cartridgeType: cartridgeType as CartridgeType,
       gaugeNumber: cartridgeType === "shotgun_shot" ? gaugeNumber : undefined,

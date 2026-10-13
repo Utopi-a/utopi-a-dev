@@ -16,7 +16,8 @@ const applicationFormDraftSchema = z.object({
   ammoName: z.enum(applicationAmmoNameOptions),
   permitPurpose: z.enum(acquisitionPermitPurposeOptions),
   requestedQuantity: z.string(),
-  homeStock: z.string(),
+  /** 手で直した現保有数量。null の間は選んだ名称に当たる帳簿の在庫を使い、名称の変更に追随する。 */
+  homeStockOverride: z.string().nullable(),
   validFrom: z.string(),
   validTo: z.string(),
   storageLocation: z.string(),

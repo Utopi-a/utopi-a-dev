@@ -18,9 +18,11 @@ import { Label } from "@/components/ui/label";
 import type { ammoGun } from "@/db/schema/ammo-ledger";
 import type { AcquisitionPermitApplicationPayload } from "@/features/ammo-ledger/acquisition-permit-application/acquisition-permit-application-types";
 import {
+  type AmmoTypeStock,
   type ApplicationAmmoName,
   applicationAmmoNameOptions,
   defaultApplicationAmmoName,
+  sumHomeStockForAmmoName,
 } from "@/features/ammo-ledger/acquisition-permit-application/application-ammo-name/application-ammo-name";
 import {
   type ApplicationFormDraft,
@@ -52,6 +54,7 @@ import {
   acquisitionPermitPurposeOptions,
   defaultAcquisitionPermitPurpose,
 } from "@/features/ammo-ledger/schema/acquisition-permit-purpose-options";
+import { homeStorageRoundLimit } from "@/features/ammo-ledger/schema/home-storage-limit";
 import { cn } from "@/lib/cn";
 import { getTokyoIsoDate } from "@/lib/date/get-tokyo-iso-date";
 
@@ -62,7 +65,9 @@ type AcquisitionPermitApplicationFormProps = {
   ownerAddress: string;
   ownerBirthDate?: string;
   ownerPhone?: string;
-  currentHomeStock: number;
+  /** 全弾種の自宅在庫。自宅保管の上限は弾種をまたいだ合計で見る。 */
+  totalHomeStock: number;
+  ammoTypeStocks: AmmoTypeStock[];
   guns: (typeof ammoGun.$inferSelect)[];
 };
 
@@ -84,7 +89,8 @@ export function AcquisitionPermitApplicationForm({
   ownerAddress,
   ownerBirthDate = "",
   ownerPhone = "",
-  currentHomeStock,
+  totalHomeStock,
+  ammoTypeStocks,
   guns,
 }: AcquisitionPermitApplicationFormProps) {
   const router = useRouter();
@@ -112,7 +118,7 @@ export function AcquisitionPermitApplicationForm({
       ammoName: defaultApplicationAmmoName,
       permitPurpose: defaultAcquisitionPermitPurpose,
       requestedQuantity: "5000",
-      homeStock: String(currentHomeStock),
+      homeStockOverride: null,
       validFrom: today,
       validTo: defaultValidTo({ validFrom: today }),
       storageLocation: "自宅装弾ロッカー",
@@ -169,6 +175,10 @@ export function AcquisitionPermitApplicationForm({
   const compatibleAmmunition = draft.ammoName;
   const gunTypeAndCaliber = selectedGuns.map((gun) => `${gun.gunType} ${gun.caliber}`).join("、");
 
+  const ledgerHomeStock = sumHomeStockForAmmoName({ ammoName: draft.ammoName, ammoTypeStocks });
+  const homeStock = draft.homeStockOverride ?? String(ledgerHomeStock);
+  // 自宅保管の上限は弾種をまたいだ合計なので、計画にはほかの弾種の在庫も含める。
+  const otherHomeStock = Math.max(0, totalHomeStock - ledgerHomeStock);
   const rangeAllocations = buildRangeAllocationsFromRows({
     rows: draft.rangeAllocationRows,
     permitPurpose: draft.permitPurpose,
@@ -179,7 +189,7 @@ export function AcquisitionPermitApplicationForm({
           requestedQuantity: Number(draft.requestedQuantity) || 0,
           periodFrom: draft.validFrom,
           periodTo: draft.validTo,
-          currentHomeStock: Number(draft.homeStock) || 0,
+          currentHomeStock: otherHomeStock + (Number(homeStock) || 0),
           rangeAllocations,
           counterpartyName: draft.counterparty.name,
           counterpartyAddress: draft.counterparty.address,
@@ -278,7 +288,7 @@ export function AcquisitionPermitApplicationForm({
       ownerPhone: draft.ownerPhone || undefined,
       ammoName: draft.ammoName,
       requestedQuantity: Number(draft.requestedQuantity) || 0,
-      currentHomeStock: Number(draft.homeStock) || 0,
+      currentHomeStock: Number(homeStock) || 0,
       gunType,
       compatibleAmmunition,
       possessionPermitCertificateNumber:
@@ -422,9 +432,16 @@ export function AcquisitionPermitApplicationForm({
                 id="home-stock"
                 type="number"
                 min={0}
-                value={draft.homeStock}
-                onChange={(event) => updateDraft({ homeStock: event.target.value })}
+                value={homeStock}
+                onChange={(event) => updateDraft({ homeStockOverride: event.target.value })}
+                aria-describedby="home-stock-help"
               />
+              <p id="home-stock-help" className="text-xs text-muted-foreground">
+                初期値は、帳簿の在庫のうち選んだ名称に当たる弾種の合計です。
+                {otherHomeStock > 0
+                  ? `自宅保管の上限（${homeStorageRoundLimit}発）の確認には、ほかの弾種の${otherHomeStock.toLocaleString("ja-JP")}発も含めます。`
+                  : null}
+              </p>
             </div>
           </div>
 

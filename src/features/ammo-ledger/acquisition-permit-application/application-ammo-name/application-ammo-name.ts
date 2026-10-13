@@ -15,3 +15,39 @@ export const applicationAmmoNameOptions = [
 export type ApplicationAmmoName = (typeof applicationAmmoNameOptions)[number];
 
 export const defaultApplicationAmmoName: ApplicationAmmoName = "12番";
+
+export type AmmoTypeStock = {
+  cartridgeType: string;
+  caliber: string;
+  bookStock: number;
+};
+
+function isAmmoTypeOfName({
+  ammoName,
+  cartridgeType,
+  caliber,
+}: {
+  ammoName: ApplicationAmmoName;
+  cartridgeType: string;
+  caliber: string;
+}): boolean {
+  if (cartridgeType === "rifle") {
+    return ammoName === "実包（ライフル）";
+  }
+  // 番径は手入力なので、全角数字や空白の違いでは別の名称として扱わない。
+  return caliber.normalize("NFKC").replace(/\s/g, "") === ammoName;
+}
+
+/** 様式の備考どおり、現に保有している数量は申請する名称に当たる弾種だけを合計する。 */
+export function sumHomeStockForAmmoName({
+  ammoName,
+  ammoTypeStocks,
+}: {
+  ammoName: ApplicationAmmoName;
+  ammoTypeStocks: AmmoTypeStock[];
+}): number {
+  const total = ammoTypeStocks
+    .filter((stock) => isAmmoTypeOfName({ ammoName, ...stock }))
+    .reduce((sum, stock) => sum + stock.bookStock, 0);
+  return Math.max(0, total);
+}

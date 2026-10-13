@@ -19,7 +19,7 @@ const draft: ApplicationFormDraft = {
   ammoName: "20番",
   permitPurpose: "標的射撃",
   requestedQuantity: "750",
-  homeStock: "120",
+  homeStockOverride: "120",
   validFrom: "2026-09-10",
   validTo: "2027-09-09",
   storageLocation: "ガンロッカー",

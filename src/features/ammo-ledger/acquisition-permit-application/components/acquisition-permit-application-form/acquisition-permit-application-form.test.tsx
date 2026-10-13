@@ -44,7 +44,8 @@ async function mountForm(profile: Partial<FormProps> = {}) {
       <AcquisitionPermitApplicationForm
         ownerName="テスト氏名"
         ownerAddress="テスト住所"
-        currentHomeStock={755}
+        totalHomeStock={755}
+        ammoTypeStocks={[{ cartridgeType: "shotgun_shot", caliber: "12番", bookStock: 755 }]}
         guns={guns}
         {...profile}
       />
@@ -204,6 +205,49 @@ describe("譲受許可申請の入力から印刷への引き継ぎ", () => {
       .map((option) => option.textContent)
       .filter((label) => label !== "");
     expect(optionLabels).toEqual(["12番", "20番", "410番", "実包（ライフル）"]);
+  });
+
+  it("現保有数量は選んだ名称の弾種だけを合計し、手で直すまでは名称の変更に追随する", async () => {
+    await renderForm({
+      totalHomeStock: 600,
+      ammoTypeStocks: [
+        { cartridgeType: "shotgun_shot", caliber: "12番", bookStock: 300 },
+        { cartridgeType: "shotgun_slug", caliber: "12番", bookStock: 100 },
+        { cartridgeType: "rifle", caliber: ".308WIN", bookStock: 200 },
+      ],
+    });
+    const homeStockInput = screen.getByLabelText("現保有数量（発）");
+    expect(homeStockInput).toHaveValue(400);
+
+    fireEvent.change(screen.getByLabelText("火薬類の名称"), {
+      target: { value: "実包（ライフル）" },
+    });
+    expect(homeStockInput).toHaveValue(200);
+
+    fireEvent.change(homeStockInput, { target: { value: "150" } });
+    fireEvent.change(screen.getByLabelText("火薬類の名称"), { target: { value: "20番" } });
+    expect(homeStockInput).toHaveValue(150);
+  });
+
+  it("印刷する保有数量は名称の分だけにし、自宅保管の上限はほかの弾種も含めて計画する", async () => {
+    await renderForm({
+      totalHomeStock: 700,
+      ammoTypeStocks: [
+        { cartridgeType: "shotgun_shot", caliber: "12番", bookStock: 300 },
+        { cartridgeType: "rifle", caliber: ".308WIN", bookStock: 400 },
+      ],
+    });
+    expect(screen.getByText(/ほかの弾種の400発も含めます/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "消費計画を生成" }));
+    fireEvent.click(screen.getByRole("button", { name: "印刷プレビューへ" }));
+
+    const payload = loadAcquisitionPermitApplicationPayload();
+    if (!payload) throw new Error("印刷用データが保存されていません");
+    expect(buildApplicationFieldValues({ input: payload }).mainFields.currentHomeStock).toBe(
+      "12番 300個",
+    );
+    expect(payload.consumptionPlan.peakHomeStock).toBeGreaterThanOrEqual(700);
+    expect(payload.consumptionPlan.peakHomeStock).toBeLessThanOrEqual(800);
   });
 
   it("提出先はプロフィール住所の都道府県を初期値にする", async () => {

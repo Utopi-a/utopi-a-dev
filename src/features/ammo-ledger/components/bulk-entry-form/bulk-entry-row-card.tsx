@@ -153,6 +153,7 @@ export function BulkEntryRowCard({
             { value: "consume", label: "消費" },
             { value: "acquire", label: "譲り受け" },
           ]}
+          required
           placeholder=""
         />
 

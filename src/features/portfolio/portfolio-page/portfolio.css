@@ -158,3 +158,35 @@ a.pf-entry:hover .pf-entry-title {
     animation: none;
   }
 }
+
+/* 分類名と技術名を左右に並べ、分類名の幅を揃えて技術名の左端を一列にする */
+.pf-skills {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 1rem 2rem;
+  margin: 0;
+}
+
+.pf-skill-group {
+  display: contents;
+}
+
+.pf-skill-name {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.pf-skill-tags {
+  margin: 0;
+}
+
+@media (max-width: 40rem) {
+  .pf-skills {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.375rem;
+  }
+
+  .pf-skill-tags {
+    margin-bottom: 0.875rem;
+  }
+}

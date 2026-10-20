@@ -28,11 +28,15 @@ export function AboutView() {
 
       <section className="pf-section">
         <h2 className="pf-heading">スキル</h2>
+        <p className="pf-lead">
+          開発は AI
+          エージェントがいる前提で進めています。下の技術も、エージェントと組んで使うものです。
+        </p>
         <ul className="pf-list">
           {skills.map((skill) => (
             <li key={skill.name} className="pf-entry">
               <span className="pf-entry-title">{skill.name}</span>
-              <span className="pf-entry-description">{skill.summary}</span>
+              {skill.summary ? <span className="pf-entry-description">{skill.summary}</span> : null}
               {skill.tags ? (
                 <ul className="pf-tags mt-2 text-sm" aria-label={`${skill.name} の関連技術`}>
                   {skill.tags.map((tag) => (

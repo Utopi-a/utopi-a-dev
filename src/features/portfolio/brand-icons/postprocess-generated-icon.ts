@@ -17,18 +17,9 @@ type IconJob = {
   contentScale: number;
   boundsStrategy: BoundsStrategy;
   minInkPixelsPerRow?: number;
-  extraOutputs?: Array<{ size: number; outputPath: string }>;
 };
 
 const iconJobs: IconJob[] = [
-  {
-    sourceFile: "site-icon-512.png",
-    outputStem: "site-icon",
-    sizes: [32, 180, 192, 512],
-    contentScale: 0.97,
-    boundsStrategy: "opaque",
-    extraOutputs: [{ size: 32, outputPath: "public/favicon.png" }],
-  },
   {
     sourceFile: "ammo-ledger-icon-512.png",
     outputStem: "ammo-ledger-icon",
@@ -127,22 +118,15 @@ async function writeResizedVariants({
   outputDir,
   outputStem,
   sizes,
-  extraOutputs = [],
 }: {
   masterPath: string;
   outputDir: string;
   outputStem: string;
   sizes: number[];
-  extraOutputs?: Array<{ size: number; outputPath: string }>;
 }): Promise<void> {
   for (const size of sizes) {
     const outputPath = path.join(outputDir, `${outputStem}-${size}.png`);
     await sharp(masterPath).resize(size, size).png().toFile(outputPath);
-  }
-
-  for (const extra of extraOutputs) {
-    const outputPath = path.join(process.cwd(), extra.outputPath);
-    await sharp(masterPath).resize(extra.size, extra.size).png().toFile(outputPath);
   }
 }
 
@@ -171,7 +155,6 @@ async function main() {
       outputDir,
       outputStem: job.outputStem,
       sizes: job.sizes,
-      extraOutputs: job.extraOutputs,
     });
 
     const maskableSourcePath = path.join(sourceDir, `${job.outputStem}-512-maskable.png`);

@@ -6,7 +6,7 @@ export type CareerEntry = {
 
 export type SkillEntry = {
   name: string;
-  summary: string;
+  summary?: string;
   tags?: string[];
 };
 
@@ -50,11 +50,32 @@ export const certifications: string[] = [
   "剣道初段",
 ];
 
+/** どの技術も AI エージェントと組んで使う前提なので、先頭にエージェント自体を置く */
 export const skills: SkillEntry[] = [
+  {
+    name: "AI エージェント",
+    tags: ["Claude Code", "Codex CLI", "MCP", "Agent Skills"],
+  },
   {
     name: "TypeScript",
     summary: "インターン・個人開発でメインに使用。",
-    tags: ["Next.js", "React", "tRPC", "Prisma"],
+    tags: ["Next.js", "React", "Hono", "tRPC", "Zod", "SWR"],
+  },
+  {
+    name: "フロントエンド",
+    tags: ["Tailwind CSS", "shadcn/ui", "Radix UI", "PWA（Serwist）", "WebGPU", "Transformers.js"],
+  },
+  {
+    name: "バックエンド・データ",
+    tags: ["PostgreSQL", "Drizzle ORM", "Prisma", "Better Auth"],
+  },
+  {
+    name: "テスト・品質",
+    tags: ["Vitest", "Testing Library", "Playwright", "Biome", "Lefthook"],
+  },
+  {
+    name: "インフラ・運用",
+    tags: ["Vercel", "Neon", "Doppler", "GitHub Actions"],
   },
   {
     name: "Python",

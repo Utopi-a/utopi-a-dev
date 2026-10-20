@@ -4,10 +4,9 @@ export type CareerEntry = {
   title: string;
 };
 
-export type SkillEntry = {
+export type SkillGroup = {
   name: string;
-  summary?: string;
-  tags?: string[];
+  tags: string[];
 };
 
 export const careerEntries: CareerEntry[] = [
@@ -51,23 +50,32 @@ export const certifications: string[] = [
 ];
 
 /** どの技術も AI エージェントと組んで使う前提なので、先頭にエージェント自体を置く */
-export const skills: SkillEntry[] = [
+export const skillGroups: SkillGroup[] = [
   {
     name: "AI エージェント",
-    tags: ["Claude Code", "Codex CLI", "MCP", "Agent Skills"],
+    tags: ["Claude Code", "Codex", "Cursor", "MCP", "Agent Skills"],
   },
   {
-    name: "TypeScript",
-    summary: "インターン・個人開発でメインに使用。",
-    tags: ["Next.js", "React", "Hono", "tRPC", "Zod", "SWR"],
+    name: "言語",
+    tags: ["TypeScript", "Python"],
   },
   {
     name: "フロントエンド",
-    tags: ["Tailwind CSS", "shadcn/ui", "Radix UI", "PWA（Serwist）", "WebGPU", "Transformers.js"],
+    tags: [
+      "Next.js",
+      "React",
+      "Tailwind CSS",
+      "shadcn/ui",
+      "Radix UI",
+      "SWR",
+      "PWA（Serwist）",
+      "WebGPU",
+      "Transformers.js",
+    ],
   },
   {
     name: "バックエンド・データ",
-    tags: ["PostgreSQL", "Drizzle ORM", "Prisma", "Better Auth"],
+    tags: ["Hono", "tRPC", "Zod", "PostgreSQL", "Drizzle ORM", "Prisma", "Better Auth"],
   },
   {
     name: "テスト・品質",
@@ -75,14 +83,6 @@ export const skills: SkillEntry[] = [
   },
   {
     name: "インフラ・運用",
-    tags: ["Vercel", "Neon", "Doppler", "GitHub Actions"],
-  },
-  {
-    name: "Python",
-    summary: "競技プログラミング。",
-  },
-  {
-    name: "Git",
-    summary: "チーム開発での日常的な利用。",
+    tags: ["Git", "GitHub Actions", "Vercel", "Neon", "Doppler"],
   },
 ];

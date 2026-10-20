@@ -20,7 +20,7 @@ export function PageHeader({ title, description, parent, className }: PageHeader
           {parent.label}
         </Link>
       ) : null}
-      <h1 className="text-3xl font-bold tracking-tight text-balance sm:text-4xl">{title}</h1>
+      <h1 className="text-3xl font-semibold tracking-wide text-balance">{title}</h1>
       {description ? (
         <p className="max-w-[36em] leading-relaxed text-muted-foreground text-pretty">
           {description}

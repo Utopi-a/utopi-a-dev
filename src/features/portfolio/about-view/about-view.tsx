@@ -1,42 +1,40 @@
 import { careerEntries, certifications, skills } from "@/features/portfolio/about-content";
 import { EntryRow } from "@/features/portfolio/entry-row/entry-row";
-import { LabeledSection } from "@/features/portfolio/labeled-section/labeled-section";
-import { PageHeader } from "@/features/portfolio/page-header/page-header";
 
 export function AboutView() {
   return (
-    <div className="flex flex-col gap-14 sm:gap-16">
-      <PageHeader title="プロフィール" className="mb-2 sm:mb-4" />
+    <>
+      <h1 className="pf-title">プロフィール</h1>
 
-      <LabeledSection title="経歴">
-        <ol className="-my-3">
+      <section className="pf-section">
+        <h2 className="pf-heading">経歴</h2>
+        <ol className="pf-list">
           {careerEntries.map((entry) => (
             <li key={entry.id}>
               <EntryRow title={entry.title} meta={entry.period} />
             </li>
           ))}
         </ol>
-      </LabeledSection>
+      </section>
 
-      <LabeledSection title="資格">
-        <ul className="grid gap-x-8 gap-y-2 sm:grid-cols-2">
+      <section className="pf-section">
+        <h2 className="pf-heading">資格</h2>
+        <ul className="pf-tags">
           {certifications.map((name) => (
             <li key={name}>{name}</li>
           ))}
         </ul>
-      </LabeledSection>
+      </section>
 
-      <LabeledSection title="スキル">
-        <ul className="-my-3">
+      <section className="pf-section">
+        <h2 className="pf-heading">スキル</h2>
+        <ul className="pf-list">
           {skills.map((skill) => (
-            <li key={skill.name} className="py-3">
-              <p className="font-bold">{skill.name}</p>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{skill.summary}</p>
+            <li key={skill.name} className="pf-entry">
+              <span className="pf-entry-title">{skill.name}</span>
+              <span className="pf-entry-description">{skill.summary}</span>
               {skill.tags ? (
-                <ul
-                  className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm"
-                  aria-label={`${skill.name} の関連技術`}
-                >
+                <ul className="pf-tags mt-2 text-sm" aria-label={`${skill.name} の関連技術`}>
                   {skill.tags.map((tag) => (
                     <li key={tag}>{tag}</li>
                   ))}
@@ -45,7 +43,7 @@ export function AboutView() {
             </li>
           ))}
         </ul>
-      </LabeledSection>
-    </div>
+      </section>
+    </>
   );
 }

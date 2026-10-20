@@ -1,10 +1,10 @@
-import { PublicPageShell } from "@/components/layout/public-page-shell";
 import { AboutView } from "@/features/portfolio/about-view/about-view";
+import { PortfolioPage } from "@/features/portfolio/portfolio-page/portfolio-page";
 
 export default function AboutPage() {
   return (
-    <PublicPageShell>
+    <PortfolioPage>
       <AboutView />
-    </PublicPageShell>
+    </PortfolioPage>
   );
 }

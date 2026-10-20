@@ -1,9 +1,7 @@
 "use client";
 
-import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
 type ThemeToggleProps = {
@@ -18,33 +16,20 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
     setMounted(true);
   }, []);
 
-  const buttonClassName = cn("text-muted-foreground hover:text-foreground", className);
-
-  if (!mounted) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label="テーマを切り替える"
-        disabled
-        className={buttonClassName}
-      >
-        <SunIcon className="size-4" />
-      </Button>
-    );
-  }
-
-  const isDark = resolvedTheme === "dark";
+  const isDark = mounted && resolvedTheme === "dark";
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
+    <button
+      type="button"
+      disabled={!mounted}
       aria-label={isDark ? "ライトモードに切り替え" : "ダークモードに切り替え"}
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className={buttonClassName}
+      className={cn(
+        "size-8 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50",
+        className,
+      )}
     >
-      {isDark ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />}
-    </Button>
+      {isDark ? "昼" : "夜"}
+    </button>
   );
 }

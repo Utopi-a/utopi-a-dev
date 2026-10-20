@@ -1,10 +1,10 @@
-import { PublicPageShell } from "@/components/layout/public-page-shell";
 import { LabView } from "@/features/portfolio/lab-view/lab-view";
+import { PortfolioPage } from "@/features/portfolio/portfolio-page/portfolio-page";
 
 export default function LabPage() {
   return (
-    <PublicPageShell>
+    <PortfolioPage>
       <LabView />
-    </PublicPageShell>
+    </PortfolioPage>
   );
 }

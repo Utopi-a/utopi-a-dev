@@ -1,10 +1,10 @@
-import { PublicPageShell } from "@/components/layout/public-page-shell";
 import { BlogPlaceholder } from "@/features/portfolio/blog-placeholder/blog-placeholder";
+import { PortfolioPage } from "@/features/portfolio/portfolio-page/portfolio-page";
 
 export default function BlogPage() {
   return (
-    <PublicPageShell>
+    <PortfolioPage>
       <BlogPlaceholder />
-    </PublicPageShell>
+    </PortfolioPage>
   );
 }

@@ -123,7 +123,7 @@ def close_eyes_on_lower_lash(client: Client):
     上まつ毛の根元（まつ毛のメッシュの下端）を下まつ毛の根元（白目のメッシュの下端。fit_parts.py で
     下まつ毛の線までに揃えてある）へ下ろし、毛先側は自動リグと同じく 0.88 倍の厚みで根元の上に載せる。
     下まぶたも閉じるときわずかに上がるので、下まつ毛は根元どうしの距離の 1 割だけ上げ、そこで重ねる。
-    白目の外へ伸びる目頭・目尻のまつ毛の跳ねも、閉じた線を延ばした位置へ下ろして一本の線につなげる。
+    目尻で上下のまつ毛がつながる部分は下まつ毛側のパーツにしてあるので、上まつ毛の目尻側の端は動かさない。
     白目は根元の少し上で薄くつぶしてまつ毛の裏に隠す（瞳は白目でクリッピングされるので一緒に隠れる）。
     まつ毛と白目は同じ目のデフォーマの中にあり、座標（0〜1）がそろっているので、メッシュだけで計算できる。
     """
@@ -149,17 +149,15 @@ def close_eyes_on_lower_lash(client: Client):
         # 閉じた根元の線。白目の幅では下まつ毛の根元をなめらかな曲線に当てはめ、目尻・目頭で折れないようにする
         inner = on_white & (grid > white_x.min() + 0.03 * np.ptp(white_x)) & (grid < white_x.max() - 0.03 * np.ptp(white_x))
         curve = np.poly1d(np.polyfit(grid[inner], (lower_root - gap * rise)[inner], 3))
-        closed_root = curve(grid) + overlap
-        # 白目の外（まつ毛の跳ね）は線を延ばしてつなぐ。3 次式の端は傾きが急になりやすいので傾きは半分にし、
-        # 跳ねは開いたときの形の 15% だけ残して少し上げる
-        tail_keep = 0.15
-        for edge_x, outside in ((white_x.min(), grid < white_x.min()), (white_x.max(), grid > white_x.max())):
-            slope = curve.deriv()(edge_x) * 0.5
-            edge_root = np.interp(edge_x, grid, upper_root)
-            closed_root[outside] = (curve(edge_x) + overlap + slope * (grid[outside] - edge_x)
-                                    + (upper_root[outside] - edge_root) * tail_keep)
-        shift = cv2.GaussianBlur((closed_root - upper_root).astype(np.float32).reshape(1, -1), (0, 0), 4).ravel()
-
+        closed_root = curve(np.clip(grid, white_x.min(), white_x.max())) + overlap
+        # 上まつ毛の目尻側の端は、動かない目尻のパーツ（fit_parts.py で下まつ毛側に移したもの）とつながっているので
+        # 端では動かさず、中央へ向かってなめらかに動きを大きくする。目頭側は分けていないので下まつ毛まで下ろす
+        span = np.ptp(grid)
+        # 画面上で右目は左端、左目は右端が目尻
+        from_outer = grid - grid.min() if side == "R" else grid.max() - grid
+        taper = np.clip(from_outer / (0.18 * span), 0, 1)
+        taper = taper * taper * (3 - 2 * taper)
+        shift = cv2.GaussianBlur((closed_root - upper_root).astype(np.float32).reshape(1, -1), (0, 0), 4).ravel() * taper
         closed_lower = lower.copy()
         closed_lower[:, 1] -= np.interp(lower[:, 0], grid, gap) * rise
 
@@ -167,7 +165,8 @@ def close_eyes_on_lower_lash(client: Client):
         squash = 0.88
         lash_root = np.interp(lash[:, 0], grid, upper_root)
         closed_lash = lash.copy()
-        closed_lash[:, 1] = lash_root + np.interp(lash[:, 0], grid, shift) + (lash[:, 1] - lash_root) * squash
+        lash_taper = np.interp(lash[:, 0], grid, taper)
+        closed_lash[:, 1] = lash_root + np.interp(lash[:, 0], grid, shift) + (lash[:, 1] - lash_root) * (1 - (1 - squash) * lash_taper)
         # 白目は根元の境界ではなく、閉じたまつ毛の帯の内側（根元より少し上）へ細くつぶす
         line = np.interp(white[:, 0], grid, closed_root)
         closed_white = white.copy()

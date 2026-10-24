@@ -181,15 +181,16 @@ for sigma in (60 * S, 12 * S):
     blurred = soft(known[..., None] * torso[..., :3], sigma) / np.maximum(blur, 1e-6)[..., None]
     cloth = np.where((blur > 0.05)[..., None], blurred, cloth)
 torso[..., :3] = np.where(under[..., None], cloth, torso[..., :3])
-# タイの下は、元絵の周り（黒い襟・白いシャツ）を内側へ延ばして埋める。平均の色で埋めると襟の黒が混ざって灰色になる。
-# 大きな範囲なので 1/4 に縮めて埋め、元の大きさに戻す
+# タイの下は、GPT がタイとブローチを取り除いて襟とシャツを描き足した絵（gpt_parts.py の under_tie）で埋める。
+# 元絵の周りを延ばすだけでは、襟とシャツの形にならずぼやけた塊になった
 tie_fill = under_tie & figure & ~face_and_neck
-small = cv2.resize(master, (master.shape[1] // 4, master.shape[0] // 4), interpolation=cv2.INTER_AREA)
-small_mask = cv2.resize(tie_fill.astype(np.uint8), (small.shape[1], small.shape[0]), interpolation=cv2.INTER_NEAREST)
-small_mask = cv2.dilate(small_mask, disk(2))
-filled = cv2.inpaint(small, small_mask * 255, 6, cv2.INPAINT_TELEA)
-filled = cv2.GaussianBlur(cv2.resize(filled, (master.shape[1], master.shape[0]), interpolation=cv2.INTER_CUBIC), (0, 0), S)
-torso[..., :3] = np.where(tie_fill[..., None], filled, torso[..., :3])
+gpt_under = load("under_tie")
+filled = gpt_under[..., :3]
+# タイの縁から 20px（元絵）までは GPT の絵をそのまま使う。元絵と混ぜる幅は細くする（広く混ぜると、
+# GPT が描き変えた襟の端と元絵の襟が重なってにじむ）
+gpt_zone = cv2.dilate(masks["tie"].astype(np.uint8), disk(20 * S)).astype(bool) & figure & ~face_and_neck
+blend = soft(gpt_zone, S)[..., None] * (gpt_under[..., 3:] / 255)
+torso[..., :3] = torso[..., :3] * (1 - blend) + filled * blend
 # 胴は、見えている胴から 25px（元絵）以内に限る。袖の外側に胴の布や輪郭がはみ出さないように
 torso[..., 3] *= np.maximum(soft(cv2.dilate(torso_visible.astype(np.uint8), disk(25 * S)).astype(bool) | (under_tie & figure), 2 * S), torso_visible)
 # タイの下と、見えている胴との継ぎ目は不透明にそろえる（透明度のわずかなへこみが細い枠の線に見える）

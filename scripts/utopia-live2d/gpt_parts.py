@@ -61,6 +61,15 @@ def scaled(image: Image.Image) -> Image.Image:
     return image.resize((round(image.width * scale), round(image.height * scale)), Image.LANCZOS)
 
 
+REMOVE_RULES = """条件（最重要）:
+- {master} を参照画像として渡し、編集で作る。出力は {master} と同じ縦横比・同じ構図にし、取り除くもの以外は {master} と一致させる（後でそのまま重ねるため）。拡大・移動・回転・描き直しで構図を変えない
+- 取り除いた跡には、その下に本来ある服（襟・シャツなど）を、周りとつながる形・線・塗りで自然に描き足す。ぼかし・にじみ・取り除いたものの影や輪郭の残りを残さない
+- 背景（人物の外）は元絵のままでよい（透明にしなくてよい）
+- 線の太さ・色・塗り（アニメ塗り）は元絵に合わせる。設定 /Users/ryo/dev/private/utopi-a-dev/tmp/utopia-reference/ゆーとぴあちゃん_テキスト設定_v1.3.txt を守る
+- 参考: {context} は元絵の全体で、赤く塗った範囲が取り除くもの、黄色の枠が {master} の切り抜き範囲
+"""
+
+
 def prepare(name: str):
     spec = SPEC[name]
     job = JOBS / name
@@ -80,7 +89,10 @@ def prepare(name: str):
     context.convert("RGB").save(job / "context.png")
 
     (job / "box.json").write_text(json.dumps(box))
-    if spec.get("input") == "current":
+    if spec.get("input") == "remove":
+        # 元絵から手前のパーツを取り除き、その下を描き足す（揺れものが動いたときに見える下地）
+        rules = REMOVE_RULES.format(master=job / "master_crop.png", context=job / "context.png")
+    elif spec.get("input") == "current":
         # 今の切り出しを清書する。形と位置は今のパーツを基準にし、元絵は色と線の参考にだけ使う
         rules = CLEAN_RULES.format(current=job / "current.png", master=job / "master_crop.png")
     else:

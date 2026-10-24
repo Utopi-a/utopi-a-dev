@@ -45,8 +45,9 @@ const order = [
   // 編み込みは揺らさず頭と一緒に動かす（髪として扱うと前髪の揺れが付く）
   ["braid_L", "headwear 2"],
   ["ribbon_L", "headwear"],
-  ["hair_front", "front hair"],
+  // アホ毛は前髪の後ろに描き、付け根を頭頂の分け目の毛の下に潜らせる（手前だと付け根の尖った端が見えて二股に見える）
   ["ahoge", "front hair 4"],
+  ["hair_front", "front hair"],
   // 髪飾りは前髪の毛先より手前に見える
   ["hairpin", "headwear 3"],
 ];

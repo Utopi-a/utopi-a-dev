@@ -265,11 +265,11 @@
 		},
 		{
 			"Id": "ArtMeshFrontHair",
-			"Name": "front hair 4"
+			"Name": "front hair"
 		},
 		{
 			"Id": "ArtMeshFrontHair2",
-			"Name": "front hair"
+			"Name": "front hair 4"
 		},
 		{
 			"Id": "ArtMeshHeadwear2",
@@ -388,7 +388,7 @@
 			"Name": "eyebrow-r（前髪透け）"
 		},
 		{
-			"Id": "ArtMeshFrontHair2_SeeThrough",
+			"Id": "ArtMeshFrontHair_SeeThrough",
 			"Name": "front hair（前髪透け）"
 		},
 		{

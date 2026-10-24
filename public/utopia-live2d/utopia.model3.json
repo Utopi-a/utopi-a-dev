@@ -1,0 +1,75 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "utopia.moc3",
+    "Textures": [
+      "textures/texture_00.webp",
+      "textures/texture_01.webp",
+      "textures/texture_02.webp",
+      "textures/texture_03.webp"
+    ],
+    "Physics": "utopia.physics3.json",
+    "DisplayInfo": "utopia.cdi3.json",
+    "Expressions": [
+      {
+        "Name": "smile",
+        "File": "utopia.smile.exp3.json"
+      },
+      {
+        "Name": "surprised",
+        "File": "utopia.surprised.exp3.json"
+      },
+      {
+        "Name": "grin",
+        "File": "utopia.grin.exp3.json"
+      },
+      {
+        "Name": "shy",
+        "File": "utopia.shy.exp3.json"
+      },
+      {
+        "Name": "pout",
+        "File": "utopia.pout.exp3.json"
+      }
+    ],
+    "Motions": {
+      "Idle": [
+        {
+          "File": "utopia.idle.motion3.json"
+        }
+      ],
+      "Blink": [
+        {
+          "File": "utopia.blink.motion3.json"
+        }
+      ],
+      "Nod": [
+        {
+          "File": "utopia.nod.motion3.json"
+        }
+      ],
+      "Shake": [
+        {
+          "File": "utopia.shake.motion3.json"
+        }
+      ]
+    }
+  },
+  "Groups": [
+    {
+      "Target": "Parameter",
+      "Name": "EyeBlink",
+      "Ids": [
+        "ParamEyeLOpen",
+        "ParamEyeROpen"
+      ]
+    },
+    {
+      "Target": "Parameter",
+      "Name": "LipSync",
+      "Ids": [
+        "ParamMouthOpenY"
+      ]
+    }
+  ]
+}

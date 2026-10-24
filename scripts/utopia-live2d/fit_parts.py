@@ -3,6 +3,8 @@
 - 白目・瞳: 目は下まつ毛の線までと決め、元絵からたどった目の輪郭（EYE_OUTLINE）と上まつ毛の裏の範囲に収める。
   GPT の白目は丸い楕円で下まぶたより下まで広がり、目を閉じても白い帯が残るため
 - 下まつ毛: GPT の下まつ毛は元絵の位置からずれる（瞳を横切る）ので、元絵の下まつ毛を輪郭の下端から切り出す
+- 目尻: 目尻では上まつ毛と下まつ毛がつながっている。上まぶたの弧が下まぶた側へ折り返す所より外
+  （目尻の跳ねと、下まつ毛へ下りる線）を上まつ毛から外し、閉じても動かない下まつ毛側に移す
 - 顔: GPT の顔にも小さな口が描かれていて、閉じ口の線と二重に見えるので口の赤みを消す
   （閉じ口の線は draw_mouth_line.py で描く）
 - 腕: GPT が描き足した袖山が、胴の肩線の手前に二重の山として見える。元絵で腕が見えていた範囲
@@ -52,6 +54,9 @@ EYE_OUTLINE = {
 }
 master = np.array(Image.open(WORK / "master/master_b_4x.png").convert("RGB"))
 master_hsv = cv2.cvtColor(master, cv2.COLOR_RGB2HSV_FULL).astype(np.int16)
+# 目尻の切れ目（4 倍の座標）。上まぶたの弧が下まぶた側へ折り返す点から、外側の跳ねと跳ねの間のくぼみへ引いた線。
+# この線より目の外側にある上まつ毛は目尻として扱う（Codex に元絵を見せて決めた初期案）
+EYE_CORNER_CUT = {"R": ((1350, 2570), (1405, 2615)), "L": ((2640, 2480), (2695, 2435))}
 # 下まつ毛は赤みのある細い線。周りの肌より彩度が高いことで見分ける（頬の赤みは周りとの差が小さい）
 saturation = master_hsv[..., 1].astype(np.float32)
 lash_contrast = saturation - cv2.medianBlur(master_hsv[..., 1].astype(np.uint8), 31).astype(np.float32)
@@ -87,10 +92,27 @@ for side in ("L", "R"):
     band = (bottom[None, :] >= 0) & (rows >= bottom[None, :] - 3 * S) & (rows <= bottom[None, :] + 8 * S)
     lash = band & lash_colored & ~upper
     alpha = np.clip((lash_contrast - 12) / 40, 0, 1) * soft(lash, S / 4)
-    rgba = np.zeros((*master.shape[:2], 4), np.float32)
-    rgba[..., :3] = master * (alpha[..., None] > 0)
-    rgba[..., 3] = alpha * 255
-    save(f"eyelash_lower_{side}", rgba)
+    lower = np.zeros((*master.shape[:2], 4), np.float32)
+    lower[..., :3] = master * (alpha[..., None] > 0)
+    lower[..., 3] = alpha * 255
+
+    # 目尻: 切れ目の線より目の外側（目の中心と反対側）で、線の近くにある上まつ毛を下まつ毛側へ移す
+    (ax, ay), (bx, by) = EYE_CORNER_CUT[side]
+    length = np.hypot(bx - ax, by - ay)
+    rows, cols = np.mgrid[0 : master.shape[0], 0 : master.shape[1]]
+    signed = ((bx - ax) * (rows - ay) - (by - ay) * (cols - ax)) / length
+    center_y, center_x = np.nonzero(outline)
+    if ((bx - ax) * (center_y.mean() - ay) - (by - ay) * (center_x.mean() - ax)) > 0:
+        signed = -signed
+    near = np.hypot(cols - (ax + bx) / 2, rows - (ay + by) / 2) < 300
+    corner = np.clip(signed / (2 * S) + 0.5, 0, 1) * near
+    upper_rgba = load(f"eyelash_upper_{side}")
+    moved = upper_rgba[..., 3] * corner
+    lower[..., :3] = np.where((moved > lower[..., 3])[..., None], upper_rgba[..., :3], lower[..., :3])
+    lower[..., 3] = np.maximum(lower[..., 3], moved)
+    upper_rgba[..., 3] *= 1 - corner
+    save(f"eyelash_upper_{side}", upper_rgba)
+    save(f"eyelash_lower_{side}", lower)
 
 face = load("face")
 hsv = cv2.cvtColor(face[..., :3].clip(0, 255).astype(np.uint8), cv2.COLOR_RGB2HSV_FULL).astype(np.int16)

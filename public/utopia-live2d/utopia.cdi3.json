@@ -253,10 +253,6 @@
 			"Name": "front hair 4"
 		},
 		{
-			"Id": "ArtMeshEyelashR",
-			"Name": "eyelash-r"
-		},
-		{
 			"Id": "ArtMeshFrontHair2",
 			"Name": "front hair"
 		},
@@ -303,6 +299,10 @@
 		{
 			"Id": "ArtMeshEyewhiteL",
 			"Name": "eyewhite-l"
+		},
+		{
+			"Id": "ArtMeshEyelashR",
+			"Name": "eyelash-r"
 		},
 		{
 			"Id": "ArtMeshEyelashR2",

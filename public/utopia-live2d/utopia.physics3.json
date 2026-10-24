@@ -215,12 +215,12 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 14.590319
+                        "Y": 14.590561
                     },
                     "Mobility": 0.92,
                     "Delay": 0.9,
                     "Acceleration": 1.3,
-                    "Radius": 14.590319
+                    "Radius": 14.590561
                 }
             ],
             "Normalization": {
@@ -303,12 +303,12 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 13.619961
+                        "Y": 13.620019
                     },
                     "Mobility": 0.96,
                     "Delay": 0.6,
                     "Acceleration": 1.8,
-                    "Radius": 13.619961
+                    "Radius": 13.620019
                 }
             ],
             "Normalization": {
@@ -391,12 +391,12 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 5.837501
+                        "Y": 5.837446
                     },
                     "Mobility": 0.96,
                     "Delay": 0.6,
                     "Acceleration": 1.8,
-                    "Radius": 5.837501
+                    "Radius": 5.837446
                 }
             ],
             "Normalization": {
@@ -596,7 +596,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleX"
                     },
-                    "Weight": 14.171551,
+                    "Weight": 13.72774,
                     "Type": "X",
                     "Reflect": false
                 },
@@ -605,7 +605,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleZ"
                     },
-                    "Weight": 25.983192,
+                    "Weight": 25.99413,
                     "Type": "X",
                     "Reflect": false
                 },
@@ -614,7 +614,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleX"
                     },
-                    "Weight": 1.08392,
+                    "Weight": 1.076348,
                     "Type": "Angle",
                     "Reflect": true
                 },
@@ -623,7 +623,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleZ"
                     },
-                    "Weight": 9.068866,
+                    "Weight": 8.843701,
                     "Type": "X",
                     "Reflect": false
                 }
@@ -635,7 +635,7 @@
                         "Id": "ParamSimpresetfronthair_1"
                     },
                     "VertexIndex": 1,
-                    "Scale": 105.31877,
+                    "Scale": 106.61488,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -646,7 +646,7 @@
                         "Id": "ParamSimpresetfronthair_2"
                     },
                     "VertexIndex": 2,
-                    "Scale": 98.1869,
+                    "Scale": 95.73789,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -666,22 +666,22 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 15.798111
+                        "Y": 15.846927
                     },
-                    "Mobility": 0.9480531,
-                    "Delay": 1.5325485,
-                    "Acceleration": 0.81643933,
-                    "Radius": 15.798111
+                    "Mobility": 0.94834644,
+                    "Delay": 1.5304738,
+                    "Acceleration": 0.8205795,
+                    "Radius": 15.846927
                 },
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 24.842815
+                        "Y": 24.104488
                     },
-                    "Mobility": 0.9233992,
-                    "Delay": 0.7922916,
-                    "Acceleration": 3.4459026,
-                    "Radius": 9.044705
+                    "Mobility": 0.92044955,
+                    "Delay": 1.2333252,
+                    "Acceleration": 1.3141257,
+                    "Radius": 8.257562
                 }
             ],
             "Normalization": {
@@ -705,7 +705,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleY"
                     },
-                    "Weight": 22.521427,
+                    "Weight": 22.407057,
                     "Type": "X",
                     "Reflect": true
                 },
@@ -714,7 +714,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleY"
                     },
-                    "Weight": 14.246482,
+                    "Weight": 14.117824,
                     "Type": "X",
                     "Reflect": true
                 },
@@ -723,7 +723,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyLean"
                     },
-                    "Weight": 40.0648,
+                    "Weight": 41.770325,
                     "Type": "X",
                     "Reflect": false
                 }
@@ -735,7 +735,7 @@
                         "Id": "ParamSimpresetfronthair_Y"
                     },
                     "VertexIndex": 1,
-                    "Scale": 34.323082,
+                    "Scale": 32.559277,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -755,12 +755,12 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 8.9881315
+                        "Y": 8.475052
                     },
-                    "Mobility": 0.9481386,
-                    "Delay": 1.0745115,
-                    "Acceleration": 1.0445379,
-                    "Radius": 8.9881315
+                    "Mobility": 0.9476866,
+                    "Delay": 1.0630605,
+                    "Acceleration": 1.020075,
+                    "Radius": 8.475052
                 }
             ],
             "Normalization": {
@@ -784,7 +784,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleZ"
                     },
-                    "Weight": 67.53523,
+                    "Weight": 63.52699,
                     "Type": "X",
                     "Reflect": false
                 },
@@ -793,7 +793,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleX"
                     },
-                    "Weight": 8.900653,
+                    "Weight": 6.716585,
                     "Type": "X",
                     "Reflect": true
                 },
@@ -802,7 +802,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleZ"
                     },
-                    "Weight": 10.095102,
+                    "Weight": 10.774218,
                     "Type": "X",
                     "Reflect": false
                 }
@@ -814,7 +814,7 @@
                         "Id": "ParamSimpresetbackhair_1"
                     },
                     "VertexIndex": 1,
-                    "Scale": 45.298443,
+                    "Scale": 44.532986,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -825,7 +825,7 @@
                         "Id": "ParamSimpresetbackhair_2"
                     },
                     "VertexIndex": 2,
-                    "Scale": 14.579154,
+                    "Scale": 14.611934,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -845,22 +845,22 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 11.324168
+                        "Y": 12.168949
                     },
-                    "Mobility": 0.9023002,
-                    "Delay": 0.91503984,
-                    "Acceleration": 0.97746676,
-                    "Radius": 11.324168
+                    "Mobility": 0.9263276,
+                    "Delay": 0.92339635,
+                    "Acceleration": 0.87578344,
+                    "Radius": 12.168949
                 },
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 13.441814
+                        "Y": 13.847779
                     },
-                    "Mobility": 0.7815868,
-                    "Delay": 0.1233561,
-                    "Acceleration": 10.0,
-                    "Radius": 2.1176457
+                    "Mobility": 0.8103274,
+                    "Delay": 0.24167965,
+                    "Acceleration": 2.7613397,
+                    "Radius": 1.6788299
                 }
             ],
             "Normalization": {
@@ -884,7 +884,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleY"
                     },
-                    "Weight": 9.079849,
+                    "Weight": 9.588501,
                     "Type": "X",
                     "Reflect": true
                 },
@@ -893,7 +893,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleY"
                     },
-                    "Weight": 25.444052,
+                    "Weight": 25.78419,
                     "Type": "X",
                     "Reflect": true
                 },
@@ -902,7 +902,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyLean"
                     },
-                    "Weight": 98.9514,
+                    "Weight": 98.8719,
                     "Type": "X",
                     "Reflect": false
                 }
@@ -914,7 +914,7 @@
                         "Id": "ParamSimpresetbackhair_Y"
                     },
                     "VertexIndex": 1,
-                    "Scale": 20.63605,
+                    "Scale": 19.506031,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -934,12 +934,12 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 9.159215
+                        "Y": 8.589141
                     },
-                    "Mobility": 0.9543467,
-                    "Delay": 0.7400598,
-                    "Acceleration": 1.1270046,
-                    "Radius": 9.159215
+                    "Mobility": 0.95742035,
+                    "Delay": 0.7222996,
+                    "Acceleration": 1.0537076,
+                    "Radius": 8.589141
                 }
             ],
             "Normalization": {
@@ -963,7 +963,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleX"
                     },
-                    "Weight": 22.923681,
+                    "Weight": 21.877808,
                     "Type": "X",
                     "Reflect": false
                 }
@@ -975,7 +975,7 @@
                         "Id": "ParamSimpresetneckwear_1"
                     },
                     "VertexIndex": 1,
-                    "Scale": 182.61607,
+                    "Scale": 194.9193,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -986,7 +986,7 @@
                         "Id": "ParamSimpresetneckwear_2"
                     },
                     "VertexIndex": 2,
-                    "Scale": 115.445,
+                    "Scale": 121.95354,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -1006,22 +1006,22 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 22.995607
+                        "Y": 23.381006
                     },
-                    "Mobility": 0.9553568,
-                    "Delay": 1.6725621,
-                    "Acceleration": 0.33341303,
-                    "Radius": 22.995607
+                    "Mobility": 0.9553737,
+                    "Delay": 1.7766253,
+                    "Acceleration": 0.3023777,
+                    "Radius": 23.381006
                 },
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 31.28437
+                        "Y": 31.490372
                     },
-                    "Mobility": 0.9162166,
-                    "Delay": 0.594316,
-                    "Acceleration": 2.2346108,
-                    "Radius": 8.288764
+                    "Mobility": 0.91199833,
+                    "Delay": 0.5450937,
+                    "Acceleration": 2.7045608,
+                    "Radius": 8.109365
                 }
             ],
             "Normalization": {
@@ -1045,7 +1045,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleY"
                     },
-                    "Weight": 13.475712,
+                    "Weight": 19.0982,
                     "Type": "Angle",
                     "Reflect": false
                 }
@@ -1057,7 +1057,7 @@
                         "Id": "ParamSimpresetneckwear_Y"
                     },
                     "VertexIndex": 1,
-                    "Scale": 293.72464,
+                    "Scale": 194.53476,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -1077,12 +1077,12 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 11.075664
+                        "Y": 9.718505
                     },
-                    "Mobility": 0.8436375,
-                    "Delay": 1.7259126,
-                    "Acceleration": 0.94264114,
-                    "Radius": 11.075664
+                    "Mobility": 0.87712485,
+                    "Delay": 1.1997974,
+                    "Acceleration": 1.819947,
+                    "Radius": 9.718505
                 }
             ],
             "Normalization": {

@@ -51,7 +51,7 @@ EXPRESSIONS = {
     "surprised": [("ParamEyeLOpen", "OVERWRITE", 1.0), ("ParamEyeROpen", "OVERWRITE", 1.0), ("ParamEyeLWide", "OVERWRITE", 1.0),
                   ("ParamEyeRWide", "OVERWRITE", 1.0), ("ParamBrowLY", "ADD", 1.0), ("ParamBrowRY", "ADD", 1.0),
                   ("ParamMouthO", "OVERWRITE", 1.0)],
-    "shy": [("ParamCheek", "OVERWRITE", 0.8), ("ParamEyeLOpen", "MULTIPLY", 0.8), ("ParamEyeROpen", "MULTIPLY", 0.8),
+    "shy": [("ParamCheek", "OVERWRITE", 0.55), ("ParamEyeLOpen", "MULTIPLY", 0.8), ("ParamEyeROpen", "MULTIPLY", 0.8),
             ("ParamEyeBallX", "ADD", -0.35), ("ParamEyeBallY", "ADD", -0.45), ("ParamMouthForm", "ADD", 0.35)],
     # むすっは眉頭を下げて不満を出す（照れと半目の形が似ていて、口だけでは見分けにくかった）。頬染めは付けない
     "pout": [("ParamBrowLY", "ADD", -0.6), ("ParamBrowRY", "ADD", -0.6), ("ParamBrowLAngle", "ADD", -1.0),

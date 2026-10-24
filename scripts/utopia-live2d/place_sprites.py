@@ -55,8 +55,8 @@ place(cheek, load("blush", mirror=True), center=(614, 712), width=72)
 # 色は透明度で重み付けしてぼかす（透明な所の色まで広がると四角い跡になる）
 cheek_rgba = np.array(cheek).astype(np.float32)
 alpha = cheek_rgba[..., 3:] / 255
-blurred_alpha = cv2.GaussianBlur(alpha[..., 0], (0, 0), 8 * S)[..., None]
-blurred_rgb = cv2.GaussianBlur(cheek_rgba[..., :3] * alpha, (0, 0), 8 * S) / np.maximum(blurred_alpha, 1e-4)
+blurred_alpha = cv2.GaussianBlur(alpha[..., 0], (0, 0), 12 * S)[..., None]
+blurred_rgb = cv2.GaussianBlur(cheek_rgba[..., :3] * alpha, (0, 0), 12 * S) / np.maximum(blurred_alpha, 1e-4)
 cheek = Image.fromarray(np.concatenate([blurred_rgb, blurred_alpha * 255], axis=2).clip(0, 255).astype(np.uint8))
 cheek.save(OUT / "cheek.png", compress_level=3)
 print("saved cheek")

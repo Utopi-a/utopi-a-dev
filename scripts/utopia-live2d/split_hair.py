@@ -96,13 +96,24 @@ FACE_SHOWN = cv2.erode(
      & ~MASKS["translucent_bangs"]).astype(np.uint8),
     disk(2 * S),
 ).astype(bool)
-IN_FRONT_OF_FACE = {"hair_front", "hair_side_R"}
+# 顔のマスク（SAM）は頬の横の肌や目尻の白目を取りこぼす。顔のまわりでは、元絵の色が肌色・白目の色の所も
+# 「顔が見えている所」とする（髪の色は青紫で、半透明の前髪越しの所も青みが残るので区別できる）
+_master = np.array(Image.open(REPO / "tmp/utopia-puppet-work/master/master_b_4x.png").convert("RGB")).astype(np.int16)
+_near_face = cv2.dilate(
+    (MASKS["face_visible"] | MASKS["eye_R_opening"] | MASKS["eye_L_opening"]).astype(np.uint8), disk(60 * S)
+).astype(bool)
+_skin = (_master[..., 0] - _master[..., 2] > 8) & (_master.min(axis=2) > 150)
+_white = _master.min(axis=2) > 232
+_by_color = cv2.morphologyEx((_near_face & (_skin | _white)).astype(np.uint8), cv2.MORPH_OPEN, disk(2 * S))
+# 色の判定は横髪だけに使う（前髪では細い毛先のすき間の肌まで拾い、毛先が櫛のように欠けた）
+FACE_SHOWN_BY_COLOR = FACE_SHOWN | cv2.erode(_by_color, disk(S)).astype(bool)
+IN_FRONT_OF_FACE = {"hair_front": FACE_SHOWN, "hair_side_R": FACE_SHOWN_BY_COLOR}
 
 
 def split(name: str, spec: dict):
     rgba = np.array(Image.open(LAYERS / f"{name}.png").convert("RGBA"))
     if name in IN_FRONT_OF_FACE:
-        keep = 1 - cv2.GaussianBlur(FACE_SHOWN.astype(np.float32), (0, 0), S / 2)
+        keep = 1 - cv2.GaussianBlur(IN_FRONT_OF_FACE[name].astype(np.float32), (0, 0), S / 2)
         rgba[..., 3] = (rgba[..., 3] * keep).astype(np.uint8)
     if name == "hair_side_R":
         ahoge = np.array(Image.open(LAYERS / "ahoge.png"))[..., 3] > 20

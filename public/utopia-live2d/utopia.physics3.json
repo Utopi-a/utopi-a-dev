@@ -2,7 +2,7 @@
     "Version": 3,
     "Meta": {
         "PhysicsSettingCount": 11,
-        "TotalInputCount": 39,
+        "TotalInputCount": 38,
         "TotalOutputCount": 13,
         "VertexCount": 25,
         "Fps": 60,
@@ -150,9 +150,18 @@
                 {
                     "Source": {
                         "Target": "Parameter",
-                        "Id": "ParamAngleX"
+                        "Id": "ParamAngleY"
                     },
                     "Weight": 60.0,
+                    "Type": "X",
+                    "Reflect": false
+                },
+                {
+                    "Source": {
+                        "Target": "Parameter",
+                        "Id": "ParamBodyAngleY"
+                    },
+                    "Weight": 40.0,
                     "Type": "X",
                     "Reflect": false
                 },
@@ -161,25 +170,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleZ"
                     },
-                    "Weight": 60.0,
-                    "Type": "Angle",
-                    "Reflect": false
-                },
-                {
-                    "Source": {
-                        "Target": "Parameter",
-                        "Id": "ParamBodyAngleX"
-                    },
-                    "Weight": 40.0,
-                    "Type": "X",
-                    "Reflect": false
-                },
-                {
-                    "Source": {
-                        "Target": "Parameter",
-                        "Id": "ParamBodyAngleZ"
-                    },
-                    "Weight": 40.0,
+                    "Weight": 20.0,
                     "Type": "Angle",
                     "Reflect": false
                 }
@@ -191,7 +182,7 @@
                         "Id": "ParamSwingahoge"
                     },
                     "VertexIndex": 1,
-                    "Scale": 1.6,
+                    "Scale": 1.4,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -680,7 +671,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleX"
                     },
-                    "Weight": 15.126273,
+                    "Weight": 15.290215,
                     "Type": "X",
                     "Reflect": false
                 },
@@ -689,7 +680,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleZ"
                     },
-                    "Weight": 30.938566,
+                    "Weight": 31.307272,
                     "Type": "X",
                     "Reflect": false
                 },
@@ -698,7 +689,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleX"
                     },
-                    "Weight": 1.0881268,
+                    "Weight": 1.1224021,
                     "Type": "Angle",
                     "Reflect": true
                 },
@@ -707,7 +698,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleZ"
                     },
-                    "Weight": 10.018791,
+                    "Weight": 9.984654,
                     "Type": "X",
                     "Reflect": false
                 }
@@ -719,7 +710,7 @@
                         "Id": "ParamSimpresetfronthair_1"
                     },
                     "VertexIndex": 1,
-                    "Scale": 51.25804,
+                    "Scale": 50.30095,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -730,7 +721,7 @@
                         "Id": "ParamSimpresetfronthair_2"
                     },
                     "VertexIndex": 2,
-                    "Scale": 50.225582,
+                    "Scale": 52.07606,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -750,22 +741,22 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 8.359339
+                        "Y": 8.282501
                     },
-                    "Mobility": 0.9475826,
-                    "Delay": 1.0535893,
-                    "Acceleration": 0.9169677,
-                    "Radius": 8.359339
+                    "Mobility": 0.94777733,
+                    "Delay": 1.0179906,
+                    "Acceleration": 0.97312176,
+                    "Radius": 8.282501
                 },
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 12.478343
+                        "Y": 12.9947815
                     },
-                    "Mobility": 0.91899055,
-                    "Delay": 0.96778524,
-                    "Acceleration": 1.1034994,
-                    "Radius": 4.1190042
+                    "Mobility": 0.923436,
+                    "Delay": 0.48137927,
+                    "Acceleration": 4.869638,
+                    "Radius": 4.7122803
                 }
             ],
             "Normalization": {
@@ -789,7 +780,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleY"
                     },
-                    "Weight": 28.817207,
+                    "Weight": 28.817177,
                     "Type": "X",
                     "Reflect": false
                 },
@@ -798,7 +789,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleY"
                     },
-                    "Weight": 18.098856,
+                    "Weight": 18.098843,
                     "Type": "X",
                     "Reflect": false
                 },
@@ -819,7 +810,7 @@
                         "Id": "ParamSimpresetfronthair_Y"
                     },
                     "VertexIndex": 1,
-                    "Scale": 28.631153,
+                    "Scale": 28.631182,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false

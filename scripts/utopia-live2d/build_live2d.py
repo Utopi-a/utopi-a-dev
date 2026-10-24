@@ -19,7 +19,9 @@ from mcp_proxy import Client  # noqa: E402
 
 # 揺れを付けるレイヤー名と揺れ方
 SWINGS = [
-    {"id": "ahoge", "layer": "front hair 4", "preset": "hair", "kind": "lateral", "magnitude": 0.2},
+    # アホ毛は右下の端（頭頂の分け目）から生えて左へ弧を描き、先が垂れる。既定ではレイヤーの下端（＝垂れた先）が
+    # 固定されて付け根が動いていたので、右の端を固定して先を上下に揺らす
+    {"id": "ahoge", "layer": "front hair 4", "preset": "hair", "kind": "vertical", "magnitude": 0.2, "fulcrum": "right"},
     {"id": "ribbon", "layer": "headwear", "preset": "accessory", "kind": "lateral", "magnitude": 0.3},
     {"id": "earring", "layer": "earwear-l", "preset": "accessory", "kind": "lateral", "magnitude": 0.45},
     {"id": "side_hair_r", "layer": "front hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.18},
@@ -321,7 +323,7 @@ def main(psd: str, output: str):
 
         meshes = meshes_by_layer(client)
         for swing in SWINGS:
-            options = {"softness": swing["softness"]} if "softness" in swing else {}
+            options = {key: swing[key] for key in ("softness", "fulcrum") if key in swing}
             edit(client, "swing_put", id=swing["id"], name=swing["id"], targets=[meshes[swing["layer"]]],
                  kind=swing["kind"], preset=swing["preset"], magnitude=swing["magnitude"], **options)
             print("swing", swing["id"])

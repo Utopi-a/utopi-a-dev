@@ -25,8 +25,8 @@
 9. `fit_parts.py`: 動かしたときに破綻しないよう整える（白目と瞳を下まつ毛までの目の輪郭に収める、下まつ毛を元絵から切り出す、顔に描かれた口を消す、袖山の二重を消す、髪の内側を不透明にする）
 10. `draw_mouth_line.py`: 閉じ口の線を左右対称のなめらかな線で描き直す
 11. `add_base_blush.py`: 薄い頬の赤みを顔に焼き込む（頬染めの表情は別パーツ）
-12. `make-psd.mjs`: パーツを [PSD2Live](https://github.com/tsunehimatoi/psd2live) が部位を読み取れるレイヤー名で PSD にまとめる
-13. `build_live2d.py`: PSD2Live（MCP）で自動リギングし、揺れもの・頬染め・設定資料の表情 6 種を足して書き出す。目を閉じたとき上まつ毛が下まつ毛まで下りるよう、まばたきの閉じる線を下げる
+12. `make-psd.mjs`: パーツを [PSD2Live](https://github.com/tsunehimatoi/psd2live) が部位を読み取れるレイヤー名で PSD にまとめる。下まつ毛は顔に結合せず目のレイヤーにする（頭の向きで目と顔の動きがずれて離れるため）
+13. `build_live2d.py`: PSD2Live（MCP）で自動リギングし、揺れもの・頬染め・設定資料の表情 6 種を足して書き出す。閉じた目は、上まつ毛の根元の線を下まつ毛の根元の線に重ねる形へ書き直す（下まつ毛はわずかに上げ、上まつ毛の帯の裏に潜らせる）
 14. `install_web_model.py`: 書き出したモデルを `public/utopia-live2d/` に配置する（テクスチャは WebP）
 
 中間生成物は `tmp/utopia-puppet-work/`、`tmp/live2d-work/`（どちらも git 対象外）に置きます。

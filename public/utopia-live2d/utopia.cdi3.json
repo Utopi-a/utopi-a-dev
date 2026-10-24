@@ -289,6 +289,10 @@
 			"Name": "eyelash-l"
 		},
 		{
+			"Id": "ArtMeshEyelashL2",
+			"Name": "eyelash 2-l"
+		},
+		{
 			"Id": "ArtMeshIridesL",
 			"Name": "irides-l"
 		},
@@ -299,6 +303,10 @@
 		{
 			"Id": "ArtMeshEyelashR",
 			"Name": "eyelash-r"
+		},
+		{
+			"Id": "ArtMeshEyelashR2",
+			"Name": "eyelash 2-r"
 		},
 		{
 			"Id": "ArtMeshIridesR",

@@ -9,6 +9,9 @@ import sys
 import uuid
 from pathlib import Path
 
+import cv2
+import numpy as np
+
 REPO = Path(__file__).resolve().parents[2]
 # PSD2Live に同梱の MCP クライアント（README の手順で clone しておく）
 sys.path.insert(0, str(REPO / "tmp/live2d-work/psd2live"))
@@ -67,12 +70,112 @@ def layer_ids(client: Client):
     return {item["name"]: item["id"] for item in data.get("items", [])}
 
 
+def mesh_outline(client: Client, mesh: str):
+    """メッシュの休止位置の頂点と、外周を一周たどった頂点の順番"""
+    vertices = np.array([v[1:] for v in client.call("mesh_get_topology", {"target": mesh, "section": "vertices", "limit": 4096})[0]["items"]])
+    edges = client.call("mesh_get_topology", {"target": mesh, "section": "outline", "limit": 4096})[0]["items"]
+    neighbors = {}
+    for a, b in edges:
+        neighbors.setdefault(a, []).append(b)
+        neighbors.setdefault(b, []).append(a)
+    loop = [edges[0][0]]
+    while True:
+        following = [n for n in neighbors[loop[-1]] if len(loop) < 2 or n != loop[-2]]
+        if not following or following[0] == loop[0]:
+            break
+        loop.append(following[0])
+    return vertices, vertices[loop]
+
+
+def column_bottom(polygon: np.ndarray, xs: np.ndarray, resolution: int = 4000):
+    """多角形の各列の下端。目のデフォーマ内の 0〜1 の座標を細かい格子に描いて読む"""
+    mask = np.zeros((resolution, resolution), np.uint8)
+    cv2.fillPoly(mask, [np.round(polygon * resolution).astype(np.int32)], 1)
+    bottoms = []
+    for x in xs:
+        rows = np.nonzero(mask[:, int(np.clip(round(x * resolution), 0, resolution - 1))])[0]
+        bottoms.append(rows.max() / resolution if len(rows) else np.nan)
+    return np.array(bottoms)
+
+
+def write_closed_key(client: Client, mesh: str, parameter: str, rest: np.ndarray, closed: np.ndarray):
+    """閉じたキーの各頂点の位置をそのまま書く。変形パスの点を全頂点に重ねると、各頂点は指定した位置へ動く"""
+    # 点は三角形に結び付ける決まりなので、その頂点を含む三角形に重み 1 で結ぶ
+    triangles = client.call("mesh_get_topology", {"target": mesh, "section": "triangles", "limit": 4096})[0]["items"]
+    owner = {}
+    for _, a, b, c in triangles:
+        for v in (a, b, c):
+            owner.setdefault(v, (a, b, c))
+    points = []
+    for i in range(len(rest)):
+        a, b, c = owner[i]
+        points.append({"a": a, "b": b, "c": c, "wa": float(i == a), "wb": float(i == b), "wc": float(i == c), "corner": True})
+    path_id = f"close_{mesh.split(':')[1]}"
+    edit(client, "path_put", target=mesh, id=path_id, points=points, closed=False)
+    edit(client, "path_deform", target=mesh, path_id=path_id, key={parameter: 0}, moved_points=closed.tolist())
+
+
+def close_eyes_on_lower_lash(client: Client):
+    """閉じた目（開閉 0）で、上まつ毛の根元の線を下まつ毛の根元の線に重ねる。
+
+    自動リグの閉じ目は白目の範囲から作る左右対称の放物線で、目尻の上がった左目に合わず、下まつ毛との間に
+    隙間が残る。閉じ目では上まつ毛を下まつ毛の位置まで下ろすのが Live2D の基本なので、列ごとに
+    上まつ毛の根元（まつ毛のメッシュの下端）を下まつ毛の根元（白目のメッシュの下端。fit_parts.py で
+    下まつ毛の線までに揃えてある）へ下ろし、毛先側は自動リグと同じく 0.88 倍の厚みで根元の上に載せる。
+    下まぶたも閉じるときわずかに上がるので、下まつ毛は根元どうしの距離の 1 割だけ上げ、そこで重ねる。
+    白目は根元の少し上で薄くつぶしてまつ毛の裏に隠す（瞳は白目でクリッピングされるので一緒に隠れる）。
+    まつ毛と白目は同じ目のデフォーマの中にあり、座標（0〜1）がそろっているので、メッシュだけで計算できる。
+    """
+    meshes = meshes_by_layer(client)
+    for side, parameter in (("R", "ParamEyeROpen"), ("L", "ParamEyeLOpen")):
+        lash_mesh, white_mesh, lower_mesh = (f"mesh:{meshes[f'{name}-{side.lower()}']}" for name in ("eyelash", "eyewhite", "eyelash 2"))
+        lash, lash_outline = mesh_outline(client, lash_mesh)
+        white, white_outline = mesh_outline(client, white_mesh)
+        grid = np.linspace(white_outline[:, 0].min(), white_outline[:, 0].max(), 200)
+        upper_root = column_bottom(lash_outline, grid)
+        lower_root = column_bottom(white_outline, grid)
+        valid = ~np.isnan(upper_root) & ~np.isnan(lower_root)
+        grid, upper_root, lower_root = grid[valid], upper_root[valid], lower_root[valid]
+        # 根元どうしの距離。目頭・目尻で 0 になり、白目の外（まつ毛の跳ね）は動かさない
+        gap = np.clip(lower_root - upper_root, 0, None)
+        gap = cv2.GaussianBlur(gap.astype(np.float32).reshape(1, -1), (0, 0), 3).ravel()
+        gap[[0, -1]] = 0
+
+        def at(values, x):
+            return np.interp(x, grid, values)
+
+        rise = 0.1
+        lower, _ = mesh_outline(client, lower_mesh)
+        closed_lower = lower.copy()
+        closed_lower[:, 1] -= np.interp(lower[:, 0], grid, gap, left=0, right=0) * rise
+
+        squash = 0.88
+        # 上まつ毛は下まつ毛の根元より少し下まで下ろし、下まつ毛の根元を不透明な帯の裏に潜らせる（隙間を残さない）
+        overlap = 0.008
+        lash_gap = np.interp(lash[:, 0], grid, np.where(gap > 0, gap * (1 - rise) + overlap, 0), left=0, right=0)
+        lash_root = at(upper_root, lash[:, 0])
+        # 動く量に応じて押しつぶしを効かせる（動かない跳ねの先はそのままの形）
+        weight = np.clip(lash_gap / max(gap.max(), 1e-6) * 4, 0, 1)
+        closed_lash = lash.copy()
+        closed_lash[:, 1] = np.where(
+            weight > 0,
+            lash_root + lash_gap + (lash[:, 1] - lash_root) * (1 - (1 - squash) * weight),
+            lash[:, 1],
+        )
+        line = at(lower_root, white[:, 0])
+        closed_white = white.copy()
+        # 白目は根元の境界ではなく、閉じたまつ毛の帯の内側（根元より少し上）へ細くつぶす
+        closed_white[:, 1] = line - np.interp(white[:, 0], grid, gap) * rise - 0.025 + (white[:, 1] - line) * 0.03
+        write_closed_key(client, lash_mesh, parameter, lash, closed_lash)
+        write_closed_key(client, white_mesh, parameter, white, closed_white)
+        write_closed_key(client, lower_mesh, parameter, lower, closed_lower)
+        print("closed eye", side, "max gap", round(float(gap.max()), 4))
+
+
 def main(psd: str, output: str):
     with Client(timeout=900) as client:
         edit(client, "project_import_psd", path=psd, discard_unsaved=True)
-        # 目は下まつ毛の線まで。閉じた上まつ毛が下まつ毛に重なるよう、閉じる線を白目の高さの
-        # 端 50%・中央 86% に下げる（既定は 34%・72% で、白目を上まつ毛の裏まで広げると目の中ほどで止まる）
-        edit(client, "settings_update", changes={"atlasSize": 2048, "rigTuning": {"blinkCorner": 50, "blinkDepth": 36}})
+        edit(client, "settings_update", changes={"atlasSize": 2048})
 
         # 照れの頬染めは ParamCheek で出し入れする
         edit(client, "parameter_create", parameter_id="ParamCheek", name="照れ", min=0, max=1, default=0)
@@ -113,6 +216,8 @@ def main(psd: str, output: str):
                 "entries": [{"parameter": p, "blend": b, "value": v} for p, b, v in entries],
             })
             print("expression", expression_id)
+
+        close_eyes_on_lower_lash(client)
 
         result = edit(client, "project_export_model", output_directory=output)
         print(json.dumps(result, ensure_ascii=False)[:600])

@@ -281,10 +281,12 @@ def rig_closed_mouth(client: Client):
          shapes=[{"target": mesh, "value": v, "operations": [{"type": "translate", "delta": [0, 0]}]} for v in (1, -1)])
     write_key(client, mesh, {"ParamMouthForm": 1}, rest, smile)
     write_key(client, mesh, {"ParamMouthForm": -1}, rest, frown)
-    # 驚きの「お」の口を出すときは、閉じた口の線を消す（「お」の口の左右に線がはみ出すため）
+    # 口を開けたとき（喋ったとき・驚きの「お」の口）は閉じた口の線を消す。残すと、開いた口のまわりに閉じた口や
+    # 笑った口の線が重なって見える。少し開いた（0.15）だけで消え、閉じれば戻る
     edit(client, "keyform_apply", changes=[
-        {"op": "set", "target": mesh, "key": {"ParamMouthO": 0}, "channels": {"opacity": 1}},
-        {"op": "set", "target": mesh, "key": {"ParamMouthO": 1}, "channels": {"opacity": 0}},
+        {"op": "set", "target": mesh, "key": {"ParamMouthO": o, "ParamMouthOpenY": y},
+         "channels": {"opacity": 1 if (o == 0 and y == 0) else 0}}
+        for o in (0, 1) for y in (0, 0.15)
     ])
     print("closed mouth form")
 

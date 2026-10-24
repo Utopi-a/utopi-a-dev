@@ -14,24 +14,29 @@
             "Blend": "Overwrite"
         },
         {
+            "Id": "ParamEyeLWide",
+            "Value": 1.0,
+            "Blend": "Overwrite"
+        },
+        {
+            "Id": "ParamEyeRWide",
+            "Value": 1.0,
+            "Blend": "Overwrite"
+        },
+        {
             "Id": "ParamBrowLY",
-            "Value": 0.9,
+            "Value": 1.0,
             "Blend": "Add"
         },
         {
             "Id": "ParamBrowRY",
-            "Value": 0.9,
+            "Value": 1.0,
             "Blend": "Add"
         },
         {
-            "Id": "ParamMouthOpenY",
-            "Value": 0.6,
-            "Blend": "Add"
-        },
-        {
-            "Id": "ParamMouthForm",
-            "Value": -0.5,
-            "Blend": "Add"
+            "Id": "ParamMouthO",
+            "Value": 1.0,
+            "Blend": "Overwrite"
         }
     ]
 }

@@ -26,6 +26,8 @@ const order = [
   ["cheek", "腮红"],
   ["mouth_closed", "mouth close"],
   ["mouth_open_a", "mouth open"],
+  // 驚きの「お」の口（ParamMouthO で出す）。mouth open 系の名前にすると口の開きが 0 のとき自動で消えるので、顔の 2 枚目にする
+  ["mouth_open_o", "face 2"],
   ["eye_white_R", "eyewhite-r"],
   ["iris_R", "irides-r"],
   // 下まつ毛は顔ではなく目のレイヤーにする（顔に結合すると、頭の向きで目と顔の動きがずれて離れる）

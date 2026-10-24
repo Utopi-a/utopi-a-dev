@@ -27,14 +27,29 @@
 			"Name": "ahoge"
 		},
 		{
+			"Id": "ParamEyeLWide",
+			"GroupId": "",
+			"Name": "左目 見開き"
+		},
+		{
 			"Id": "ParamEyeLSmile",
 			"GroupId": "",
 			"Name": "左目 笑顔"
 		},
 		{
+			"Id": "ParamEyeRWide",
+			"GroupId": "",
+			"Name": "右目 見開き"
+		},
+		{
 			"Id": "ParamEyeRSmile",
 			"GroupId": "",
 			"Name": "右目 笑顔"
+		},
+		{
+			"Id": "ParamMouthO",
+			"GroupId": "",
+			"Name": "驚きの口"
 		},
 		{
 			"Id": "ParamCheek",
@@ -327,6 +342,10 @@
 			"Name": "eyewhite-r"
 		},
 		{
+			"Id": "ArtMeshFace",
+			"Name": "face 2"
+		},
+		{
 			"Id": "ArtMeshMouthOpen",
 			"Name": "mouth open"
 		},
@@ -339,7 +358,7 @@
 			"Name": "腮红"
 		},
 		{
-			"Id": "ArtMeshFace",
+			"Id": "ArtMeshFace2",
 			"Name": "face"
 		},
 		{

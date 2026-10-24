@@ -8,7 +8,8 @@
 - 顔: GPT の顔にも小さな口が描かれていて、閉じ口の線と二重に見えるので口の赤みを消す
   （閉じ口の線は draw_mouth_line.py で描く）
 - 腕: GPT が描き足した袖山が、胴の肩線の手前に二重の山として見える。元絵で腕が見えていた範囲
-  （少し広げたもの）に収め、肩の輪郭は胴に任せる
+  （少し広げたもの）に収め、肩の継ぎ目の袖は元絵の画素にする。胴も見えている所は元絵の画素にして肩の線を
+  一本につなぎ、袖の下に隠れる胴は袖ぐりの輪郭線を消して布の色で埋める
 - 髪: GPT の髪は内側にも半透明の画素があり、目の上に透明な板のように重なる。内側を不透明にし、
   なめらかな縁だけを残す
 """
@@ -123,11 +124,62 @@ reddish = cv2.dilate(reddish.astype(np.uint8), disk(3)).astype(bool)
 face[..., :3] = cv2.inpaint(face[..., :3].clip(0, 255).astype(np.uint8), reddish.astype(np.uint8) * 255, 6, cv2.INPAINT_TELEA)
 save("face", face)
 
+torso = load("torso")
+hair = masks["hair_all"]
+rows = np.arange(master.shape[0])[:, None]
+# 人物の形。SAM の前景は白い布を背景と見分けられず、輪郭線の内側でも値が低い。輪郭線（前景の濃い所）で
+# 囲まれた内側を塗りつぶして作る
+line = cv2.morphologyEx((masks["fg_alpha"] > 0.5).astype(np.uint8), cv2.MORPH_CLOSE, disk(2 * S))
+outside = line.copy()
+outside = np.pad(outside, 1)
+cv2.floodFill(outside, None, (0, 0), 2)
+figure = outside[1:-1, 1:-1] != 2
+arms = masks["arm_L"] | masks["arm_R"]
 for side in ("L", "R"):
-    visible_arm = cv2.dilate(masks[f"arm_{side}"].astype(np.uint8), disk(6 * S)).astype(bool)
+    arm_mask = masks[f"arm_{side}"]
+    visible_arm = cv2.dilate(arm_mask.astype(np.uint8), disk(6 * S)).astype(bool)
     rgba = load(f"arm_{side}")
     rgba[..., 3] *= soft(visible_arm, S)
+    # 見えている袖は元絵の画素と不透明度にする（GPT の袖は形と陰影が元絵と少しずれ、肩の線ともつながらない）。
+    # 一部だけ元絵にすると境目が水平の線になって見えるので、見えている所は全体を差し替える
+    sleeve = cv2.dilate(arm_mask.astype(np.uint8), disk(2 * S)).astype(bool) & figure
+    weight = soft(cv2.dilate(sleeve.astype(np.uint8), disk(2 * S)).astype(bool), S / 2)
+    rgba[..., :3] = rgba[..., :3] * (1 - weight[..., None]) + master * weight[..., None]
+    rgba[..., 3] = np.maximum(rgba[..., 3] * (1 - soft(sleeve, S)), soft(sleeve, S / 2) * 255)
+    # 肩の上端では、元絵の袖の外にはみ出す GPT の袖山を消す（胴の肩の線と二重の弧に見える）
+    arm_top = np.nonzero(arm_mask.any(axis=1))[0].min()
+    cap = (rows < arm_top + 120 * S) & ~sleeve
+    rgba[..., 3] *= 1 - soft(cap, S)
     save(f"arm_{side}", rgba)
+
+# 胴: 見えている所は元絵の画素にする。GPT の胴は肩の線が元絵より 30px ほど低く、元絵の肩・袖とつながらない。
+# GPT の絵は、袖の下に隠れる所（体を回して袖がずれたときに見える）にだけ使う
+# 胴として扱うのは、GPT の胴（肩の線が元絵より低いので少し広げる）の範囲で、顔と首（顔のパーツ）に重ならない所。
+# 髪の毛先のすき間や、あごの線を胴に取り込まないように
+gpt_torso = cv2.dilate((torso[..., 3] > 128).astype(np.uint8), disk(40 * S)).astype(bool)
+face_and_neck = cv2.dilate((load("face")[..., 3] > 0).astype(np.uint8), disk(2 * S)).astype(bool)
+torso_visible = figure & gpt_torso & ~arms & ~hair & ~face_and_neck & ~masks["tie"] & (rows > 3000)
+# 袖の輪郭のすぐ外に残る細い欠片は除く（体を回すと袖の外に浮いて見える）
+torso_visible = cv2.morphologyEx(torso_visible.astype(np.uint8), cv2.MORPH_OPEN, disk(3 * S)).astype(bool)
+# 胴本体につながった、いちばん大きいかたまりだけ残す（髪の毛先に囲まれたすき間を取り込まない）
+count, labels, stats, _ = cv2.connectedComponentsWithStats(torso_visible.astype(np.uint8), connectivity=8)
+torso_visible = labels == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+# 色は範囲の少し外まで元絵にし（端で GPT の色と混ぜると肩の輪郭線が薄くなる）、透明度だけをなめらかにする
+weight = soft(cv2.dilate(torso_visible.astype(np.uint8), disk(2 * S)).astype(bool), S / 2)
+torso[..., :3] = torso[..., :3] * (1 - weight[..., None]) + master * weight[..., None]
+torso[..., 3] = np.maximum(torso[..., 3] * (1 - soft(torso_visible, S)), soft(torso_visible, S / 2) * 255)
+# 袖の下に隠れる胴は、袖ぐりの輪郭線を消して布の色で埋める（体を回して袖がずれても線が出ないように）
+under = cv2.dilate(arms.astype(np.uint8), disk(3 * S)).astype(bool) & (torso[..., 3] > 0) & ~torso_visible
+known = ((torso[..., 3] > 200) & torso_visible).astype(np.float32)
+cloth = np.median(master[torso_visible], axis=0) * np.ones_like(torso[..., :3])
+for sigma in (60 * S, 12 * S):
+    blur = soft(known, sigma)
+    blurred = soft(known[..., None] * torso[..., :3], sigma) / np.maximum(blur, 1e-6)[..., None]
+    cloth = np.where((blur > 0.05)[..., None], blurred, cloth)
+torso[..., :3] = np.where(under[..., None], cloth, torso[..., :3])
+# 胴は、見えている胴から 25px（元絵）以内に限る。袖の外側に胴の布や輪郭がはみ出さないように
+torso[..., 3] *= np.maximum(soft(cv2.dilate(torso_visible.astype(np.uint8), disk(25 * S)).astype(bool), 2 * S), torso_visible)
+save("torso", torso)
 
 for part in ("hair_front", "hair_side_L", "hair_side_R", "hair_back"):
     rgba = load(part)

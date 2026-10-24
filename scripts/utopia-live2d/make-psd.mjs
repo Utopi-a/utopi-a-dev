@@ -30,7 +30,6 @@ const order = [
   ["iris_R", "irides-r"],
   // 下まつ毛は顔ではなく目のレイヤーにする（顔に結合すると、頭の向きで目と顔の動きがずれて離れる）
   ["eyelash_lower_R", "eyelash 2-r"],
-  ["eyelash_upper_R", "eyelash-r"],
   ["eye_white_L", "eyewhite-l"],
   ["iris_L", "irides-l"],
   ["eyelash_lower_L", "eyelash 2-l"],
@@ -44,6 +43,9 @@ const order = [
   ["braid_L", "headwear 2"],
   ["ribbon_L", "headwear"],
   ["hair_front", "front hair"],
+  // 右目の上まつ毛は目尻の跳ねが顔の外の髪の上まで伸びているので、元絵どおり髪より手前に描く
+  // （髪の後ろにすると跳ねが隠れ、閉じたときに線が途切れて見える）
+  ["eyelash_upper_R", "eyelash-r"],
   ["ahoge", "front hair 4"],
   // 髪飾りは前髪の毛先より手前に見える
   ["hairpin", "headwear 3"],

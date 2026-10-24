@@ -112,9 +112,23 @@ export function UtopiaLive2DStage({
       function applyExpression(name: string | null) {
         if (name) {
           void model.expression(name);
-        } else {
-          model.internalModel.motionManager.expressionManager?.resetExpression();
+          return;
         }
+        const manager = model.internalModel.motionManager.expressionManager as
+          | (NonNullable<typeof model.internalModel.motionManager.expressionManager> & {
+              currentExpression: unknown;
+              defaultExpression: unknown;
+              reserveExpressionIndex: number;
+            })
+          | undefined;
+        if (!manager) {
+          return;
+        }
+        // エンジンの resetExpression は「今の表情」と読み込み中の予約を更新しない。そのままだと
+        // 通常に戻したあと同じ表情を選んでも「適用中」として無視され、読み込み中だった表情が後から上書きする
+        manager.currentExpression = manager.defaultExpression;
+        manager.reserveExpressionIndex = -1;
+        manager.resetExpression();
       }
       handleRef.current = {
         setExpression(name) {

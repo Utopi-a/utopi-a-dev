@@ -123,6 +123,7 @@ def close_eyes_on_lower_lash(client: Client):
     上まつ毛の根元（まつ毛のメッシュの下端）を下まつ毛の根元（白目のメッシュの下端。fit_parts.py で
     下まつ毛の線までに揃えてある）へ下ろし、毛先側は自動リグと同じく 0.88 倍の厚みで根元の上に載せる。
     下まぶたも閉じるときわずかに上がるので、下まつ毛は根元どうしの距離の 1 割だけ上げ、そこで重ねる。
+    白目の外へ伸びる目頭・目尻のまつ毛の跳ねも、閉じた線を延ばした位置へ下ろして一本の線につなげる。
     白目は根元の少し上で薄くつぶしてまつ毛の裏に隠す（瞳は白目でクリッピングされるので一緒に隠れる）。
     まつ毛と白目は同じ目のデフォーマの中にあり、座標（0〜1）がそろっているので、メッシュだけで計算できる。
     """
@@ -131,41 +132,46 @@ def close_eyes_on_lower_lash(client: Client):
         lash_mesh, white_mesh, lower_mesh = (f"mesh:{meshes[f'{name}-{side.lower()}']}" for name in ("eyelash", "eyewhite", "eyelash 2"))
         lash, lash_outline = mesh_outline(client, lash_mesh)
         white, white_outline = mesh_outline(client, white_mesh)
-        grid = np.linspace(white_outline[:, 0].min(), white_outline[:, 0].max(), 200)
+        lower, _ = mesh_outline(client, lower_mesh)
+        # まつ毛の端（目頭・目尻の外へ伸びる跳ね）まで含めた全幅で、列ごとに根元の線を読む
+        grid = np.linspace(lash_outline[:, 0].min(), lash_outline[:, 0].max(), 300)
         upper_root = column_bottom(lash_outline, grid)
         lower_root = column_bottom(white_outline, grid)
-        valid = ~np.isnan(upper_root) & ~np.isnan(lower_root)
-        grid, upper_root, lower_root = grid[valid], upper_root[valid], lower_root[valid]
-        # 根元どうしの距離。目頭・目尻で 0 になり、白目の外（まつ毛の跳ね）は動かさない
-        gap = np.clip(lower_root - upper_root, 0, None)
-        gap = cv2.GaussianBlur(gap.astype(np.float32).reshape(1, -1), (0, 0), 3).ravel()
-        gap[[0, -1]] = 0
-
-        def at(values, x):
-            return np.interp(x, grid, values)
-
+        has_lash = ~np.isnan(upper_root)
+        grid, upper_root, lower_root = grid[has_lash], upper_root[has_lash], lower_root[has_lash]
+        on_white = ~np.isnan(lower_root)
+        white_x = grid[on_white]
+        # 根元どうしの距離。下まつ毛と白目はこれの 1 割だけ上げる（下まぶたもわずかに上がる）
+        gap = np.clip(np.nan_to_num(lower_root - upper_root), 0, None)
         rise = 0.1
-        lower, _ = mesh_outline(client, lower_mesh)
-        closed_lower = lower.copy()
-        closed_lower[:, 1] -= np.interp(lower[:, 0], grid, gap, left=0, right=0) * rise
-
-        squash = 0.88
         # 上まつ毛は下まつ毛の根元より少し下まで下ろし、下まつ毛の根元を不透明な帯の裏に潜らせる（隙間を残さない）
         overlap = 0.008
-        lash_gap = np.interp(lash[:, 0], grid, np.where(gap > 0, gap * (1 - rise) + overlap, 0), left=0, right=0)
-        lash_root = at(upper_root, lash[:, 0])
-        # 動く量に応じて押しつぶしを効かせる（動かない跳ねの先はそのままの形）
-        weight = np.clip(lash_gap / max(gap.max(), 1e-6) * 4, 0, 1)
+        # 閉じた根元の線。白目の幅では下まつ毛の根元をなめらかな曲線に当てはめ、目尻・目頭で折れないようにする
+        inner = on_white & (grid > white_x.min() + 0.03 * np.ptp(white_x)) & (grid < white_x.max() - 0.03 * np.ptp(white_x))
+        curve = np.poly1d(np.polyfit(grid[inner], (lower_root - gap * rise)[inner], 3))
+        closed_root = curve(grid) + overlap
+        # 白目の外（まつ毛の跳ね）は線を延ばしてつなぐ。3 次式の端は傾きが急になりやすいので傾きは半分にし、
+        # 跳ねは開いたときの形の 15% だけ残して少し上げる
+        tail_keep = 0.15
+        for edge_x, outside in ((white_x.min(), grid < white_x.min()), (white_x.max(), grid > white_x.max())):
+            slope = curve.deriv()(edge_x) * 0.5
+            edge_root = np.interp(edge_x, grid, upper_root)
+            closed_root[outside] = (curve(edge_x) + overlap + slope * (grid[outside] - edge_x)
+                                    + (upper_root[outside] - edge_root) * tail_keep)
+        shift = cv2.GaussianBlur((closed_root - upper_root).astype(np.float32).reshape(1, -1), (0, 0), 4).ravel()
+
+        closed_lower = lower.copy()
+        closed_lower[:, 1] -= np.interp(lower[:, 0], grid, gap) * rise
+
+        # 根元を閉じた線へ下ろし、毛先側は自動リグと同じく 0.88 倍の厚みで根元の上に載せる
+        squash = 0.88
+        lash_root = np.interp(lash[:, 0], grid, upper_root)
         closed_lash = lash.copy()
-        closed_lash[:, 1] = np.where(
-            weight > 0,
-            lash_root + lash_gap + (lash[:, 1] - lash_root) * (1 - (1 - squash) * weight),
-            lash[:, 1],
-        )
-        line = at(lower_root, white[:, 0])
-        closed_white = white.copy()
+        closed_lash[:, 1] = lash_root + np.interp(lash[:, 0], grid, shift) + (lash[:, 1] - lash_root) * squash
         # 白目は根元の境界ではなく、閉じたまつ毛の帯の内側（根元より少し上）へ細くつぶす
-        closed_white[:, 1] = line - np.interp(white[:, 0], grid, gap) * rise - 0.025 + (white[:, 1] - line) * 0.03
+        line = np.interp(white[:, 0], grid, closed_root)
+        closed_white = white.copy()
+        closed_white[:, 1] = line - overlap - 0.025 + (white[:, 1] - line) * 0.03
         write_closed_key(client, lash_mesh, parameter, lash, closed_lash)
         write_closed_key(client, white_mesh, parameter, white, closed_white)
         write_closed_key(client, lower_mesh, parameter, lower, closed_lower)

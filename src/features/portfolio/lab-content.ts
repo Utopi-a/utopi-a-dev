@@ -8,6 +8,14 @@ export type LabEntry = {
 
 export const labEntries: LabEntry[] = [
   {
+    id: "utopia-live2d",
+    title: "ゆーとぴあちゃん",
+    description:
+      "Live2D モデルにした看板キャラクター。視線・まばたき・髪の揺れ・表情、マイクでの口パク。",
+    status: "active",
+    href: "/lab/utopia",
+  },
+  {
     id: "auth-studio",
     title: "認証 Studio",
     description: "Better Auth（メール / SSO）とログイン後エリア。Lab 上部の Studio から入る。",

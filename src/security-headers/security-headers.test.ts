@@ -24,8 +24,18 @@ describe("buildSecurityHeaderRoutes", () => {
   it("全ルートにヘッダーを適用する設定を返す", () => {
     const routes = buildSecurityHeaderRoutes();
 
-    expect(routes).toHaveLength(1);
     expect(routes[0]?.source).toBe("/(.*)");
     expect(routes[0]?.headers).toHaveLength(securityHeaders.length);
+  });
+
+  it("マイクはゆーとぴあちゃんのページだけ同じオリジンに許可する", () => {
+    const routes = buildSecurityHeaderRoutes();
+    const utopia = routes.find((route) => route.source === "/lab/utopia");
+
+    expect(utopia?.headers).toContainEqual({
+      key: "Permissions-Policy",
+      value: "camera=(), microphone=(self), geolocation=()",
+    });
+    expect(routes.at(-1)).toBe(utopia);
   });
 });

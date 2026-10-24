@@ -245,6 +245,10 @@
 	],
 	"Drawables": [
 		{
+			"Id": "ArtMeshHeadwear",
+			"Name": "headwear 3"
+		},
+		{
 			"Id": "ArtMeshFrontHair",
 			"Name": "front hair 4"
 		},
@@ -253,15 +257,15 @@
 			"Name": "front hair"
 		},
 		{
-			"Id": "ArtMeshHeadwear",
+			"Id": "ArtMeshHeadwear2",
 			"Name": "headwear"
 		},
 		{
-			"Id": "ArtMeshFrontHair3",
-			"Name": "front hair 3"
+			"Id": "ArtMeshHeadwear3",
+			"Name": "headwear 2"
 		},
 		{
-			"Id": "ArtMeshFrontHair4",
+			"Id": "ArtMeshFrontHair3",
 			"Name": "front hair 2"
 		},
 		{
@@ -309,14 +313,6 @@
 			"Name": "mouth open"
 		},
 		{
-			"Id": "ArtMeshMouthOpen_lip_0",
-			"Name": "mouth open / 上唇の輪郭"
-		},
-		{
-			"Id": "ArtMeshMouthOpen_lip_1",
-			"Name": "mouth open / 下唇の輪郭"
-		},
-		{
 			"Id": "ArtMeshMouthClose",
 			"Name": "mouth close"
 		},
@@ -331,6 +327,10 @@
 		{
 			"Id": "ArtMeshBackHair",
 			"Name": "back hair 2"
+		},
+		{
+			"Id": "ArtMeshObjects",
+			"Name": "objects"
 		},
 		{
 			"Id": "ArtMeshNeckwear",
@@ -365,7 +365,7 @@
 			"Name": "front hair（前髪透け）"
 		},
 		{
-			"Id": "ArtMeshFrontHair4_SeeThrough",
+			"Id": "ArtMeshFrontHair3_SeeThrough",
 			"Name": "front hair 2（前髪透け）"
 		}
 	]

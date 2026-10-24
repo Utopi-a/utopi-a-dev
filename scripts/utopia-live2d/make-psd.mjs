@@ -19,6 +19,8 @@ const order = [
   ["arm_R", "handwear-r"],
   ["arm_L", "handwear-l"],
   ["tie", "neckwear"],
+  // ブローチは布と一緒に揺らさない（金具なので変形させない）
+  ["brooch", "objects"],
   ["hair_side_L", "back hair 2"],
   [["face", "eyelash_lower_R", "eyelash_lower_L"], "face"],
   ["cheek", "腮红"],
@@ -35,10 +37,13 @@ const order = [
   ["ear_L", "ear-l"],
   ["earring_L", "earwear-l"],
   ["hair_side_R", "front hair 2"],
-  ["braid_L", "front hair 3"],
+  // 編み込みは揺らさず頭と一緒に動かす（髪として扱うと前髪の揺れが付く）
+  ["braid_L", "headwear 2"],
   ["ribbon_L", "headwear"],
   ["hair_front", "front hair"],
   ["ahoge", "front hair 4"],
+  // 髪飾りは前髪の毛先より手前に見える
+  ["hairpin", "headwear 3"],
 ];
 
 async function loadLayer(files) {

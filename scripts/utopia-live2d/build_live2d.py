@@ -16,7 +16,7 @@ from mcp_proxy import Client  # noqa: E402
 
 # 揺れを付けるレイヤー名と揺れ方
 SWINGS = [
-    {"id": "ahoge", "layer": "front hair 4", "preset": "hair", "kind": "lateral", "magnitude": 0.35},
+    {"id": "ahoge", "layer": "front hair 4", "preset": "hair", "kind": "lateral", "magnitude": 0.2},
     {"id": "ribbon", "layer": "headwear", "preset": "accessory", "kind": "lateral", "magnitude": 0.3},
     {"id": "earring", "layer": "earwear-l", "preset": "accessory", "kind": "lateral", "magnitude": 0.45},
     {"id": "side_hair_r", "layer": "front hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.18},
@@ -79,6 +79,17 @@ def main(psd: str, output: str):
         # レイヤーの分類や差分の変更は、リグを生成し直したときに反映される
         edit(client, "rig_generate")
 
+        # 読み込み中に出す静止画。口の差し替え設定の前に描く（設定後は描画機能が口のレイヤーを見つけられない）。既定のポーズを書き出す（物理演算の揺れは含まない）
+        _, images = client.call("view_render_model", {
+            "viewport": {"mode": "canvas_rect", "left": 0, "top": 0, "width": 2048, "height": 3072},
+            "background": "transparent", "target_long_edge": 1350,
+        })
+        (Path(output) / "poster.png").write_bytes(images[0])
+
+        # 開いた口は差し替えで出す。自動生成の唇の輪郭は閉じたとき閉じ口の線と二重に見えるため
+        edit(client, "layer_set_variant", layer_id=layers["mouth open"], variant="toggle", parameter="ParamMouthOpenY")
+        edit(client, "rig_generate")
+
         for preset in ["front_hair", "back_hair", "clothing"]:
             edit(client, "model_apply_preset", preset=preset)
             print("preset", preset)
@@ -100,13 +111,6 @@ def main(psd: str, output: str):
                 "entries": [{"parameter": p, "blend": b, "value": v} for p, b, v in entries],
             })
             print("expression", expression_id)
-
-        # 読み込み中に出す静止画。既定のポーズを書き出す（物理演算の揺れは含まない）
-        _, images = client.call("view_render_model", {
-            "viewport": {"mode": "canvas_rect", "left": 0, "top": 0, "width": 2048, "height": 3072},
-            "background": "transparent", "target_long_edge": 1350,
-        })
-        (Path(output) / "poster.png").write_bytes(images[0])
 
         result = edit(client, "project_export_model", output_directory=output)
         print(json.dumps(result, ensure_ascii=False)[:600])

@@ -1,6 +1,7 @@
 """Codex が単体で描いた表情パーツ（開いた口・驚きの口・頬染め）を、元絵の口・頬の位置へ縮小して置く（4 倍キャンバス）。"""
 from pathlib import Path
 
+import cv2
 import numpy as np
 from PIL import Image, ImageOps
 
@@ -50,5 +51,12 @@ single("mouth_open_o", load("mouth_open_o"), center=(517, 774), width=22)
 cheek = Image.new("RGBA", CANVAS, (0, 0, 0, 0))
 place(cheek, load("blush"), center=(425, 728), width=78)
 place(cheek, load("blush", mirror=True), center=(614, 712), width=72)
+# 頬染めの縁をぼかす（縁がはっきりした楕円だと浮いて見える）
+# 色は透明度で重み付けしてぼかす（透明な所の色まで広がると四角い跡になる）
+cheek_rgba = np.array(cheek).astype(np.float32)
+alpha = cheek_rgba[..., 3:] / 255
+blurred_alpha = cv2.GaussianBlur(alpha[..., 0], (0, 0), 8 * S)[..., None]
+blurred_rgb = cv2.GaussianBlur(cheek_rgba[..., :3] * alpha, (0, 0), 8 * S) / np.maximum(blurred_alpha, 1e-4)
+cheek = Image.fromarray(np.concatenate([blurred_rgb, blurred_alpha * 255], axis=2).clip(0, 255).astype(np.uint8))
 cheek.save(OUT / "cheek.png", compress_level=3)
 print("saved cheek")

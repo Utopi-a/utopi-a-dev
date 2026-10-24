@@ -21,7 +21,9 @@ const order = [
   ["tie", "neckwear"],
   // ブローチは布と一緒に揺らさない（金具なので変形させない）
   ["brooch", "objects"],
-  ["hair_side_L", "back hair 2"],
+  // 横髪（画面右・顔より奥）は 2 束。顔に近い L1 を手前に（split_hair.py）
+  ["hair_side_L_L2", "back hair 3"],
+  ["hair_side_L_L1", "back hair 2"],
   ["face", "face"],
   ["cheek", "腮红"],
   ["mouth_closed", "mouth close"],
@@ -41,13 +43,21 @@ const order = [
   ["brow_L", "eyebrow-l"],
   ["ear_L", "ear-l"],
   ["earring_L", "earwear-l"],
-  ["hair_side_R", "front hair 2"],
+  // 横髪（画面左・手前）は 3 束。顔に近い R1 がいちばん手前（split_hair.py）
+  ["hair_side_R_R3", "front hair 2"],
+  ["hair_side_R_R2", "front hair 5"],
+  ["hair_side_R_R1", "front hair 6"],
   // 編み込みは揺らさず頭と一緒に動かす（髪として扱うと前髪の揺れが付く）
   ["braid_L", "headwear 2"],
   ["ribbon_L", "headwear"],
   // アホ毛は前髪の後ろに描き、付け根を頭頂の分け目の毛の下に潜らせる（手前だと付け根の尖った端が見えて二股に見える）
   ["ahoge", "front hair 4"],
-  ["hair_front", "front hair"],
+  // 前髪は 5 束。奥から F5（右へ払う短い束）・F1・F2・F4・F3（中央の細い束）の順（split_hair.py）
+  ["hair_front_F5", "front hair 7"],
+  ["hair_front_F1", "front hair 8"],
+  ["hair_front_F2", "front hair 9"],
+  ["hair_front_F4", "front hair 10"],
+  ["hair_front_F3", "front hair"],
   // 髪飾りは前髪の毛先より手前に見える
   ["hairpin", "headwear 3"],
 ];

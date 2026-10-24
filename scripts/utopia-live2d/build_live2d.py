@@ -24,8 +24,18 @@ SWINGS = [
     {"id": "ahoge", "layer": "front hair 4", "preset": "hair", "kind": "vertical", "magnitude": 0.2, "fulcrum": "right"},
     {"id": "ribbon", "layer": "headwear", "preset": "accessory", "kind": "lateral", "magnitude": 0.3},
     {"id": "earring", "layer": "earwear-l", "preset": "accessory", "kind": "lateral", "magnitude": 0.45},
-    {"id": "side_hair_r", "layer": "front hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.18},
-    {"id": "side_hair_l", "layer": "back hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.18},
+    # 前髪・横髪は毛束ごとに付け根（上端）を固定して揺らす（split_hair.py で分けた束）。細い束・短い束は小さく、
+    # 外側の長い束は大きく。右へ払う前髪の短い束（F5）は左の付け根を固定して先を上下に揺らす
+    {"id": "bangs_f1", "layer": "front hair 8", "preset": "hair", "kind": "lateral", "magnitude": 0.14},
+    {"id": "bangs_f2", "layer": "front hair 9", "preset": "hair", "kind": "lateral", "magnitude": 0.14},
+    {"id": "bangs_f3", "layer": "front hair", "preset": "hair", "kind": "lateral", "magnitude": 0.08},
+    {"id": "bangs_f4", "layer": "front hair 10", "preset": "hair", "kind": "lateral", "magnitude": 0.14},
+    {"id": "bangs_f5", "layer": "front hair 7", "preset": "hair", "kind": "vertical", "magnitude": 0.1, "fulcrum": "left"},
+    {"id": "side_hair_r1", "layer": "front hair 6", "preset": "hair", "kind": "lateral", "magnitude": 0.04, "softness": 0.6},
+    {"id": "side_hair_r2", "layer": "front hair 5", "preset": "hair", "kind": "lateral", "magnitude": 0.12},
+    {"id": "side_hair_r3", "layer": "front hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.22},
+    {"id": "side_hair_l1", "layer": "back hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.1},
+    {"id": "side_hair_l2", "layer": "back hair 3", "preset": "hair", "kind": "lateral", "magnitude": 0.16},
     # 胸のタイは結び目（レイヤーの上端）から全体がしなるように揺らす。服の自動設定（clothing）は根元を硬くして
     # 先だけが揺れ、付け根から動いて見えなかった
     {"id": "tie", "layer": "neckwear", "preset": "accessory", "kind": "lateral", "magnitude": 0.12, "softness": 0.1},
@@ -41,10 +51,12 @@ EXPRESSIONS = {
     "surprised": [("ParamEyeLOpen", "OVERWRITE", 1.0), ("ParamEyeROpen", "OVERWRITE", 1.0), ("ParamEyeLWide", "OVERWRITE", 1.0),
                   ("ParamEyeRWide", "OVERWRITE", 1.0), ("ParamBrowLY", "ADD", 1.0), ("ParamBrowRY", "ADD", 1.0),
                   ("ParamMouthO", "OVERWRITE", 1.0)],
-    "shy": [("ParamCheek", "OVERWRITE", 1.0), ("ParamEyeLOpen", "MULTIPLY", 0.8), ("ParamEyeROpen", "MULTIPLY", 0.8),
+    "shy": [("ParamCheek", "OVERWRITE", 0.8), ("ParamEyeLOpen", "MULTIPLY", 0.8), ("ParamEyeROpen", "MULTIPLY", 0.8),
             ("ParamEyeBallX", "ADD", -0.35), ("ParamEyeBallY", "ADD", -0.45), ("ParamMouthForm", "ADD", 0.35)],
-    "pout": [("ParamBrowLY", "ADD", -0.5), ("ParamBrowRY", "ADD", -0.5), ("ParamEyeLOpen", "MULTIPLY", 0.72),
-             ("ParamEyeROpen", "MULTIPLY", 0.72), ("ParamMouthForm", "ADD", -1.0), ("ParamCheek", "ADD", 0.45)],
+    # むすっは眉頭を下げて不満を出す（照れと半目の形が似ていて、口だけでは見分けにくかった）。頬染めは付けない
+    "pout": [("ParamBrowLY", "ADD", -0.6), ("ParamBrowRY", "ADD", -0.6), ("ParamBrowLAngle", "ADD", -1.0),
+             ("ParamBrowRAngle", "ADD", -1.0), ("ParamEyeLOpen", "MULTIPLY", 0.8), ("ParamEyeROpen", "MULTIPLY", 0.8),
+             ("ParamMouthForm", "ADD", -1.0)],
 }
 
 
@@ -291,6 +303,30 @@ def rig_closed_mouth(client: Client):
     print("closed mouth form")
 
 
+def rig_brow_angle(client: Client):
+    """眉の角度（ParamBrowLAngle / ParamBrowRAngle）。-1 で眉頭（顔の中心側）を下げる。
+
+    眉のメッシュは眉の上下（ParamBrow*Y）にも結び付いているので、上下の各キーで、その形からの相対移動として書く。
+    """
+    meshes = meshes_by_layer(client)
+    for side, side_name in (("R", "右"), ("L", "左")):
+        mesh = f"mesh:{meshes[f'eyebrow-{side.lower()}']}"
+        parameter, height_parameter = f"ParamBrow{side}Angle", f"ParamBrow{side}Y"
+        heights = (-1, 0, 1)
+        edit(client, "author_axis", summary=f"{side_name}眉の角度",
+             parameter={"id": parameter, "name": f"{side_name}眉 角度", "min": -1, "max": 1, "default": 0},
+             shapes=[{"target": mesh, "value": -1, "key": {height_parameter: h}, "operations": [{"type": "translate", "delta": [0, 0]}]}
+                     for h in heights])
+        # 画面上で右眉は右側、左眉は左側が眉頭。眉頭側の半分を下げ、眉尻側を少し上げる（範囲は 0〜1 の正規化座標）
+        inner, outer = ([0.55, -0.2, 1.2, 1.2], [-0.2, -0.2, 0.35, 1.2]) if side == "R" else ([-0.2, -0.2, 0.45, 1.2], [0.65, -0.2, 1.2, 1.2])
+        edit(client, "rig_deform", changes=[
+            {"target": mesh, "key": {parameter: -1, height_parameter: h}, "operations": [
+                {"type": "translate", "delta": [0, 0.45], "selection": {"rect": inner, "feather": 0.35}},
+                {"type": "translate", "delta": [0, -0.12], "selection": {"rect": outer, "feather": 0.35}},
+            ]} for h in heights])
+    print("brow angle")
+
+
 def main(psd: str, output: str):
     with Client(timeout=900) as client:
         edit(client, "project_import_psd", path=psd, discard_unsaved=True)
@@ -332,6 +368,7 @@ def main(psd: str, output: str):
 
         rig_eyes(client)
         rig_closed_mouth(client)
+        rig_brow_angle(client)
 
         # 自動生成の標準表情（笑顔・悲しみなど）は消し、設定資料の 6 種に置き換える
         existing, _ = client.call("expression_list", {})

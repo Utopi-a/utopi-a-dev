@@ -7,14 +7,54 @@
 			"Name": "tie"
 		},
 		{
-			"Id": "ParamSwingsidehairl",
+			"Id": "ParamSwingsidehairl2",
 			"GroupId": "",
-			"Name": "side_hair_l"
+			"Name": "side_hair_l2"
 		},
 		{
-			"Id": "ParamSwingsidehairr",
+			"Id": "ParamSwingsidehairl1",
 			"GroupId": "",
-			"Name": "side_hair_r"
+			"Name": "side_hair_l1"
+		},
+		{
+			"Id": "ParamSwingsidehairr3",
+			"GroupId": "",
+			"Name": "side_hair_r3"
+		},
+		{
+			"Id": "ParamSwingsidehairr2",
+			"GroupId": "",
+			"Name": "side_hair_r2"
+		},
+		{
+			"Id": "ParamSwingsidehairr1",
+			"GroupId": "",
+			"Name": "side_hair_r1"
+		},
+		{
+			"Id": "ParamSwingbangsf5",
+			"GroupId": "",
+			"Name": "bangs_f5"
+		},
+		{
+			"Id": "ParamSwingbangsf4",
+			"GroupId": "",
+			"Name": "bangs_f4"
+		},
+		{
+			"Id": "ParamSwingbangsf3",
+			"GroupId": "",
+			"Name": "bangs_f3"
+		},
+		{
+			"Id": "ParamSwingbangsf2",
+			"GroupId": "",
+			"Name": "bangs_f2"
+		},
+		{
+			"Id": "ParamSwingbangsf1",
+			"GroupId": "",
+			"Name": "bangs_f1"
 		},
 		{
 			"Id": "ParamSwingearring",
@@ -30,6 +70,16 @@
 			"Id": "ParamSwingahoge",
 			"GroupId": "",
 			"Name": "ahoge"
+		},
+		{
+			"Id": "ParamBrowLAngle",
+			"GroupId": "",
+			"Name": "左眉 角度"
+		},
+		{
+			"Id": "ParamBrowRAngle",
+			"GroupId": "",
+			"Name": "右眉 角度"
 		},
 		{
 			"Id": "ParamEyeLWide",
@@ -269,6 +319,22 @@
 		},
 		{
 			"Id": "ArtMeshFrontHair2",
+			"Name": "front hair 10"
+		},
+		{
+			"Id": "ArtMeshFrontHair3",
+			"Name": "front hair 9"
+		},
+		{
+			"Id": "ArtMeshFrontHair4",
+			"Name": "front hair 8"
+		},
+		{
+			"Id": "ArtMeshFrontHair5",
+			"Name": "front hair 7"
+		},
+		{
+			"Id": "ArtMeshFrontHair6",
 			"Name": "front hair 4"
 		},
 		{
@@ -280,7 +346,15 @@
 			"Name": "headwear 2"
 		},
 		{
-			"Id": "ArtMeshFrontHair3",
+			"Id": "ArtMeshFrontHair7",
+			"Name": "front hair 6"
+		},
+		{
+			"Id": "ArtMeshFrontHair8",
+			"Name": "front hair 5"
+		},
+		{
+			"Id": "ArtMeshFrontHair9",
 			"Name": "front hair 2"
 		},
 		{
@@ -356,6 +430,10 @@
 			"Name": "back hair 2"
 		},
 		{
+			"Id": "ArtMeshBackHair2",
+			"Name": "back hair 3"
+		},
+		{
 			"Id": "ArtMeshObjects",
 			"Name": "objects"
 		},
@@ -376,7 +454,7 @@
 			"Name": "topwear"
 		},
 		{
-			"Id": "ArtMeshBackHair2",
+			"Id": "ArtMeshBackHair3",
 			"Name": "back hair"
 		},
 		{
@@ -388,12 +466,28 @@
 			"Name": "eyebrow-r（前髪透け）"
 		},
 		{
+			"Id": "ArtMeshFrontHair2_SeeThrough",
+			"Name": "front hair 10（前髪透け）"
+		},
+		{
 			"Id": "ArtMeshFrontHair_SeeThrough",
 			"Name": "front hair（前髪透け）"
 		},
 		{
 			"Id": "ArtMeshFrontHair3_SeeThrough",
-			"Name": "front hair 2（前髪透け）"
+			"Name": "front hair 9（前髪透け）"
+		},
+		{
+			"Id": "ArtMeshFrontHair4_SeeThrough",
+			"Name": "front hair 8（前髪透け）"
+		},
+		{
+			"Id": "ArtMeshFrontHair7_SeeThrough",
+			"Name": "front hair 6（前髪透け）"
+		},
+		{
+			"Id": "ArtMeshFrontHair8_SeeThrough",
+			"Name": "front hair 5（前髪透け）"
 		}
 	]
 }

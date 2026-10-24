@@ -202,6 +202,17 @@ torso[..., 3] *= np.maximum(soft(cv2.dilate(torso_visible.astype(np.uint8), disk
 # タイの下と、見えている胴との継ぎ目は不透明にそろえる（透明度のわずかなへこみが細い枠の線に見える）
 solid = cv2.dilate(tie_fill.astype(np.uint8), disk(4 * S)).astype(bool) & cv2.erode(figure.astype(np.uint8), disk(2 * S)).astype(bool) & ~face_and_neck
 torso[..., 3] = np.where(solid, 255, torso[..., 3])
+# 首の上端: GPT の胴は首の上端（あごの下に隠れる所）にあごの線の跡が残っていて、顔が動くとあご下に波打つ帯が
+# 見えていた。GPT に顔を取り除いて首を上へ伸ばさせた絵（gpt_parts.py の neck_under_chin）で、あごの下に隠れる所と
+# あご下 20px（元絵）を埋める。元絵で見えているあご下の影はそれより下に残る
+face_alpha = load("face")[..., 3] > 128
+neck_art = load("neck_under_chin")
+neck_skin = (neck_art[..., 3] > 250) & (neck_art[..., 0] - neck_art[..., 2] > 20) & (neck_art[..., :3].min(axis=2) > 140)
+under_face = cv2.dilate(face_alpha.astype(np.uint8), disk(20 * S)).astype(bool)
+neck_fill = neck_skin & under_face
+weight = soft(neck_fill, 4 * S)[..., None] * neck_skin[..., None]
+torso[..., :3] = torso[..., :3] * (1 - weight) + neck_art[..., :3] * weight
+torso[..., 3] = np.maximum(torso[..., 3], neck_fill * 255.0)
 save("torso", torso)
 
 for part in ("hair_front", "hair_side_L", "hair_side_R", "hair_back"):

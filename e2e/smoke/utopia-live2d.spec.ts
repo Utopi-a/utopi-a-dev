@@ -16,8 +16,17 @@ test("ゆーとぴあちゃんの Live2D モデルが動き出し、表情を切
   await expect(page.getByRole("button", { name: "通常" })).toHaveAttribute("aria-pressed", "false");
 });
 
-test("Lab の一覧からゆーとぴあちゃんのページへ行ける", async ({ page }) => {
+test("Lab の一覧からゆーとぴあちゃんのページへ行き、マイクを使える", async ({ page }) => {
   await page.goto("/lab");
   await page.getByRole("link", { name: /ゆーとぴあちゃん/ }).click();
   await expect(page).toHaveURL("/lab/utopia");
+
+  // Permissions-Policy は最初に読み込んだページのものが効き続ける。サイト内リンクで来てもマイクが止められていないこと
+  const allowsMicrophone = await page.evaluate(() => {
+    const policy = (
+      document as Document & { featurePolicy?: { allowsFeature(name: string): boolean } }
+    ).featurePolicy;
+    return policy ? policy.allowsFeature("microphone") : true;
+  });
+  expect(allowsMicrophone).toBe(true);
 });

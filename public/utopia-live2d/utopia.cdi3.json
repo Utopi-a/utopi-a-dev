@@ -27,6 +27,16 @@
 			"Name": "ahoge"
 		},
 		{
+			"Id": "ParamEyeLSmile",
+			"GroupId": "",
+			"Name": "左目 笑顔"
+		},
+		{
+			"Id": "ParamEyeRSmile",
+			"GroupId": "",
+			"Name": "右目 笑顔"
+		},
+		{
 			"Id": "ParamCheek",
 			"GroupId": "",
 			"Name": "照れ"

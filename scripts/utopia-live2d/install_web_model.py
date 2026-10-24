@@ -23,6 +23,8 @@ def main(source_dir: str):
 
     shutil.rmtree(TARGET, ignore_errors=True)
     (TARGET / "textures").mkdir(parents=True)
+    # 配信するモデルと一緒に利用条件を置く
+    shutil.copyfile(Path(__file__).parent / "source/LICENSE.txt", TARGET / "LICENSE.txt")
 
     def copy(relative: str) -> str:
         renamed = Path(relative).name.replace(stem, "utopia", 1)

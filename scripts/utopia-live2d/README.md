@@ -26,7 +26,7 @@
 10. `draw_mouth_line.py`: 閉じ口の線を左右対称のなめらかな線で描き直す
 11. `add_base_blush.py`: 薄い頬の赤みを顔に焼き込む（頬染めの表情は別パーツ）
 12. `make-psd.mjs`: パーツを [PSD2Live](https://github.com/tsunehimatoi/psd2live) が部位を読み取れるレイヤー名で PSD にまとめる。下まつ毛は顔に結合せず目のレイヤーにする（頭の向きで目と顔の動きがずれて離れるため）
-13. `build_live2d.py`: PSD2Live（MCP）で自動リギングし、揺れもの・頬染め・設定資料の表情 6 種を足して書き出す。閉じた目は、上まつ毛の根元の線を下まつ毛の根元の線に重ねる形へ書き直す（下まつ毛はわずかに上げ、上まつ毛の帯の裏に潜らせる）
+13. `build_live2d.py`: PSD2Live（MCP）で自動リギングし、揺れもの・頬染め・設定資料の表情 6 種を足して書き出す。閉じた目は、上まつ毛の根元の線を下まつ毛の根元の線に重ねる形へ書き直す（下まつ毛はわずかに上げ、上まつ毛の帯の裏に潜らせる）。笑い目（ParamEyeLSmile / ParamEyeRSmile）と、閉じた口の口角（ParamMouthForm）の変形もここで足す
 14. `install_web_model.py`: 書き出したモデルを `public/utopia-live2d/` に配置する（テクスチャは WebP）
 
 中間生成物は `tmp/utopia-puppet-work/`、`tmp/live2d-work/`（どちらも git 対象外）に置きます。
@@ -101,6 +101,7 @@ $W/tools/venv/bin/python scripts/utopia-live2d/install_web_model.py $PWD/tmp/liv
 
 ## ライセンス
 
+- キャラクター・元絵・素材・書き出したモデルは、ゆーとぴあ（utopi-a）がすべての権利を留保する。利用条件は `source/LICENSE.txt`（`install_web_model.py` が `public/utopia-live2d/LICENSE.txt` にも置く）
 - SAM 2.1: Apache-2.0
 - waifu2x-ncnn-vulkan: MIT
 - PSD2Live: GPL-3.0（ツールとして使うだけで、サイトには含めない。書き出したモデルは PSD2Live に依存しない）

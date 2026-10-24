@@ -186,9 +186,9 @@ torso[..., :3] = np.where(under[..., None], cloth, torso[..., :3])
 tie_fill = under_tie & figure & ~face_and_neck
 gpt_under = load("under_tie")
 filled = gpt_under[..., :3]
-# タイの縁から 20px（元絵）までは GPT の絵をそのまま使う。元絵と混ぜる幅は細くする（広く混ぜると、
+# タイの縁から 40px（元絵）までは GPT の絵をそのまま使う。元絵と混ぜる幅は細くする（広く混ぜると、
 # GPT が描き変えた襟の端と元絵の襟が重なってにじむ）
-gpt_zone = cv2.dilate(masks["tie"].astype(np.uint8), disk(20 * S)).astype(bool) & figure & ~face_and_neck
+gpt_zone = cv2.dilate(masks["tie"].astype(np.uint8), disk(40 * S)).astype(bool) & figure & ~face_and_neck
 # タイの羽の先は SAM のマスクから少し外れる。タイのまわりで元絵と GPT の絵が大きく違う所（タイが描かれていた所）も含める
 differs = np.abs(filled - master.astype(np.float32)).max(axis=2) > 40
 differs = cv2.morphologyEx(differs.astype(np.uint8), cv2.MORPH_OPEN, disk(S)).astype(bool)

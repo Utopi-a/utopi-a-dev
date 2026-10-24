@@ -70,7 +70,9 @@ def layer_ids(client: Client):
 def main(psd: str, output: str):
     with Client(timeout=900) as client:
         edit(client, "project_import_psd", path=psd, discard_unsaved=True)
-        edit(client, "settings_update", changes={"atlasSize": 2048})
+        # 目は下まつ毛の線まで。閉じた上まつ毛が下まつ毛に重なるよう、閉じる線を白目の高さの
+        # 端 50%・中央 86% に下げる（既定は 34%・72% で、白目を上まつ毛の裏まで広げると目の中ほどで止まる）
+        edit(client, "settings_update", changes={"atlasSize": 2048, "rigTuning": {"blinkCorner": 50, "blinkDepth": 36}})
 
         # 照れの頬染めは ParamCheek で出し入れする
         edit(client, "parameter_create", parameter_id="ParamCheek", name="照れ", min=0, max=1, default=0)

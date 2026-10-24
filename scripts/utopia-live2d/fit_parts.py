@@ -1,7 +1,8 @@
 """GPT で描き直したパーツを、Live2D で動かしたときに破綻しない形に整える（評価で出た指摘への対処）。
 
-- 白目: GPT の白目は丸い楕円で下まぶたより下まで広がり、目を閉じても白い帯が残る。
-  元絵の目の開口部（少しだけ広げたもの）と上まつ毛の裏の範囲に収める
+- 白目・瞳: 目は下まつ毛の線までと決め、元絵からたどった目の輪郭（EYE_OUTLINE）と上まつ毛の裏の範囲に収める。
+  GPT の白目は丸い楕円で下まぶたより下まで広がり、目を閉じても白い帯が残るため
+- 下まつ毛: GPT の下まつ毛は元絵の位置からずれる（瞳を横切る）ので、元絵の下まつ毛を輪郭の下端から切り出す
 - 顔: GPT の顔にも小さな口が描かれていて、閉じ口の線と二重に見えるので口の赤みを消す
   （閉じ口の線は draw_mouth_line.py で描く）
 - 腕: GPT が描き足した袖山が、胴の肩線の手前に二重の山として見える。元絵で腕が見えていた範囲
@@ -39,15 +40,57 @@ def soft(mask: np.ndarray, px: float) -> np.ndarray:
     return cv2.GaussianBlur(mask.astype(np.float32), (0, 0), px)
 
 
+# 目の輪郭（4 倍の座標）。元絵の上まつ毛の下端と下まつ毛の線をたどったもの。
+# SAM の開口部マスクは瞳のまわりしか取れず、目頭・目尻の白目が抜けるため手でたどる
+EYE_OUTLINE = {
+    "R": [(1393, 2640), (1403, 2600), (1460, 2560), (1513, 2533), (1560, 2520), (1660, 2517), (1727, 2527),
+          (1760, 2545), (1800, 2590), (1820, 2640), (1793, 2680), (1753, 2707), (1693, 2727), (1620, 2743),
+          (1560, 2747), (1513, 2743), (1460, 2727), (1413, 2707)],
+    "L": [(2247, 2540), (2265, 2500), (2287, 2473), (2340, 2440), (2407, 2430), (2513, 2433), (2573, 2437),
+          (2640, 2458), (2690, 2474), (2712, 2478), (2673, 2507), (2633, 2560), (2593, 2607), (2540, 2640), (2473, 2653),
+          (2407, 2657), (2340, 2653), (2290, 2635), (2265, 2600)],
+}
+master = np.array(Image.open(WORK / "master/master_b_4x.png").convert("RGB"))
+master_hsv = cv2.cvtColor(master, cv2.COLOR_RGB2HSV_FULL).astype(np.int16)
+# 下まつ毛は赤みのある細い線。周りの肌より彩度が高いことで見分ける（頬の赤みは周りとの差が小さい）
+saturation = master_hsv[..., 1].astype(np.float32)
+lash_contrast = saturation - cv2.medianBlur(master_hsv[..., 1].astype(np.uint8), 31).astype(np.float32)
+lash_colored = ((master_hsv[..., 0] >= 230) | (master_hsv[..., 0] <= 25)) & (lash_contrast > 20)
+
 for side in ("L", "R"):
-    opening = masks[f"eye_{side}_opening"].astype(np.uint8)
+    outline = np.zeros(master.shape[:2], np.uint8)
+    cv2.fillPoly(outline, [np.array(EYE_OUTLINE[side], np.int32)], 1)
     upper = load(f"eyelash_upper_{side}")[..., 3] > 40
-    # 開口部を上へは上まつ毛の裏まで、横と下へは 2px（元絵の解像度）だけ広げる
-    allowed = cv2.dilate(opening, disk(S)).astype(bool) | (cv2.dilate(opening, disk(10 * S)).astype(bool) & upper)
-    for part in (f"eye_white_{side}", f"iris_{side}"):
-        rgba = load(part)
-        rgba[..., 3] *= soft(allowed, S / 2)
-        save(part, rgba)
+    # 上へは上まつ毛の裏まで、横と下へは 1px（元絵の解像度）だけ広げて、まつ毛の下に潜らせる
+    allowed = cv2.dilate(outline, disk(S)).astype(bool) | (cv2.dilate(outline, disk(10 * S)).astype(bool) & upper)
+    # 上まつ毛の跳ねに沿って横へはみ出さないよう、輪郭の左右幅に収める（白目の範囲が閉じる位置の基準になる）
+    xs = np.nonzero(outline.any(axis=0))[0]
+    allowed[:, : xs.min() - S] = False
+    allowed[:, xs.max() + S :] = False
+    iris = load(f"iris_{side}")
+    iris[..., 3] *= soft(allowed, S / 2)
+    save(f"iris_{side}", iris)
+    # GPT の白目は目頭・目尻の角まで届かないことがあるので、輪郭の中の足りない所を周りの白目の色で埋める
+    white = load(f"eye_white_{side}")
+    # 白目の画素だけを重みにしてぼかした色で埋める（透明な画素の黒を混ぜない）
+    valid = (white[..., 3] > 200).astype(np.float32)
+    filled = soft(valid[..., None] * white[..., :3], 12 * S) / np.maximum(soft(valid, 12 * S), 1e-4)[..., None]
+    white[..., :3] = np.where(valid[..., None] > 0, white[..., :3], filled)
+    white[..., 3] = 255 * soft(allowed, S / 2)
+    save(f"eye_white_{side}", white)
+
+    # 輪郭の下端から下 8px（元絵）までの帯にある下まつ毛の色を切り出す
+    ys, xs = np.nonzero(outline)
+    bottom = np.full(master.shape[1], -1)
+    np.maximum.at(bottom, xs, ys)
+    rows = np.arange(master.shape[0])[:, None]
+    band = (bottom[None, :] >= 0) & (rows >= bottom[None, :] - 3 * S) & (rows <= bottom[None, :] + 8 * S)
+    lash = band & lash_colored & ~upper
+    alpha = np.clip((lash_contrast - 12) / 40, 0, 1) * soft(lash, S / 4)
+    rgba = np.zeros((*master.shape[:2], 4), np.float32)
+    rgba[..., :3] = master * (alpha[..., None] > 0)
+    rgba[..., 3] = alpha * 255
+    save(f"eyelash_lower_{side}", rgba)
 
 face = load("face")
 hsv = cv2.cvtColor(face[..., :3].clip(0, 255).astype(np.uint8), cv2.COLOR_RGB2HSV_FULL).astype(np.int16)

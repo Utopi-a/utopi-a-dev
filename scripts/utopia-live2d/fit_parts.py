@@ -158,7 +158,9 @@ for side in ("L", "R"):
 # 髪の毛先のすき間や、あごの線を胴に取り込まないように
 gpt_torso = cv2.dilate((torso[..., 3] > 128).astype(np.uint8), disk(40 * S)).astype(bool)
 face_and_neck = cv2.dilate((load("face")[..., 3] > 0).astype(np.uint8), disk(2 * S)).astype(bool)
-torso_visible = figure & gpt_torso & ~arms & ~hair & ~face_and_neck & ~masks["tie"] & (rows > 3000)
+# タイの下はタイの輪郭線ごと除く（取り込むとタイが揺れたとき服に枠が残る）
+under_tie = cv2.dilate(masks["tie"].astype(np.uint8), disk(6 * S)).astype(bool)
+torso_visible = figure & gpt_torso & ~arms & ~hair & ~face_and_neck & ~under_tie & (rows > 3000)
 # 袖の輪郭のすぐ外に残る細い欠片は除く（体を回すと袖の外に浮いて見える）
 torso_visible = cv2.morphologyEx(torso_visible.astype(np.uint8), cv2.MORPH_OPEN, disk(3 * S)).astype(bool)
 # 胴本体につながった、いちばん大きいかたまりだけ残す（髪の毛先に囲まれたすき間を取り込まない）
@@ -169,7 +171,9 @@ weight = soft(cv2.dilate(torso_visible.astype(np.uint8), disk(2 * S)).astype(boo
 torso[..., :3] = torso[..., :3] * (1 - weight[..., None]) + master * weight[..., None]
 torso[..., 3] = np.maximum(torso[..., 3] * (1 - soft(torso_visible, S)), soft(torso_visible, S / 2) * 255)
 # 袖の下に隠れる胴は、袖ぐりの輪郭線を消して布の色で埋める（体を回して袖がずれても線が出ないように）
-under = cv2.dilate(arms.astype(np.uint8), disk(3 * S)).astype(bool) & (torso[..., 3] > 0) & ~torso_visible
+# タイの下も同じく、周りのシャツの色で埋める（タイが揺れて見えても線や枠が出ないように）
+under = ((cv2.dilate(arms.astype(np.uint8), disk(3 * S)).astype(bool) & (torso[..., 3] > 0)) | (under_tie & figure & ~face_and_neck)) & ~torso_visible
+torso[..., 3] = np.where(under_tie & figure & ~face_and_neck, 255, torso[..., 3])
 known = ((torso[..., 3] > 200) & torso_visible).astype(np.float32)
 cloth = np.median(master[torso_visible], axis=0) * np.ones_like(torso[..., :3])
 for sigma in (60 * S, 12 * S):
@@ -177,8 +181,20 @@ for sigma in (60 * S, 12 * S):
     blurred = soft(known[..., None] * torso[..., :3], sigma) / np.maximum(blur, 1e-6)[..., None]
     cloth = np.where((blur > 0.05)[..., None], blurred, cloth)
 torso[..., :3] = np.where(under[..., None], cloth, torso[..., :3])
+# タイの下は、元絵の周り（黒い襟・白いシャツ）を内側へ延ばして埋める。平均の色で埋めると襟の黒が混ざって灰色になる。
+# 大きな範囲なので 1/4 に縮めて埋め、元の大きさに戻す
+tie_fill = under_tie & figure & ~face_and_neck
+small = cv2.resize(master, (master.shape[1] // 4, master.shape[0] // 4), interpolation=cv2.INTER_AREA)
+small_mask = cv2.resize(tie_fill.astype(np.uint8), (small.shape[1], small.shape[0]), interpolation=cv2.INTER_NEAREST)
+small_mask = cv2.dilate(small_mask, disk(2))
+filled = cv2.inpaint(small, small_mask * 255, 6, cv2.INPAINT_TELEA)
+filled = cv2.GaussianBlur(cv2.resize(filled, (master.shape[1], master.shape[0]), interpolation=cv2.INTER_CUBIC), (0, 0), S)
+torso[..., :3] = np.where(tie_fill[..., None], filled, torso[..., :3])
 # 胴は、見えている胴から 25px（元絵）以内に限る。袖の外側に胴の布や輪郭がはみ出さないように
-torso[..., 3] *= np.maximum(soft(cv2.dilate(torso_visible.astype(np.uint8), disk(25 * S)).astype(bool), 2 * S), torso_visible)
+torso[..., 3] *= np.maximum(soft(cv2.dilate(torso_visible.astype(np.uint8), disk(25 * S)).astype(bool) | (under_tie & figure), 2 * S), torso_visible)
+# タイの下と、見えている胴との継ぎ目は不透明にそろえる（透明度のわずかなへこみが細い枠の線に見える）
+solid = cv2.dilate(tie_fill.astype(np.uint8), disk(4 * S)).astype(bool) & cv2.erode(figure.astype(np.uint8), disk(2 * S)).astype(bool) & ~face_and_neck
+torso[..., 3] = np.where(solid, 255, torso[..., 3])
 save("torso", torso)
 
 for part in ("hair_front", "hair_side_L", "hair_side_R", "hair_back"):

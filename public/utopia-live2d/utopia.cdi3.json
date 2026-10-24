@@ -2,6 +2,11 @@
 	"Version": 3,
 	"Parameters": [
 		{
+			"Id": "ParamSwingtie",
+			"GroupId": "",
+			"Name": "tie"
+		},
+		{
 			"Id": "ParamSwingsidehairl",
 			"GroupId": "",
 			"Name": "side_hair_l"
@@ -145,21 +150,6 @@
 			"Id": "ParamBreath",
 			"GroupId": "ParamGroupBody",
 			"Name": "呼吸"
-		},
-		{
-			"Id": "ParamSimpresetneckwear_1",
-			"GroupId": "ParamGroupPhysics",
-			"Name": "ネックウェア（プリセット） 1"
-		},
-		{
-			"Id": "ParamSimpresetneckwear_2",
-			"GroupId": "ParamGroupPhysics",
-			"Name": "ネックウェア（プリセット） 2"
-		},
-		{
-			"Id": "ParamSimpresetneckwear_Y",
-			"GroupId": "ParamGroupPhysics",
-			"Name": "ネックウェア（プリセット） Y"
 		},
 		{
 			"Id": "ParamSimpresetbackhair_1",

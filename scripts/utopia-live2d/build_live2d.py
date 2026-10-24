@@ -24,6 +24,9 @@ SWINGS = [
     {"id": "earring", "layer": "earwear-l", "preset": "accessory", "kind": "lateral", "magnitude": 0.45},
     {"id": "side_hair_r", "layer": "front hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.18},
     {"id": "side_hair_l", "layer": "back hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.18},
+    # 胸のタイは結び目（レイヤーの上端）から全体がしなるように揺らす。服の自動設定（clothing）は根元を硬くして
+    # 先だけが揺れ、付け根から動いて見えなかった
+    {"id": "tie", "layer": "neckwear", "preset": "accessory", "kind": "lateral", "magnitude": 0.12, "softness": 0.1},
 ]
 
 # 設定資料 00 の表情バリエーション。ID はページの表情ボタン（utopia-expressions.ts）と揃える
@@ -312,14 +315,15 @@ def main(psd: str, output: str):
         edit(client, "layer_set_variant", layer_id=layers["face 2"], variant="toggle", parameter="ParamMouthO")
         edit(client, "rig_generate")
 
-        for preset in ["front_hair", "back_hair", "clothing"]:
+        for preset in ["front_hair", "back_hair"]:
             edit(client, "model_apply_preset", preset=preset)
             print("preset", preset)
 
         meshes = meshes_by_layer(client)
         for swing in SWINGS:
+            options = {"softness": swing["softness"]} if "softness" in swing else {}
             edit(client, "swing_put", id=swing["id"], name=swing["id"], targets=[meshes[swing["layer"]]],
-                 kind=swing["kind"], preset=swing["preset"], magnitude=swing["magnitude"])
+                 kind=swing["kind"], preset=swing["preset"], magnitude=swing["magnitude"], **options)
             print("swing", swing["id"])
 
         rig_eyes(client)

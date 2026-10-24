@@ -1,10 +1,10 @@
 {
     "Version": 3,
     "Meta": {
-        "PhysicsSettingCount": 12,
-        "TotalInputCount": 38,
-        "TotalOutputCount": 15,
-        "VertexCount": 28,
+        "PhysicsSettingCount": 11,
+        "TotalInputCount": 39,
+        "TotalOutputCount": 13,
+        "VertexCount": 25,
         "Fps": 60,
         "EffectiveForces": {
             "Gravity": {
@@ -42,6 +42,10 @@
                 "Name": "side_hair_l"
             },
             {
+                "Id": "PhysicsSwing_tie",
+                "Name": "tie"
+            },
+            {
                 "Id": "PhysicsSim_preset_front_hair",
                 "Name": "前髪（プリセット）"
             },
@@ -56,14 +60,6 @@
             {
                 "Id": "PhysicsSim_preset_back_hair_y",
                 "Name": "後ろ髪（プリセット）"
-            },
-            {
-                "Id": "PhysicsSim_preset_neckwear",
-                "Name": "ネックウェア（プリセット）"
-            },
-            {
-                "Id": "PhysicsSim_preset_neckwear_y",
-                "Name": "ネックウェア（プリセット）"
             }
         ]
     },
@@ -589,6 +585,94 @@
             }
         },
         {
+            "Id": "PhysicsSwing_tie",
+            "Input": [
+                {
+                    "Source": {
+                        "Target": "Parameter",
+                        "Id": "ParamAngleX"
+                    },
+                    "Weight": 60.0,
+                    "Type": "X",
+                    "Reflect": false
+                },
+                {
+                    "Source": {
+                        "Target": "Parameter",
+                        "Id": "ParamAngleZ"
+                    },
+                    "Weight": 60.0,
+                    "Type": "Angle",
+                    "Reflect": false
+                },
+                {
+                    "Source": {
+                        "Target": "Parameter",
+                        "Id": "ParamBodyAngleX"
+                    },
+                    "Weight": 40.0,
+                    "Type": "X",
+                    "Reflect": false
+                },
+                {
+                    "Source": {
+                        "Target": "Parameter",
+                        "Id": "ParamBodyAngleZ"
+                    },
+                    "Weight": 40.0,
+                    "Type": "Angle",
+                    "Reflect": false
+                }
+            ],
+            "Output": [
+                {
+                    "Destination": {
+                        "Target": "Parameter",
+                        "Id": "ParamSwingtie"
+                    },
+                    "VertexIndex": 1,
+                    "Scale": 1.8,
+                    "Weight": 100.0,
+                    "Type": "Angle",
+                    "Reflect": false
+                }
+            ],
+            "Vertices": [
+                {
+                    "Position": {
+                        "X": 0,
+                        "Y": 0.0
+                    },
+                    "Mobility": 1.0,
+                    "Delay": 1.0,
+                    "Acceleration": 1.0,
+                    "Radius": 0.0
+                },
+                {
+                    "Position": {
+                        "X": 0,
+                        "Y": 16.0
+                    },
+                    "Mobility": 0.96,
+                    "Delay": 0.6,
+                    "Acceleration": 1.8,
+                    "Radius": 16.0
+                }
+            ],
+            "Normalization": {
+                "Position": {
+                    "Minimum": -10.0,
+                    "Default": 0.0,
+                    "Maximum": 10.0
+                },
+                "Angle": {
+                    "Minimum": -30.0,
+                    "Default": 0.0,
+                    "Maximum": 30.0
+                }
+            }
+        },
+        {
             "Id": "PhysicsSim_preset_front_hair",
             "Input": [
                 {
@@ -940,158 +1024,6 @@
                     "Delay": 0.78794914,
                     "Acceleration": 1.1177828,
                     "Radius": 10.307018
-                }
-            ],
-            "Normalization": {
-                "Position": {
-                    "Minimum": -10.0,
-                    "Default": 0.0,
-                    "Maximum": 10.0
-                },
-                "Angle": {
-                    "Minimum": -30.0,
-                    "Default": 0.0,
-                    "Maximum": 30.0
-                }
-            }
-        },
-        {
-            "Id": "PhysicsSim_preset_neckwear",
-            "Input": [
-                {
-                    "Source": {
-                        "Target": "Parameter",
-                        "Id": "ParamBodyAngleX"
-                    },
-                    "Weight": 23.287449,
-                    "Type": "X",
-                    "Reflect": false
-                },
-                {
-                    "Source": {
-                        "Target": "Parameter",
-                        "Id": "ParamBodyAngleZ"
-                    },
-                    "Weight": 0.5226191,
-                    "Type": "Angle",
-                    "Reflect": false
-                }
-            ],
-            "Output": [
-                {
-                    "Destination": {
-                        "Target": "Parameter",
-                        "Id": "ParamSimpresetneckwear_1"
-                    },
-                    "VertexIndex": 1,
-                    "Scale": 210.61026,
-                    "Weight": 100.0,
-                    "Type": "Angle",
-                    "Reflect": false
-                },
-                {
-                    "Destination": {
-                        "Target": "Parameter",
-                        "Id": "ParamSimpresetneckwear_2"
-                    },
-                    "VertexIndex": 2,
-                    "Scale": 136.08116,
-                    "Weight": 100.0,
-                    "Type": "Angle",
-                    "Reflect": false
-                }
-            ],
-            "Vertices": [
-                {
-                    "Position": {
-                        "X": 0,
-                        "Y": 0.0
-                    },
-                    "Mobility": 1.0,
-                    "Delay": 1.0,
-                    "Acceleration": 1.0,
-                    "Radius": 0.0
-                },
-                {
-                    "Position": {
-                        "X": 0,
-                        "Y": 27.840837
-                    },
-                    "Mobility": 0.9567429,
-                    "Delay": 1.4567744,
-                    "Acceleration": 0.4978382,
-                    "Radius": 27.840837
-                },
-                {
-                    "Position": {
-                        "X": 0,
-                        "Y": 38.664185
-                    },
-                    "Mobility": 0.92602944,
-                    "Delay": 0.7564669,
-                    "Acceleration": 1.6166759,
-                    "Radius": 10.823347
-                }
-            ],
-            "Normalization": {
-                "Position": {
-                    "Minimum": -10.0,
-                    "Default": 0.0,
-                    "Maximum": 10.0
-                },
-                "Angle": {
-                    "Minimum": -30.0,
-                    "Default": 0.0,
-                    "Maximum": 30.0
-                }
-            }
-        },
-        {
-            "Id": "PhysicsSim_preset_neckwear_y",
-            "Input": [
-                {
-                    "Source": {
-                        "Target": "Parameter",
-                        "Id": "ParamBodyAngleY"
-                    },
-                    "Weight": 4.7512255,
-                    "Type": "Angle",
-                    "Reflect": false
-                }
-            ],
-            "Output": [
-                {
-                    "Destination": {
-                        "Target": "Parameter",
-                        "Id": "ParamSimpresetneckwear_Y"
-                    },
-                    "VertexIndex": 1,
-                    "Scale": 844.1625,
-                    "Weight": 100.0,
-                    "Type": "Angle",
-                    "Reflect": false
-                }
-            ],
-            "Vertices": [
-                {
-                    "Position": {
-                        "X": 0,
-                        "Y": 0.0
-                    },
-                    "Mobility": 1.0,
-                    "Delay": 1.0,
-                    "Acceleration": 1.0,
-                    "Radius": 0.0
-                },
-                {
-                    "Position": {
-                        "X": 0,
-                        "Y": 19.940632
-                    },
-                    "Mobility": 0.8388402,
-                    "Delay": 2.389365,
-                    "Acceleration": 1.0809296,
-                    "Radius": 19.940632
                 }
             ],
             "Normalization": {

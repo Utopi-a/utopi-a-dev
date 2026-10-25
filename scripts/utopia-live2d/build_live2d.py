@@ -32,9 +32,7 @@ SWINGS = [
     {"id": "bangs_f3", "layer": "front hair", "preset": "hair", "kind": "lateral", "magnitude": 0.08, "segments": 2},
     {"id": "bangs_f4", "layer": "front hair 10", "preset": "hair", "kind": "lateral", "magnitude": 0.14, "segments": 2},
     {"id": "bangs_f5", "layer": "front hair 7", "preset": "hair", "kind": "vertical", "magnitude": 0.1, "fulcrum": "left"},
-    {"id": "side_hair_r1", "layer": "front hair 6", "preset": "hair", "kind": "lateral", "magnitude": 0.04, "softness": 0.6, "segments": 2},
-    {"id": "side_hair_r2", "layer": "front hair 5", "preset": "hair", "kind": "lateral", "magnitude": 0.12, "segments": 2},
-    {"id": "side_hair_r3", "layer": "front hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.22, "segments": 2},
+    {"id": "side_hair_r", "layer": "front hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.16, "segments": 2},
     {"id": "side_hair_l1", "layer": "back hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.1, "segments": 2},
     {"id": "side_hair_l2", "layer": "back hair 3", "preset": "hair", "kind": "lateral", "magnitude": 0.16, "segments": 2},
     # 胸のタイは結び目（レイヤーの上端）から全体がしなるように揺らす。服の自動設定（clothing）は根元を硬くして

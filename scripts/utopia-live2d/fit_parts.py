@@ -123,13 +123,6 @@ mouth_area[730 * S:800 * S, 455 * S:575 * S] = True
 reddish = mouth_area & ((hsv[..., 0] <= 20) | (hsv[..., 0] >= 235)) & (hsv[..., 1] > 50)
 reddish = cv2.dilate(reddish.astype(np.uint8), disk(3)).astype(bool)
 face[..., :3] = cv2.inpaint(face[..., :3].clip(0, 255).astype(np.uint8), reddish.astype(np.uint8) * 255, 6, cv2.INPAINT_TELEA)
-# 顔の肌は、元絵で見えている所は元絵の画素を使う（GPT の顔は頬の陰影や目元の細かい塗りが失われ、平板に見えた）。
-# GPT の絵は前髪や目の下などの隠れていた所にだけ使う。眉と口は別パーツなので元絵から持ち込まない
-master_skin = masks["face_visible"] & ~cv2.dilate((masks["brow_L"] | masks["mouth"]).astype(np.uint8), disk(4 * S)).astype(bool)
-# 輪郭の線（元絵と GPT で位置が少し違う）は取り込まない。取り込むと二重線になる
-master_skin = cv2.erode(master_skin.astype(np.uint8), disk(8 * S)).astype(bool) & (face[..., 3] > 200)
-weight = soft(master_skin, 3 * S)[..., None]
-face[..., :3] = face[..., :3] * (1 - weight) + master_rgb * weight
 # GPT の顔は頬の横（耳の手前）で元絵より細く、そこから後ろ髪が見えて頬が髪で隠れたように見えていた。
 # 元絵で顔が見えている所は、元絵の画素で顔を補う
 # 顔のレイヤーのすぐ近く（6px（元絵）以内）だけを補う。離れた所（髪のすき間から見える右耳など）を足すと、

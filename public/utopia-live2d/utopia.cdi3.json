@@ -27,34 +27,14 @@
 			"Name": "side_hair_l1 1"
 		},
 		{
-			"Id": "ParamSwingsidehairr3_2",
+			"Id": "ParamSwingsidehairr_2",
 			"GroupId": "",
-			"Name": "side_hair_r3 2"
+			"Name": "side_hair_r 2"
 		},
 		{
-			"Id": "ParamSwingsidehairr3_1",
+			"Id": "ParamSwingsidehairr_1",
 			"GroupId": "",
-			"Name": "side_hair_r3 1"
-		},
-		{
-			"Id": "ParamSwingsidehairr2_2",
-			"GroupId": "",
-			"Name": "side_hair_r2 2"
-		},
-		{
-			"Id": "ParamSwingsidehairr2_1",
-			"GroupId": "",
-			"Name": "side_hair_r2 1"
-		},
-		{
-			"Id": "ParamSwingsidehairr1_2",
-			"GroupId": "",
-			"Name": "side_hair_r1 2"
-		},
-		{
-			"Id": "ParamSwingsidehairr1_1",
-			"GroupId": "",
-			"Name": "side_hair_r1 1"
+			"Name": "side_hair_r 1"
 		},
 		{
 			"Id": "ParamSwingbangsf5",
@@ -392,14 +372,6 @@
 		},
 		{
 			"Id": "ArtMeshFrontHair7",
-			"Name": "front hair 6"
-		},
-		{
-			"Id": "ArtMeshFrontHair8",
-			"Name": "front hair 5"
-		},
-		{
-			"Id": "ArtMeshFrontHair9",
 			"Name": "front hair 2"
 		},
 		{
@@ -515,6 +487,10 @@
 			"Name": "front hair 10（前髪透け）"
 		},
 		{
+			"Id": "ArtMeshFrontHair5_SeeThrough",
+			"Name": "front hair 7（前髪透け）"
+		},
+		{
 			"Id": "ArtMeshFrontHair_SeeThrough",
 			"Name": "front hair（前髪透け）"
 		},
@@ -528,11 +504,7 @@
 		},
 		{
 			"Id": "ArtMeshFrontHair7_SeeThrough",
-			"Name": "front hair 6（前髪透け）"
-		},
-		{
-			"Id": "ArtMeshFrontHair8_SeeThrough",
-			"Name": "front hair 5（前髪透け）"
+			"Name": "front hair 2（前髪透け）"
 		}
 	]
 }

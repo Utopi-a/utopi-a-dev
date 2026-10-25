@@ -43,10 +43,8 @@ const order = [
   ["brow_L", "eyebrow-l"],
   ["ear_L", "ear-l"],
   ["earring_L", "earwear-l"],
-  // 横髪（画面左・手前）は 3 束。顔に近い R1 がいちばん手前（split_hair.py）
-  ["hair_side_R_R3", "front hair 2"],
-  ["hair_side_R_R2", "front hair 5"],
-  ["hair_side_R_R1", "front hair 6"],
+  // 横髪（画面左・手前）は分けない（split_hair.py）
+  ["hair_side_R_R1", "front hair 2"],
   // 編み込みは揺らさず頭と一緒に動かす（髪として扱うと前髪の揺れが付く）
   ["braid_L", "headwear 2"],
   ["ribbon_L", "headwear"],

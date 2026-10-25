@@ -34,17 +34,8 @@ SPLITS = {
         # 手前から奥の順
         "front_to_back": ["F3", "F4", "F2", "F1", "F5"],
     },
-    "hair_side_R": {
-        "boundaries": [
-            [(2000, 1170), (1740, 1250), (1460, 1510), (1190, 1900), (1010, 2310), (1000, 2650), (1070, 2920),
-             (1270, 3160), (1510, 3330), (1790, 3430)],
-            # 顔の近くの短い束（R1）は y 2500 あたりで終わるので、毛先の先で右へ折り返して閉じる
-            [(2000, 1280), (1870, 1430), (1750, 1660), (1660, 1930), (1560, 2200), (1450, 2410), (1360, 2500),
-             (1500, 2600), (1900, 2620), (2300, 2600)],
-        ],
-        "pieces": ["R3", "R2", "R1"],
-        "front_to_back": ["R1", "R2", "R3"],
-    },
+    # 画面左の横髪は分けない（顔の手前で頬にかかるので、束に分けると境目が頬の横に尖った段差として出た）
+    "hair_side_R": {"boundaries": [], "pieces": ["R1"], "front_to_back": ["R1"]},
     "hair_side_L": {
         "boundaries": [
             [(2390, 1260), (2520, 1400), (2660, 1610), (2810, 1930), (2960, 2350), (3000, 2670), (2930, 2920),
@@ -106,8 +97,15 @@ _skin = (_master[..., 0] - _master[..., 2] > 8) & (_master.min(axis=2) > 150)
 _white = _master.min(axis=2) > 232
 _by_color = cv2.morphologyEx((_near_face & (_skin | _white)).astype(np.uint8), cv2.MORPH_OPEN, disk(2 * S))
 # 色の判定は横髪だけに使う（前髪では細い毛先のすき間の肌まで拾い、毛先が櫛のように欠けた）
-FACE_SHOWN_BY_COLOR = FACE_SHOWN | cv2.erode(_by_color, disk(S)).astype(bool)
-IN_FRONT_OF_FACE = {"hair_front": FACE_SHOWN, "hair_side_R": FACE_SHOWN_BY_COLOR}
+_by_color = cv2.erode(_by_color, disk(S)).astype(bool)
+# 顔とつながっている所だけ使う（髪のすき間から見える耳の肌は顔ではなく、切り抜くと髪に穴があく）
+_count, _labels = cv2.connectedComponents((_by_color | FACE_SHOWN).astype(np.uint8))
+_face_labels = np.unique(_labels[FACE_SHOWN])
+# 顔の縁から 12px（元絵）以内に限る（耳の肌は頬の肌とつながっていても、顔から離れた所は切らない）
+_near_edge = cv2.dilate(FACE_SHOWN.astype(np.uint8), disk(12 * S)).astype(bool)
+FACE_SHOWN_BY_COLOR = FACE_SHOWN | (_by_color & np.isin(_labels, _face_labels[_face_labels > 0]) & _near_edge)
+# 前髪は切らない（切ると前髪がまばらになって額がのぞき、毛束の端がまっすぐ切れて見えた）
+IN_FRONT_OF_FACE = {"hair_side_R": FACE_SHOWN_BY_COLOR}
 
 
 def restore_outline(rgba: np.ndarray, original_alpha: np.ndarray):
@@ -130,14 +128,6 @@ def restore_outline(rgba: np.ndarray, original_alpha: np.ndarray):
 def split(name: str, spec: dict):
     rgba = np.array(Image.open(LAYERS / f"{name}.png").convert("RGBA"))
     original_alpha = rgba[..., 3].copy()
-    if name == "hair_front":
-        # 前髪の外形は元絵の髪の範囲（目にかかる半透明の前髪を含む）に収める。GPT が元絵にない毛束を瞳の上などに
-        # 描き足していた
-        hair_shape = cv2.dilate((MASKS["hair_all"] | MASKS["translucent_bangs"]).astype(np.uint8), disk(3 * S))
-        rgba[..., 3] = (rgba[..., 3] * cv2.GaussianBlur(hair_shape.astype(np.float32), (0, 0), S)).astype(np.uint8)
-        # 目にかかる半透明の前髪は 7 割の濃さにする（目尻の上で紫灰色の帯に見えていた）
-        over_eyes = cv2.GaussianBlur(MASKS["translucent_bangs"].astype(np.float32), (0, 0), 2 * S)
-        rgba[..., 3] = (rgba[..., 3] * (1 - 0.3 * over_eyes)).astype(np.uint8)
     if name in IN_FRONT_OF_FACE:
         keep = 1 - cv2.GaussianBlur(IN_FRONT_OF_FACE[name].astype(np.float32), (0, 0), S / 2)
         rgba[..., 3] = (rgba[..., 3] * keep).astype(np.uint8)
@@ -145,6 +135,14 @@ def split(name: str, spec: dict):
         ahoge = np.array(Image.open(LAYERS / "ahoge.png"))[..., 3] > 20
         rgba[..., 3] = np.where(cv2.dilate(ahoge.astype(np.uint8), disk(4 * S)).astype(bool), 0, rgba[..., 3])
     if name in IN_FRONT_OF_FACE:
+        # 髪の中に囲まれた穴になった所は元に戻す（SAM の顔のマスクには、髪のすき間から見える耳まで入っている）
+        kept = (rgba[..., 3] > 128).astype(np.uint8)
+        closed = cv2.morphologyEx(kept, cv2.MORPH_CLOSE, disk(8 * S))
+        flood = np.pad(closed, 1)
+        cv2.floodFill(flood, None, (0, 0), 2)
+        holes = (flood[1:-1, 1:-1] != 2) & ~kept.astype(bool)
+        holes = cv2.dilate(holes.astype(np.uint8), disk(S)).astype(bool)
+        rgba[..., 3] = np.where(holes, original_alpha, rgba[..., 3])
         restore_outline(rgba, original_alpha)
     shape = rgba.shape[:2]
     lefts = [left_of(curve, shape) for curve in spec["boundaries"]]

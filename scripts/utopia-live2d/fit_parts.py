@@ -24,6 +24,7 @@ WORK = REPO / "tmp/utopia-puppet-work"
 LAYERS = WORK / "layers4x"
 S = 4
 masks = np.load(WORK / "seg/masks4x.npz")
+master_rgb = np.array(Image.open(WORK / "master/master_b_4x.png").convert("RGB")).astype(np.float32)
 
 
 def disk(px: int) -> np.ndarray:
@@ -122,6 +123,15 @@ mouth_area[730 * S:800 * S, 455 * S:575 * S] = True
 reddish = mouth_area & ((hsv[..., 0] <= 20) | (hsv[..., 0] >= 235)) & (hsv[..., 1] > 50)
 reddish = cv2.dilate(reddish.astype(np.uint8), disk(3)).astype(bool)
 face[..., :3] = cv2.inpaint(face[..., :3].clip(0, 255).astype(np.uint8), reddish.astype(np.uint8) * 255, 6, cv2.INPAINT_TELEA)
+# GPT の顔は頬の横（耳の手前）で元絵より細く、そこから後ろ髪が見えて頬が髪で隠れたように見えていた。
+# 元絵で顔が見えている所は、元絵の画素で顔を補う
+# 顔のレイヤーのすぐ近く（6px（元絵）以内）だけを補う。離れた所（髪のすき間から見える右耳など）を足すと、
+# 顔から浮いた切れ端になる
+near_face_layer = cv2.dilate((face[..., 3] > 200).astype(np.uint8), disk(6 * S)).astype(bool)
+face_shown = masks["face_visible"] & (face[..., 3] < 200) & near_face_layer
+weight = soft(face_shown, S / 2)
+face[..., :3] = np.where((weight > 0)[..., None], face[..., :3] * (1 - weight[..., None]) + master_rgb * weight[..., None], face[..., :3])
+face[..., 3] = np.maximum(face[..., 3], weight * 255)
 save("face", face)
 
 torso = load("torso")
@@ -174,9 +184,11 @@ torso[..., 3] = np.maximum(torso[..., 3] * (1 - soft(torso_visible, S)), soft(to
 # タイの下も同じく、周りのシャツの色で埋める（タイが揺れて見えても線や枠が出ないように）
 under = ((cv2.dilate(arms.astype(np.uint8), disk(3 * S)).astype(bool) & (torso[..., 3] > 0)) | (under_tie & figure & ~face_and_neck)) & ~torso_visible
 torso[..., 3] = np.where(under_tie & figure & ~face_and_neck, 255, torso[..., 3])
-known = ((torso[..., 3] > 200) & torso_visible).astype(np.float32)
-cloth = np.median(master[torso_visible], axis=0) * np.ones_like(torso[..., :3])
-for sigma in (60 * S, 12 * S):
+# 白い布の明るい所だけを使う（袖の黒い帯やベルトの色まで混ざると、体を回したとき灰色の帯に見える）
+luma_torso = torso[..., :3] @ np.array([0.299, 0.587, 0.114], np.float32)
+known = ((torso[..., 3] > 200) & torso_visible & (luma_torso > 215)).astype(np.float32)
+cloth = np.median(master[torso_visible & (master.min(axis=2) > 215)], axis=0) * np.ones_like(torso[..., :3])
+for sigma in (60 * S, 20 * S):
     blur = soft(known, sigma)
     blurred = soft(known[..., None] * torso[..., :3], sigma) / np.maximum(blur, 1e-6)[..., None]
     cloth = np.where((blur > 0.05)[..., None], blurred, cloth)
@@ -202,6 +214,29 @@ torso[..., 3] *= np.maximum(soft(cv2.dilate(torso_visible.astype(np.uint8), disk
 # タイの下と、見えている胴との継ぎ目は不透明にそろえる（透明度のわずかなへこみが細い枠の線に見える）
 solid = cv2.dilate(tie_fill.astype(np.uint8), disk(4 * S)).astype(bool) & cv2.erode(figure.astype(np.uint8), disk(2 * S)).astype(bool) & ~face_and_neck
 torso[..., 3] = np.where(solid, 255, torso[..., 3])
+# 首の上端: GPT の胴は首の上端（あごの下に隠れる所）にあごの線の跡が残っていて、顔が動くとあご下に波打つ帯が
+# 見えていた。GPT に顔を取り除いて首を上へ伸ばさせた絵（gpt_parts.py の neck_under_chin）で、あごの下に隠れる所と
+# あご下 20px（元絵）を埋める。元絵で見えているあご下の影はそれより下に残る
+face_alpha = load("face")[..., 3] > 128
+neck_art = load("neck_under_chin")
+neck_skin = (neck_art[..., 3] > 250) & (neck_art[..., 0] - neck_art[..., 2] > 20) & (neck_art[..., :3].min(axis=2) > 140)
+under_face = cv2.dilate(face_alpha.astype(np.uint8), disk(20 * S)).astype(bool)
+neck_fill = neck_skin & under_face
+weight = soft(neck_fill, 4 * S)[..., None] * neck_skin[..., None]
+torso[..., :3] = torso[..., :3] * (1 - weight) + neck_art[..., :3] * weight
+torso[..., 3] = np.maximum(torso[..., 3], neck_fill * 255.0)
+# 肩の線を袖の下まで延ばす。体を回すと袖が胴に対して少しずれ、肩の角で線が途切れて白い切れ目が見えていた。
+# 元絵の肩の角まわり（袖の上端から 40px（元絵）、胴の 8px 以内）の輪郭線を、胴にも描いておく
+outline_line = (master.astype(np.int16) @ np.array([0.299, 0.587, 0.114]) < 170) & (master[..., 2].astype(np.int16) > master[..., 1].astype(np.int16) + 20)
+for side in ("L", "R"):
+    arm_mask = masks[f"arm_{side}"]
+    arm_top = np.nonzero(arm_mask.any(axis=1))[0].min()
+    edge = cv2.morphologyEx(arm_mask.astype(np.uint8), cv2.MORPH_GRADIENT, disk(1)).astype(bool)
+    near_torso = cv2.dilate((torso[..., 3] > 200).astype(np.uint8), disk(8 * S)).astype(bool)
+    band = cv2.dilate(edge.astype(np.uint8), disk(6 * S)).astype(bool) & (rows < arm_top + 40 * S) & near_torso
+    line = cv2.dilate((band & outline_line).astype(np.uint8), disk(S)).astype(bool)
+    torso[..., :3] = np.where(line[..., None], master, torso[..., :3])
+    torso[..., 3] = np.where(line, 255, torso[..., 3])
 save("torso", torso)
 
 for part in ("hair_front", "hair_side_L", "hair_side_R", "hair_back"):

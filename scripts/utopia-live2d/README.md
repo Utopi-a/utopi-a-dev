@@ -25,6 +25,7 @@
 9. `fit_parts.py`: 動かしたときに破綻しないよう整える（白目と瞳を下まつ毛までの目の輪郭に収める、下まつ毛を元絵から切り出す、目尻で上下のまつ毛がつながる部分を下まつ毛側に移す、顔に描かれた口を消す、見えている胴と袖を元絵の画素にして肩の線をつなぐ、タイの下を輪郭線ごと除き、GPT がタイを取り除いて描いた白いシャツ（`under_tie`）で埋める、髪の内側を不透明にする）
 10. `draw_mouth_line.py`: 閉じ口の線を左右対称のなめらかな線で描き直す
 11. `add_base_blush.py`: 薄い頬の赤みを顔に焼き込む（頬染めの表情は別パーツ）
+11.5. `split_hair.py`: 前髪を 5 束、画面右の横髪を 2 束に分ける（VTuber のモデルで一般的な、毛束ごとに揺らす分け方）。画面左の横髪は頬にかかるので分けない。奥の束は手前の束の下を塗り足し、画面左の横髪は元絵で顔が見えている所から除く
 12. `make-psd.mjs`: パーツを [PSD2Live](https://github.com/tsunehimatoi/psd2live) が部位を読み取れるレイヤー名で PSD にまとめる。下まつ毛は顔に結合せず目のレイヤーにする（頭の向きで目と顔の動きがずれて離れるため）。アホ毛は前髪の後ろに描き、付け根を分け目の毛の下に潜らせる
 13. `build_live2d.py`: PSD2Live（MCP）で自動リギングし、揺れもの・頬染め・設定資料の表情 6 種を足して書き出す。閉じた目は、上まつ毛の根元の線を下まつ毛の根元の線に重ねる形へ書き直す（下まつ毛はわずかに上げ、上まつ毛の帯の裏に潜らせる）。笑い目（ParamEyeLSmile / ParamEyeRSmile）、見開き（ParamEyeLWide / ParamEyeRWide）、閉じた口の口角（ParamMouthForm）の変形と、驚きの口の差し替え（ParamMouthO）もここで足す
 14. `install_web_model.py`: 書き出したモデルを `public/utopia-live2d/` に配置する（テクスチャは WebP）
@@ -87,7 +88,7 @@ for step in build_layers compose_layers place_sprites unmix_translucent_bangs; d
 done
 (cd scripts/utopia-live2d && ../../$W/tools/venv/bin/python gpt_parts.py apply \
   $(python3 -c "import json; print(' '.join(json.load(open('source/gpt_parts.json'))))"))
-for step in extract_accessories clip_to_silhouette fit_parts draw_mouth_line add_base_blush; do
+for step in extract_accessories clip_to_silhouette fit_parts draw_mouth_line add_base_blush split_hair; do
   $W/tools/venv/bin/python scripts/utopia-live2d/$step.py
 done
 node scripts/utopia-live2d/make-psd.mjs $PWD/tmp/live2d-work/rig/utopia.psd

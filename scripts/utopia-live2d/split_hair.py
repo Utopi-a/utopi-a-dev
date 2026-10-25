@@ -105,7 +105,16 @@ _face_labels = np.unique(_labels[FACE_SHOWN])
 _near_edge = cv2.dilate(FACE_SHOWN.astype(np.uint8), disk(12 * S)).astype(bool)
 FACE_SHOWN_BY_COLOR = FACE_SHOWN | (_by_color & np.isin(_labels, _face_labels[_face_labels > 0]) & _near_edge)
 # 前髪は切らない（切ると前髪がまばらになって額がのぞき、毛束の端がまっすぐ切れて見えた）
-IN_FRONT_OF_FACE = {"hair_side_R": FACE_SHOWN_BY_COLOR}
+# 目の高さより上（目尻・こめかみ）は切らない。切ると、横を向いて目が髪の位置へ動いたとき、
+# 髪がなくなっているので奥側の目尻が髪の上に見えてしまう。切るのは目より下の頬だけ
+_eye_bottom = np.nonzero((MASKS["eye_R_region"] | MASKS["eye_L_region"]).any(axis=1))[0].max()
+_rows = np.arange(FACE_SHOWN.shape[0])[:, None]
+IN_FRONT_OF_FACE = {"hair_side_R": FACE_SHOWN_BY_COLOR & (_rows > _eye_bottom + 10 * S)}
+# 目の高さで顔にかかる所は、元絵と同じく半透明（5 割）にして目尻が髪越しに見えるようにする
+_around_eye = cv2.dilate(MASKS["eye_R_region"].astype(np.uint8), disk(8 * S)).astype(bool)
+# 前髪も、目の上にかかる所は元絵と同じく半透明にする（不透明だと目尻がまるごと隠れる）
+_eye_r = cv2.dilate(MASKS["eye_R_region"].astype(np.uint8), disk(2 * S)).astype(bool)
+SEE_THROUGH = {"hair_side_R": (FACE_SHOWN_BY_COLOR & (_rows <= _eye_bottom + 10 * S)) | _around_eye, "hair_front": _eye_r}
 
 
 def restore_outline(rgba: np.ndarray, original_alpha: np.ndarray):
@@ -128,6 +137,9 @@ def restore_outline(rgba: np.ndarray, original_alpha: np.ndarray):
 def split(name: str, spec: dict):
     rgba = np.array(Image.open(LAYERS / f"{name}.png").convert("RGBA"))
     original_alpha = rgba[..., 3].copy()
+    if name in SEE_THROUGH:
+        see = cv2.GaussianBlur(SEE_THROUGH[name].astype(np.float32), (0, 0), 2 * S)
+        rgba[..., 3] = (rgba[..., 3] * (1 - 0.5 * see)).astype(np.uint8)
     if name in IN_FRONT_OF_FACE:
         keep = 1 - cv2.GaussianBlur(IN_FRONT_OF_FACE[name].astype(np.float32), (0, 0), S / 2)
         rgba[..., 3] = (rgba[..., 3] * keep).astype(np.uint8)

@@ -7,29 +7,54 @@
 			"Name": "tie"
 		},
 		{
-			"Id": "ParamSwingsidehairl2",
+			"Id": "ParamSwingsidehairl2_2",
 			"GroupId": "",
-			"Name": "side_hair_l2"
+			"Name": "side_hair_l2 2"
 		},
 		{
-			"Id": "ParamSwingsidehairl1",
+			"Id": "ParamSwingsidehairl2_1",
 			"GroupId": "",
-			"Name": "side_hair_l1"
+			"Name": "side_hair_l2 1"
 		},
 		{
-			"Id": "ParamSwingsidehairr3",
+			"Id": "ParamSwingsidehairl1_2",
 			"GroupId": "",
-			"Name": "side_hair_r3"
+			"Name": "side_hair_l1 2"
 		},
 		{
-			"Id": "ParamSwingsidehairr2",
+			"Id": "ParamSwingsidehairl1_1",
 			"GroupId": "",
-			"Name": "side_hair_r2"
+			"Name": "side_hair_l1 1"
 		},
 		{
-			"Id": "ParamSwingsidehairr1",
+			"Id": "ParamSwingsidehairr3_2",
 			"GroupId": "",
-			"Name": "side_hair_r1"
+			"Name": "side_hair_r3 2"
+		},
+		{
+			"Id": "ParamSwingsidehairr3_1",
+			"GroupId": "",
+			"Name": "side_hair_r3 1"
+		},
+		{
+			"Id": "ParamSwingsidehairr2_2",
+			"GroupId": "",
+			"Name": "side_hair_r2 2"
+		},
+		{
+			"Id": "ParamSwingsidehairr2_1",
+			"GroupId": "",
+			"Name": "side_hair_r2 1"
+		},
+		{
+			"Id": "ParamSwingsidehairr1_2",
+			"GroupId": "",
+			"Name": "side_hair_r1 2"
+		},
+		{
+			"Id": "ParamSwingsidehairr1_1",
+			"GroupId": "",
+			"Name": "side_hair_r1 1"
 		},
 		{
 			"Id": "ParamSwingbangsf5",
@@ -37,24 +62,44 @@
 			"Name": "bangs_f5"
 		},
 		{
-			"Id": "ParamSwingbangsf4",
+			"Id": "ParamSwingbangsf4_2",
 			"GroupId": "",
-			"Name": "bangs_f4"
+			"Name": "bangs_f4 2"
 		},
 		{
-			"Id": "ParamSwingbangsf3",
+			"Id": "ParamSwingbangsf4_1",
 			"GroupId": "",
-			"Name": "bangs_f3"
+			"Name": "bangs_f4 1"
 		},
 		{
-			"Id": "ParamSwingbangsf2",
+			"Id": "ParamSwingbangsf3_2",
 			"GroupId": "",
-			"Name": "bangs_f2"
+			"Name": "bangs_f3 2"
 		},
 		{
-			"Id": "ParamSwingbangsf1",
+			"Id": "ParamSwingbangsf3_1",
 			"GroupId": "",
-			"Name": "bangs_f1"
+			"Name": "bangs_f3 1"
+		},
+		{
+			"Id": "ParamSwingbangsf2_2",
+			"GroupId": "",
+			"Name": "bangs_f2 2"
+		},
+		{
+			"Id": "ParamSwingbangsf2_1",
+			"GroupId": "",
+			"Name": "bangs_f2 1"
+		},
+		{
+			"Id": "ParamSwingbangsf1_2",
+			"GroupId": "",
+			"Name": "bangs_f1 2"
+		},
+		{
+			"Id": "ParamSwingbangsf1_1",
+			"GroupId": "",
+			"Name": "bangs_f1 1"
 		},
 		{
 			"Id": "ParamSwingearring",

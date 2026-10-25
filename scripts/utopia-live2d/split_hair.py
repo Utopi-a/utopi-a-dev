@@ -110,14 +110,42 @@ FACE_SHOWN_BY_COLOR = FACE_SHOWN | cv2.erode(_by_color, disk(S)).astype(bool)
 IN_FRONT_OF_FACE = {"hair_front": FACE_SHOWN, "hair_side_R": FACE_SHOWN_BY_COLOR}
 
 
+def restore_outline(rgba: np.ndarray, original_alpha: np.ndarray):
+    """顔の見えている所などで切り落とした縁に、髪の輪郭線を描き直す（切ると GPT が描いた輪郭線ごと消える）"""
+    # 目のまわり（半透明の前髪で切った所）には描かない
+    eyes = cv2.dilate((MASKS["eye_R_region"] | MASKS["eye_L_region"]).astype(np.uint8), disk(10 * S)).astype(bool)
+    cut = (original_alpha > 128) & (rgba[..., 3] < 128) & ~eyes
+    if not cut.any():
+        return
+    # 元絵の線と同じくらいの細さ（元絵で 1px）
+    line = cv2.dilate(cut.astype(np.uint8), disk(S)).astype(bool) & (rgba[..., 3] > 0) & ~cut
+    # 元絵の髪の輪郭線の色（髪の中の、少し暗い青紫の線）
+    luma = _master @ np.array([299, 587, 114]) // 1000
+    outline_pixels = MASKS["hair_all"] & (luma > 100) & (luma < 150) & (_master[..., 2] > _master[..., 0] + 20)
+    color = np.median(_master[outline_pixels], axis=0)
+    weight = cv2.GaussianBlur(line.astype(np.float32), (0, 0), S / 3)[..., None]
+    rgba[..., :3] = (rgba[..., :3] * (1 - weight) + color * weight).astype(np.uint8)
+
+
 def split(name: str, spec: dict):
     rgba = np.array(Image.open(LAYERS / f"{name}.png").convert("RGBA"))
+    original_alpha = rgba[..., 3].copy()
+    if name == "hair_front":
+        # 前髪の外形は元絵の髪の範囲（目にかかる半透明の前髪を含む）に収める。GPT が元絵にない毛束を瞳の上などに
+        # 描き足していた
+        hair_shape = cv2.dilate((MASKS["hair_all"] | MASKS["translucent_bangs"]).astype(np.uint8), disk(3 * S))
+        rgba[..., 3] = (rgba[..., 3] * cv2.GaussianBlur(hair_shape.astype(np.float32), (0, 0), S)).astype(np.uint8)
+        # 目にかかる半透明の前髪は 7 割の濃さにする（目尻の上で紫灰色の帯に見えていた）
+        over_eyes = cv2.GaussianBlur(MASKS["translucent_bangs"].astype(np.float32), (0, 0), 2 * S)
+        rgba[..., 3] = (rgba[..., 3] * (1 - 0.3 * over_eyes)).astype(np.uint8)
     if name in IN_FRONT_OF_FACE:
         keep = 1 - cv2.GaussianBlur(IN_FRONT_OF_FACE[name].astype(np.float32), (0, 0), S / 2)
         rgba[..., 3] = (rgba[..., 3] * keep).astype(np.uint8)
     if name == "hair_side_R":
         ahoge = np.array(Image.open(LAYERS / "ahoge.png"))[..., 3] > 20
         rgba[..., 3] = np.where(cv2.dilate(ahoge.astype(np.uint8), disk(4 * S)).astype(bool), 0, rgba[..., 3])
+    if name in IN_FRONT_OF_FACE:
+        restore_outline(rgba, original_alpha)
     shape = rgba.shape[:2]
     lefts = [left_of(curve, shape) for curve in spec["boundaries"]]
     regions = {}

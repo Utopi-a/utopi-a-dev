@@ -24,18 +24,19 @@ SWINGS = [
     {"id": "ahoge", "layer": "front hair 4", "preset": "hair", "kind": "vertical", "magnitude": 0.2, "fulcrum": "right"},
     {"id": "ribbon", "layer": "headwear", "preset": "accessory", "kind": "lateral", "magnitude": 0.3},
     {"id": "earring", "layer": "earwear-l", "preset": "accessory", "kind": "lateral", "magnitude": 0.45},
-    # 前髪・横髪は毛束ごとに付け根（上端）を固定して揺らす（split_hair.py で分けた束）。細い束・短い束は小さく、
+    # 前髪・横髪は毛束ごとに付け根（上端）を固定して揺らす。揺れは 2 段（付け根側と毛先側）に分け、
+    # 束が一枚板のように回らず途中でしなるようにする（split_hair.py で分けた束）。細い束・短い束は小さく、
     # 外側の長い束は大きく。右へ払う前髪の短い束（F5）は左の付け根を固定して先を上下に揺らす
-    {"id": "bangs_f1", "layer": "front hair 8", "preset": "hair", "kind": "lateral", "magnitude": 0.14},
-    {"id": "bangs_f2", "layer": "front hair 9", "preset": "hair", "kind": "lateral", "magnitude": 0.14},
-    {"id": "bangs_f3", "layer": "front hair", "preset": "hair", "kind": "lateral", "magnitude": 0.08},
-    {"id": "bangs_f4", "layer": "front hair 10", "preset": "hair", "kind": "lateral", "magnitude": 0.14},
+    {"id": "bangs_f1", "layer": "front hair 8", "preset": "hair", "kind": "lateral", "magnitude": 0.14, "segments": 2},
+    {"id": "bangs_f2", "layer": "front hair 9", "preset": "hair", "kind": "lateral", "magnitude": 0.14, "segments": 2},
+    {"id": "bangs_f3", "layer": "front hair", "preset": "hair", "kind": "lateral", "magnitude": 0.08, "segments": 2},
+    {"id": "bangs_f4", "layer": "front hair 10", "preset": "hair", "kind": "lateral", "magnitude": 0.14, "segments": 2},
     {"id": "bangs_f5", "layer": "front hair 7", "preset": "hair", "kind": "vertical", "magnitude": 0.1, "fulcrum": "left"},
-    {"id": "side_hair_r1", "layer": "front hair 6", "preset": "hair", "kind": "lateral", "magnitude": 0.04, "softness": 0.6},
-    {"id": "side_hair_r2", "layer": "front hair 5", "preset": "hair", "kind": "lateral", "magnitude": 0.12},
-    {"id": "side_hair_r3", "layer": "front hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.22},
-    {"id": "side_hair_l1", "layer": "back hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.1},
-    {"id": "side_hair_l2", "layer": "back hair 3", "preset": "hair", "kind": "lateral", "magnitude": 0.16},
+    {"id": "side_hair_r1", "layer": "front hair 6", "preset": "hair", "kind": "lateral", "magnitude": 0.04, "softness": 0.6, "segments": 2},
+    {"id": "side_hair_r2", "layer": "front hair 5", "preset": "hair", "kind": "lateral", "magnitude": 0.12, "segments": 2},
+    {"id": "side_hair_r3", "layer": "front hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.22, "segments": 2},
+    {"id": "side_hair_l1", "layer": "back hair 2", "preset": "hair", "kind": "lateral", "magnitude": 0.1, "segments": 2},
+    {"id": "side_hair_l2", "layer": "back hair 3", "preset": "hair", "kind": "lateral", "magnitude": 0.16, "segments": 2},
     # 胸のタイは結び目（レイヤーの上端）から全体がしなるように揺らす。服の自動設定（clothing）は根元を硬くして
     # 先だけが揺れ、付け根から動いて見えなかった
     {"id": "tie", "layer": "neckwear", "preset": "accessory", "kind": "lateral", "magnitude": 0.12, "softness": 0.1},
@@ -361,7 +362,7 @@ def main(psd: str, output: str):
 
         meshes = meshes_by_layer(client)
         for swing in SWINGS:
-            options = {key: swing[key] for key in ("softness", "fulcrum") if key in swing}
+            options = {key: swing[key] for key in ("softness", "fulcrum", "segments") if key in swing}
             edit(client, "swing_put", id=swing["id"], name=swing["id"], targets=[meshes[swing["layer"]]],
                  kind=swing["kind"], preset=swing["preset"], magnitude=swing["magnitude"], **options)
             print("swing", swing["id"])

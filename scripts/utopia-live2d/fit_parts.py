@@ -152,9 +152,34 @@ for side in ("L", "R"):
     rgba[..., 3] *= soft(visible_arm, S)
     # 見えている袖は元絵の画素と不透明度にする（GPT の袖は形と陰影が元絵と少しずれ、肩の線ともつながらない）。
     # 一部だけ元絵にすると境目が水平の線になって見えるので、見えている所は全体を差し替える
-    sleeve = cv2.dilate(arm_mask.astype(np.uint8), disk(2 * S)).astype(bool) & figure
+    # 袖と胴の境目の縫い目の線は袖に持たせる（胴に残すと、腕が動いたとき袖の縁と二重になる）。
+    # 胸のベルト（線より暗い）は袖に入れない（袖の内側に切れ端として残っていた）
+    luma = master.astype(np.float32) @ np.array([0.299, 0.587, 0.114], np.float32)
+    # 輪郭線は鮮やかな紫（青が緑より大きく上回る）。ベルトは彩度の低い暗い色
+    violet = (master[..., 2].astype(np.int16) - master[..., 1].astype(np.int16)) > 50
+    belt_color = (luma < 100) & ~violet
+    # 袖に持たせるのは内側の縫い目だけ。肩先より上の肩の線は胴の線なので取り込まない（取り込むと腕が動いたとき
+    # 胴の肩の線とずれて二重になる）
+    arm_top_row = np.nonzero(arm_mask.any(axis=1))[0].min()
+    seam = cv2.dilate(arm_mask.astype(np.uint8), disk(3 * S)).astype(bool) & (luma < 190) & violet & (rows > arm_top_row + 25 * S)
+    sleeve = (arm_mask | seam) & figure
+    # 暗い所のうち、袖口の帯（大きくつながっている）は残し、袖の縁にかかる小さな切れ端（ベルト）だけ除く
+    dark = (sleeve & belt_color).astype(np.uint8)
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(dark, connectivity=8)
+    small = np.zeros(count, bool)
+    small[1:] = stats[1:, cv2.CC_STAT_AREA] < 20000
+    # 袖の縁（腕のマスクの内側 6px（元絵）以内）にかかるものだけ
+    rim = arm_mask & ~cv2.erode(arm_mask.astype(np.uint8), disk(6 * S)).astype(bool) | seam
+    on_rim = np.zeros(count, bool)
+    on_rim[np.unique(labels[rim & (labels > 0)])] = True
+    sleeve &= ~cv2.dilate((small & on_rim)[labels].astype(np.uint8), disk(2 * S)).astype(bool)
     weight = soft(cv2.dilate(sleeve.astype(np.uint8), disk(2 * S)).astype(bool), S / 2)
     rgba[..., :3] = rgba[..., :3] * (1 - weight[..., None]) + master * weight[..., None]
+    # 袖の中の小さな穴（輪郭線の内側で透明になった所）は埋める
+    sleeve = cv2.morphologyEx(sleeve.astype(np.uint8), cv2.MORPH_CLOSE, disk(4 * S)).astype(bool) & cv2.dilate(sleeve.astype(np.uint8), disk(S)).astype(bool) | sleeve
+    holes = np.pad(sleeve.astype(np.uint8), 1)
+    cv2.floodFill(holes, None, (0, 0), 2)
+    sleeve |= holes[1:-1, 1:-1] == 0
     rgba[..., 3] = np.maximum(rgba[..., 3] * (1 - soft(sleeve, S)), soft(sleeve, S / 2) * 255)
     # 肩の上端では、元絵の袖の外にはみ出す GPT の袖山を消す（胴の肩の線と二重の弧に見える）
     arm_top = np.nonzero(arm_mask.any(axis=1))[0].min()
@@ -180,9 +205,59 @@ torso_visible = labels == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
 weight = soft(cv2.dilate(torso_visible.astype(np.uint8), disk(2 * S)).astype(bool), S / 2)
 torso[..., :3] = torso[..., :3] * (1 - weight[..., None]) + master * weight[..., None]
 torso[..., 3] = np.maximum(torso[..., 3] * (1 - soft(torso_visible, S)), soft(torso_visible, S / 2) * 255)
-# 袖の下に隠れる胴は、袖ぐりの輪郭線を消して布の色で埋める（体を回して袖がずれても線が出ないように）
-# タイの下も同じく、周りのシャツの色で埋める（タイが揺れて見えても線や枠が出ないように）
-under = ((cv2.dilate(arms.astype(np.uint8), disk(3 * S)).astype(bool) & (torso[..., 3] > 0)) | (under_tie & figure & ~face_and_neck)) & ~torso_visible
+# 袖の下に隠れる胴（脇・脇の下）は、GPT が袖を取り除いて描き足した胴（gpt_parts.py の torso_under_sleeves）で埋める。
+# 体を回して袖がずれたとき、肩から脇まで布が続いて見えるように。縫い目の線は袖に持たせたので胴には描かない
+sleeve_art = load("torso_under_sleeves")
+art_rgb = sleeve_art[..., :3]
+art_body = np.abs(art_rgb - np.array([254, 253, 254], np.float32)).max(axis=2) > 6
+art_body = cv2.morphologyEx(art_body.astype(np.uint8), cv2.MORPH_CLOSE, disk(4 * S))
+art_flood = np.pad(art_body.copy(), 1)
+cv2.floodFill(art_flood, None, (0, 0), 2)
+art_body = (art_flood[1:-1, 1:-1] != 2) & (rows > 3300)
+seams = np.zeros(master.shape[:2], bool)
+for side in ("L", "R"):
+    luma = master.astype(np.float32) @ np.array([0.299, 0.587, 0.114], np.float32)
+    seams |= cv2.dilate(masks[f"arm_{side}"].astype(np.uint8), disk(3 * S)).astype(bool) & (luma < 190) & ((master[..., 2].astype(np.int16) - master[..., 1].astype(np.int16)) > 50)
+under_sleeves = art_body & (arms | seams | ~figure | ~torso_visible) & ~(under_tie & figure) & ~face_and_neck & (rows > 3300)
+under_sleeves &= cv2.dilate((arms | seams).astype(np.uint8), disk(40 * S)).astype(bool)
+# GPT の胴には、袖の下に胴の側面の輪郭線（紫の線）が描かれていて、袖の縫い目のすぐ内側を平行に走る。
+# 腕が動くとこの線が縫い目の横に出て二重に見えるので、袖の下に隠れる所の線は布の色で埋める
+art_luma = art_rgb @ np.array([0.299, 0.587, 0.114], np.float32)
+art_line = under_sleeves & (art_luma < 215) & ((art_rgb[..., 2] - art_rgb[..., 1]) > 12)
+art_line = cv2.dilate(art_line.astype(np.uint8), disk(2 * S))
+small = cv2.resize(art_rgb.clip(0, 255).astype(np.uint8), (master.shape[1] // 4, master.shape[0] // 4), interpolation=cv2.INTER_AREA)
+small_mask = cv2.dilate(cv2.resize(art_line, (small.shape[1], small.shape[0]), interpolation=cv2.INTER_NEAREST), disk(1))
+patched = cv2.inpaint(small, small_mask * 255, 6, cv2.INPAINT_TELEA)
+patched = cv2.resize(patched, (master.shape[1], master.shape[0]), interpolation=cv2.INTER_CUBIC).astype(np.float32)
+art_rgb = np.where(art_line.astype(bool)[..., None], patched, art_rgb)
+# 肩先（袖の上端）の下にも胴の布を敷く。GPT の胴は肩が元絵より低く、ここが欠けて胴の肩先がギザギザに切れていた
+for side in ("L", "R"):
+    arm_mask = masks[f"arm_{side}"]
+    top_row = np.nonzero(arm_mask.any(axis=1))[0].min()
+    # 細い出っ張りがあると PSD2Live のメッシュに細い三角形ができて弾かれるので、なめらかな塊にする
+    # 袖の縁より 15px（元絵）内側に収める（体を回すと袖の外へはみ出して、薄い輪郭が二重に見えた）
+    shoulder_cap = cv2.erode(arm_mask.astype(np.uint8), disk(15 * S)).astype(bool) & figure & (rows < top_row + 80 * S)
+    shoulder_cap = cv2.morphologyEx(shoulder_cap.astype(np.uint8), cv2.MORPH_OPEN, disk(12 * S)).astype(bool)
+    shoulder_cap = cv2.morphologyEx(shoulder_cap.astype(np.uint8), cv2.MORPH_CLOSE, disk(12 * S)).astype(bool)
+    under_sleeves |= shoulder_cap
+    art_rgb = np.where((shoulder_cap & ~art_body)[..., None], np.median(master[torso_visible & (master.min(axis=2) > 215)], axis=0), art_rgb)
+weight = soft(under_sleeves, S)[..., None]
+torso[..., :3] = torso[..., :3] * (1 - weight) + art_rgb * weight
+# 肩先のくぼみの線は袖が持っているので、胴の肩の線の端（袖の縁から 6px（元絵）以内）は消す。
+# 残すと、体を回したとき袖のくぼみの横に小さな鉤の形が二重に見えた
+cloth_color = np.median(master[torso_visible & (master.min(axis=2) > 215)], axis=0)
+for side in ("L", "R"):
+    arm_mask = masks[f"arm_{side}"]
+    top_row = np.nonzero(arm_mask.any(axis=1))[0].min()
+    tip = cv2.dilate(arm_mask.astype(np.uint8), disk(6 * S)).astype(bool) & (rows < top_row + 40 * S)
+    tip_line = tip & (torso[..., :3] @ np.array([0.299, 0.587, 0.114], np.float32) < 200)
+    torso[..., :3] = np.where(tip_line[..., None], cloth_color, torso[..., :3])
+torso[..., 3] = np.maximum(torso[..., 3], soft(under_sleeves, S / 2) * 255)
+# 見えている胴に残る縫い目の線も、GPT の胴の布で置き換える
+seam_on_torso = seams & torso_visible
+torso[..., :3] = np.where(seam_on_torso[..., None], art_rgb, torso[..., :3])
+# タイの下は、周りのシャツの色で埋める（タイが揺れて見えても線や枠が出ないように）
+under = (under_tie & figure & ~face_and_neck) & ~torso_visible
 torso[..., 3] = np.where(under_tie & figure & ~face_and_neck, 255, torso[..., 3])
 # 白い布の明るい所だけを使う（袖の黒い帯やベルトの色まで混ざると、体を回したとき灰色の帯に見える）
 luma_torso = torso[..., :3] @ np.array([0.299, 0.587, 0.114], np.float32)
@@ -210,7 +285,7 @@ tie_fill |= leftover & figure & ~face_and_neck
 blend = soft(gpt_zone, S)[..., None] * (gpt_under[..., 3:] / 255)
 torso[..., :3] = torso[..., :3] * (1 - blend) + filled * blend
 # 胴は、見えている胴から 25px（元絵）以内に限る。袖の外側に胴の布や輪郭がはみ出さないように
-torso[..., 3] *= np.maximum(soft(cv2.dilate(torso_visible.astype(np.uint8), disk(25 * S)).astype(bool) | (under_tie & figure), 2 * S), torso_visible)
+torso[..., 3] *= np.maximum(soft(cv2.dilate(torso_visible.astype(np.uint8), disk(25 * S)).astype(bool) | (under_tie & figure) | under_sleeves, 2 * S), torso_visible)
 # タイの下と、見えている胴との継ぎ目は不透明にそろえる（透明度のわずかなへこみが細い枠の線に見える）
 solid = cv2.dilate(tie_fill.astype(np.uint8), disk(4 * S)).astype(bool) & cv2.erode(figure.astype(np.uint8), disk(2 * S)).astype(bool) & ~face_and_neck
 torso[..., 3] = np.where(solid, 255, torso[..., 3])
@@ -225,18 +300,6 @@ neck_fill = neck_skin & under_face
 weight = soft(neck_fill, 4 * S)[..., None] * neck_skin[..., None]
 torso[..., :3] = torso[..., :3] * (1 - weight) + neck_art[..., :3] * weight
 torso[..., 3] = np.maximum(torso[..., 3], neck_fill * 255.0)
-# 肩の線を袖の下まで延ばす。体を回すと袖が胴に対して少しずれ、肩の角で線が途切れて白い切れ目が見えていた。
-# 元絵の肩の角まわり（袖の上端から 40px（元絵）、胴の 8px 以内）の輪郭線を、胴にも描いておく
-outline_line = (master.astype(np.int16) @ np.array([0.299, 0.587, 0.114]) < 170) & (master[..., 2].astype(np.int16) > master[..., 1].astype(np.int16) + 20)
-for side in ("L", "R"):
-    arm_mask = masks[f"arm_{side}"]
-    arm_top = np.nonzero(arm_mask.any(axis=1))[0].min()
-    edge = cv2.morphologyEx(arm_mask.astype(np.uint8), cv2.MORPH_GRADIENT, disk(1)).astype(bool)
-    near_torso = cv2.dilate((torso[..., 3] > 200).astype(np.uint8), disk(8 * S)).astype(bool)
-    band = cv2.dilate(edge.astype(np.uint8), disk(6 * S)).astype(bool) & (rows < arm_top + 40 * S) & near_torso
-    line = cv2.dilate((band & outline_line).astype(np.uint8), disk(S)).astype(bool)
-    torso[..., :3] = np.where(line[..., None], master, torso[..., :3])
-    torso[..., 3] = np.where(line, 255, torso[..., 3])
 save("torso", torso)
 
 for part in ("hair_front", "hair_side_L", "hair_side_R", "hair_back"):

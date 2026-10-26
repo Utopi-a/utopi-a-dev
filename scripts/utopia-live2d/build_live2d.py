@@ -330,8 +330,10 @@ def main(psd: str, output: str):
     with Client(timeout=900) as client:
         edit(client, "project_import_psd", path=psd, discard_unsaved=True)
         # 開いた口の口角も、笑ったのが分かるよう少し強く上げる（mouthSmile の既定 10.5。上げすぎると上唇が波打つ）
+        # 体を回したとき、胴が平たい板を横にずらしたように見えないよう、胴の厚み（既定 70）を増やし、
+        # 見る距離（既定 3）を近づけて手前の肩を大きく、奥の肩を小さく見せる
         # 眉は前髪越しに見えるので、表情で上下したのが分かるよう動く量を大きくする（既定 12）
-        edit(client, "settings_update", changes={"atlasSize": 2048, "rigTuning": {"browLift": 30, "mouthSmile": 13}})
+        edit(client, "settings_update", changes={"atlasSize": 2048, "rigTuning": {"browLift": 30, "mouthSmile": 13, "torsoDepth": 90, "turnCameraDistance": 2.2}})
 
         # 照れの頬染めは ParamCheek で出し入れする
         edit(client, "parameter_create", parameter_id="ParamCheek", name="照れ", min=0, max=1, default=0)

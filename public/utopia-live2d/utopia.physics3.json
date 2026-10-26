@@ -1,10 +1,10 @@
 {
     "Version": 3,
     "Meta": {
-        "PhysicsSettingCount": 17,
-        "TotalInputCount": 61,
+        "PhysicsSettingCount": 18,
+        "TotalInputCount": 66,
         "TotalOutputCount": 26,
-        "VertexCount": 44,
+        "VertexCount": 45,
         "Fps": 60,
         "EffectiveForces": {
             "Gravity": {
@@ -79,6 +79,10 @@
             },
             {
                 "Id": "PhysicsSim_preset_back_hair",
+                "Name": "後ろ髪（プリセット）"
+            },
+            {
+                "Id": "PhysicsSim_preset_back_hair_2",
                 "Name": "後ろ髪（プリセット）"
             },
             {
@@ -226,12 +230,12 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 14.590561
+                        "Y": 14.590562
                     },
                     "Mobility": 0.92,
                     "Delay": 0.9,
                     "Acceleration": 1.3,
-                    "Radius": 14.590561
+                    "Radius": 14.590562
                 }
             ],
             "Normalization": {
@@ -314,12 +318,12 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 13.620021
+                        "Y": 13.620022
                     },
                     "Mobility": 0.96,
                     "Delay": 0.6,
                     "Acceleration": 1.8,
-                    "Radius": 13.620021
+                    "Radius": 13.620022
                 }
             ],
             "Normalization": {
@@ -402,12 +406,12 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 5.8374486
+                        "Y": 5.8374453
                     },
                     "Mobility": 0.96,
                     "Delay": 0.6,
                     "Acceleration": 1.8,
-                    "Radius": 5.8374486
+                    "Radius": 5.8374453
                 }
             ],
             "Normalization": {
@@ -917,12 +921,12 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 11.331704
+                        "Y": 11.3317
                     },
                     "Mobility": 0.92,
                     "Delay": 0.9,
                     "Acceleration": 1.3,
-                    "Radius": 11.331704
+                    "Radius": 11.3317
                 }
             ],
             "Normalization": {
@@ -1361,7 +1365,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleX"
                     },
-                    "Weight": 15.740426,
+                    "Weight": 12.940737,
                     "Type": "X",
                     "Reflect": false
                 },
@@ -1370,7 +1374,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleZ"
                     },
-                    "Weight": 34.161625,
+                    "Weight": 27.04316,
                     "Type": "X",
                     "Reflect": false
                 },
@@ -1379,7 +1383,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleX"
                     },
-                    "Weight": 5.8526955,
+                    "Weight": 5.2405977,
                     "Type": "X",
                     "Reflect": true
                 },
@@ -1388,7 +1392,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleZ"
                     },
-                    "Weight": 10.652961,
+                    "Weight": 8.271067,
                     "Type": "X",
                     "Reflect": false
                 }
@@ -1400,7 +1404,7 @@
                         "Id": "ParamSimpresetfronthair_1"
                     },
                     "VertexIndex": 1,
-                    "Scale": 48.208454,
+                    "Scale": 138.03928,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -1411,7 +1415,7 @@
                         "Id": "ParamSimpresetfronthair_2"
                     },
                     "VertexIndex": 2,
-                    "Scale": 53.21105,
+                    "Scale": 121.88695,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -1431,22 +1435,22 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 8.4306555
+                        "Y": 18.371214
                     },
-                    "Mobility": 0.94539744,
-                    "Delay": 0.95512396,
-                    "Acceleration": 1.0754138,
-                    "Radius": 8.4306555
+                    "Mobility": 0.94095,
+                    "Delay": 2.278946,
+                    "Acceleration": 0.45020038,
+                    "Radius": 18.371214
                 },
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 12.762886
+                        "Y": 28.462292
                     },
-                    "Mobility": 0.9175087,
-                    "Delay": 0.7817233,
-                    "Acceleration": 1.8174018,
-                    "Radius": 4.332231
+                    "Mobility": 0.9133877,
+                    "Delay": 0.66169924,
+                    "Acceleration": 5.6716766,
+                    "Radius": 10.091078
                 }
             ],
             "Normalization": {
@@ -1470,7 +1474,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleY"
                     },
-                    "Weight": 20.960659,
+                    "Weight": 12.89541,
                     "Type": "X",
                     "Reflect": true
                 },
@@ -1479,7 +1483,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleY"
                     },
-                    "Weight": 13.537914,
+                    "Weight": 8.196293,
                     "Type": "X",
                     "Reflect": true
                 },
@@ -1488,7 +1492,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyLean"
                     },
-                    "Weight": 62.755535,
+                    "Weight": 37.717846,
                     "Type": "X",
                     "Reflect": false
                 }
@@ -1500,7 +1504,7 @@
                         "Id": "ParamSimpresetfronthair_Y"
                     },
                     "VertexIndex": 1,
-                    "Scale": 25.183638,
+                    "Scale": 59.13598,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -1520,12 +1524,12 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 6.7949877
+                        "Y": 11.464303
                     },
-                    "Mobility": 0.9435606,
-                    "Delay": 0.936886,
-                    "Acceleration": 1.1109667,
-                    "Radius": 6.7949877
+                    "Mobility": 0.9461224,
+                    "Delay": 1.8452575,
+                    "Acceleration": 0.47064492,
+                    "Radius": 11.464303
                 }
             ],
             "Normalization": {
@@ -1547,9 +1551,18 @@
                 {
                     "Source": {
                         "Target": "Parameter",
+                        "Id": "ParamAngleX"
+                    },
+                    "Weight": 0.7768384,
+                    "Type": "X",
+                    "Reflect": true
+                },
+                {
+                    "Source": {
+                        "Target": "Parameter",
                         "Id": "ParamAngleZ"
                     },
-                    "Weight": 66.11367,
+                    "Weight": 62.82781,
                     "Type": "X",
                     "Reflect": false
                 },
@@ -1558,16 +1571,16 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleX"
                     },
-                    "Weight": 15.356084,
+                    "Weight": 29.126467,
                     "Type": "X",
-                    "Reflect": true
+                    "Reflect": false
                 },
                 {
                     "Source": {
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleZ"
                     },
-                    "Weight": 14.256897,
+                    "Weight": 24.013397,
                     "Type": "X",
                     "Reflect": false
                 }
@@ -1579,18 +1592,7 @@
                         "Id": "ParamSimpresetbackhair_1"
                     },
                     "VertexIndex": 1,
-                    "Scale": 42.994278,
-                    "Weight": 100.0,
-                    "Type": "Angle",
-                    "Reflect": false
-                },
-                {
-                    "Destination": {
-                        "Target": "Parameter",
-                        "Id": "ParamSimpresetbackhair_2"
-                    },
-                    "VertexIndex": 2,
-                    "Scale": 15.662476,
+                    "Scale": 40.270866,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -1610,22 +1612,100 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 12.69323
+                        "Y": 20.557362
                     },
-                    "Mobility": 0.9154091,
-                    "Delay": 0.888202,
-                    "Acceleration": 0.9845021,
-                    "Radius": 12.69323
+                    "Mobility": 0.9656321,
+                    "Delay": 1.1886308,
+                    "Acceleration": 0.4559433,
+                    "Radius": 20.557362
+                }
+            ],
+            "Normalization": {
+                "Position": {
+                    "Minimum": -10.0,
+                    "Default": 0.0,
+                    "Maximum": 10.0
+                },
+                "Angle": {
+                    "Minimum": -30.0,
+                    "Default": 0.0,
+                    "Maximum": 30.0
+                }
+            }
+        },
+        {
+            "Id": "PhysicsSim_preset_back_hair_2",
+            "Input": [
+                {
+                    "Source": {
+                        "Target": "Parameter",
+                        "Id": "ParamAngleX"
+                    },
+                    "Weight": 0.98485744,
+                    "Type": "Angle",
+                    "Reflect": false
+                },
+                {
+                    "Source": {
+                        "Target": "Parameter",
+                        "Id": "ParamAngleZ"
+                    },
+                    "Weight": 68.34042,
+                    "Type": "Angle",
+                    "Reflect": false
+                },
+                {
+                    "Source": {
+                        "Target": "Parameter",
+                        "Id": "ParamBodyAngleX"
+                    },
+                    "Weight": 28.734364,
+                    "Type": "Angle",
+                    "Reflect": true
+                },
+                {
+                    "Source": {
+                        "Target": "Parameter",
+                        "Id": "ParamBodyAngleZ"
+                    },
+                    "Weight": 15.035123,
+                    "Type": "Angle",
+                    "Reflect": false
+                }
+            ],
+            "Output": [
+                {
+                    "Destination": {
+                        "Target": "Parameter",
+                        "Id": "ParamSimpresetbackhair_2"
+                    },
+                    "VertexIndex": 1,
+                    "Scale": 23.160065,
+                    "Weight": 100.0,
+                    "Type": "Angle",
+                    "Reflect": false
+                }
+            ],
+            "Vertices": [
+                {
+                    "Position": {
+                        "X": 0,
+                        "Y": 0.0
+                    },
+                    "Mobility": 1.0,
+                    "Delay": 1.0,
+                    "Acceleration": 1.0,
+                    "Radius": 0.0
                 },
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 15.263146
+                        "Y": 8.323692
                     },
-                    "Mobility": 0.7750288,
-                    "Delay": 0.20086008,
-                    "Acceleration": 7.1146655,
-                    "Radius": 2.5699167
+                    "Mobility": 0.9618485,
+                    "Delay": 0.7151577,
+                    "Acceleration": 0.56139725,
+                    "Radius": 8.323692
                 }
             ],
             "Normalization": {
@@ -1649,7 +1729,7 @@
                         "Target": "Parameter",
                         "Id": "ParamAngleY"
                     },
-                    "Weight": 7.9455266,
+                    "Weight": 5.0494003,
                     "Type": "X",
                     "Reflect": true
                 },
@@ -1658,7 +1738,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyAngleY"
                     },
-                    "Weight": 19.177261,
+                    "Weight": 9.358813,
                     "Type": "X",
                     "Reflect": true
                 },
@@ -1667,7 +1747,7 @@
                         "Target": "Parameter",
                         "Id": "ParamBodyLean"
                     },
-                    "Weight": 81.41043,
+                    "Weight": 55.376865,
                     "Type": "X",
                     "Reflect": false
                 }
@@ -1679,7 +1759,7 @@
                         "Id": "ParamSimpresetbackhair_Y"
                     },
                     "VertexIndex": 1,
-                    "Scale": 25.489655,
+                    "Scale": 22.880413,
                     "Weight": 100.0,
                     "Type": "Angle",
                     "Reflect": false
@@ -1699,12 +1779,12 @@
                 {
                     "Position": {
                         "X": 0,
-                        "Y": 9.46531
+                        "Y": 4.90292
                     },
-                    "Mobility": 0.945642,
-                    "Delay": 0.78723615,
-                    "Acceleration": 1.0878102,
-                    "Radius": 9.46531
+                    "Mobility": 0.9362626,
+                    "Delay": 0.4387765,
+                    "Acceleration": 2.144168,
+                    "Radius": 4.90292
                 }
             ],
             "Normalization": {

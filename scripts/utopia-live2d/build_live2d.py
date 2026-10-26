@@ -363,8 +363,21 @@ def main(psd: str, output: str):
         meshes = meshes_by_layer(client)
         for swing in SWINGS:
             options = {key: swing[key] for key in ("softness", "fulcrum", "segments") if key in swing}
-            edit(client, "swing_put", id=swing["id"], name=swing["id"], targets=[meshes[swing["layer"]]],
-                 kind=swing["kind"], preset=swing["preset"], magnitude=swing["magnitude"], **options)
+            # PSD2Live のメッシュは自動生成で毎回少し変わり、揺れの幅によっては三角形がつぶれて安全チェックで
+            # 弾かれることがある。そのときは揺れの幅を 2 割ずつ小さくして付け直す
+            magnitude = swing["magnitude"]
+            for _ in range(4):
+                try:
+                    edit(client, "swing_put", id=swing["id"], name=swing["id"], targets=[meshes[swing["layer"]]],
+                         kind=swing["kind"], preset=swing["preset"], magnitude=magnitude, **options)
+                    break
+                except Exception as error:
+                    if "GEOMETRY_NEW_DEGENERATE" not in str(error):
+                        raise
+                    magnitude = round(magnitude * 0.8, 4)
+                    print("swing", swing["id"], "retry with magnitude", magnitude)
+            else:
+                raise RuntimeError(f"swing {swing['id']} keeps degenerating")
             print("swing", swing["id"])
 
         rig_eyes(client)

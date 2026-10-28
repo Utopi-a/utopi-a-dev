@@ -225,19 +225,12 @@ export async function loadVisionModel({
   );
 
   const image = await loadImageFromDataUrl({ dataUrl: WARMUP_IMAGE_DATA_URL });
-  const warmupInputs = (await processor.apply_chat_template(
-    [
-      {
-        role: "user",
-        content: [{ type: "image" }, { type: "text", text: "warmup" }],
-      },
-    ],
-    {
-      add_generation_prompt: true,
-      return_dict: true,
-      images: [image],
-    } as Record<string, unknown>,
-  )) as Record<string, unknown>;
+  // Processor.apply_chat_template は画像を処理せず文字列を返すだけなので、画像は processor 本体に渡す
+  const warmupPrompt = processor.apply_chat_template(
+    [{ role: "user", content: [{ type: "image" }, { type: "text", text: "warmup" }] }],
+    { add_generation_prompt: true, tokenize: false } as Record<string, unknown>,
+  ) as string;
+  const warmupInputs = await processor(warmupPrompt, [image]);
   await model.generate({ ...warmupInputs, max_new_tokens: 1 });
 
   loadedPipeline = {
@@ -329,11 +322,11 @@ async function generateQwen3Vl({
     throw new Error("Tokenizer is not available");
   }
 
-  const inputs = (await loadedPipeline.processor.apply_chat_template(chatMessages, {
+  const prompt = loadedPipeline.processor.apply_chat_template(chatMessages, {
     add_generation_prompt: true,
-    return_dict: true,
-    images,
-  } as Record<string, unknown>)) as Record<string, unknown>;
+    tokenize: false,
+  } as Record<string, unknown>) as string;
+  const inputs = await loadedPipeline.processor(prompt, images.length > 0 ? images : null);
 
   let startTime: number | undefined;
   let numTokens = 0;

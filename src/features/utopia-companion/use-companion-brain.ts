@@ -9,9 +9,12 @@ import {
 } from "@/features/local-llm/model-registry/local-llm-models";
 import type { CompanionGenerate } from "@/features/utopia-companion/companion-agent";
 
-/** 画像（カメラ）とツール呼び出しを 1 つのモデルで扱えるので、ゆーとぴあちゃんの頭は LFM3-VL-2B にする */
+/**
+ * ゆーとぴあちゃんの頭は LFM3-1.7B。LFM3-VL-2B は同じ指示でも道具を呼ばずに答えてしまうことが多く、
+ * 道具を使う会話にはテキストのモデルのほうが向いている
+ */
 export const COMPANION_MODEL = getLocalLlmModelById({
-  modelId: "lfm3-vl-2b",
+  modelId: "lfm3-1.7b",
 }) as TransformersLocalLlmModel;
 
 export type CompanionBrainState =
@@ -27,7 +30,7 @@ type PendingGeneration = {
 };
 
 /**
- * ゆーとぴあちゃんの頭（LFM3-VL-2B）を端末内で動かす。読み込みは起こしたときにだけ行い、
+ * ゆーとぴあちゃんの頭（LFM3-1.7B）を端末内で動かす。読み込みは起こしたときにだけ行い、
  * 生成は 1 回ずつ文章を丸ごと返す（エージェントがツールの呼び出しを読み取ってから次へ進むため）。
  */
 export function useCompanionBrain() {
@@ -126,6 +129,9 @@ export function useCompanionBrain() {
           return;
         }
         pendingRef.current = { output: "", resolve, reject };
+        // テキストのパイプラインは前の生成の KV キャッシュを続きとして使う。エージェントは毎回プロンプトを
+        // 組み直す（記憶・道具の結果が変わる）ので、続きとして扱われないよう捨ててから生成する
+        client.postMessage({ type: "reset" });
         client.postMessage({ type: "generate", data: messages, tools });
       }),
     [],

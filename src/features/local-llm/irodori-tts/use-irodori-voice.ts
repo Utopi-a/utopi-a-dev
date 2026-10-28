@@ -16,7 +16,7 @@ export type IrodoriVoiceState =
 
 /**
  * 返答を Irodori-TTS で読み上げる。どのモデルの返答でも、生成中に言い終えた文から順に読む。
- * モデル（約 1.6 GB）は初めてオンにしたときに読み込み、オフにしてもメモリに残す。
+ * モデル（約 1.7 GB）は初めてオンにしたときに読み込み、オフにしてもメモリに残す。
  */
 export function useIrodoriVoice() {
   const speakerRef = useRef<IrodoriSpeaker | null>(null);

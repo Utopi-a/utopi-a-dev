@@ -61,7 +61,7 @@ export async function loadIrodoriSpeaker({
           return;
       }
     };
-    send({ type: "load" });
+    send({ type: "load", caption });
   }).catch((error: unknown) => {
     worker.terminate();
     throw error;
@@ -71,7 +71,7 @@ export async function loadIrodoriSpeaker({
     const id = nextId++;
     return new Promise<Float32Array<ArrayBuffer>>((resolve, reject) => {
       pending.set(id, { resolve, reject });
-      send({ type: "synthesize", id, text, caption });
+      send({ type: "synthesize", id, text });
     });
   }
 

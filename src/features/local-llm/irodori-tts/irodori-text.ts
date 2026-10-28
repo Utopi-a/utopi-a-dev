@@ -100,17 +100,19 @@ function isAsciiAlnum(code: number) {
   );
 }
 
-/** 長さの予測に渡す 14 個の特徴量（参照音声なし） */
+/** 長さの予測に渡す 14 個の特徴量。最後の 1 つは話者の手本があるか */
 export function buildDurationFeatures({
   text,
   tokenCount,
   maxTextLength,
   annotationEmojis,
+  hasSpeaker,
 }: {
   text: string;
   tokenCount: number;
   maxTextLength: number;
   annotationEmojis: readonly string[];
+  hasSpeaker: boolean;
 }) {
   const codes = [...text].map((char) => char.codePointAt(0) ?? 0);
   const charCount = Math.max(codes.length, 1);
@@ -138,7 +140,7 @@ export function buildDurationFeatures({
     codes.filter(isKana).length / charCount,
     codes.filter(isKanji).length / charCount,
     codes.filter(isAsciiAlnum).length / charCount,
-    0,
+    hasSpeaker ? 1 : 0,
   ]);
 }
 
@@ -185,16 +187,19 @@ const SENTENCE_END = /[。！？!?\n]/u;
 
 /**
  * 生成中の返答から、`from` 文字目以降で言い終えた部分を取り出す（最後の文末記号まで）。
- * 返答が終わったら（isFinal）残りを全部返す。
+ * 言い終えた部分が minLength 文字に届かないうちは、次の文と一緒に読むため待つ
+ * （「はい！」だけを 1 回で合成すると、抑揚がそこで切れる）。返答が終わったら（isFinal）残りを全部返す。
  */
 export function takeFinishedSpeech({
   text,
   from,
   isFinal,
+  minLength = 12,
 }: {
   text: string;
   from: number;
   isFinal: boolean;
+  minLength?: number;
 }) {
   const rest = text.slice(from);
   if (isFinal) {
@@ -207,7 +212,10 @@ export function takeFinishedSpeech({
       break;
     }
   }
-  return end < 0 ? { speech: "", next: from } : { speech: rest.slice(0, end), next: from + end };
+  if (end < 0 || [...rest.slice(0, end).trim()].length < minLength) {
+    return { speech: "", next: from };
+  }
+  return { speech: rest.slice(0, end), next: from + end };
 }
 
 /** Irodori-TTS は日本語専用なので、かなも漢字も含まない文（英語の返答など）は読まない */
@@ -220,7 +228,8 @@ export function isJapaneseSpeech({ text }: { text: string }) {
 
 /**
  * 読み上げる返答を文ごとに分ける。1 文ずつ合成して、最初の文ができた時点で話し始めるため。
- * 短すぎる文は次の文とまとめる（1 文ごとの合成には固定の手間がかかる）。
+ * 短すぎる文は次の文とまとめる（1 文ごとの合成には固定の手間がかかり、抑揚も文ごとに切れる）。
+ * 箇条書きの記号は読まず、改行で終わる行には文末を補う（まとめたときに前後の行がつながらないように）。
  */
 export function splitSpeechSentences({
   text,
@@ -230,10 +239,12 @@ export function splitSpeechSentences({
   minLength?: number;
 }) {
   const pieces = text
+    .replace(/^[ \t]*(?:[-+*・]|\d+[.)])[ \t]+/gmu, "")
     .replace(/[*#`>_|]/g, "")
     .split(/(?<=[。！？!?\n])/u)
     .map((piece) => piece.trim())
-    .filter((piece) => piece.length > 0);
+    .filter((piece) => piece.length > 0)
+    .map((piece) => (/[。！？!?、]$/u.test(piece) ? piece : `${piece}。`));
   const sentences: string[] = [];
   for (const piece of pieces) {
     const last = sentences.at(-1);

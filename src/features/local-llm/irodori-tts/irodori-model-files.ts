@@ -47,6 +47,16 @@ const FILES = {
     size: 166_135_616,
     sha256: "4ab51296a7482bf0dc9f6465b939f547fe6f10f982fb5d4b60946df6e5cf1a2c",
   },
+  speaker: {
+    path: "shared/speaker.onnx",
+    size: 1_362_734,
+    sha256: "77ef718dbb2887ffb01caa06ccb20efecde16259cd1fb223fb284f355542db8c",
+  },
+  speakerData: {
+    path: "shared/speaker.onnx.data",
+    size: 121_015_296,
+    sha256: "33e4eb8853175b2133ff76f3c2760c34359cde14e822636ad37008b36ab8796c",
+  },
   textTokenizer: {
     path: "tokenizer/tokenizer_text.json",
     size: 3_228_566,

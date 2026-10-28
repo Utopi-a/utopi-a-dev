@@ -1,5 +1,6 @@
 import { Loader2Icon, Volume2Icon, VolumeOffIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { IRODORI_TOTAL_BYTES } from "@/features/local-llm/irodori-tts/irodori-model-files";
 import type { IrodoriVoiceState } from "@/features/local-llm/irodori-tts/use-irodori-voice";
 
 type VoiceToggleProps = {
@@ -34,7 +35,9 @@ export function VoiceToggle({ state, onTurnOn, onTurnOff }: VoiceToggleProps) {
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
       {state.status === "error" ? <span className="text-destructive">{state.message}</span> : null}
-      {state.status === "off" && !state.isDownloaded ? <span>初回 約 1.6 GB</span> : null}
+      {state.status === "off" && !state.isDownloaded ? (
+        <span>初回 約 {(IRODORI_TOTAL_BYTES / 1e9).toFixed(1)} GB</span>
+      ) : null}
       <Button
         type="button"
         variant={isOn ? "default" : "outline"}

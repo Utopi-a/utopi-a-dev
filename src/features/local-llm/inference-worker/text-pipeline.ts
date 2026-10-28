@@ -21,9 +21,11 @@ let pastKeyValuesCache: DynamicCache | null = null;
 export async function loadTextModel({
   modelConfig,
   progressCallback,
+  onWarmup,
 }: {
   modelConfig: WorkerModelConfig;
   progressCallback?: (event: Record<string, unknown>) => void;
+  onWarmup: () => void;
 }) {
   if (loadedModelId !== modelConfig.huggingFaceModelId) {
     tokenizer = undefined;
@@ -42,6 +44,7 @@ export async function loadTextModel({
     progress_callback: progressCallback,
   });
 
+  onWarmup();
   const inputs = tokenizer("a");
   await model.generate({ ...inputs, max_new_tokens: 1 });
 

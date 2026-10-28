@@ -12,6 +12,9 @@ type ModelSelectorProps = {
 };
 
 function formatModalities({ model }: { model: LocalLlmModelDefinition }) {
+  if (model.modalities.includes("audio")) {
+    return "テキスト + 画像 + 音声";
+  }
   if (model.modalities.includes("image")) {
     return "テキスト + 画像";
   }

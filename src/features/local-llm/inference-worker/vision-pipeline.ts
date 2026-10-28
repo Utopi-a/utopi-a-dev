@@ -128,9 +128,11 @@ async function buildChatMessagesWithImages({ messages }: { messages: InferenceMe
 export async function loadVisionModel({
   modelConfig,
   progressCallback,
+  onWarmup,
 }: {
   modelConfig: WorkerModelConfig;
   progressCallback?: (event: Record<string, unknown>) => void;
+  onWarmup: () => void;
 }) {
   if (loadedPipeline?.modelId === modelConfig.huggingFaceModelId) {
     return modelConfig.huggingFaceModelId;
@@ -156,6 +158,7 @@ export async function loadVisionModel({
       },
     );
 
+    onWarmup();
     const image = await loadImageFromDataUrl({ dataUrl: WARMUP_IMAGE_DATA_URL });
     const warmupInputs = await processor(image, buildMoondreamPrompt({ question: "warmup" }));
     await model.generate({ ...warmupInputs, max_new_tokens: 1 });
@@ -188,6 +191,7 @@ export async function loadVisionModel({
       },
     );
 
+    onWarmup();
     const image = await loadImageFromDataUrl({ dataUrl: WARMUP_IMAGE_DATA_URL });
     const warmupPrompt = processor.apply_chat_template(
       [{ role: "user", content: [{ type: "image" }, { type: "text", text: "warmup" }] }],
@@ -224,6 +228,7 @@ export async function loadVisionModel({
     },
   );
 
+  onWarmup();
   const image = await loadImageFromDataUrl({ dataUrl: WARMUP_IMAGE_DATA_URL });
   // Processor.apply_chat_template は画像を処理せず文字列を返すだけなので、画像は processor 本体に渡す
   const warmupPrompt = processor.apply_chat_template(

@@ -56,15 +56,17 @@ async function loadModel({
     postEvent(event as InferenceWorkerEvent);
   };
 
-  postEvent({
-    status: "loading",
-    data: "シェーダーをコンパイルしてウォームアップしています…",
-  });
+  // 重みの取得が終わってから、最初の生成でシェーダーをコンパイルする
+  const onWarmup = () =>
+    postEvent({
+      status: "loading",
+      data: "シェーダーをコンパイルしてウォームアップしています…",
+    });
 
   const loadedModelId =
     modelConfig.kind === "causal-lm"
-      ? await loadTextModel({ modelConfig, progressCallback })
-      : await loadVisionModel({ modelConfig, progressCallback });
+      ? await loadTextModel({ modelConfig, progressCallback, onWarmup })
+      : await loadVisionModel({ modelConfig, progressCallback, onWarmup });
 
   postEvent({ status: "ready", modelId: loadedModelId });
 }
@@ -80,6 +82,9 @@ export function createInferenceSession({ postEvent }: { postEvent: InferenceWork
           break;
 
         case "load":
+          if (command.model.kind === "fusor-lfm3-omni") {
+            throw new Error("LFM3-Omni は omni-engine-client で読み込みます");
+          }
           activeModelConfig = command.model;
           await loadModel({ modelConfig: command.model, postEvent });
           break;

@@ -49,10 +49,21 @@ export function parseCompanionReply({ text: rawText }: { text: string }) {
   const name = match?.[1].toLowerCase();
   const expression = COMPANION_EXPRESSIONS.find((item) => item === name) ?? "neutral";
   // 文中に紛れたタグも読み上げない
+  // 絵文字は Irodori-TTS では話し方の指定になるので、読み上げる文に残さない
   const speech = text
     .replace(EXPRESSION_TAG_PATTERN, "")
     .replace(/\[[a-z]+\]/gi, "")
+    .replace(/(?:\p{Extended_Pictographic}\uFE0F?)+/gu, "\n")
     .trim();
-  const sentences = speech.match(/[^。！？!?]+[。！？!?]*/gu) ?? [];
-  return { expression, speech: sentences.slice(0, MAX_SENTENCES).join("").trim() };
+  // 同じ文を言い直すことがあるので、2 回目からは読まない
+  const sentences = [
+    ...new Set((speech.match(/[^。！？!?\n]+[。！？!?]*/gu) ?? []).map((item) => item.trim())),
+  ];
+  return {
+    expression,
+    speech: sentences
+      .filter((sentence) => sentence.length > 0)
+      .slice(0, MAX_SENTENCES)
+      .join(""),
+  };
 }

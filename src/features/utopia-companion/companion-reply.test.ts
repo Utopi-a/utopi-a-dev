@@ -49,10 +49,18 @@ describe("parseCompanionReply", () => {
     });
   });
 
+  it("絵文字と、同じ文の言い直しは読まない", () => {
+    expect(
+      parseCompanionReply({
+        text: "[shy] ちょっと疲れてるかな。ゆっくり休んでね😊 ちょっと疲れてるかな。",
+      }),
+    ).toEqual({ expression: "shy", speech: "ちょっと疲れてるかな。ゆっくり休んでね" });
+  });
+
   it("タグがない・知らない名前なら neutral にし、文中のタグも読まない", () => {
     expect(parseCompanionReply({ text: "[angry] もう。[smile] 冗談だよ。" })).toEqual({
       expression: "neutral",
-      speech: "もう。 冗談だよ。",
+      speech: "もう。冗談だよ。",
     });
   });
 });

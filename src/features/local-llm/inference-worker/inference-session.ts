@@ -56,15 +56,17 @@ async function loadModel({
     postEvent(event as InferenceWorkerEvent);
   };
 
-  postEvent({
-    status: "loading",
-    data: "シェーダーをコンパイルしてウォームアップしています…",
-  });
+  // 重みの取得が終わってから、最初の生成でシェーダーをコンパイルする
+  const onWarmup = () =>
+    postEvent({
+      status: "loading",
+      data: "シェーダーをコンパイルしてウォームアップしています…",
+    });
 
   const loadedModelId =
     modelConfig.kind === "causal-lm"
-      ? await loadTextModel({ modelConfig, progressCallback })
-      : await loadVisionModel({ modelConfig, progressCallback });
+      ? await loadTextModel({ modelConfig, progressCallback, onWarmup })
+      : await loadVisionModel({ modelConfig, progressCallback, onWarmup });
 
   postEvent({ status: "ready", modelId: loadedModelId });
 }

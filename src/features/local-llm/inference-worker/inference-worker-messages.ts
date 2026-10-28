@@ -44,14 +44,15 @@ export type InferenceWorkerCommand =
 export type DownloadProgress = {
   status: "initiate" | "progress" | "done";
   file: string;
-  progress?: number;
+  /** 取得済みのバイト数（Omni はパート数）。Transformers.js の `progress` は百分率なので使わない */
+  loaded?: number;
   total?: number;
 };
 
 export type InferenceWorkerEvent =
   | { status: "loading"; data: string }
-  | { status: "initiate"; file: string; progress: number; total: number }
-  | { status: "progress"; file: string; progress: number; total: number }
+  | { status: "initiate"; file: string; loaded: number; total: number }
+  | { status: "progress"; file: string; loaded: number; total: number }
   | { status: "done"; file: string }
   | { status: "ready"; modelId: string }
   | { status: "start" }

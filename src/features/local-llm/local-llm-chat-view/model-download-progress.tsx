@@ -19,8 +19,8 @@ export function ModelDownloadProgress({ items, className }: ModelDownloadProgres
     <ul className={cn("space-y-2", className)}>
       {items.map((item) => {
         const percent =
-          item.progress !== undefined && item.total !== undefined && item.total > 0
-            ? Math.round((item.progress / item.total) * 100)
+          item.loaded !== undefined && item.total !== undefined && item.total > 0
+            ? Math.floor((item.loaded / item.total) * 100)
             : 0;
 
         return (

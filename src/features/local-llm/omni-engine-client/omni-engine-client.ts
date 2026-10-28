@@ -129,7 +129,7 @@ export function createOmniEngineClient({
   function handleEngineMessage({ data }: MessageEvent<EngineMessage>) {
     switch (data.type) {
       case "progress":
-        emit({ status: "progress", file: BUNDLE_LABEL, progress: data.done, total: data.total });
+        emit({ status: "progress", file: BUNDLE_LABEL, loaded: data.done, total: data.total });
         return;
       case "ready":
         isLoaded = true;
@@ -220,7 +220,7 @@ export function createOmniEngineClient({
           return;
         case "load":
           emit({ status: "loading", data: "重みを取得して WASM ランタイムに読み込んでいます…" });
-          emit({ status: "initiate", file: BUNDLE_LABEL, progress: 0, total: 0 });
+          emit({ status: "initiate", file: BUNDLE_LABEL, loaded: 0, total: 0 });
           worker.postMessage({ type: "load" });
           return;
         case "generate":

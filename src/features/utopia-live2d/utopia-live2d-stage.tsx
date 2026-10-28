@@ -14,6 +14,8 @@ type StageStatus = "loading" | "ready" | "unsupported";
 /** 表示中のモデルへの操作。表情の切り替えなどはページ側から呼ぶ */
 export type Live2DStageHandle = {
   setExpression: (name: string | null) => void;
+  /** うなずく（Nod）・首を振る（Shake）など、モデルのモーションを 1 回再生する */
+  playMotion: (group: "Nod" | "Shake") => void;
 };
 
 export function UtopiaLive2DStage({
@@ -135,6 +137,9 @@ export function UtopiaLive2DStage({
           currentExpression = name;
           window.clearTimeout(reactionTimer);
           applyExpression(name);
+        },
+        playMotion(group) {
+          void model.motion(group);
         },
       };
 

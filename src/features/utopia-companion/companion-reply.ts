@@ -50,9 +50,12 @@ export function parseCompanionReply({ text: rawText }: { text: string }) {
   const expression = COMPANION_EXPRESSIONS.find((item) => item === name) ?? "neutral";
   // 文中に紛れたタグも読み上げない
   // 絵文字は Irodori-TTS では話し方の指定になるので、読み上げる文に残さない
+  // 声で読むので Markdown の飾り（強調・コード・見出し・箇条書きの記号）は外し、箇条書きは文として区切る
   const speech = text
     .replace(EXPRESSION_TAG_PATTERN, "")
     .replace(/\[[a-z]+\]/gi, "")
+    .replace(/\*\*|__|`|^#+\s*/gm, "")
+    .replace(/(?<=^|[\s。！？!?])[-・]\s+/gm, "\n")
     .replace(/(?:\p{Extended_Pictographic}\uFE0F?)+/gu, "\n")
     .trim();
   // 同じ文を言い直すことがあるので、2 回目からは読まない

@@ -49,6 +49,17 @@ describe("parseCompanionReply", () => {
     });
   });
 
+  it("Markdown の飾りを外し、箇条書きは文として区切る", () => {
+    expect(
+      parseCompanionReply({
+        text: "[smile] Lab にはいくつかあるよ！- **認証 Studio**：ログインの仕組み。- `実包管理帳簿`：帳簿をつける。",
+      }),
+    ).toEqual({
+      expression: "smile",
+      speech: "Lab にはいくつかあるよ！認証 Studio：ログインの仕組み。実包管理帳簿：帳簿をつける。",
+    });
+  });
+
   it("絵文字と、同じ文の言い直しは読まない", () => {
     expect(
       parseCompanionReply({

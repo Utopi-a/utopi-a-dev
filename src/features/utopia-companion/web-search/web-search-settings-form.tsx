@@ -57,18 +57,17 @@ export function WebSearchSettingsForm({
             </Button>
           ))}
         </div>
-        <label htmlFor={keyId} className="block">
-          {providerInfo?.label} の API キー（
+        <p className="flex flex-wrap gap-x-2">
+          <label htmlFor={keyId}>{providerInfo?.label} の API キー</label>
           <a
             href={providerInfo?.keyUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="underline underline-offset-2 hover:text-foreground"
           >
-            発行する
+            キーを発行する
           </a>
-          ）
-        </label>
+        </p>
         <div className="flex gap-2">
           <Input
             id={keyId}

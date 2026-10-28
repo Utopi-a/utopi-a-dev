@@ -4,7 +4,6 @@ import { Loader2Icon, SendIcon, SquareIcon } from "lucide-react";
 import { type RefObject, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import type { InferenceToolCall } from "@/features/local-llm/inference-worker/inference-worker-messages";
 import { useIrodoriVoice } from "@/features/local-llm/irodori-tts/use-irodori-voice";
 import { ModelAttribution } from "@/features/local-llm/local-llm-chat-view/model-attribution";
 import { VoiceAttribution } from "@/features/local-llm/local-llm-chat-view/voice-attribution";
@@ -27,19 +26,6 @@ import {
 /** 読み上げの大きさ（RMS）を口の開き 0〜1 にする範囲 */
 const SILENT_RMS = 0.01;
 const LOUD_RMS = 0.1;
-
-function describeToolCall({ call }: { call: InferenceToolCall }) {
-  switch (call.name) {
-    case "search_wikipedia":
-      return `ウィキペディアで「${call.arguments.query ?? ""}」を調べてる…`;
-    case "read_web_page":
-      return "ページを読んでる…";
-    case "remember":
-      return "覚えてる…";
-    default:
-      return "考え中…";
-  }
-}
 
 function megabytes({ bytes }: { bytes: number }) {
   return Math.round(bytes / 1e6).toLocaleString();
@@ -98,7 +84,7 @@ export function CompanionTalkPanel({
         generate: brain.generate,
         context: { fetch: window.fetch.bind(window), storage: localStorage },
         now: new Date(),
-        onToolCall: (call) => setActivity(describeToolCall({ call })),
+        onToolCall: ({ description }) => setActivity(description),
       });
       const memory = readCompanionMemory({ storage: localStorage });
       setLog(memory.history);

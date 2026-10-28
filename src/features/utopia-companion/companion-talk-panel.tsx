@@ -8,6 +8,13 @@ import { useIrodoriVoice } from "@/features/local-llm/irodori-tts/use-irodori-vo
 import { ModelAttribution } from "@/features/local-llm/local-llm-chat-view/model-attribution";
 import { VoiceAttribution } from "@/features/local-llm/local-llm-chat-view/voice-attribution";
 import { VoiceToggle } from "@/features/local-llm/local-llm-chat-view/voice-toggle";
+import { CompanionCameraControl } from "@/features/utopia-companion/camera/companion-camera-control";
+import {
+  buildSceneMessages,
+  buildSceneTurn,
+} from "@/features/utopia-companion/camera/companion-scene";
+import { useCompanionCamera } from "@/features/utopia-companion/camera/use-companion-camera";
+import { useCompanionWatch } from "@/features/utopia-companion/camera/use-companion-watch";
 import { type CompanionStep, runCompanionTurn } from "@/features/utopia-companion/companion-agent";
 import {
   type CompanionHistoryEntry,
@@ -19,15 +26,19 @@ import {
   type CompanionExpression,
   parseCompanionReply,
 } from "@/features/utopia-companion/companion-reply";
+import { splitThinking } from "@/features/utopia-companion/companion-thinking";
 import { buildCompanionTools } from "@/features/utopia-companion/companion-toolbox";
-import {
-  COMPANION_MODEL,
-  useCompanionBrain,
-} from "@/features/utopia-companion/use-companion-brain";
+import { createCameraTool } from "@/features/utopia-companion/tools/camera-tool";
 import {
   type CompanionEarsState,
   useCompanionEars,
 } from "@/features/utopia-companion/use-companion-ears";
+import {
+  COMPANION_MODEL,
+  EYES_MODEL,
+  useCompanionBrain,
+  useCompanionEyes,
+} from "@/features/utopia-companion/use-companion-models";
 import {
   clearWebSearchSettings,
   readWebSearchSettings,
@@ -101,6 +112,44 @@ export function CompanionTalkPanel({
   const ears = useCompanionEars({ onHeard: (text) => void talk({ text }) });
   const earsActivity = describeEars({ state: ears.state });
 
+  const eyes = useCompanionEyes();
+  const camera = useCompanionCamera();
+  const isWatching = camera.state === "on" && eyes.state.status === "awake";
+
+  /** 目（LFM3-VL）で 1 枚見て、様子か、質問への答えを文章で返す */
+  async function see({ frame, question }: { frame: string; question?: string }) {
+    const output = await eyes.generate({
+      messages: buildSceneMessages({ frame, question }),
+      tools: [],
+      thinking: false,
+    });
+    return splitThinking({ output }).visible;
+  }
+
+  async function lookAtCamera(question: string) {
+    const frame = camera.capture();
+    if (!frame) {
+      throw new Error("カメラに何も映っていない");
+    }
+    return see({ frame, question });
+  }
+
+  // 考えている間・話している間・聞いている間は、カメラを見て話しかけない
+  const activityRef = useRef(activity);
+  activityRef.current = activity;
+  const isListeningRef = useRef(false);
+  isListeningRef.current = ears.state.status === "listening";
+  useCompanionWatch({
+    isEnabled: isWatching && brain.state.status === "awake",
+    capture: camera.capture,
+    describe: (frame) => see({ frame }),
+    isIdle: () => activityRef.current === null && voice.level() === 0 && !isListeningRef.current,
+    onScene: async (caption) => {
+      const { userText, historyText } = buildSceneTurn({ caption });
+      await respond({ userText, historyText });
+    },
+  });
+
   const turnRef = useRef<AbortController | null>(null);
 
   function describeStep({ step }: { step: CompanionStep }) {
@@ -126,17 +175,30 @@ export function CompanionTalkPanel({
       return;
     }
     setDraft("");
+    await respond({ userText, historyText: userText });
+  }
+
+  /** 1 回の返事を作って、表情・声・記憶に反映する。historyText は画面と記憶に残す発言 */
+  async function respond({ userText, historyText }: { userText: string; historyText: string }) {
+    if (activityRef.current) {
+      return;
+    }
+    activityRef.current = "考え中…";
     setError(null);
     setActivity("考え中…");
-    setLog((prev) => [...prev, { role: "user", content: userText }]);
+    setLog((prev) => [...prev, { role: "user", content: historyText }]);
     voice.stop();
     const turn = new AbortController();
     turnRef.current = turn;
     try {
       const reply = await runCompanionTurn({
         userText,
+        historyText,
         generate: brain.generate,
-        tools: buildCompanionTools({ webSearch }),
+        tools: [
+          ...buildCompanionTools({ webSearch }),
+          ...(isWatching ? [createCameraTool({ look: lookAtCamera })] : []),
+        ],
         context: {
           fetch: window.fetch.bind(window),
           storage: localStorage,
@@ -164,6 +226,7 @@ export function CompanionTalkPanel({
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
       turnRef.current = null;
+      activityRef.current = null;
       setActivity(null);
     }
   }
@@ -297,6 +360,15 @@ export function CompanionTalkPanel({
         )}
       </form>
 
+      <CompanionCameraControl
+        camera={camera}
+        eyesState={eyes.state}
+        onStart={() => {
+          void camera.start();
+          void eyes.wake();
+        }}
+      />
+
       <div className="flex flex-wrap items-center justify-between gap-2">
         <VoiceToggle
           state={voice.state}
@@ -329,10 +401,12 @@ export function CompanionTalkPanel({
 
       <div className="space-y-2">
         <ModelAttribution model={COMPANION_MODEL} />
+        {eyes.state.status !== "asleep" ? <ModelAttribution model={EYES_MODEL} /> : null}
         {voice.state.status !== "off" ? <VoiceAttribution /> : null}
         <p className="text-xs text-muted-foreground">
           調べものをするときだけ、検索する言葉や URL を Wikipedia・Jina
-          Reader（ネット検索を設定したときは Tavily・Exa）に送ります。
+          Reader（ネット検索を設定したときは
+          Tavily・Exa）に送ります。カメラの映像は端末の外に出しません。
         </p>
       </div>
     </div>

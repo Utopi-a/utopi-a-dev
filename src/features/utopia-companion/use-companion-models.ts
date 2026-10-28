@@ -17,6 +17,16 @@ export const COMPANION_MODEL = getLocalLlmModelById({
   modelId: "lfm3-1.7b",
 }) as TransformersLocalLlmModel;
 
+/** カメラに映ったものを見る目は LFM3-VL-2B。カメラを使い始めたときにだけ読み込む */
+export const EYES_MODEL = getLocalLlmModelById({
+  modelId: "lfm3-vl-2b",
+}) as TransformersLocalLlmModel;
+
+type CreateClient = (options: {
+  onError: (event: ErrorEvent) => void;
+  onMessage: (event: MessageEvent<InferenceWorkerEvent>) => void;
+}) => BrowserInferenceClient;
+
 export type CompanionBrainState =
   | { status: "asleep" }
   | { status: "waking"; loaded: number; total: number; message: string }
@@ -30,10 +40,16 @@ type PendingGeneration = {
 };
 
 /**
- * ゆーとぴあちゃんの頭（LFM3-1.7B）を端末内で動かす。読み込みは起こしたときにだけ行い、
+ * ゆーとぴあちゃんのモデルを端末内で動かす。読み込みは起こしたときにだけ行い、
  * 生成は 1 回ずつ文章を丸ごと返す（エージェントがツールの呼び出しを読み取ってから次へ進むため）。
  */
-export function useCompanionBrain() {
+function useCompanionModel({
+  model,
+  loadClient,
+}: {
+  model: TransformersLocalLlmModel;
+  loadClient: () => Promise<CreateClient>;
+}) {
   const clientRef = useRef<BrowserInferenceClient | null>(null);
   const pendingRef = useRef<PendingGeneration | null>(null);
   const [state, setState] = useState<CompanionBrainState>({ status: "asleep" });
@@ -51,7 +67,7 @@ export function useCompanionBrain() {
       setState({ status: "error", message: "このブラウザは WebGPU に対応していません" });
       return;
     }
-    setState({ status: "waking", loaded: 0, total: 0, message: "頭を読み込んでいます…" });
+    setState({ status: "waking", loaded: 0, total: 0, message: "読み込んでいます…" });
     const files = new Map<string, { loaded: number; total: number }>();
 
     const onMessage = ({ data }: MessageEvent<InferenceWorkerEvent>) => {
@@ -98,10 +114,8 @@ export function useCompanionBrain() {
       }
     };
 
-    const { createBrowserInferenceClient } = await import(
-      "@/features/local-llm/browser-inference-client/browser-inference-client"
-    );
-    const client = createBrowserInferenceClient({
+    const createClient = await loadClient();
+    const client = createClient({
       onMessage,
       onError: (event) => {
         fail(event.message);
@@ -113,12 +127,12 @@ export function useCompanionBrain() {
     client.postMessage({
       type: "load",
       model: {
-        huggingFaceModelId: COMPANION_MODEL.huggingFaceModelId,
-        kind: COMPANION_MODEL.kind,
-        dtype: COMPANION_MODEL.dtype,
+        huggingFaceModelId: model.huggingFaceModelId,
+        kind: model.kind,
+        dtype: model.dtype,
       },
     });
-  }, [fail]);
+  }, [fail, model, loadClient]);
 
   const generate = useCallback<CompanionGenerate>(
     ({ messages, tools, thinking }) =>
@@ -150,4 +164,26 @@ export function useCompanionBrain() {
   );
 
   return { state, wake, generate, interrupt };
+}
+
+const loadInProcessClient = () =>
+  import("@/features/local-llm/browser-inference-client/browser-inference-client").then(
+    ({ createBrowserInferenceClient }) => createBrowserInferenceClient,
+  );
+const loadWorkerClient = () =>
+  import("@/features/local-llm/browser-inference-client/worker-inference-client").then(
+    ({ createWorkerInferenceClient }) => createWorkerInferenceClient,
+  );
+
+/** ゆーとぴあちゃんの頭（LFM3-1.7B）。ページの中で動かす */
+export function useCompanionBrain() {
+  return useCompanionModel({ model: COMPANION_MODEL, loadClient: loadInProcessClient });
+}
+
+/**
+ * カメラを見る目（LFM3-VL-2B）。頭と同時に動かすので、別の Worker で動かす
+ * （パイプラインはモジュールごとに 1 つで、同じ場所で読み込むと頭のモデルを外してしまう）
+ */
+export function useCompanionEyes() {
+  return useCompanionModel({ model: EYES_MODEL, loadClient: loadWorkerClient });
 }

@@ -28,14 +28,14 @@ describe("buildSecurityHeaderRoutes", () => {
     expect(routes[0]?.headers).toHaveLength(securityHeaders.length);
   });
 
-  it("マイクは同じオリジンにだけ許可し、カメラと位置情報は禁止する", () => {
+  it("マイクとカメラは同じオリジンにだけ許可し、位置情報は禁止する", () => {
     const routes = buildSecurityHeaderRoutes();
 
     // サイト内リンクで移動しても最初のページのポリシーが効き続けるので、全ルートで同じ値にする
     expect(routes).toHaveLength(1);
     expect(routes[0]?.headers).toContainEqual({
       key: "Permissions-Policy",
-      value: "camera=(), microphone=(self), geolocation=()",
+      value: "camera=(self), microphone=(self), geolocation=()",
     });
   });
 });

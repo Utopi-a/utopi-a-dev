@@ -1,0 +1,50 @@
+import { describe, expect, it } from "vitest";
+import {
+  buildSceneMessages,
+  buildSceneTurn,
+  isSimilarScene,
+} from "@/features/utopia-companion/camera/companion-scene";
+
+describe("isSimilarScene", () => {
+  it("言い回しが少し違うだけの同じ様子は似ているとし、別の様子は似ていないとする", () => {
+    expect(
+      isSimilarScene({
+        previous: "机の上にノートパソコンとマグカップがある。",
+        current: "机の上にノートパソコンとマグカップが置かれている。",
+      }),
+    ).toBe(true);
+    expect(
+      isSimilarScene({
+        previous: "机の上にノートパソコンとマグカップがある。",
+        current: "男性が猫を抱いて笑っている。",
+      }),
+    ).toBe(false);
+    expect(isSimilarScene({ previous: "", current: "猫がいる。" })).toBe(false);
+  });
+});
+
+describe("buildSceneMessages", () => {
+  it("1 枚の画像と、説明か質問への答えを頼む文を目に渡す", () => {
+    expect(buildSceneMessages({ frame: "data:image/jpeg;base64,AAA" })).toEqual([
+      {
+        role: "user",
+        content: "この写真に写っているものを、日本語で 2 文以内で、具体的に説明して。",
+        images: [
+          { dataUrl: "data:image/jpeg;base64,AAA", name: "camera.jpg", mimeType: "image/jpeg" },
+        ],
+      },
+    ]);
+    expect(buildSceneMessages({ frame: "data:x", question: "何色？" })[0].content).toBe(
+      "この写真について答えて: 何色？",
+    );
+  });
+});
+
+describe("buildSceneTurn", () => {
+  it("見えた様子を話しかけとして渡し、記憶にはカメラで見たこととして残す", () => {
+    expect(buildSceneTurn({ caption: "猫がいる。" })).toEqual({
+      userText: expect.stringMatching(/^（いまカメラに映っているもの: 猫がいる。）\n/),
+      historyText: "（カメラで見た: 猫がいる。）",
+    });
+  });
+});

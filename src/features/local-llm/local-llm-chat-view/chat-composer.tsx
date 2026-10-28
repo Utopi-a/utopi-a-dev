@@ -1,7 +1,7 @@
 "use client";
 
 import { FileAudioIcon, ImagePlusIcon, MicIcon, SendIcon, SquareIcon, XIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { LocalLlmReplyMode } from "@/features/local-llm/inference-worker/inference-worker-messages";
@@ -22,6 +22,8 @@ type ChatComposerProps = {
   supportsAudio?: boolean;
   replyMode: LocalLlmReplyMode;
   onReplyModeChange: (replyMode: LocalLlmReplyMode) => void;
+  /** 入力欄の上に右寄せで置く操作（声で読み上げ） */
+  voiceControl: ReactNode;
   onSubmit: (args: {
     message: string;
     images: ChatImageAttachment[];
@@ -44,6 +46,7 @@ export function ChatComposer({
   supportsAudio = false,
   replyMode,
   onReplyModeChange,
+  voiceControl,
   onSubmit,
   onInterrupt,
   onError,
@@ -162,13 +165,18 @@ export function ChatComposer({
         </div>
       ) : null}
 
-      {supportsAudio ? (
-        <ReplyModeSelector
-          replyMode={replyMode}
-          disabled={disabled || isGenerating}
-          onChange={onReplyModeChange}
-        />
-      ) : null}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {supportsAudio ? (
+          <ReplyModeSelector
+            replyMode={replyMode}
+            disabled={disabled || isGenerating}
+            onChange={onReplyModeChange}
+          />
+        ) : (
+          <span />
+        )}
+        {voiceControl}
+      </div>
 
       <div className="flex items-end gap-2 rounded-xl border border-border/70 bg-card/70 p-3">
         {supportsImages ? (

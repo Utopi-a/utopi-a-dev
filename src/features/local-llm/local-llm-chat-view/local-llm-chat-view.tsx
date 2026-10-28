@@ -12,12 +12,15 @@ import type {
   LocalLlmChatPhase,
   LocalLlmReplyMode,
 } from "@/features/local-llm/inference-worker/inference-worker-messages";
+import { useIrodoriVoice } from "@/features/local-llm/irodori-tts/use-irodori-voice";
 import { ChatComposer } from "@/features/local-llm/local-llm-chat-view/chat-composer";
 import { ChatMessageList } from "@/features/local-llm/local-llm-chat-view/chat-message-list";
 import type { ChatMessage } from "@/features/local-llm/local-llm-chat-view/chat-message-types";
 import { ModelAttribution } from "@/features/local-llm/local-llm-chat-view/model-attribution";
 import { ModelDownloadProgress } from "@/features/local-llm/local-llm-chat-view/model-download-progress";
 import { ModelSelector } from "@/features/local-llm/local-llm-chat-view/model-selector";
+import { VoiceAttribution } from "@/features/local-llm/local-llm-chat-view/voice-attribution";
+import { VoiceToggle } from "@/features/local-llm/local-llm-chat-view/voice-toggle";
 import {
   DEFAULT_LOCAL_LLM_MODEL_ID,
   getLocalLlmModelById,
@@ -58,6 +61,7 @@ export function LocalLlmChatView() {
   const [replyMode, setReplyMode] = useState<LocalLlmReplyMode>({ mode: "text" });
   const replyModeRef = useRef(replyMode);
   replyModeRef.current = replyMode;
+  const voice = useIrodoriVoice();
 
   const selectedModel =
     getLocalLlmModelById({ modelId: selectedModelId }) ??
@@ -239,6 +243,14 @@ export function LocalLlmChatView() {
     });
   }, [messages]);
 
+  // 返答が伸びるたびに、言い終えた文を読み上げに回す。生成が終わったら残りも読む
+  useEffect(() => {
+    const last = messages.at(-1);
+    if (last?.role === "assistant") {
+      voice.follow({ messageId: last.id, text: last.content, isFinal: !isGenerating });
+    }
+  }, [messages, isGenerating, voice.follow]);
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll when message content grows during streaming
   useEffect(() => {
     if (!chatContainerRef.current || !isGenerating) {
@@ -316,6 +328,7 @@ export function LocalLlmChatView() {
     }
 
     setError(null);
+    voice.stop();
     setMessages((prev) => [
       ...prev,
       {
@@ -332,6 +345,7 @@ export function LocalLlmChatView() {
   }
 
   function resetConversation() {
+    voice.stop();
     inferenceClientRef.current?.postMessage({ type: "reset" });
     setMessages([]);
     setTps(null);
@@ -514,12 +528,23 @@ export function LocalLlmChatView() {
             supportsAudio={modelSupportsAudio({ model: activeModel })}
             replyMode={replyMode}
             onReplyModeChange={setReplyMode}
+            voiceControl={
+              <VoiceToggle
+                state={voice.state}
+                onTurnOn={() => void voice.turnOn()}
+                onTurnOff={voice.turnOff}
+              />
+            }
             onSubmit={submitMessage}
-            onInterrupt={() => inferenceClientRef.current?.postMessage({ type: "interrupt" })}
+            onInterrupt={() => {
+              voice.stop();
+              inferenceClientRef.current?.postMessage({ type: "interrupt" });
+            }}
             onError={setError}
           />
 
           <ModelAttribution model={activeModel} />
+          {voice.state.status === "off" ? null : <VoiceAttribution />}
           <p className="text-xs text-muted-foreground">免責: 生成内容は不正確な場合があります。</p>
         </div>
       ) : null}

@@ -41,6 +41,9 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      onnxruntime-web:
+        specifier: 1.31.0-dev.20260914-8d85527a0
+        version: 1.31.0-dev.20260914-8d85527a0
       pixi.js:
         specifier: ^8
         version: 8.22.0

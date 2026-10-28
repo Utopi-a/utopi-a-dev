@@ -80,6 +80,9 @@ export function createInferenceSession({ postEvent }: { postEvent: InferenceWork
           break;
 
         case "load":
+          if (command.model.kind === "fusor-lfm3-omni") {
+            throw new Error("LFM3-Omni は omni-engine-client で読み込みます");
+          }
           activeModelConfig = command.model;
           await loadModel({ modelConfig: command.model, postEvent });
           break;

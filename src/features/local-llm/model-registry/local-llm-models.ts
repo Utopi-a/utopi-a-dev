@@ -1,4 +1,4 @@
-export type LocalLlmModality = "text" | "image";
+export type LocalLlmModality = "text" | "image" | "audio";
 
 export type LocalLlmModelKind = "causal-lm" | "moondream" | "qwen3-vl" | "lfm3-vl";
 
@@ -18,19 +18,30 @@ export type LocalLlmLicense = {
   holder: string;
 };
 
-export type LocalLlmModelDefinition = {
+type LocalLlmModelBase = {
   id: string;
   label: string;
   description: string;
   huggingFaceModelId: string;
   huggingFaceUrl: string;
-  kind: LocalLlmModelKind;
   modalities: LocalLlmModality[];
-  dtype: LocalLlmDtype;
   estimatedDownload: string;
   license: LocalLlmLicense;
   examples: readonly string[];
 };
+
+/** Transformers.js + WebGPU で動かすモデル */
+export type TransformersLocalLlmModel = LocalLlmModelBase & {
+  kind: LocalLlmModelKind;
+  dtype: LocalLlmDtype;
+};
+
+/** fusor-ai の WASM ランタイム（public/lfm3-omni/）で CPU 推論するモデル */
+export type FusorLocalLlmModel = LocalLlmModelBase & {
+  kind: "fusor-lfm3-omni";
+};
+
+export type LocalLlmModelDefinition = TransformersLocalLlmModel | FusorLocalLlmModel;
 
 export const DEFAULT_LOCAL_LLM_MODEL_ID = "lfm3-1.7b";
 
@@ -145,6 +156,27 @@ export const LOCAL_LLM_MODELS: readonly LocalLlmModelDefinition[] = [
     ],
   },
   {
+    id: "lfm3-omni-2b",
+    label: "LFM3-Omni-2B",
+    description:
+      "画像と音声も扱える 2B モデル。音声での会話・文字起こし・読み上げができる。CPU で動き、3 GB 前後のメモリを使う。",
+    huggingFaceModelId: "LiquidAI/LFM3-Omni-2B",
+    huggingFaceUrl: "https://huggingface.co/LiquidAI/LFM3-Omni-2B",
+    kind: "fusor-lfm3-omni",
+    modalities: ["text", "image", "audio"],
+    estimatedDownload: "約 2.5 GB",
+    license: {
+      name: "LFM Open License v1.0",
+      url: "https://huggingface.co/LiquidAI/LFM3-Omni-2B/raw/main/LICENSE",
+      holder: "Liquid AI, Inc.",
+    },
+    examples: [
+      "自己紹介を短くしてください。",
+      "雨の日の楽しみ方を3つ教えてください。",
+      "Explain the difference between AI and ML in simple terms.",
+    ],
+  },
+  {
     id: "moondream2",
     label: "Moondream2",
     description: "画像 + テキストの VLM。軽量なビジョン質問応答向け。",
@@ -206,4 +238,13 @@ export function getLocalLlmModelById({
 
 export function modelSupportsImages({ model }: { model: LocalLlmModelDefinition }): boolean {
   return model.modalities.includes("image");
+}
+
+export function modelSupportsAudio({ model }: { model: LocalLlmModelDefinition }): boolean {
+  return model.modalities.includes("audio");
+}
+
+/** Transformers.js の画像モデルは、会話の最初に画像がないと応答できない */
+export function modelRequiresImage({ model }: { model: LocalLlmModelDefinition }): boolean {
+  return model.kind !== "fusor-lfm3-omni" && modelSupportsImages({ model });
 }

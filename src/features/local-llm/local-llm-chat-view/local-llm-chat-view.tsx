@@ -10,6 +10,7 @@ import type {
   DownloadProgress,
   InferenceWorkerEvent,
   LocalLlmChatPhase,
+  LocalLlmReplyMode,
 } from "@/features/local-llm/inference-worker/inference-worker-messages";
 import { ChatComposer } from "@/features/local-llm/local-llm-chat-view/chat-composer";
 import { ChatMessageList } from "@/features/local-llm/local-llm-chat-view/chat-message-list";
@@ -20,6 +21,8 @@ import { ModelSelector } from "@/features/local-llm/local-llm-chat-view/model-se
 import {
   DEFAULT_LOCAL_LLM_MODEL_ID,
   getLocalLlmModelById,
+  modelRequiresImage,
+  modelSupportsAudio,
   modelSupportsImages,
 } from "@/features/local-llm/model-registry/local-llm-models";
 import { PageHeader } from "@/features/portfolio/page-header/page-header";
@@ -52,6 +55,9 @@ export function LocalLlmChatView() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [tps, setTps] = useState<number | null>(null);
   const [numTokens, setNumTokens] = useState<number | null>(null);
+  const [replyMode, setReplyMode] = useState<LocalLlmReplyMode>({ mode: "text" });
+  const replyModeRef = useRef(replyMode);
+  replyModeRef.current = replyMode;
 
   const selectedModel =
     getLocalLlmModelById({ modelId: selectedModelId }) ??
@@ -138,7 +144,28 @@ export function LocalLlmChatView() {
         return;
       }
 
+      if (payload.status === "speech") {
+        setMessages((prev) => {
+          const last = prev.at(-1);
+          if (last?.role !== "assistant") {
+            return prev;
+          }
+          return [
+            ...prev.slice(0, -1),
+            { ...last, spokenSeconds: (last.spokenSeconds ?? 0) + payload.seconds },
+          ];
+        });
+        return;
+      }
+
       if (payload.status === "complete") {
+        setIsGenerating(false);
+        setPhase("ready");
+        return;
+      }
+
+      if (payload.status === "generation-error") {
+        setError(payload.data);
         setIsGenerating(false);
         setPhase("ready");
         return;
@@ -161,13 +188,24 @@ export function LocalLlmChatView() {
 
     terminateInferenceClient();
 
-    void import("@/features/local-llm/browser-inference-client/browser-inference-client")
-      .then(({ createBrowserInferenceClient }) => {
+    // LFM3-Omni は fusor の WASM ランタイム、それ以外は Transformers.js で動かす
+    const isFusorModel =
+      getLocalLlmModelById({ modelId: selectedModelId })?.kind === "fusor-lfm3-omni";
+    const createClient = isFusorModel
+      ? import("@/features/local-llm/omni-engine-client/omni-engine-client").then(
+          ({ createOmniEngineClient }) => createOmniEngineClient,
+        )
+      : import("@/features/local-llm/browser-inference-client/browser-inference-client").then(
+          ({ createBrowserInferenceClient }) => createBrowserInferenceClient,
+        );
+
+    void createClient
+      .then((createInferenceClient) => {
         if (!isActive) {
           return;
         }
 
-        const client = createBrowserInferenceClient({
+        const client = createInferenceClient({
           onError: onErrorReceived,
           onMessage: onMessageReceived,
         });
@@ -205,11 +243,13 @@ export function LocalLlmChatView() {
     setTps(null);
     inferenceClientRef.current?.postMessage({
       type: "generate",
-      data: messages.map(({ role, content, images }) => ({
+      data: messages.map(({ role, content, images, audio }) => ({
         role,
         content,
         images: images?.map(({ dataUrl, name, mimeType }) => ({ dataUrl, name, mimeType })),
+        audio: audio?.map(({ name, samples }) => ({ name, samples })),
       })),
+      replyMode: replyModeRef.current,
     });
   }, [messages]);
 
@@ -242,36 +282,49 @@ export function LocalLlmChatView() {
     }
 
     setError(null);
+    setMessages([]);
     setPhase("loading");
     setProgressItems([]);
     inferenceClientRef.current?.postMessage({
       type: "load",
-      model: {
-        huggingFaceModelId: selectedModel.huggingFaceModelId,
-        kind: selectedModel.kind,
-        dtype: selectedModel.dtype,
-      },
+      model:
+        selectedModel.kind === "fusor-lfm3-omni"
+          ? { kind: selectedModel.kind }
+          : {
+              huggingFaceModelId: selectedModel.huggingFaceModelId,
+              kind: selectedModel.kind,
+              dtype: selectedModel.dtype,
+            },
     });
   }
 
-  function submitMessage({ message, images }: { message: string; images: ChatMessage["images"] }) {
+  function submitMessage({
+    message,
+    images,
+    audio,
+  }: {
+    message: string;
+    images: ChatMessage["images"];
+    audio: ChatMessage["audio"];
+  }) {
     if (!selectedModel || isGenerating || phase !== "ready") {
       return;
     }
 
     const trimmed = message.trim();
     const hasImages = (images?.length ?? 0) > 0;
-    if (!trimmed && !hasImages) {
+    const hasAudio = (audio?.length ?? 0) > 0;
+    if (!trimmed && !hasImages && !hasAudio) {
       return;
     }
 
-    if (modelSupportsImages({ model: selectedModel })) {
+    if (modelRequiresImage({ model: selectedModel })) {
       const hasPreviousImage = messages.some((entry) => (entry.images?.length ?? 0) > 0);
       if (!hasImages && !hasPreviousImage) {
         setError("このモデルでは最初のメッセージに画像の添付が必要です。");
         return;
       }
-    } else if (hasImages) {
+    } else if (hasImages && !modelSupportsImages({ model: selectedModel })) {
       setError("選択中のモデルは画像入力に対応していません。");
       return;
     }
@@ -282,8 +335,10 @@ export function LocalLlmChatView() {
       {
         id: crypto.randomUUID(),
         role: "user",
-        content: trimmed || "この画像について教えてください。",
+        // 音声だけの発言は、音声そのものが問いかけになる
+        content: trimmed || (hasAudio ? "" : "この画像について教えてください。"),
         images,
+        audio,
       },
     ]);
     setTps(null);
@@ -347,7 +402,7 @@ export function LocalLlmChatView() {
         description="WebGPU + Transformers.js で端末内推論する実験です。会話内容はサーバーに送信されません。"
       />
 
-      {phase === "idle" && messages.length === 0 ? (
+      {phase === "idle" ? (
         <Card className="border-border/70 bg-card/70">
           <CardHeader>
             <CardTitle className="text-base">モデルを読み込む</CardTitle>
@@ -412,16 +467,17 @@ export function LocalLlmChatView() {
                         submitMessage({
                           message: example,
                           images: undefined,
+                          audio: undefined,
                         })
                       }
-                      disabled={isGenerating || modelSupportsImages({ model: activeModel })}
+                      disabled={isGenerating || modelRequiresImage({ model: activeModel })}
                     >
                       {example}
                     </button>
                   </li>
                 ))}
               </ul>
-              {modelSupportsImages({ model: activeModel }) ? (
+              {modelRequiresImage({ model: activeModel }) ? (
                 <p className="mt-3 text-xs text-muted-foreground">
                   画像入力モデルは、画像を添付して質問してください。
                 </p>
@@ -469,8 +525,12 @@ export function LocalLlmChatView() {
             disabled={phase !== "ready"}
             isGenerating={isGenerating}
             supportsImages={modelSupportsImages({ model: activeModel })}
+            supportsAudio={modelSupportsAudio({ model: activeModel })}
+            replyMode={replyMode}
+            onReplyModeChange={setReplyMode}
             onSubmit={submitMessage}
             onInterrupt={() => inferenceClientRef.current?.postMessage({ type: "interrupt" })}
+            onError={setError}
           />
 
           <ModelAttribution model={activeModel} />

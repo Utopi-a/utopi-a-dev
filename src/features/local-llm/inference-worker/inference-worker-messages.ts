@@ -68,6 +68,11 @@ export type InferenceWorkerCommand =
       replyMode?: LocalLlmReplyMode;
       /** 呼び出せるツール。テキストのモデルと LFM3-VL のテンプレートに渡す */
       tools?: InferenceTool[];
+      /**
+       * エージェントとして使うときの生成の仕方。指定すると LFM3 の推奨値（top_k 50・repetition_penalty 1.1）で
+       * 生成し、thinking なら思考（<think>…</think>）を書かせる。チャット欄は指定しない（従来どおり）
+       */
+      generation?: { thinking: boolean };
     }
   | { type: "interrupt" }
   | { type: "reset" };

@@ -56,10 +56,12 @@ export async function loadTextModel({
 export async function generateText({
   messages,
   tools,
+  generation,
   postEvent,
 }: {
   messages: InferenceMessage[];
   tools?: InferenceTool[];
+  generation?: { thinking: boolean };
   postEvent: InferenceWorkerEventSender;
 }) {
   if (!tokenizer || !model) {
@@ -73,7 +75,7 @@ export async function generateText({
   const templateOptions = {
     add_generation_prompt: true,
     return_dict: true,
-    enable_thinking: false,
+    enable_thinking: generation?.thinking ?? false,
     tools: tools?.length ? tools : undefined,
   };
   const inputs = tokenizer.apply_chat_template(chatMessages, templateOptions);
@@ -103,8 +105,10 @@ export async function generateText({
     past_key_values: pastKeyValuesCache,
     do_sample: true,
     temperature: 0.1,
-    repetition_penalty: 1.05,
-    max_new_tokens: 512,
+    // エージェントは LFM3 の推奨値で生成する。思考を書くぶん長く取る
+    ...(generation
+      ? { top_k: 50, repetition_penalty: 1.1, max_new_tokens: generation.thinking ? 1024 : 384 }
+      : { repetition_penalty: 1.05, max_new_tokens: 512 }),
     streamer,
     stopping_criteria: stoppingCriteria,
     return_dict_in_generate: true,

@@ -96,7 +96,12 @@ export function createInferenceSession({ postEvent }: { postEvent: InferenceWork
 
           if (activeModelConfig.kind === "causal-lm") {
             resetTextGenerationState();
-            await generateText({ messages: command.data, tools: command.tools, postEvent });
+            await generateText({
+              messages: command.data,
+              tools: command.tools,
+              generation: command.generation,
+              postEvent,
+            });
             break;
           }
 

@@ -1,14 +1,14 @@
 "use client";
 
 import { Loader2Icon, MicIcon, SendIcon, SquareIcon } from "lucide-react";
-import { type RefObject, useEffect, useState } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useIrodoriVoice } from "@/features/local-llm/irodori-tts/use-irodori-voice";
 import { ModelAttribution } from "@/features/local-llm/local-llm-chat-view/model-attribution";
 import { VoiceAttribution } from "@/features/local-llm/local-llm-chat-view/voice-attribution";
 import { VoiceToggle } from "@/features/local-llm/local-llm-chat-view/voice-toggle";
-import { runCompanionTurn } from "@/features/utopia-companion/companion-agent";
+import { type CompanionStep, runCompanionTurn } from "@/features/utopia-companion/companion-agent";
 import {
   type CompanionHistoryEntry,
   clearCompanionMemory,
@@ -90,6 +90,25 @@ export function CompanionTalkPanel({
   const ears = useCompanionEars({ onHeard: (text) => void talk({ text }) });
   const earsActivity = describeEars({ state: ears.state });
 
+  const turnRef = useRef<AbortController | null>(null);
+
+  function describeStep({ step }: { step: CompanionStep }) {
+    switch (step.type) {
+      case "thinking":
+        return "考え中…";
+      case "tool":
+        return step.description;
+      case "answering":
+        return "まとめてる…";
+    }
+  }
+
+  /** 止めるボタン。生成中の文章を止め、道具の待ちも取りやめて、この返事をなかったことにする */
+  function stopTurn() {
+    turnRef.current?.abort();
+    brain.interrupt();
+  }
+
   async function talk({ text }: { text: string }) {
     const userText = text.trim();
     if (userText.length === 0 || activity) {
@@ -100,13 +119,19 @@ export function CompanionTalkPanel({
     setActivity("考え中…");
     setLog((prev) => [...prev, { role: "user", content: userText }]);
     voice.stop();
+    const turn = new AbortController();
+    turnRef.current = turn;
     try {
       const reply = await runCompanionTurn({
         userText,
         generate: brain.generate,
-        context: { fetch: window.fetch.bind(window), storage: localStorage },
-        now: new Date(),
-        onToolCall: ({ description }) => setActivity(description),
+        context: {
+          fetch: window.fetch.bind(window),
+          storage: localStorage,
+          now: new Date(),
+          signal: turn.signal,
+        },
+        onStep: (step) => setActivity(describeStep({ step })),
       });
       const memory = readCompanionMemory({ storage: localStorage });
       setLog(memory.history);
@@ -114,8 +139,13 @@ export function CompanionTalkPanel({
       onReply({ expression: reply.expression });
       voice.follow({ messageId: crypto.randomUUID(), text: reply.speech, isFinal: true });
     } catch (cause) {
+      if (turn.signal.aborted) {
+        setLog(readCompanionMemory({ storage: localStorage }).history);
+        return;
+      }
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
+      turnRef.current = null;
       setActivity(null);
     }
   }
@@ -237,7 +267,7 @@ export function CompanionTalkPanel({
           <span className="sr-only">声で話しかける</span>
         </Button>
         {activity ? (
-          <Button type="button" size="icon" variant="outline" onClick={brain.interrupt}>
+          <Button type="button" size="icon" variant="outline" onClick={stopTurn}>
             <SquareIcon />
             <span className="sr-only">止める</span>
           </Button>

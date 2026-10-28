@@ -121,7 +121,7 @@ export function useCompanionBrain() {
   }, [fail]);
 
   const generate = useCallback<CompanionGenerate>(
-    ({ messages, tools }) =>
+    ({ messages, tools, thinking }) =>
       new Promise((resolve, reject) => {
         const client = clientRef.current;
         if (!client) {
@@ -132,7 +132,7 @@ export function useCompanionBrain() {
         // テキストのパイプラインは前の生成の KV キャッシュを続きとして使う。エージェントは毎回プロンプトを
         // 組み直す（記憶・道具の結果が変わる）ので、続きとして扱われないよう捨ててから生成する
         client.postMessage({ type: "reset" });
-        client.postMessage({ type: "generate", data: messages, tools });
+        client.postMessage({ type: "generate", data: messages, tools, generation: { thinking } });
       }),
     [],
   );

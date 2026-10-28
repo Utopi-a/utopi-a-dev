@@ -27,6 +27,7 @@ export function useCompanionCamera() {
     setState("off");
   }, []);
 
+  /** カメラを起動する。映り始めたら true（許可されなかったときは false） */
   const start = useCallback(async () => {
     setState("starting");
     try {
@@ -40,8 +41,10 @@ export function useCompanionCamera() {
         await videoRef.current.play();
       }
       setState("on");
+      return true;
     } catch {
       setState("denied");
+      return false;
     }
   }, []);
 

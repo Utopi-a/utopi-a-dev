@@ -17,18 +17,18 @@ export function CompanionCameraControl({
 }: {
   camera: ReturnType<typeof useCompanionCamera>;
   eyesState: CompanionBrainState;
-  onStart: () => void;
+  onStart: () => Promise<void>;
 }) {
   const isOn = camera.state === "on";
   const status =
-    eyesState.status === "waking"
-      ? eyesState.total > 0 && eyesState.loaded < eyesState.total
-        ? `目を読み込み中 ${megabytes({ bytes: eyesState.loaded })} / ${megabytes({ bytes: eyesState.total })} MB`
-        : "目を準備中…"
-      : eyesState.status === "error"
-        ? eyesState.message
-        : camera.state === "denied"
-          ? "カメラを使えません。ブラウザでカメラの使用を許可してください"
+    camera.state === "denied"
+      ? "カメラを使えません。ブラウザ（と OS）の設定で、このサイトにカメラの使用を許可してください"
+      : eyesState.status === "waking"
+        ? eyesState.total > 0 && eyesState.loaded < eyesState.total
+          ? `目を読み込み中 ${megabytes({ bytes: eyesState.loaded })} / ${megabytes({ bytes: eyesState.total })} MB`
+          : "目を準備中…"
+        : eyesState.status === "error"
+          ? eyesState.message
           : isOn && eyesState.status === "awake"
             ? "一緒に見てるよ。気になったことを話すね"
             : null;
@@ -41,7 +41,7 @@ export function CompanionCameraControl({
         variant={isOn ? "default" : "outline"}
         aria-pressed={isOn}
         disabled={camera.state === "starting"}
-        onClick={isOn ? camera.stop : onStart}
+        onClick={isOn ? camera.stop : () => void onStart()}
       >
         {isOn ? <CameraIcon className="size-4" /> : <CameraOffIcon className="size-4" />}
         カメラで一緒に見る

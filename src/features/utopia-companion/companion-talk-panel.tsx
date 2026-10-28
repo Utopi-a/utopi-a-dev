@@ -363,9 +363,11 @@ export function CompanionTalkPanel({
       <CompanionCameraControl
         camera={camera}
         eyesState={eyes.state}
-        onStart={() => {
-          void camera.start();
-          void eyes.wake();
+        onStart={async () => {
+          // 目（約 1.9 GB）は、カメラが映り始めてから読み込む（許可されなければ取得しない）
+          if (await camera.start()) {
+            void eyes.wake();
+          }
         }}
       />
 

@@ -35,6 +35,20 @@ describe("parseCompanionReply", () => {
     });
   });
 
+  it("思考の書き出しを読まず、文は 3 つまでにする", () => {
+    expect(
+      parseCompanionReply({
+        text: "<think>調べた結果を見る</think>[smile] 1 つ目。2 つ目！3 つ目？4 つ目。",
+      }),
+    ).toEqual({ expression: "smile", speech: "1 つ目。2 つ目！3 つ目？" });
+    expect(
+      parseCompanionReply({ text: "[neutral] まだ分からない。もう一度調べよう。</think>" }),
+    ).toEqual({
+      expression: "neutral",
+      speech: "まだ分からない。もう一度調べよう。",
+    });
+  });
+
   it("タグがない・知らない名前なら neutral にし、文中のタグも読まない", () => {
     expect(parseCompanionReply({ text: "[angry] もう。[smile] 冗談だよ。" })).toEqual({
       expression: "neutral",

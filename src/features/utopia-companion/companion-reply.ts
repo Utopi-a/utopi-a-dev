@@ -16,6 +16,8 @@ const TOOL_CALL_PATTERN =
   /<tool_call>\s*<function=([^\n>]+)>([\s\S]*?)<\/function>\s*<\/tool_call>/g;
 const PARAMETER_PATTERN = /<parameter=([^>\n]+)>\n?([\s\S]*?)\n?<\/parameter>/g;
 const EXPRESSION_TAG_PATTERN = /^\s*\[([a-z]+)\]\s*/i;
+/** 読み上げる返事の文の数の上限。小さいモデルは「1〜3 文で」と頼んでも長く話し続けることがある */
+const MAX_SENTENCES = 3;
 
 /**
  * LFM3 の出力からツールの呼び出し（`<tool_call><function=…><parameter=…>`）を取り出す。
@@ -35,9 +37,14 @@ export function parseToolCalls({ output, idPrefix }: { output: string; idPrefix:
 
 /**
  * 返答の頭の気持ちのタグ（`[smile]` など）を表情に変え、読み上げる文から外す。
- * タグがない・知らない名前のときは neutral にする。
+ * タグがない・知らない名前のときは neutral にする。思考の書き出し（`<think>`）は読まず、文は 3 つまでにする。
  */
-export function parseCompanionReply({ text }: { text: string }) {
+export function parseCompanionReply({ text: rawText }: { text: string }) {
+  // 思考を切っていても、道具の結果のあとに考えを書いて `</think>` で閉じることがある
+  const text = rawText
+    .replace(/<think>[\s\S]*?<\/think>/g, "")
+    .replace(/<\/?think>/g, "")
+    .trim();
   const match = text.match(EXPRESSION_TAG_PATTERN);
   const name = match?.[1].toLowerCase();
   const expression = COMPANION_EXPRESSIONS.find((item) => item === name) ?? "neutral";
@@ -46,5 +53,6 @@ export function parseCompanionReply({ text }: { text: string }) {
     .replace(EXPRESSION_TAG_PATTERN, "")
     .replace(/\[[a-z]+\]/gi, "")
     .trim();
-  return { expression, speech };
+  const sentences = speech.match(/[^。！？!?]+[。！？!?]*/gu) ?? [];
+  return { expression, speech: sentences.slice(0, MAX_SENTENCES).join("").trim() };
 }

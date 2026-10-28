@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2Icon, SendIcon, SquareIcon } from "lucide-react";
+import { Loader2Icon, MicIcon, SendIcon, SquareIcon } from "lucide-react";
 import { type RefObject, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +22,10 @@ import {
   COMPANION_MODEL,
   useCompanionBrain,
 } from "@/features/utopia-companion/use-companion-brain";
+import {
+  type CompanionEarsState,
+  useCompanionEars,
+} from "@/features/utopia-companion/use-companion-ears";
 
 /** 読み上げの大きさ（RMS）を口の開き 0〜1 にする範囲 */
 const SILENT_RMS = 0.01;
@@ -29,6 +33,21 @@ const LOUD_RMS = 0.1;
 
 function megabytes({ bytes }: { bytes: number }) {
   return Math.round(bytes / 1e6).toLocaleString();
+}
+
+function describeEars({ state }: { state: CompanionEarsState }) {
+  switch (state.status) {
+    case "loading":
+      return state.total > 0
+        ? `耳を読み込み中 ${megabytes({ bytes: state.loaded })} / ${megabytes({ bytes: state.total })} MB`
+        : "耳を読み込み中…";
+    case "listening":
+      return "聞いてるよ。話し終えたら、もう一度マイクを押してね";
+    case "transcribing":
+      return "聞き取ってる…";
+    default:
+      return null;
+  }
 }
 
 export function CompanionTalkPanel({
@@ -68,8 +87,11 @@ export function CompanionTalkPanel({
     return () => cancelAnimationFrame(frame);
   }, [voice.level, speechLevelRef]);
 
-  async function talk() {
-    const userText = draft.trim();
+  const ears = useCompanionEars({ onHeard: (text) => void talk({ text }) });
+  const earsActivity = describeEars({ state: ears.state });
+
+  async function talk({ text }: { text: string }) {
+    const userText = text.trim();
     if (userText.length === 0 || activity) {
       return;
     }
@@ -164,13 +186,26 @@ export function CompanionTalkPanel({
           {activity}
         </p>
       ) : null}
+      {earsActivity ? (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          {ears.state.status === "listening" ? (
+            <MicIcon className="size-4 text-primary" />
+          ) : (
+            <Loader2Icon className="size-4 animate-spin" />
+          )}
+          {earsActivity}
+        </p>
+      ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {ears.state.status === "error" ? (
+        <p className="text-sm text-destructive">{ears.state.message}</p>
+      ) : null}
 
       <form
         className="flex items-end gap-2"
         onSubmit={(event) => {
           event.preventDefault();
-          void talk();
+          void talk({ text: draft });
         }}
       >
         <Textarea
@@ -179,13 +214,28 @@ export function CompanionTalkPanel({
           onKeyDown={(event) => {
             if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
               event.preventDefault();
-              void talk();
+              void talk({ text: draft });
             }
           }}
           placeholder="ゆーとぴあちゃんに話しかける…"
           rows={2}
           className="min-h-0 resize-none"
         />
+        <Button
+          type="button"
+          size="icon"
+          variant={ears.state.status === "listening" ? "default" : "outline"}
+          aria-pressed={ears.state.status === "listening"}
+          disabled={
+            Boolean(activity) ||
+            ears.state.status === "loading" ||
+            ears.state.status === "transcribing"
+          }
+          onClick={() => void ears.toggle()}
+        >
+          <MicIcon />
+          <span className="sr-only">声で話しかける</span>
+        </Button>
         {activity ? (
           <Button type="button" size="icon" variant="outline" onClick={brain.interrupt}>
             <SquareIcon />

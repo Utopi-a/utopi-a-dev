@@ -14,6 +14,8 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
     useNativeEsbuild: true,
     globIgnores: [
       "**/node_modules/**/*",
+      // LFM3-Omni の WASM（数 MB）は使う人だけが取得すればよいので、全訪問者に事前保存しない
+      "public/lfm3-omni/**",
       "public/forms/**",
       "public/opengraph-image.jpg",
       "public/screenshots/**",

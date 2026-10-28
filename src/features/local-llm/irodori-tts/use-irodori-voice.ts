@@ -106,5 +106,8 @@ export function useIrodoriVoice() {
     [],
   );
 
-  return { state, turnOn, turnOff, stop, follow };
+  /** いま鳴っている読み上げの大きさ（RMS）。口の動きに使う */
+  const level = useCallback(() => speakerRef.current?.level() ?? 0, []);
+
+  return { state, turnOn, turnOff, stop, follow, level };
 }

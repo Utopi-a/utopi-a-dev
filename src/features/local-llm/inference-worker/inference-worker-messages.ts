@@ -16,11 +16,36 @@ export type InferenceAudioClip = {
   samples: Float32Array;
 };
 
+/** モデルが呼び出したツール。引数の値は型の付かない文字列で返る */
+export type InferenceToolCall = {
+  id: string;
+  name: string;
+  arguments: Record<string, string>;
+};
+
+/** モデルに渡すツールの定義（JSON Schema の function 形式） */
+export type InferenceTool = {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: {
+      type: "object";
+      properties: Record<string, { type: "string"; description: string }>;
+      required: string[];
+    };
+  };
+};
+
 export type InferenceMessage = {
-  role: "user" | "assistant" | "system";
+  role: "user" | "assistant" | "system" | "tool";
   content: string;
   images?: InferenceImageAttachment[];
   audio?: InferenceAudioClip[];
+  /** assistant がこのターンで呼び出したツール */
+  toolCalls?: InferenceToolCall[];
+  /** role が tool のとき、どの呼び出しへの結果か */
+  toolCallId?: string;
 };
 
 /** 音声を扱うモデルの返答のしかた。文字起こし・読み上げは言語を指定する */
@@ -37,7 +62,13 @@ export type WorkerModelConfig = {
 export type InferenceWorkerCommand =
   | { type: "check" }
   | { type: "load"; model: WorkerModelConfig | Pick<FusorLocalLlmModel, "kind"> }
-  | { type: "generate"; data: InferenceMessage[]; replyMode?: LocalLlmReplyMode }
+  | {
+      type: "generate";
+      data: InferenceMessage[];
+      replyMode?: LocalLlmReplyMode;
+      /** 呼び出せるツール。いまは LFM3-VL だけがテンプレートに渡す */
+      tools?: InferenceTool[];
+    }
   | { type: "interrupt" }
   | { type: "reset" };
 

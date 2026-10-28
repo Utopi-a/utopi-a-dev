@@ -104,6 +104,7 @@ export function createInferenceSession({ postEvent }: { postEvent: InferenceWork
           await generateVision({
             messages: command.data,
             kind: activeModelConfig.kind,
+            tools: command.tools,
             postEvent,
           });
           break;

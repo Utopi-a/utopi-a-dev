@@ -61,10 +61,14 @@ export async function generateText({
 
   const chatMessages = messages.map(({ role, content }) => ({ role, content }));
 
-  const inputs = tokenizer.apply_chat_template(chatMessages, {
+  // LFM3 のテンプレートは思考モードが既定で有効。チャット欄に推論過程を流さないため切る（他モデルのテンプレートは無視する）。
+  // apply_chat_template は未知のキーをテンプレート変数として渡すが、型には載っていないので変数経由で渡す
+  const templateOptions = {
     add_generation_prompt: true,
     return_dict: true,
-  });
+    enable_thinking: false,
+  };
+  const inputs = tokenizer.apply_chat_template(chatMessages, templateOptions);
 
   let startTime: number | undefined;
   let numTokens = 0;

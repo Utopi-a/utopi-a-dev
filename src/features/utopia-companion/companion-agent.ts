@@ -40,11 +40,19 @@ const MAX_STEPS = 4;
 const MAX_TOOL_CALLS = 6;
 
 /**
- * 道具を使い切ったあとに答えさせる指示。道具を外しただけだと、小さいモデルは呼び出しを書き続けて
- * 返事が空になる（ブラウザで確かめた）ので、ここまでの結果で話すようはっきり伝える
+ * 道具を使い切ったあとに答えさせる指示。道具を外しても、呼び出しのやり取りが見えていると小さいモデルは
+ * 呼び出しを書き続けて返事が空になる（Node と ブラウザで確かめた）。やり取りは見せず、結果だけを文章で渡す
  */
 const ANSWER_NOW =
-  "（道具はもう使えない。ここまでに分かったことをもとに、気持ちのタグを付けて相手に返事をする。分からなかったことは正直に言う）";
+  "（道具はもう使えない。上の調べた結果をもとに、気持ちのタグを付けて相手に返事をする。分からなかったことは正直に言う）";
+/** それでも答えられなかったときの返事 */
+const FALLBACK_ANSWER = "[neutral] ごめん、うまく答えられなかった。もう一度聞いてみてくれる？";
+
+/**
+ * 思考モードを使うか。LFM3-1.7B で同じ質問を比べると、思考なしでも道具の選び方は崩れず、
+ * 思考ありは雑談でも上限まで考え込んで、1 手が数倍遅くなった（Node の CPU で計測）
+ */
+const USES_THINKING = false;
 
 function callKey({ call }: { call: InferenceToolCall }) {
   return JSON.stringify([call.name, Object.entries(call.arguments).sort()]);
@@ -69,6 +77,7 @@ export async function runCompanionTurn({
   tools = COMPANION_TOOLS,
   context,
   onStep,
+  thinking = USES_THINKING,
 }: {
   userText: string;
   images?: InferenceImageAttachment[];
@@ -78,15 +87,20 @@ export async function runCompanionTurn({
   tools?: readonly CompanionTool[];
   context: CompanionToolContext;
   onStep?: (step: CompanionStep) => void;
+  /** 思考モードで次の手を考えさせるか */
+  thinking?: boolean;
 }) {
   const memory = readCompanionMemory({ storage: context.storage });
   const available = selectCompanionTools({ tools, userText });
-  const messages: InferenceMessage[] = [
+  const conversation: InferenceMessage[] = [
     {
       role: "system",
       content: buildCompanionSystemPrompt({ memories: memory.notes, now: context.now }),
     },
     ...memory.history,
+  ];
+  const messages: InferenceMessage[] = [
+    ...conversation,
     { role: "user", content: userText, images },
   ];
 
@@ -101,9 +115,9 @@ export async function runCompanionTurn({
     const output = await generate({
       messages: [...messages],
       tools: available.map((tool) => tool.definition),
-      thinking: true,
+      thinking,
     });
-    const { visible, isComplete } = splitThinking({ output });
+    const { visible, isComplete } = splitThinking({ output, isThinkingRequested: thinking });
     if (!isComplete) {
       break;
     }
@@ -141,14 +155,26 @@ export async function runCompanionTurn({
   if (answer.length === 0) {
     throwIfAborted({ signal: context.signal });
     onStep?.({ type: "answering" });
-    if (messages.at(-1)?.role === "tool") {
-      messages.push({ role: "user", content: ANSWER_NOW });
-    }
-    const output = await generate({ messages: [...messages], tools: [], thinking: false });
+    const findings = [...results.values()];
+    const output = await generate({
+      messages: [
+        ...conversation,
+        {
+          role: "user",
+          content:
+            findings.length > 0
+              ? `${userText}\n\n（調べた結果）\n${findings.join("\n\n")}\n\n${ANSWER_NOW}`
+              : userText,
+          images,
+        },
+      ],
+      tools: [],
+      thinking: false,
+    });
     answer = parseToolCalls({ output: splitThinking({ output }).visible, idPrefix: "final" }).text;
   }
 
-  const { expression, speech } = parseCompanionReply({ text: answer });
+  const { expression, speech } = parseCompanionReply({ text: answer || FALLBACK_ANSWER });
   const reply = speech || "…";
   appendCompanionHistory({
     storage: context.storage,

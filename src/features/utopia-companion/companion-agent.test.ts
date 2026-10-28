@@ -49,6 +49,7 @@ describe("runCompanionTurn", () => {
       generate,
       context: { fetch: wikipediaFetch(), storage, now },
       onStep,
+      thinking: true,
     });
 
     expect(result).toEqual({
@@ -92,6 +93,7 @@ describe("runCompanionTurn", () => {
       userText: "やっほー",
       generate,
       context: { fetch, storage: createMemoryStorage(), now },
+      thinking: true,
     });
 
     expect(result).toEqual({ expression: "smile", speech: "やっほー。" });
@@ -119,7 +121,7 @@ describe("runCompanionTurn", () => {
     });
   });
 
-  it("道具を使い続けたら 4 手で切り上げ、道具も思考もなしで分かったことを答えさせる", async () => {
+  it("道具を使い続けたら 4 手で切り上げ、呼び出しのやり取りは見せずに調べた結果で答えさせる", async () => {
     const generate = vi.fn<CompanionGenerate>();
     for (const query of ["a", "b", "c", "d"]) {
       generate.mockResolvedValueOnce(toolCall({ name: "search_wikipedia", args: { query } }));
@@ -133,19 +135,14 @@ describe("runCompanionTurn", () => {
     });
 
     expect(result).toEqual({ expression: "neutral", speech: "はっきりは分からなかった。" });
-    expect(
-      generate.mock.calls.map(([options]) => [options.tools.length, options.thinking]),
-    ).toEqual([
-      [2, true],
-      [2, true],
-      [2, true],
-      [2, true],
-      [0, false],
-    ]);
-    expect(generate.mock.calls[4][0].messages.at(-1)).toEqual({
-      role: "user",
-      content: expect.stringContaining("道具はもう使えない"),
-    });
+    expect(generate.mock.calls.map(([options]) => options.tools.length)).toEqual([2, 2, 2, 2, 0]);
+    const finalMessages = generate.mock.calls[4][0].messages;
+    expect(finalMessages.some((message) => message.role === "tool" || message.toolCalls)).toBe(
+      false,
+    );
+    expect(finalMessages.at(-1)?.content).toMatch(
+      /^いろいろ調べて\n\n（調べた結果）\n成功: 記事「富士山」[\s\S]*道具はもう使えない/,
+    );
   });
 
   it("同じ呼び出しを繰り返したら、もう実行せずに答えさせる", async () => {
@@ -166,7 +163,7 @@ describe("runCompanionTurn", () => {
     expect(result.speech).toBe("同じ結果だったよ。");
     // 検索と冒頭の取得で 2 回。繰り返しの呼び出しでは取りに行かない
     expect(fetch).toHaveBeenCalledTimes(2);
-    expect(generate.mock.calls.map(([options]) => options.thinking)).toEqual([true, true, false]);
+    expect(generate.mock.calls.map(([options]) => options.tools.length)).toEqual([2, 2, 0]);
   });
 
   it("考えている途中で上限に達したら、思考なしで答え直させる", async () => {
@@ -179,12 +176,45 @@ describe("runCompanionTurn", () => {
       userText: "ねえねえ",
       generate,
       context: { fetch: vi.fn(), storage: createMemoryStorage(), now },
+      thinking: true,
     });
 
     expect(result).toEqual({ expression: "shy", speech: "えへへ、なんでもないよ。" });
     expect(generate.mock.calls[1][0]).toEqual(
       expect.objectContaining({ tools: [], thinking: false }),
     );
+  });
+
+  it("思考を頼んで閉じタグがないまま終わったら、考えた文を返事として読まない", async () => {
+    const generate = vi
+      .fn<CompanionGenerate>()
+      .mockResolvedValueOnce("We need to respond in a friendly tone")
+      .mockResolvedValueOnce("[smile] やっほー。");
+
+    const result = await runCompanionTurn({
+      userText: "やっほー",
+      generate,
+      context: { fetch: vi.fn(), storage: createMemoryStorage(), now },
+      thinking: true,
+    });
+
+    expect(result).toEqual({ expression: "smile", speech: "やっほー。" });
+  });
+
+  it("最後まで呼び出ししか書かなかったら、答えられなかったと正直に返す", async () => {
+    const call = toolCall({ name: "search_wikipedia", args: { query: "x" } });
+    const generate = vi.fn<CompanionGenerate>().mockResolvedValue(call);
+
+    const result = await runCompanionTurn({
+      userText: "調べて",
+      generate,
+      context: { fetch: wikipediaFetch(), storage: createMemoryStorage(), now },
+    });
+
+    expect(result).toEqual({
+      expression: "neutral",
+      speech: "ごめん、うまく答えられなかった。もう一度聞いてみてくれる？",
+    });
   });
 
   it("取りやめたら返事を作らず、会話も残さない", async () => {

@@ -20,6 +20,14 @@ describe("splitThinking", () => {
     });
   });
 
+  it("思考を頼んだのに閉じタグがなければ、全体を考えている途中とみなす", () => {
+    expect(splitThinking({ output: "We need to answer", isThinkingRequested: true })).toEqual({
+      thinking: "We need to answer",
+      visible: "",
+      isComplete: false,
+    });
+  });
+
   it("思考がなければ全体を発言とする", () => {
     expect(splitThinking({ output: " [neutral] うん。 " })).toEqual({
       thinking: "",

@@ -25,8 +25,8 @@ export type InferenceMessage = {
 
 /** 音声を扱うモデルの返答のしかた。文字起こし・読み上げは言語を指定する */
 export type LocalLlmReplyMode =
-  | { mode: "text" | "interleaved" }
-  | { mode: "transcribe" | "speech"; language: "Japanese" | "English" };
+  | { mode: "text" }
+  | { mode: "transcribe"; language: "Japanese" | "English" };
 
 export type WorkerModelConfig = {
   huggingFaceModelId: string;
@@ -56,7 +56,6 @@ export type InferenceWorkerEvent =
   | { status: "ready"; modelId: string }
   | { status: "start" }
   | { status: "update"; output: string; tps: number | null; numTokens: number }
-  | { status: "speech"; seconds: number }
   | { status: "complete" }
   | { status: "error"; data: string }
   /** 読み込んだモデルはそのまま使える、1 回の返答だけの失敗 */

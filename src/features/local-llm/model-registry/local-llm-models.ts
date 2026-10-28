@@ -159,7 +159,7 @@ export const LOCAL_LLM_MODELS: readonly LocalLlmModelDefinition[] = [
     id: "lfm3-omni-2b",
     label: "LFM3-Omni-2B",
     description:
-      "画像と音声も扱える 2B モデル。音声での会話・文字起こし・読み上げができる。CPU で動き、3 GB 前後のメモリを使う。",
+      "画像と音声も扱える 2B モデル。声で質問したり、音声を文字起こししたりできる。CPU で動き、3 GB 前後のメモリを使う。",
     huggingFaceModelId: "LiquidAI/LFM3-Omni-2B",
     huggingFaceUrl: "https://huggingface.co/LiquidAI/LFM3-Omni-2B",
     kind: "fusor-lfm3-omni",

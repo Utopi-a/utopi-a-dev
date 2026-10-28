@@ -14,7 +14,6 @@ import {
 // バンドラを通すとランタイムの動的 import が書き換わるので、public から配信してそのまま読む。
 const ENGINE_WORKER_URL = "/lfm3-omni/engine-worker.js";
 const BUNDLE_LABEL = "LFM3-Omni-2B（fusor 7bit バンドル）";
-const SPOKEN_SAMPLE_RATE = 24_000;
 
 type ReplyProgress = {
   answer: string;
@@ -28,7 +27,6 @@ type EngineMessage =
   | { type: "started"; job: number }
   | ({ type: "reply"; job: number } & ReplyProgress)
   | ({ type: "done"; job: number; stopped: boolean } & Partial<ReplyProgress>)
-  | { type: "speech"; job: number; samples: Float32Array }
   | { type: "error" | "fatal"; job?: number; message: string };
 
 type OmniEngineClientOptions = {
@@ -88,40 +86,12 @@ export function createOmniEngineClient({
   let isLoaded = false;
   let jobs = 0;
   let currentJob: { id: number; answer: string; firstTokenAt: number | null } | null = null;
-  let speaker: AudioContext | null = null;
-  let playAt = 0;
-  const playing = new Set<AudioBufferSourceNode>();
 
   const emit = (event: InferenceWorkerEvent) => {
     if (!isTerminated) {
       onMessage(new MessageEvent("message", { data: event }));
     }
   };
-
-  function stopSpeech() {
-    for (const source of playing) {
-      source.stop();
-    }
-    playing.clear();
-    playAt = 0;
-  }
-
-  /** 返答が話した 24 kHz の音声を、前の音声の直後に続けて鳴らす */
-  function play({ samples }: { samples: Float32Array }) {
-    if (!speaker) {
-      return;
-    }
-    const buffer = speaker.createBuffer(1, samples.length, SPOKEN_SAMPLE_RATE);
-    buffer.copyToChannel(new Float32Array(samples), 0);
-    const source = speaker.createBufferSource();
-    source.buffer = buffer;
-    source.connect(speaker.destination);
-    source.onended = () => playing.delete(source);
-    playAt = Math.max(playAt, speaker.currentTime);
-    source.start(playAt);
-    playAt += buffer.duration;
-    playing.add(source);
-  }
 
   function emitReply({ answer: rawAnswer, tokens }: ReplyProgress) {
     if (!currentJob) {
@@ -179,12 +149,6 @@ export function createOmniEngineClient({
           emitReply(data);
         }
         return;
-      case "speech":
-        if (data.job === currentJob?.id) {
-          play({ samples: data.samples });
-          emit({ status: "speech", seconds: data.samples.length / SPOKEN_SAMPLE_RATE });
-        }
-        return;
       case "done":
         if (data.job !== currentJob?.id) {
           return;
@@ -239,11 +203,6 @@ export function createOmniEngineClient({
       seed,
     });
 
-    if (replyMode.mode === "speech" || replyMode.mode === "interleaved") {
-      speaker ??= new AudioContext({ sampleRate: SPOKEN_SAMPLE_RATE });
-      void speaker.resume();
-    }
-    stopSpeech();
     currentJob = { id: ++jobs, answer: "", firstTokenAt: null };
     worker.postMessage(
       { type: "send", job: currentJob.id, message: engineMessage, rgba, audio, layout },
@@ -277,21 +236,17 @@ export function createOmniEngineClient({
           });
           return;
         case "interrupt":
-          stopSpeech();
           if (currentJob) {
             worker.postMessage({ type: "stop", job: currentJob.id });
           }
           return;
         case "reset":
-          stopSpeech();
           worker.postMessage({ type: "reset" });
           return;
       }
     },
     terminate() {
       isTerminated = true;
-      stopSpeech();
-      void speaker?.close();
       worker.terminate();
     },
   };

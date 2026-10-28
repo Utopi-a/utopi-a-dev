@@ -9,10 +9,8 @@ type ReplyModeSelectorProps = {
 };
 
 const MODE_OPTIONS = [
-  { value: "text", label: "テキスト" },
-  { value: "interleaved", label: "テキストと音声" },
+  { value: "text", label: "会話" },
   { value: "transcribe", label: "文字起こし" },
-  { value: "speech", label: "読み上げ" },
 ] as const satisfies readonly { value: LocalLlmReplyMode["mode"]; label: string }[];
 
 const LANGUAGE_OPTIONS = [
@@ -34,13 +32,13 @@ export function ReplyModeSelector({
   const language = "language" in replyMode ? replyMode.language : "Japanese";
 
   function changeMode(mode: LocalLlmReplyMode["mode"]) {
-    onChange(mode === "transcribe" || mode === "speech" ? { mode, language } : { mode });
+    onChange(mode === "transcribe" ? { mode, language } : { mode });
   }
 
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm">
       <Label htmlFor="local-llm-reply-mode" className="text-muted-foreground">
-        返答
+        モード
       </Label>
       <select
         id="local-llm-reply-mode"

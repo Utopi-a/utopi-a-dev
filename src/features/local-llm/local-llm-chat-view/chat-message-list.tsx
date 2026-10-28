@@ -18,10 +18,8 @@ export function ChatMessageList({ messages, isGenerating, containerRef }: ChatMe
     >
       {messages.map((message) => {
         const isPending = isGenerating && message.id === messages.at(-1)?.id;
-        // 音声だけの発言や、音声だけで返した返答には吹き出しを出さない
-        const hasBubble =
-          message.content.length > 0 ||
-          (message.role === "assistant" && isPending && !message.spokenSeconds);
+        // 音声だけの発言には吹き出しを出さない
+        const hasBubble = message.content.length > 0 || (message.role === "assistant" && isPending);
 
         return (
           <div
@@ -53,9 +51,6 @@ export function ChatMessageList({ messages, isGenerating, containerRef }: ChatMe
                   <ChatAudioChip key={clip.id} clip={clip} />
                 ))}
               </div>
-            ) : null}
-            {message.spokenSeconds ? (
-              <ChatAudioChip clip={{ name: "音声で返答", seconds: message.spokenSeconds }} />
             ) : null}
             {hasBubble ? (
               <div

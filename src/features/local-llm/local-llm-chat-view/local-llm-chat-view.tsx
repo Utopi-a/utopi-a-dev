@@ -144,20 +144,6 @@ export function LocalLlmChatView() {
         return;
       }
 
-      if (payload.status === "speech") {
-        setMessages((prev) => {
-          const last = prev.at(-1);
-          if (last?.role !== "assistant") {
-            return prev;
-          }
-          return [
-            ...prev.slice(0, -1),
-            { ...last, spokenSeconds: (last.spokenSeconds ?? 0) + payload.seconds },
-          ];
-        });
-        return;
-      }
-
       if (payload.status === "complete") {
         setIsGenerating(false);
         setPhase("ready");

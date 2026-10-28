@@ -66,7 +66,7 @@ export type InferenceWorkerCommand =
       type: "generate";
       data: InferenceMessage[];
       replyMode?: LocalLlmReplyMode;
-      /** 呼び出せるツール。いまは LFM3-VL だけがテンプレートに渡す */
+      /** 呼び出せるツール。テキストのモデルと LFM3-VL のテンプレートに渡す */
       tools?: InferenceTool[];
     }
   | { type: "interrupt" }

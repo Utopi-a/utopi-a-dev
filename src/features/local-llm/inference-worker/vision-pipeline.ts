@@ -10,6 +10,7 @@ import {
   RawImage,
   TextStreamer,
 } from "@huggingface/transformers";
+import { toChatTemplateMessage } from "@/features/local-llm/inference-worker/chat-template-message";
 import type {
   InferenceMessage,
   InferenceTool,
@@ -104,23 +105,8 @@ async function buildChatMessagesWithImages({ messages }: { messages: InferenceMe
   const images: Awaited<ReturnType<typeof loadImageFromDataUrl>>[] = [];
   const chatMessages = await Promise.all(
     messages.map(async (message) => {
-      if (message.role === "tool") {
-        return { role: "tool", tool_call_id: message.toolCallId, content: message.content };
-      }
-      if (message.toolCalls?.length) {
-        // LFM3 のテンプレートは arguments をオブジェクトで受け取る（JSON 文字列だと例外になる）
-        return {
-          role: message.role,
-          content: message.content,
-          tool_calls: message.toolCalls.map(({ id, name, arguments: args }) => ({
-            id,
-            type: "function",
-            function: { name, arguments: args },
-          })),
-        };
-      }
       if (message.role !== "user" || !message.images?.length) {
-        return { role: message.role, content: message.content };
+        return toChatTemplateMessage({ message });
       }
 
       const loadedImages = await Promise.all(

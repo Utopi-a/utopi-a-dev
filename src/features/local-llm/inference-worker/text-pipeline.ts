@@ -5,8 +5,10 @@ import {
   InterruptableStoppingCriteria,
   TextStreamer,
 } from "@huggingface/transformers";
+import { toChatTemplateMessage } from "@/features/local-llm/inference-worker/chat-template-message";
 import type {
   InferenceMessage,
+  InferenceTool,
   InferenceWorkerEventSender,
   WorkerModelConfig,
 } from "@/features/local-llm/inference-worker/inference-worker-messages";
@@ -53,16 +55,18 @@ export async function loadTextModel({
 
 export async function generateText({
   messages,
+  tools,
   postEvent,
 }: {
   messages: InferenceMessage[];
+  tools?: InferenceTool[];
   postEvent: InferenceWorkerEventSender;
 }) {
   if (!tokenizer || !model) {
     throw new Error("Text model is not loaded");
   }
 
-  const chatMessages = messages.map(({ role, content }) => ({ role, content }));
+  const chatMessages = messages.map((message) => toChatTemplateMessage({ message }));
 
   // LFM3 のテンプレートは思考モードが既定で有効。チャット欄に推論過程を流さないため切る（他モデルのテンプレートは無視する）。
   // apply_chat_template は未知のキーをテンプレート変数として渡すが、型には載っていないので変数経由で渡す
@@ -70,6 +74,7 @@ export async function generateText({
     add_generation_prompt: true,
     return_dict: true,
     enable_thinking: false,
+    tools: tools?.length ? tools : undefined,
   };
   const inputs = tokenizer.apply_chat_template(chatMessages, templateOptions);
 

@@ -8,6 +8,11 @@ const MODEL_URL = "/utopia-live2d/utopia.model3.json";
 /** 頭を撫でたと見なす範囲（モデルの高さに対する上からの割合） */
 const HEAD_PAT_RATIO = 0.3;
 const REACTION_MILLISECONDS = 2200;
+/**
+ * カーソルを追うときの動き。エンジン任せ（autoFocus）だと首が ±30 度・体まで向いて大げさなので、
+ * 目線を主にして首は少しだけ向ける。値はパラメータに足す量（目は -1〜1、角度は度）
+ */
+const GAZE = { eye: 0.8, angleX: 8, angleY: 6, smoothing: 0.08 } as const;
 
 type StageStatus = "loading" | "ready" | "unsupported";
 
@@ -21,10 +26,13 @@ export type Live2DStageHandle = {
 export function UtopiaLive2DStage({
   handleRef,
   voiceLevelRef,
+  followCursorRef,
   reactionExpression,
 }: {
   handleRef: RefObject<Live2DStageHandle | null>;
   voiceLevelRef: RefObject<number>;
+  /** true の間だけカーソルを目で追う。毎フレーム読むので ref で渡す */
+  followCursorRef: RefObject<boolean>;
   /** 頭を撫でたときに一時的に出す表情 */
   reactionExpression: string;
 }) {
@@ -65,7 +73,7 @@ export function UtopiaLive2DStage({
         resizeTo: target,
         preference: "webgl",
       });
-      const model = await Live2DModel.from(MODEL_URL, { autoFocus: true, autoHitTest: false });
+      const model = await Live2DModel.from(MODEL_URL, { autoFocus: false, autoHitTest: false });
       if (disposed) {
         app.destroy(true, { children: true });
         return;
@@ -95,18 +103,46 @@ export function UtopiaLive2DStage({
         getParameterValueByIndex(index: number): number;
         setParameterValueByIndex(index: number, value: number): void;
       };
-      let mouthIndex = -1;
+      const parameterIndex = new Map<string, number>();
       for (let index = 0; index < coreModel.getParameterCount(); index++) {
-        if (coreModel.getParameterId(index).getString().s === "ParamMouthOpenY") {
-          mouthIndex = index;
+        parameterIndex.set(coreModel.getParameterId(index).getString().s, index);
+      }
+      const mouthIndex = parameterIndex.get("ParamMouthOpenY") ?? -1;
+      function addToParameter({ id, value }: { id: string; value: number }) {
+        const index = parameterIndex.get(id);
+        if (index !== undefined) {
+          coreModel.setParameterValueByIndex(
+            index,
+            coreModel.getParameterValueByIndex(index) + value,
+          );
         }
       }
+
+      // カーソルの位置（モデルの中心から見た向き、-1〜1）。追わないときは正面へゆっくり戻す
+      const gazeTarget = { x: 0, y: 0 };
+      const gaze = { x: 0, y: 0 };
+      function handlePointerMove(event: PointerEvent) {
+        const bounds = app.canvas.getBoundingClientRect();
+        const centerX = bounds.left + bounds.width / 2;
+        const centerY = bounds.top + bounds.height * 0.3;
+        gazeTarget.x = Math.max(-1, Math.min(1, (event.clientX - centerX) / bounds.width));
+        gazeTarget.y = Math.max(-1, Math.min(1, (centerY - event.clientY) / bounds.height));
+      }
+      window.addEventListener("pointermove", handlePointerMove);
+
       model.internalModel.on("beforeModelUpdate", () => {
         const level = voiceLevelRef.current;
         if (mouthIndex >= 0 && level > 0) {
           const current = coreModel.getParameterValueByIndex(mouthIndex);
           coreModel.setParameterValueByIndex(mouthIndex, Math.max(current, level));
         }
+        const follow = followCursorRef.current;
+        gaze.x += ((follow ? gazeTarget.x : 0) - gaze.x) * GAZE.smoothing;
+        gaze.y += ((follow ? gazeTarget.y : 0) - gaze.y) * GAZE.smoothing;
+        addToParameter({ id: "ParamEyeBallX", value: gaze.x * GAZE.eye });
+        addToParameter({ id: "ParamEyeBallY", value: gaze.y * GAZE.eye });
+        addToParameter({ id: "ParamAngleX", value: gaze.x * GAZE.angleX });
+        addToParameter({ id: "ParamAngleY", value: gaze.y * GAZE.angleY });
       });
 
       let currentExpression: string | null = null;
@@ -164,6 +200,7 @@ export function UtopiaLive2DStage({
       cleanup = () => {
         window.clearTimeout(reactionTimer);
         app.canvas.removeEventListener("pointerdown", handleTap);
+        window.removeEventListener("pointermove", handlePointerMove);
         handleRef.current = null;
         app.destroy(true, { children: true });
       };
@@ -174,7 +211,7 @@ export function UtopiaLive2DStage({
       disposed = true;
       cleanup();
     };
-  }, [handleRef, voiceLevelRef]);
+  }, [handleRef, voiceLevelRef, followCursorRef]);
 
   return (
     // 絵は胸の下で切れているので、下端を地の色へ溶かす

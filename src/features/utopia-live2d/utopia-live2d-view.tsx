@@ -1,6 +1,6 @@
 "use client";
 
-import { MicIcon, MicOffIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, MicIcon, MicOffIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/features/portfolio/page-header/page-header";
@@ -25,12 +25,18 @@ export function UtopiaLive2DView() {
   const voice = useVoiceLevel();
   const speechLevelRef = useRef(0);
   const mouthLevelRef = useRef(0);
+  const [followsCursor, setFollowsCursor] = useState(false);
+  const followsCursorRef = useRef(followsCursor);
+  followsCursorRef.current = followsCursor;
+  const followCursorRef = useRef(false);
 
-  // 口はマイクの声と、ゆーとぴあちゃんの読み上げの大きいほうで開ける
+  // 口はマイクの声と、ゆーとぴあちゃんの読み上げの大きいほうで開ける。
+  // 話している間は、カーソルを追うモードでも相手（正面）を見る
   useEffect(() => {
     let frame = 0;
     const tick = () => {
       mouthLevelRef.current = Math.max(voice.levelRef.current, speechLevelRef.current);
+      followCursorRef.current = followsCursorRef.current && speechLevelRef.current === 0;
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
@@ -57,6 +63,7 @@ export function UtopiaLive2DView() {
           <UtopiaLive2DStage
             handleRef={handleRef}
             voiceLevelRef={mouthLevelRef}
+            followCursorRef={followCursorRef}
             reactionExpression="shy"
           />
         </div>
@@ -87,6 +94,19 @@ export function UtopiaLive2DView() {
                 </Button>
               ))}
             </div>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="pf-heading">視線</h2>
+            <Button
+              variant={followsCursor ? "default" : "outline"}
+              className="w-full"
+              aria-pressed={followsCursor}
+              onClick={() => setFollowsCursor((prev) => !prev)}
+            >
+              {followsCursor ? <EyeIcon /> : <EyeOffIcon />}
+              カーソルを目で追う
+            </Button>
           </section>
 
           <section className="space-y-3">

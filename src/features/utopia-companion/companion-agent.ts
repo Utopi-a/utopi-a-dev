@@ -26,6 +26,13 @@ export type CompanionGenerate = (options: {
 /** 道具を使うのは 1 回の返事につき 2 回まで。2B のモデルでは、それ以上続けると話がそれやすい */
 const MAX_TOOL_ROUNDS = 2;
 
+/**
+ * 道具を使い切ったあとに答えさせる指示。道具を外しただけだと、2B 未満のモデルは呼び出しを書き続けて
+ * 返事が空になる（ブラウザで確かめた）ので、ここまでの結果で話すようはっきり伝える
+ */
+const ANSWER_NOW =
+  "（道具はもう使えない。ここまでに分かったことをもとに、気持ちのタグを付けて相手に返事をする）";
+
 function callKey({ call }: { call: InferenceToolCall }) {
   return JSON.stringify([call.name, Object.entries(call.arguments).sort()]);
 }
@@ -65,23 +72,15 @@ export async function runCompanionTurn({
   const definitions = tools.map((tool) => tool.definition);
   // 同じ道具を同じ引数で呼び直すのは空回りなので、結果を使い回して答えさせる
   const results = new Map<string, string>();
-  let output = "";
-  for (let round = 0; ; round += 1) {
-    const canUseTools = round < MAX_TOOL_ROUNDS;
-    output = await generate({ messages, tools: canUseTools ? definitions : [] });
+  let answer: string | null = null;
+  for (let round = 0; round < MAX_TOOL_ROUNDS && answer === null; round += 1) {
+    const output = await generate({ messages, tools: definitions });
     const { toolCalls, text } = parseToolCalls({ output, idPrefix: `call-${round}` });
-    const isRepeating =
-      toolCalls.length > 0 && toolCalls.every((call) => results.has(callKey({ call })));
-    if (toolCalls.length === 0 || !canUseTools || isRepeating) {
-      output = text;
-      if (output.length > 0 || toolCalls.length === 0) {
-        break;
-      }
-      // 道具の呼び出しだけで答えがないときは、道具なしでもう 1 度答えさせる
-      output = parseToolCalls({
-        output: await generate({ messages, tools: [] }),
-        idPrefix: "final",
-      }).text;
+    if (toolCalls.length === 0) {
+      answer = text;
+      break;
+    }
+    if (toolCalls.every((call) => results.has(callKey({ call })))) {
       break;
     }
     messages.push({ role: "assistant", content: text, toolCalls });
@@ -94,8 +93,15 @@ export async function runCompanionTurn({
       messages.push({ role: "tool", toolCallId: call.id, content: result });
     }
   }
+  if (answer === null) {
+    messages.push({ role: "user", content: ANSWER_NOW });
+    answer = parseToolCalls({
+      output: await generate({ messages, tools: [] }),
+      idPrefix: "final",
+    }).text;
+  }
 
-  const { expression, speech } = parseCompanionReply({ text: output });
+  const { expression, speech } = parseCompanionReply({ text: answer });
   const reply = speech || "…";
   appendCompanionHistory({
     storage: context.storage,

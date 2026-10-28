@@ -93,6 +93,10 @@ describe("runCompanionTurn", () => {
 
     expect(result).toEqual({ expression: "smile", speech: "読んだよ。" });
     expect(generate.mock.calls.map(([options]) => options.tools.length)).toEqual([3, 3, 0]);
+    expect(generate.mock.calls[2][0].messages.at(-1)).toEqual({
+      role: "user",
+      content: expect.stringContaining("道具はもう使えない"),
+    });
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(readCompanionMemory({ storage }).history[0]).toEqual({
       role: "user",

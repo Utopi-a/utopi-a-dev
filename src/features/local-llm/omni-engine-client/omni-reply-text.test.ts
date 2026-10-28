@@ -26,10 +26,10 @@ describe("nextReplyDelta", () => {
 });
 
 describe("systemTextFor", () => {
-  it("モデルカードの書き方で各モードの system 文を作る", () => {
+  it("モデルカードの書き方で各モードの system 文を作り、テキストと音声の返答は話しかけた言語に合わせる", () => {
     expect(systemTextFor({ replyMode: { mode: "text" } })).toBe("");
     expect(systemTextFor({ replyMode: { mode: "interleaved" } })).toBe(
-      "Respond with interleaved text and audio.",
+      "Always reply in the same language the user speaks. Respond with interleaved text and audio.",
     );
     expect(systemTextFor({ replyMode: { mode: "transcribe", language: "Japanese" } })).toBe(
       "Perform ASR in Japanese.",

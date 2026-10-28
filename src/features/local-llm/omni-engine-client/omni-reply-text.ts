@@ -8,7 +8,9 @@ export function systemTextFor({ replyMode }: { replyMode: LocalLlmReplyMode }) {
     case "speech":
       return `Perform TTS in ${replyMode.language} using a female voice.`;
     case "interleaved":
-      return "Respond with interleaved text and audio.";
+      // 指示文だけでは日本語で話しかけても英語で返すので、言語を合わせる指示を足す。
+      // モードの指示は system 文の最後に置くようモデルカードにあるので、その前に置く
+      return "Always reply in the same language the user speaks. Respond with interleaved text and audio.";
     case "text":
       return "";
   }

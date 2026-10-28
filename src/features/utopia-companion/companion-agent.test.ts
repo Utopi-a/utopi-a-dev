@@ -43,7 +43,10 @@ describe("runCompanionTurn", () => {
       expression: "grin",
       speech: "富士山は 3776 メートルあるんだって、りょう。",
     });
-    expect(onToolCall).toHaveBeenCalledWith(expect.objectContaining({ name: "search_wikipedia" }));
+    expect(onToolCall).toHaveBeenCalledWith({
+      call: expect.objectContaining({ name: "search_wikipedia" }),
+      description: "ウィキペディアで「富士山」を調べてる…",
+    });
 
     const [first, second] = generate.mock.calls.map(([options]) => options);
     expect(first.messages[0].content).toContain("- 相手の名前はりょう");
@@ -67,19 +70,21 @@ describe("runCompanionTurn", () => {
     ]);
   });
 
-  it("道具を使い続けても 2 回までで打ち切り、3 回目は道具なしで答えさせる", async () => {
+  it("道具は 2 回までで打ち切り、3 回目は道具なしで答えさせる", async () => {
     const storage = createMemoryStorage();
-    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(new Response("本文"));
-    const call =
-      "<tool_call>\n<function=read_web_page>\n<parameter=url>\nhttps://example.com\n</parameter>\n</function>\n</tool_call>";
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockImplementation(async () => new Response("本文"));
+    const readCall = (url: string) =>
+      `<tool_call>\n<function=read_web_page>\n<parameter=url>\n${url}\n</parameter>\n</function>\n</tool_call>`;
     const generate = vi
       .fn<CompanionGenerate>()
-      .mockResolvedValueOnce(call)
-      .mockResolvedValueOnce(call)
+      .mockResolvedValueOnce(readCall("https://example.com/a"))
+      .mockResolvedValueOnce(readCall("https://example.com/b"))
       .mockResolvedValueOnce("[smile] 読んだよ。");
 
     const result = await runCompanionTurn({
-      userText: "https://example.com 読んで",
+      userText: "2 つのページを読んで",
       historyText: "（ページを渡した）",
       generate,
       context: { fetch, storage },
@@ -88,9 +93,35 @@ describe("runCompanionTurn", () => {
 
     expect(result).toEqual({ expression: "smile", speech: "読んだよ。" });
     expect(generate.mock.calls.map(([options]) => options.tools.length)).toEqual([3, 3, 0]);
+    expect(fetch).toHaveBeenCalledTimes(2);
     expect(readCompanionMemory({ storage }).history[0]).toEqual({
       role: "user",
       content: "（ページを渡した）",
     });
+  });
+
+  it("同じ道具を同じ引数で呼び直したら、もう実行せずに道具なしで答えさせる", async () => {
+    const storage = createMemoryStorage();
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockImplementation(async () => new Response("本文"));
+    const call =
+      "<tool_call>\n<function=read_web_page>\n<parameter=url>\nhttps://example.com\n</parameter>\n</function>\n</tool_call>";
+    const generate = vi
+      .fn<CompanionGenerate>()
+      .mockResolvedValueOnce(call)
+      .mockResolvedValueOnce(call)
+      .mockResolvedValueOnce("[neutral] 同じ内容だったよ。");
+
+    const result = await runCompanionTurn({
+      userText: "https://example.com 読んで",
+      generate,
+      context: { fetch, storage },
+      now,
+    });
+
+    expect(result).toEqual({ expression: "neutral", speech: "同じ内容だったよ。" });
+    expect(generate.mock.calls.map(([options]) => options.tools.length)).toEqual([3, 3, 0]);
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

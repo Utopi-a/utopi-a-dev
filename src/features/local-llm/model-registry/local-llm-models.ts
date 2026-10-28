@@ -1,6 +1,6 @@
 export type LocalLlmModality = "text" | "image";
 
-export type LocalLlmModelKind = "causal-lm" | "moondream" | "qwen3-vl";
+export type LocalLlmModelKind = "causal-lm" | "moondream" | "qwen3-vl" | "lfm3-vl";
 
 export type LocalLlmQuantizationDtype = "q4" | "q8" | "fp16" | "q4f16";
 
@@ -32,13 +32,34 @@ export type LocalLlmModelDefinition = {
   examples: readonly string[];
 };
 
-export const DEFAULT_LOCAL_LLM_MODEL_ID = "lfm2.5-1.2b-jp";
+export const DEFAULT_LOCAL_LLM_MODEL_ID = "lfm3-1.7b";
 
 export const LOCAL_LLM_MODELS: readonly LocalLlmModelDefinition[] = [
   {
+    id: "lfm3-1.7b",
+    label: "LFM3-1.7B",
+    description: "日本語にも対応した 1.7B の多言語チャットモデル。",
+    huggingFaceModelId: "onnx-community/LFM3-1.7B-ONNX",
+    huggingFaceUrl: "https://huggingface.co/onnx-community/LFM3-1.7B-ONNX",
+    kind: "causal-lm",
+    modalities: ["text"],
+    dtype: "q4f16",
+    estimatedDownload: "約 1.1 GB",
+    license: {
+      name: "LFM Open License v1.0",
+      url: "https://huggingface.co/onnx-community/LFM3-1.7B-ONNX/raw/main/LICENSE",
+      holder: "Liquid AI, Inc.",
+    },
+    examples: [
+      "時間管理スキルを向上させるためのヒントを教えてください。",
+      "TypeScript の型ガードを例つきで説明してください。",
+      "Explain the difference between AI and ML in simple terms.",
+    ],
+  },
+  {
     id: "lfm2.5-1.2b-jp",
     label: "LFM2.5-1.2B-JP",
-    description: "日本語特化の 1.2B チャットモデル。用途確認のデフォルト。",
+    description: "日本語特化の 1.2B チャットモデル。",
     huggingFaceModelId: "LiquidAI/LFM2.5-1.2B-JP-ONNX",
     huggingFaceUrl: "https://huggingface.co/LiquidAI/LFM2.5-1.2B-JP-ONNX",
     kind: "causal-lm",
@@ -96,6 +117,31 @@ export const LOCAL_LLM_MODELS: readonly LocalLlmModelDefinition[] = [
       "こんにちは。自己紹介してください。",
       "TypeScript の利点を3つ挙げて。",
       "短いジョークを一つ教えて。",
+    ],
+  },
+  {
+    id: "lfm3-vl-2b",
+    label: "LFM3-VL-2B",
+    description: "LFM3 ベースの画像理解つき 2B チャットモデル。",
+    huggingFaceModelId: "onnx-community/LFM3-VL-2B-ONNX",
+    huggingFaceUrl: "https://huggingface.co/onnx-community/LFM3-VL-2B-ONNX",
+    kind: "lfm3-vl",
+    modalities: ["text", "image"],
+    dtype: {
+      embed_tokens: "fp16",
+      vision_encoder: "fp16",
+      decoder_model_merged: "q4f16",
+    },
+    estimatedDownload: "約 1.9 GB",
+    license: {
+      name: "LFM Open License v1.0",
+      url: "https://huggingface.co/onnx-community/LFM3-VL-2B-ONNX/raw/main/LICENSE",
+      holder: "Liquid AI, Inc.",
+    },
+    examples: [
+      "この画像に何が写っていますか？",
+      "画像に写っている文字を読み取ってください。",
+      "この画像で注目すべき点は何ですか？",
     ],
   },
   {

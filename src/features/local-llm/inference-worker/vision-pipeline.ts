@@ -3,6 +3,7 @@ import {
   AutoProcessor,
   AutoTokenizer,
   InterruptableStoppingCriteria,
+  Lfm3VlForConditionalGeneration,
   LlavaProcessor,
   Moondream1ForConditionalGeneration,
   Qwen3VLForConditionalGeneration,
@@ -16,7 +17,7 @@ import type {
 } from "@/features/local-llm/inference-worker/inference-worker-messages";
 import type { LocalLlmModelKind } from "@/features/local-llm/model-registry/local-llm-models";
 
-type VisionKind = Extract<LocalLlmModelKind, "moondream" | "qwen3-vl">;
+type VisionKind = Extract<LocalLlmModelKind, "moondream" | "qwen3-vl" | "lfm3-vl">;
 
 type LoadedVisionPipeline =
   | {
@@ -31,9 +32,21 @@ type LoadedVisionPipeline =
       modelId: string;
       processor: Awaited<ReturnType<typeof AutoProcessor.from_pretrained>>;
       model: Awaited<ReturnType<typeof Qwen3VLForConditionalGeneration.from_pretrained>>;
+    }
+  | {
+      kind: "lfm3-vl";
+      modelId: string;
+      processor: Awaited<ReturnType<typeof AutoProcessor.from_pretrained>>;
+      model: Awaited<ReturnType<typeof Lfm3VlForConditionalGeneration.from_pretrained>>;
     };
 
 let loadedPipeline: LoadedVisionPipeline | undefined;
+
+const WARMUP_IMAGE_DATA_URL =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
+// LFM3-VL の既定上限（約 1,600 万画素）だとスマホ写真 1 枚で画像トークンが 1 万を超えるため、1024 トークン相当に抑える
+const LFM3_VL_MAX_PIXELS = 1024 * 32 * 32;
 const stoppingCriteria = new InterruptableStoppingCriteria();
 
 async function loadImageFromDataUrl({ dataUrl }: { dataUrl: string }) {
@@ -86,6 +99,32 @@ function getLatestUserTurn({ messages }: { messages: InferenceMessage[] }) {
   };
 }
 
+async function buildChatMessagesWithImages({ messages }: { messages: InferenceMessage[] }) {
+  const images: Awaited<ReturnType<typeof loadImageFromDataUrl>>[] = [];
+  const chatMessages = await Promise.all(
+    messages.map(async (message) => {
+      if (message.role !== "user" || !message.images?.length) {
+        return { role: message.role, content: message.content };
+      }
+
+      const loadedImages = await Promise.all(
+        message.images.map((image) => loadImageFromDataUrl({ dataUrl: image.dataUrl })),
+      );
+      images.push(...loadedImages);
+
+      return {
+        role: message.role,
+        content: [
+          ...message.images.map(() => ({ type: "image" as const })),
+          { type: "text" as const, text: message.content },
+        ],
+      };
+    }),
+  );
+
+  return { chatMessages, images };
+}
+
 export async function loadVisionModel({
   modelConfig,
   progressCallback,
@@ -117,10 +156,7 @@ export async function loadVisionModel({
       },
     );
 
-    const image = await loadImageFromDataUrl({
-      dataUrl:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-    });
+    const image = await loadImageFromDataUrl({ dataUrl: WARMUP_IMAGE_DATA_URL });
     const warmupInputs = await processor(image, buildMoondreamPrompt({ question: "warmup" }));
     await model.generate({ ...warmupInputs, max_new_tokens: 1 });
 
@@ -129,6 +165,44 @@ export async function loadVisionModel({
       modelId: modelConfig.huggingFaceModelId,
       processor,
       tokenizer,
+      model,
+    };
+    return modelConfig.huggingFaceModelId;
+  }
+
+  if (modelConfig.kind === "lfm3-vl") {
+    const processor = await AutoProcessor.from_pretrained(modelConfig.huggingFaceModelId, {
+      progress_callback: progressCallback,
+    });
+    (processor.image_processor as { max_pixels: number }).max_pixels = LFM3_VL_MAX_PIXELS;
+    const model = await Lfm3VlForConditionalGeneration.from_pretrained(
+      modelConfig.huggingFaceModelId,
+      {
+        dtype: modelConfig.dtype as {
+          embed_tokens: "fp16";
+          vision_encoder: "fp16";
+          decoder_model_merged: "q4f16";
+        },
+        device: "webgpu",
+        progress_callback: progressCallback,
+      },
+    );
+
+    const image = await loadImageFromDataUrl({ dataUrl: WARMUP_IMAGE_DATA_URL });
+    const warmupPrompt = processor.apply_chat_template(
+      [{ role: "user", content: [{ type: "image" }, { type: "text", text: "warmup" }] }],
+      { add_generation_prompt: true, tokenize: false, enable_thinking: false } as Record<
+        string,
+        unknown
+      >,
+    ) as string;
+    const warmupInputs = await processor(image, warmupPrompt, { add_special_tokens: false });
+    await model.generate({ ...warmupInputs, max_new_tokens: 1 });
+
+    loadedPipeline = {
+      kind: "lfm3-vl",
+      modelId: modelConfig.huggingFaceModelId,
+      processor,
       model,
     };
     return modelConfig.huggingFaceModelId;
@@ -150,10 +224,7 @@ export async function loadVisionModel({
     },
   );
 
-  const image = await loadImageFromDataUrl({
-    dataUrl:
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-  });
+  const image = await loadImageFromDataUrl({ dataUrl: WARMUP_IMAGE_DATA_URL });
   const warmupInputs = (await processor.apply_chat_template(
     [
       {
@@ -251,27 +322,7 @@ async function generateQwen3Vl({
     throw new Error("Qwen3-VL model is not loaded");
   }
 
-  const images: Awaited<ReturnType<typeof loadImageFromDataUrl>>[] = [];
-  const chatMessages = await Promise.all(
-    messages.map(async (message) => {
-      if (message.role !== "user" || !message.images?.length) {
-        return { role: message.role, content: message.content };
-      }
-
-      const loadedImages = await Promise.all(
-        message.images.map((image) => loadImageFromDataUrl({ dataUrl: image.dataUrl })),
-      );
-      images.push(...loadedImages);
-
-      return {
-        role: message.role,
-        content: [
-          ...message.images.map(() => ({ type: "image" as const })),
-          { type: "text" as const, text: message.content },
-        ],
-      };
-    }),
-  );
+  const { chatMessages, images } = await buildChatMessagesWithImages({ messages });
 
   const tokenizer = loadedPipeline.processor.tokenizer;
   if (!tokenizer) {
@@ -314,6 +365,68 @@ async function generateQwen3Vl({
   postEvent({ status: "complete" });
 }
 
+async function generateLfm3Vl({
+  messages,
+  postEvent,
+}: {
+  messages: InferenceMessage[];
+  postEvent: InferenceWorkerEventSender;
+}) {
+  if (loadedPipeline?.kind !== "lfm3-vl") {
+    throw new Error("LFM3-VL model is not loaded");
+  }
+
+  const { chatMessages, images } = await buildChatMessagesWithImages({ messages });
+
+  const tokenizer = loadedPipeline.processor.tokenizer;
+  if (!tokenizer) {
+    throw new Error("Tokenizer is not available");
+  }
+
+  // Lfm3VlProcessor は画像トークンを画像ごとのパッチ数に展開するため、テンプレートは文字列で受け取ってから渡す
+  const prompt = loadedPipeline.processor.apply_chat_template(chatMessages, {
+    add_generation_prompt: true,
+    tokenize: false,
+    enable_thinking: false,
+  } as Record<string, unknown>) as string;
+  const inputs = await loadedPipeline.processor(images.length > 0 ? images : null, prompt, {
+    add_special_tokens: false,
+  });
+
+  let startTime: number | undefined;
+  let numTokens = 0;
+  let tps: number | null = null;
+
+  const streamer = new TextStreamer(tokenizer, {
+    skip_prompt: true,
+    skip_special_tokens: true,
+    callback_function: (output: string) => {
+      postEvent({ status: "update", output, tps, numTokens });
+    },
+    token_callback_function: () => {
+      startTime ??= performance.now();
+      if (numTokens++ > 0 && startTime !== undefined) {
+        tps = (numTokens / (performance.now() - startTime)) * 1000;
+      }
+    },
+  });
+
+  postEvent({ status: "start" });
+
+  await loadedPipeline.model.generate({
+    ...inputs,
+    do_sample: true,
+    temperature: 0.1,
+    top_k: 50,
+    repetition_penalty: 1.1,
+    max_new_tokens: 512,
+    streamer,
+    stopping_criteria: stoppingCriteria,
+  });
+
+  postEvent({ status: "complete" });
+}
+
 export async function generateVision({
   messages,
   kind,
@@ -325,6 +438,11 @@ export async function generateVision({
 }) {
   if (kind === "moondream") {
     await generateMoondream({ messages, postEvent });
+    return;
+  }
+
+  if (kind === "lfm3-vl") {
+    await generateLfm3Vl({ messages, postEvent });
     return;
   }
 

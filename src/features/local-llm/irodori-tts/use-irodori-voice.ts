@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { hasCachedIrodoriFiles } from "@/features/local-llm/irodori-tts/irodori-model-files";
+import {
+  hasCachedIrodoriFiles,
+  IRODORI_TOTAL_BYTES,
+} from "@/features/local-llm/irodori-tts/irodori-model-files";
 import type { IrodoriSpeaker } from "@/features/local-llm/irodori-tts/irodori-speaker";
 import { takeFinishedSpeech } from "@/features/local-llm/irodori-tts/irodori-text";
 
@@ -46,7 +49,7 @@ export function useIrodoriVoice() {
       setState({ status: "on" });
       return;
     }
-    setState({ status: "loading", loaded: 0, total: 0 });
+    setState({ status: "loading", loaded: 0, total: IRODORI_TOTAL_BYTES });
     try {
       const { loadIrodoriSpeaker } = await import(
         "@/features/local-llm/irodori-tts/irodori-speaker"

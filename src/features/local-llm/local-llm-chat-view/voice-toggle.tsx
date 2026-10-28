@@ -10,11 +10,22 @@ type VoiceToggleProps = {
 
 export function VoiceToggle({ state, onTurnOn, onTurnOff }: VoiceToggleProps) {
   if (state.status === "loading") {
-    const percent = state.total > 0 ? Math.floor((state.loaded / state.total) * 100) : 0;
+    // 1% が 16 MB あり、回線が遅いと % では止まって見えるので、取得量を MB で出す
+    const isFetched = state.total > 0 && state.loaded >= state.total;
     return (
       <Button type="button" variant="outline" size="sm" disabled>
         <Loader2Icon className="size-4 animate-spin" />
-        声を読み込み中 <span className="tabular-nums">{percent}%</span>
+        {isFetched ? (
+          "声を準備中…"
+        ) : (
+          <>
+            声を取得中{" "}
+            <span className="tabular-nums">
+              {Math.floor(state.loaded / 1e6).toLocaleString()} /{" "}
+              {Math.round(state.total / 1e6).toLocaleString()} MB
+            </span>
+          </>
+        )}
       </Button>
     );
   }

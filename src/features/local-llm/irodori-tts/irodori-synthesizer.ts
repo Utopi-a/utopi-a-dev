@@ -83,10 +83,7 @@ export function createIrodoriSynthesizer({
     return tokenIds({ ids });
   }
 
-  /**
-   * 合成した音声の潜在（DACVAE の潜在そのもの）から話者の条件を作る。
-   * 参照音声を DACVAE で符号化したものと同じ空間なので、波形に戻して符号化し直さずに使える。
-   */
+  /** 手本の声の DACVAE の潜在（参照音声を符号化したもの、または合成した潜在）から話者の条件を作る */
   async function encodeSpeaker({ latent }: { latent: Float32Array }) {
     // 公式の patch_sequence_with_mask と同じく、4 フレームずつ 1 つにまとめ、端数は捨てる
     const patches = Math.floor(latent.length / LATENT_DIM / SPEAKER_PATCH_SIZE);
@@ -194,7 +191,7 @@ export function createIrodoriSynthesizer({
   return { sampleRate: SAMPLE_RATE, synthesize, encodeSpeaker };
 }
 
-/** 種から決まる一様乱数（mulberry32）。同じ種なら毎回同じ声の手本を作れる */
+/** 種から決まる一様乱数（mulberry32）。声を作るスクリプトで、同じ種から同じ手本を作り直すのに使う */
 export function createSeededRandom({ seed }: { seed: number }) {
   let state = seed >>> 0;
   return () => {

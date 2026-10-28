@@ -88,6 +88,7 @@
     "esbuild": "^0.28.0",
     "jsdom": "^29.1.1",
     "lefthook": "^2.1.9",
+    "onnxruntime-node": "1.30.0",
     "pdf-parse": "^1.1.1",
     "serwist": "^9.5.11",
     "sharp": "^0.34.5",

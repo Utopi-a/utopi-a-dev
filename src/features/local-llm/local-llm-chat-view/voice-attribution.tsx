@@ -32,7 +32,16 @@ export function VoiceAttribution() {
       >
         ONNX に変換したもの
       </a>
-      で、合成は端末内（WebGPU）で行います。声は文章から作った合成音声で、実在の人の声ではありません。
+      で、合成は端末内（WebGPU）で行います。声はゆーとぴあちゃんの設定から{" "}
+      <a
+        href="https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={linkClassName}
+      >
+        Qwen3-TTS
+      </a>
+      （Apache-2.0）で作った声を手本にした合成音声で、実在の人の声ではありません。
     </p>
   );
 }

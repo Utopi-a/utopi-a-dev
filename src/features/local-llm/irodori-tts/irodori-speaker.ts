@@ -6,9 +6,7 @@ import type {
   IrodoriWorkerCommand,
   IrodoriWorkerEvent,
 } from "@/features/local-llm/irodori-tts/irodori-tts-worker";
-
-/** 声の雰囲気の説明。Irodori-TTS v4.1 はこの文章から声を作る（誰かの声を複製しない） */
-export const DEFAULT_IRODORI_CAPTION = "落ち着いた若い女性の声で、やさしく話す。";
+import { type IrodoriVoice, UTOPIA_VOICE } from "@/features/local-llm/irodori-tts/utopia-voice";
 
 export type IrodoriSpeaker = {
   /** 文章を文ごとに合成し、前の音声の直後に続けて鳴らす。日本語専用のモデルなので日本語でない文は飛ばす */
@@ -19,10 +17,10 @@ export type IrodoriSpeaker = {
 };
 
 export async function loadIrodoriSpeaker({
-  caption = DEFAULT_IRODORI_CAPTION,
+  voice = UTOPIA_VOICE,
   onProgress,
 }: {
-  caption?: string;
+  voice?: IrodoriVoice;
   onProgress: (progress: { loaded: number; total: number }) => void;
 }): Promise<IrodoriSpeaker> {
   const worker = new Worker(new URL("./irodori-tts-worker.ts", import.meta.url), {
@@ -61,7 +59,7 @@ export async function loadIrodoriSpeaker({
           return;
       }
     };
-    send({ type: "load", caption });
+    send({ type: "load", ...voice });
   }).catch((error: unknown) => {
     worker.terminate();
     throw error;

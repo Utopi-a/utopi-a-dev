@@ -7,21 +7,18 @@ import {
 import {
   createIrodoriSynthesizer,
   createRandomNormal,
-  createSeededRandom,
   type IrodoriSpeakerCondition,
 } from "@/features/local-llm/irodori-tts/irodori-synthesizer";
+import type { IrodoriVoice } from "@/features/local-llm/irodori-tts/utopia-voice";
 
 // Irodori-TTS を専用の Worker で動かす。チャットのモデル（Transformers.js）と同じ ONNX Runtime の WebGPU を
 // 同時に使うと、実行が混ざって壊れるため、Worker ごとに別の GPU デバイスを持たせる。
 
 // 手本なしで合成すると、キャプションに合う声を毎回初期ノイズから選び直すので、文ごとに別人の声になる。
-// 読み込み時に決まった種で 1 度だけ手本の声を作り、すべての文をその声に寄せる（種が同じなら毎回同じ声）
-const VOICE_SAMPLE_TEXT =
-  "こんにちは。今日はいい天気ですね。気になることがあれば、何でも気軽に話しかけてください。";
-const VOICE_SEED = 1;
+// 用意した手本の声の潜在を読み込み、すべての文をその声に寄せる。
 
 export type IrodoriWorkerCommand =
-  | { type: "load"; caption: string }
+  | ({ type: "load" } & IrodoriVoice)
   | { type: "synthesize"; id: number; text: string };
 
 export type IrodoriWorkerEvent =
@@ -53,7 +50,16 @@ async function createSession({
   });
 }
 
-async function load({ caption }: { caption: string }) {
+async function loadReferenceLatent({ path }: { path: string }) {
+  const response = await fetch(path);
+  if (!response.ok) {
+    throw new Error(`手本の声を取得できませんでした（HTTP ${response.status}）`);
+  }
+  return new Float32Array(await response.arrayBuffer());
+}
+
+async function load({ caption, referenceLatentPath }: IrodoriVoice) {
+  const referenceLatent = loadReferenceLatent({ path: referenceLatentPath });
   void evictStaleIrodoriCaches();
   const files = await loadIrodoriFiles({
     keys: [
@@ -115,10 +121,9 @@ async function load({ caption }: { caption: string }) {
     ),
     forcedSplits: decodeJson<Record<string, number[]>>({ bytes: files.forcedSplits }),
     annotationEmojis: decodeJson<string[]>({ bytes: files.annotationEmojis }),
-    randomNormal: createRandomNormal({ random: createSeededRandom({ seed: VOICE_SEED }) }),
+    randomNormal: createRandomNormal(),
   });
-  const sample = await synthesizer.synthesize({ text: VOICE_SAMPLE_TEXT, caption });
-  const speaker = await synthesizer.encodeSpeaker({ latent: sample.latent });
+  const speaker = await synthesizer.encodeSpeaker({ latent: await referenceLatent });
   return { synthesizer, caption, speaker };
 }
 
@@ -134,7 +139,7 @@ self.addEventListener("message", ({ data }: MessageEvent<IrodoriWorkerCommand>) 
   queue = queue.then(async () => {
     try {
       if (data.type === "load") {
-        voice ??= await load({ caption: data.caption });
+        voice ??= await load(data);
         post({ type: "ready", sampleRate: voice.synthesizer.sampleRate });
         return;
       }

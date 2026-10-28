@@ -4,11 +4,17 @@ import { COMPANION_EXPRESSIONS } from "@/features/utopia-companion/companion-rep
  * ゆーとぴあちゃんとして話すための system プロンプト。人物像はキャラクター設定集 v1.3
  * （19 歳、ほんわか・穏やか・好奇心がある、少し不思議な雰囲気）に、一人称「ボク」を足したもの。
  */
+/** プロンプトに入れる覚えたことの数。古いものは recall_memory で探させる */
+const NOTES_IN_PROMPT = 10;
+
 export function buildCompanionSystemPrompt({
   memories,
+  summary,
   now,
 }: {
   memories: readonly string[];
+  /** 直近の会話より前に話したことの要約 */
+  summary: string;
   now: Date;
 }) {
   const today = now.toLocaleDateString("ja-JP", {
@@ -17,8 +23,13 @@ export function buildCompanionSystemPrompt({
     day: "numeric",
     weekday: "short",
   });
+  const recent = memories.slice(-NOTES_IN_PROMPT);
   const memoryLines =
-    memories.length > 0 ? memories.map((memory) => `- ${memory}`).join("\n") : "- まだ何もない";
+    recent.length > 0 ? recent.map((memory) => `- ${memory}`).join("\n") : "- まだ何もない";
+  const olderNotes =
+    memories.length > recent.length
+      ? `（ほかに ${memories.length - recent.length} 件覚えている。必要なら recall_memory で探す）`
+      : "";
   const expressions = COMPANION_EXPRESSIONS.map((expression) => `[${expression}]`).join(" ");
 
   return [
@@ -35,6 +46,8 @@ export function buildCompanionSystemPrompt({
     "",
     "ボクが覚えていること:",
     memoryLines,
+    olderNotes,
+    summary ? `\nこれまでに話したこと: ${summary}` : "",
     "",
     `今日は ${today}。`,
   ].join("\n");

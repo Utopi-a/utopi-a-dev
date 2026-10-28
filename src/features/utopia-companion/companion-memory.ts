@@ -4,19 +4,21 @@
 const STORAGE_KEY = "utopia-companion.memory.v1";
 const MAX_NOTES = 40;
 const MAX_NOTE_LENGTH = 200;
-/** プロンプトに入れる直近の会話の数。古いものはモデルの文脈に収まらないので捨てる */
-const MAX_HISTORY = 16;
+/** プロンプトに入れる直近の会話の数。超えた古いぶんは要約に回す（companion-memory-compaction） */
+export const MAX_HISTORY = 16;
 
 export type CompanionHistoryEntry = { role: "user" | "assistant"; content: string };
 
 export type CompanionMemory = {
   notes: string[];
   history: CompanionHistoryEntry[];
+  /** 直近の会話より前に話したことの要約 */
+  summary: string;
 };
 
 type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
-const EMPTY_MEMORY: CompanionMemory = { notes: [], history: [] };
+const EMPTY_MEMORY: CompanionMemory = { notes: [], history: [], summary: "" };
 
 function isHistoryEntry(value: unknown): value is CompanionHistoryEntry {
   if (typeof value !== "object" || value === null) {
@@ -32,10 +34,11 @@ export function readCompanionMemory({ storage }: { storage: StorageLike }): Comp
     if (typeof parsed !== "object" || parsed === null) {
       return EMPTY_MEMORY;
     }
-    const { notes, history } = parsed as Record<string, unknown>;
+    const { notes, history, summary } = parsed as Record<string, unknown>;
     return {
       notes: Array.isArray(notes) ? notes.filter((note) => typeof note === "string") : [],
       history: Array.isArray(history) ? history.filter(isHistoryEntry) : [],
+      summary: typeof summary === "string" ? summary : "",
     };
   } catch {
     return EMPTY_MEMORY;
@@ -70,6 +73,34 @@ export function addCompanionNote({ storage, note }: { storage: StorageLike; note
   });
 }
 
+/** 覚えたことのうち、言葉を含むものを忘れる。忘れた数を返す */
+export function removeCompanionNotes({
+  storage,
+  containing,
+}: {
+  storage: StorageLike;
+  containing: string;
+}) {
+  const memory = readCompanionMemory({ storage });
+  const kept = memory.notes.filter((note) => !note.includes(containing.trim()));
+  writeCompanionMemory({ storage, memory: { ...memory, notes: kept } });
+  return memory.notes.length - kept.length;
+}
+
+/** 古い会話を要約に置き換える（要約を作るのは companion-memory-compaction） */
+export function replaceCompanionHistory({
+  storage,
+  summary,
+  history,
+}: {
+  storage: StorageLike;
+  summary: string;
+  history: CompanionHistoryEntry[];
+}) {
+  const memory = readCompanionMemory({ storage });
+  return writeCompanionMemory({ storage, memory: { ...memory, summary, history } });
+}
+
 export function appendCompanionHistory({
   storage,
   entries,
@@ -80,7 +111,8 @@ export function appendCompanionHistory({
   const memory = readCompanionMemory({ storage });
   return writeCompanionMemory({
     storage,
-    memory: { ...memory, history: [...memory.history, ...entries].slice(-MAX_HISTORY) },
+    // 要約が追いつかなかったときのために、上限の 2 倍までは残す
+    memory: { ...memory, history: [...memory.history, ...entries].slice(-MAX_HISTORY * 2) },
   });
 }
 

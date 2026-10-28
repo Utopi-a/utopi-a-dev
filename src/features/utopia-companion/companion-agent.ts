@@ -6,6 +6,7 @@ import type {
 } from "@/features/local-llm/inference-worker/inference-worker-messages";
 import {
   appendCompanionHistory,
+  MAX_HISTORY,
   readCompanionMemory,
 } from "@/features/utopia-companion/companion-memory";
 import { buildCompanionSystemPrompt } from "@/features/utopia-companion/companion-persona";
@@ -45,6 +46,14 @@ const MAX_TOOL_CALLS = 6;
  */
 const ANSWER_NOW =
   "（道具はもう使えない。上の調べた結果をもとに、気持ちのタグを付けて相手に返事をする。分からなかったことは正直に言う）";
+/**
+ * 「調べてみるね」と言うだけで道具を呼ばない返事を見分ける。思考なしの小さいモデルによくある
+ * （URL を渡しても「読んでみようね」で終わった）ので、1 度だけ、いま呼び出すよう促す
+ */
+const PROMISE_PATTERN =
+  /(調べ|読ん|読み|見て|見る|探し|探す|開い|開け|確かめ)(て|で)?(み)?(る|よう|ます|ね|よ)/;
+const ACT_NOW = "（言うだけで終わらせず、いま道具を呼び出して確かめてから話す）";
+
 /** それでも答えられなかったときの返事 */
 const FALLBACK_ANSWER = "[neutral] ごめん、うまく答えられなかった。もう一度聞いてみてくれる？";
 
@@ -95,9 +104,13 @@ export async function runCompanionTurn({
   const conversation: InferenceMessage[] = [
     {
       role: "system",
-      content: buildCompanionSystemPrompt({ memories: memory.notes, now: context.now }),
+      content: buildCompanionSystemPrompt({
+        memories: memory.notes,
+        summary: memory.summary,
+        now: context.now,
+      }),
     },
-    ...memory.history,
+    ...memory.history.slice(-MAX_HISTORY),
   ];
   const messages: InferenceMessage[] = [
     ...conversation,
@@ -107,6 +120,7 @@ export async function runCompanionTurn({
   // 同じ道具を同じ引数で呼び直すのは空回りなので、結果を使い回して答えさせる
   const results = new Map<string, string>();
   let toolCallCount = 0;
+  let hasNudged = false;
   let answer = "";
   for (let step = 0; step < MAX_STEPS; step += 1) {
     throwIfAborted({ signal: context.signal });
@@ -123,6 +137,11 @@ export async function runCompanionTurn({
     }
     const { toolCalls, text } = parseToolCalls({ output: visible, idPrefix: `call-${step}` });
     if (toolCalls.length === 0) {
+      if (!hasNudged && results.size === 0 && available.length > 0 && PROMISE_PATTERN.test(text)) {
+        hasNudged = true;
+        messages.push({ role: "assistant", content: text }, { role: "user", content: ACT_NOW });
+        continue;
+      }
       answer = text;
       break;
     }

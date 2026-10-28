@@ -14,10 +14,12 @@ import {
   clearCompanionMemory,
   readCompanionMemory,
 } from "@/features/utopia-companion/companion-memory";
+import { compactCompanionMemory } from "@/features/utopia-companion/companion-memory-compaction";
 import {
   type CompanionExpression,
   parseCompanionReply,
 } from "@/features/utopia-companion/companion-reply";
+import { buildCompanionTools } from "@/features/utopia-companion/companion-toolbox";
 import {
   COMPANION_MODEL,
   useCompanionBrain,
@@ -26,6 +28,13 @@ import {
   type CompanionEarsState,
   useCompanionEars,
 } from "@/features/utopia-companion/use-companion-ears";
+import {
+  clearWebSearchSettings,
+  readWebSearchSettings,
+  type WebSearchSettings,
+  writeWebSearchSettings,
+} from "@/features/utopia-companion/web-search/web-search-settings";
+import { WebSearchSettingsForm } from "@/features/utopia-companion/web-search/web-search-settings-form";
 
 /** 読み上げの大きさ（RMS）を口の開き 0〜1 にする範囲 */
 const SILENT_RMS = 0.01;
@@ -66,11 +75,13 @@ export function CompanionTalkPanel({
   const [draft, setDraft] = useState("");
   const [activity, setActivity] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [webSearch, setWebSearch] = useState<WebSearchSettings | null>(null);
 
   useEffect(() => {
     const memory = readCompanionMemory({ storage: localStorage });
     setLog(memory.history);
     setNotes(memory.notes);
+    setWebSearch(readWebSearchSettings({ storage: localStorage }));
   }, []);
 
   useEffect(() => {
@@ -125,6 +136,7 @@ export function CompanionTalkPanel({
       const reply = await runCompanionTurn({
         userText,
         generate: brain.generate,
+        tools: buildCompanionTools({ webSearch }),
         context: {
           fetch: window.fetch.bind(window),
           storage: localStorage,
@@ -138,6 +150,12 @@ export function CompanionTalkPanel({
       setNotes(memory.notes);
       onReply({ expression: reply.expression });
       voice.follow({ messageId: crypto.randomUUID(), text: reply.speech, isFinal: true });
+      // 話している間に、溜まった古い会話を要約にしておく（次の返事の文脈を短く保つ）
+      setActivity("思い出を整理してる…");
+      // 要約に失敗しても会話は続けられる（古い会話が上限の 2 倍まで残るだけ）
+      await compactCompanionMemory({ storage: localStorage, generate: brain.generate }).catch(
+        () => false,
+      );
     } catch (cause) {
       if (turn.signal.aborted) {
         setLog(readCompanionMemory({ storage: localStorage }).history);
@@ -285,6 +303,17 @@ export function CompanionTalkPanel({
           onTurnOn={() => void voice.turnOn()}
           onTurnOff={voice.turnOff}
         />
+        <WebSearchSettingsForm
+          settings={webSearch}
+          onSave={(settings) => {
+            writeWebSearchSettings({ storage: localStorage, settings });
+            setWebSearch(readWebSearchSettings({ storage: localStorage }));
+          }}
+          onClear={() => {
+            clearWebSearchSettings({ storage: localStorage });
+            setWebSearch(null);
+          }}
+        />
         <details className="text-xs text-muted-foreground">
           <summary className="cursor-pointer">覚えていること（{notes.length}）</summary>
           <ul className="mt-2 space-y-1">
@@ -302,7 +331,8 @@ export function CompanionTalkPanel({
         <ModelAttribution model={COMPANION_MODEL} />
         {voice.state.status !== "off" ? <VoiceAttribution /> : null}
         <p className="text-xs text-muted-foreground">
-          調べものをするときだけ、検索する言葉や URL を Wikipedia・Jina Reader に送ります。
+          調べものをするときだけ、検索する言葉や URL を Wikipedia・Jina
+          Reader（ネット検索を設定したときは Tavily・Exa）に送ります。
         </p>
       </div>
     </div>

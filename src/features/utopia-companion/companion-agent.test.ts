@@ -100,6 +100,32 @@ describe("runCompanionTurn", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("調べると言うだけで呼び出さなかったら、1 度だけ呼び出すよう促す", async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValue(new Response("Example Domain"));
+    const generate = vi
+      .fn<CompanionGenerate>()
+      .mockResolvedValueOnce("[smile] 読んでみようね。")
+      .mockResolvedValueOnce(
+        toolCall({ name: "read_web_page", args: { url: "https://example.com" } }),
+      )
+      .mockResolvedValueOnce("[smile] 例のためのページだったよ。");
+
+    const result = await runCompanionTurn({
+      userText: "https://example.com を読んで",
+      generate,
+      context: { fetch, storage: createMemoryStorage(), now },
+    });
+
+    expect(result).toEqual({ expression: "smile", speech: "例のためのページだったよ。" });
+    expect(generate.mock.calls[1][0].messages.slice(-2)).toEqual([
+      { role: "assistant", content: "[smile] 読んでみようね。" },
+      { role: "user", content: expect.stringContaining("いま道具を呼び出して") },
+    ]);
+    expect(fetch).toHaveBeenCalledWith("https://r.jina.ai/https://example.com/", expect.anything());
+  });
+
   it("引数の欠けた呼び出しは失敗として返し、直した呼び出しで続ける", async () => {
     const generate = vi
       .fn<CompanionGenerate>()

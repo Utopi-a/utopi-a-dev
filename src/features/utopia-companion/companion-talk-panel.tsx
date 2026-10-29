@@ -13,7 +13,10 @@ import { CompanionCameraControl } from "@/features/utopia-companion/camera/compa
 import { buildCameraTurn } from "@/features/utopia-companion/camera/companion-scene";
 import { useCompanionCamera } from "@/features/utopia-companion/camera/use-companion-camera";
 import { useCompanionWatch } from "@/features/utopia-companion/camera/use-companion-watch";
-import { CompanionActionList } from "@/features/utopia-companion/companion-action-list";
+import {
+  CompanionActionList,
+  toCompanionActions,
+} from "@/features/utopia-companion/companion-action-list";
 import {
   asksForAction,
   type CompanionAction,
@@ -89,15 +92,9 @@ export function CompanionTalkPanel({
   const [activity, setActivity] = useState<string | null>(null);
   /** 作っている途中の返事で使った道具 */
   const [turnActions, setTurnActions] = useState<CompanionAction[]>([]);
-  /**
-   * 返事ごとの使った道具。記憶（プロンプトに入る会話）には入れず、この画面を開いている間だけ持つ。
-   * 古い会話の要約で記録の位置がずれるので、位置ではなく記憶に残る返事の文で引く
-   */
-  const [actionsByReply, setActionsByReply] = useState<
-    ReadonlyMap<string, readonly CompanionAction[]>
-  >(new Map());
   const [error, setError] = useState<string | null>(null);
   const [webSearch, setWebSearch] = useState<WebSearchSettings | null>(null);
+  const toolbox = buildCompanionTools({ webSearch });
 
   useEffect(() => {
     const memory = readCompanionMemory({ storage: localStorage });
@@ -241,7 +238,7 @@ export function CompanionTalkPanel({
         images,
         historyText,
         generate: images ? vision.generate : brain.generate,
-        tools: images ? [] : buildCompanionTools({ webSearch }),
+        tools: images ? [] : toolbox,
         context: {
           fetch: window.fetch.bind(window),
           storage: localStorage,
@@ -255,11 +252,6 @@ export function CompanionTalkPanel({
           }
         },
       });
-      if (reply.actions.length > 0) {
-        setActionsByReply((prev) =>
-          new Map(prev).set(`[${reply.expression}] ${reply.speech}`, reply.actions),
-        );
-      }
       setTurnActions([]);
       const memory = readCompanionMemory({ storage: localStorage });
       setLog(memory.history);
@@ -342,8 +334,10 @@ export function CompanionTalkPanel({
                 entry.content
               ) : (
                 <div className="space-y-1.5">
-                  {actionsByReply.has(entry.content) ? (
-                    <CompanionActionList actions={actionsByReply.get(entry.content) ?? []} />
+                  {entry.calls ? (
+                    <CompanionActionList
+                      actions={toCompanionActions({ calls: entry.calls, tools: toolbox })}
+                    />
                   ) : null}
                   <p>{parseCompanionReply({ text: entry.content }).speech}</p>
                 </div>

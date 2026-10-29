@@ -5,6 +5,7 @@ import {
 } from "@/features/utopia-companion/companion-agent";
 import {
   addCompanionNote,
+  appendCompanionHistory,
   readCompanionMemory,
 } from "@/features/utopia-companion/companion-memory";
 import { createMemoryStorage } from "@/features/utopia-companion/companion-test-storage";
@@ -89,7 +90,17 @@ describe("runCompanionTurn", () => {
     });
     expect(readCompanionMemory({ storage }).history).toEqual([
       { role: "user", content: "富士山って何メートル？" },
-      { role: "assistant", content: "[grin] 富士山は 3776 メートルだって、りょう。" },
+      {
+        role: "assistant",
+        content: "[grin] 富士山は 3776 メートルだって、りょう。",
+        calls: [
+          {
+            name: "search_wikipedia",
+            arguments: { query: "富士山" },
+            result: expect.stringMatching(/^成功: 記事「富士山」の冒頭/),
+          },
+        ],
+      },
     ]);
   });
 
@@ -206,24 +217,88 @@ describe("runCompanionTurn", () => {
     );
   });
 
-  it("覚えてと頼まれたのに道具を使わずに返したら、1 度だけ呼び出すよう促す", async () => {
+  it("前の返事で使った道具は、次の返事のプロンプトで呼び出しと結果のやり取りとして見せ直す", async () => {
     const storage = createMemoryStorage();
-    const generate = vi
-      .fn<CompanionGenerate>()
-      .mockResolvedValueOnce("[smile] 味噌ラーメン、いいね！")
-      .mockResolvedValueOnce(
-        toolCall({ name: "remember", args: { note: "味噌ラーメンが一番好き" } }),
-      )
-      .mockResolvedValueOnce("[smile] 覚えたよ。");
+    appendCompanionHistory({
+      storage,
+      entries: [
+        { role: "user", content: "名前はりょう。覚えて" },
+        {
+          role: "assistant",
+          content: "[smile] 覚えたよ。",
+          calls: [
+            { name: "remember", arguments: { note: "名前はりょう" }, result: "成功: 覚えた" },
+          ],
+        },
+      ],
+    });
+    const generate = vi.fn<CompanionGenerate>().mockResolvedValueOnce("[smile] やっほー、りょう。");
 
-    const result = await runCompanionTurn({
-      userText: "味噌ラーメンが一番好きなんだ。覚えておいて",
+    await runCompanionTurn({
+      userText: "やっほー",
       generate,
       context: { fetch: vi.fn(), storage, now },
     });
 
-    expect(result.speech).toBe("覚えたよ。");
-    expect(readCompanionMemory({ storage }).notes).toEqual(["味噌ラーメンが一番好き"]);
+    expect(generate.mock.calls[0][0].messages.slice(1)).toEqual([
+      { role: "user", content: "名前はりょう。覚えて" },
+      {
+        role: "assistant",
+        content: "",
+        toolCalls: [{ id: "past-1-0", name: "remember", arguments: { note: "名前はりょう" } }],
+      },
+      { role: "tool", toolCallId: "past-1-0", content: "成功: 覚えた" },
+      { role: "assistant", content: "[smile] 覚えたよ。" },
+      { role: "user", content: "やっほー" },
+    ]);
+  });
+
+  it("覚えてと頼まれたのに remember を呼ばずに返したら、頼む部分を除いた相手の言葉をそのまま覚えて答え直す", async () => {
+    const storage = createMemoryStorage();
+    const generate = vi
+      .fn<CompanionGenerate>()
+      .mockResolvedValueOnce("[smile] 味噌ラーメン、いいね！覚えたよ。")
+      .mockResolvedValueOnce("[smile] 味噌ラーメンが一番なんだね、覚えたよ。");
+
+    const result = await runCompanionTurn({
+      userText: "俺は味噌ラーメンが一番好きなんだ。覚えておいて",
+      generate,
+      context: { fetch: vi.fn(), storage, now },
+    });
+
+    expect(result).toMatchObject({
+      speech: "味噌ラーメンが一番なんだね、覚えたよ。",
+      actions: [{ description: "覚えてる…", isSuccess: true }],
+    });
+    expect(readCompanionMemory({ storage }).notes).toEqual(["俺は味噌ラーメンが一番好きなんだ"]);
+    // 呼ばずに言った「覚えたよ」は会話に残さず、覚えた結果を見て答え直させる
+    expect(generate.mock.calls[1][0].messages.slice(-2)).toEqual([
+      {
+        role: "assistant",
+        content: "",
+        toolCalls: [
+          {
+            id: "call-0-0",
+            name: "remember",
+            arguments: { note: "俺は味噌ラーメンが一番好きなんだ" },
+          },
+        ],
+      },
+      { role: "tool", toolCallId: "call-0-0", content: expect.stringMatching(/^成功: 覚えた/) },
+    ]);
+  });
+
+  it("覚えているか聞いただけのときは、代わりに覚えない", async () => {
+    const storage = createMemoryStorage();
+    const generate = vi.fn<CompanionGenerate>().mockResolvedValueOnce("[smile] 覚えてるよ。");
+
+    await runCompanionTurn({
+      userText: "俺の名前、覚えてる？",
+      generate,
+      context: { fetch: vi.fn(), storage, now },
+    });
+
+    expect(readCompanionMemory({ storage }).notes).toEqual([]);
   });
 
   it("引数の欠けた呼び出しは失敗として返し、直した呼び出しで続ける", async () => {
@@ -257,12 +332,12 @@ describe("runCompanionTurn", () => {
     });
   });
 
-  it("道具を使い続けたら 4 手で切り上げ、呼び出しのやり取りは見せずに調べた結果で答えさせる", async () => {
+  it("道具を使い続けたら 4 手で切り上げ、呼び出しのやり取りは見せずに道具の結果で答えさせ、見出しを書き写したら外す", async () => {
     const generate = vi.fn<CompanionGenerate>();
     for (const query of ["a", "b", "c", "d"]) {
       generate.mockResolvedValueOnce(toolCall({ name: "search_wikipedia", args: { query } }));
     }
-    generate.mockResolvedValueOnce("[neutral] はっきりは分からなかった。");
+    generate.mockResolvedValueOnce("[neutral] （使った道具の結果）はっきりは分からなかった。");
 
     const result = await runCompanionTurn({
       userText: "いろいろ調べて",
@@ -283,7 +358,7 @@ describe("runCompanionTurn", () => {
       false,
     );
     expect(finalMessages.at(-1)?.content).toMatch(
-      /^いろいろ調べて\n\n（調べた結果）\n成功: 記事「富士山」[\s\S]*道具はもう使えない/,
+      /^いろいろ調べて\n\n（使った道具の結果）\n成功: 記事「富士山」[\s\S]*道具はもう使えない/,
     );
   });
 

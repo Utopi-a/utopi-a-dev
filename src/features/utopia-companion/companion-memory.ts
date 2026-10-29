@@ -7,7 +7,19 @@ const MAX_NOTE_LENGTH = 200;
 /** プロンプトに入れる直近の会話の数。超えた古いぶんは要約に回す（companion-memory-compaction） */
 export const MAX_HISTORY = 16;
 
-export type CompanionHistoryEntry = { role: "user" | "assistant"; content: string };
+/** 返事の前に使った道具。次の返事のプロンプトで、道具を呼んだやり取りとして見せ直す */
+export type CompanionHistoryCall = {
+  name: string;
+  arguments: Record<string, string>;
+  /** 道具がモデルに返した文章（成功: / 失敗: から始まる）の頭 */
+  result: string;
+};
+
+export type CompanionHistoryEntry = {
+  role: "user" | "assistant";
+  content: string;
+  calls?: CompanionHistoryCall[];
+};
 
 export type CompanionMemory = {
   notes: string[];
@@ -20,12 +32,38 @@ type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 const EMPTY_MEMORY: CompanionMemory = { notes: [], history: [], summary: "" };
 
-function isHistoryEntry(value: unknown): value is CompanionHistoryEntry {
-  if (typeof value !== "object" || value === null) {
-    return false;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function readHistoryCall(value: unknown): CompanionHistoryCall[] {
+  if (!isRecord(value) || typeof value.name !== "string" || typeof value.result !== "string") {
+    return [];
   }
-  const { role, content } = value as Record<string, unknown>;
-  return (role === "user" || role === "assistant") && typeof content === "string";
+  const args = isRecord(value.arguments) ? value.arguments : {};
+  return [
+    {
+      name: value.name,
+      arguments: Object.fromEntries(
+        Object.entries(args).filter(
+          (entry): entry is [string, string] => typeof entry[1] === "string",
+        ),
+      ),
+      result: value.result,
+    },
+  ];
+}
+
+function readHistoryEntry(value: unknown): CompanionHistoryEntry[] {
+  if (!isRecord(value)) {
+    return [];
+  }
+  const { role, content, calls } = value;
+  if ((role !== "user" && role !== "assistant") || typeof content !== "string") {
+    return [];
+  }
+  const validCalls = Array.isArray(calls) ? calls.flatMap(readHistoryCall) : [];
+  return [validCalls.length > 0 ? { role, content, calls: validCalls } : { role, content }];
 }
 
 export function readCompanionMemory({ storage }: { storage: StorageLike }): CompanionMemory {
@@ -37,7 +75,7 @@ export function readCompanionMemory({ storage }: { storage: StorageLike }): Comp
     const { notes, history, summary } = parsed as Record<string, unknown>;
     return {
       notes: Array.isArray(notes) ? notes.filter((note) => typeof note === "string") : [],
-      history: Array.isArray(history) ? history.filter(isHistoryEntry) : [],
+      history: Array.isArray(history) ? history.flatMap(readHistoryEntry) : [],
       summary: typeof summary === "string" ? summary : "",
     };
   } catch {

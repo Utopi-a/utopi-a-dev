@@ -65,6 +65,39 @@ describe("companion memory", () => {
     });
   });
 
+  it("返事に残した使った道具は読み直せ、形の崩れた道具の記録だけを捨てる", () => {
+    const storage = createMemoryStorage();
+    storage.setItem(
+      "utopia-companion.memory.v1",
+      JSON.stringify({
+        history: [
+          {
+            role: "assistant",
+            content: "[smile] 覚えたよ。",
+            calls: [
+              {
+                name: "remember",
+                arguments: { note: "猫が好き", extra: 1 },
+                result: "成功: 覚えた",
+              },
+              { name: "remember" },
+            ],
+          },
+          { role: "assistant", content: "[smile] やっほー。", calls: "壊れた" },
+        ],
+      }),
+    );
+
+    expect(readCompanionMemory({ storage }).history).toEqual([
+      {
+        role: "assistant",
+        content: "[smile] 覚えたよ。",
+        calls: [{ name: "remember", arguments: { note: "猫が好き" }, result: "成功: 覚えた" }],
+      },
+      { role: "assistant", content: "[smile] やっほー。" },
+    ]);
+  });
+
   it("壊れた保存内容は覚えていない扱いにし、消すと空になる", () => {
     const storage = createMemoryStorage();
     storage.setItem("utopia-companion.memory.v1", "{壊れた");

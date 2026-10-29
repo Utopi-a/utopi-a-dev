@@ -1,5 +1,24 @@
 import { CheckIcon, XIcon } from "lucide-react";
 import type { CompanionAction } from "@/features/utopia-companion/companion-agent";
+import type { CompanionHistoryCall } from "@/features/utopia-companion/companion-memory";
+import type { CompanionTool } from "@/features/utopia-companion/companion-tool";
+
+/** 会話の記憶に残した使った道具を、画面に並べる形にする */
+export function toCompanionActions({
+  calls,
+  tools,
+}: {
+  calls: readonly CompanionHistoryCall[];
+  tools: readonly CompanionTool[];
+}): CompanionAction[] {
+  return calls.map(({ name, arguments: args, result }) => ({
+    // 検索のキーを消したあとなど、いまは渡していない道具は名前で出す
+    description:
+      tools.find((tool) => tool.definition.function.name === name)?.describe(args) ?? name,
+    isSuccess: result.startsWith("成功:"),
+    result,
+  }));
+}
 
 /** 返事の前に使った道具。開くと、道具がモデルに返した結果をそのまま見られる */
 export function CompanionActionList({ actions }: { actions: readonly CompanionAction[] }) {

@@ -112,17 +112,36 @@ export function CompanionTalkPanel({
   const camera = useCompanionCamera();
   const isWatching = camera.state === "on" && vision.state.status === "awake";
 
-  // 考えている間・話している間・聞いている間は、カメラを見て話しかけない
+  // 考えている間・話している間・聞いている間・相手が書いている間は、カメラを見て話しかけない
   const activityRef = useRef(activity);
   activityRef.current = activity;
   const isListeningRef = useRef(false);
   isListeningRef.current = ears.state.status === "listening";
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  /** カメラを見て自分から話しかけている返事。相手が話しかけたら止めて、相手の発言を先にする */
+  const sceneTurnRef = useRef<Promise<void> | null>(null);
+  const [isSceneTurn, setIsSceneTurn] = useState(false);
   useCompanionWatch({
     isEnabled: isWatching && brain.state.status === "awake",
     capture: camera.capture,
     sample: camera.sample,
-    isIdle: () => activityRef.current === null && voice.level() === 0 && !isListeningRef.current,
-    onScene: (frame) => respond(buildCameraTurn({ frame })),
+    isIdle: () =>
+      activityRef.current === null &&
+      voice.level() === 0 &&
+      !isListeningRef.current &&
+      draftRef.current.trim().length === 0,
+    onScene: async (frame) => {
+      const turn = respond(buildCameraTurn({ frame }));
+      sceneTurnRef.current = turn;
+      setIsSceneTurn(true);
+      try {
+        await turn;
+      } finally {
+        sceneTurnRef.current = null;
+        setIsSceneTurn(false);
+      }
+    },
   });
 
   const turnRef = useRef<AbortController | null>(null);
@@ -147,8 +166,16 @@ export function CompanionTalkPanel({
 
   async function talk({ text }: { text: string }) {
     const userText = text.trim();
-    if (userText.length === 0 || activity) {
+    if (userText.length === 0) {
       return;
+    }
+    if (activityRef.current) {
+      const sceneTurn = sceneTurnRef.current;
+      if (!sceneTurn) {
+        return;
+      }
+      stopTurn();
+      await sceneTurn;
     }
     setDraft("");
     // カメラを一緒に見ている間は、いまの映像を添えて、映像を見ながら話すモデルに渡す
@@ -326,8 +353,9 @@ export function CompanionTalkPanel({
           size="icon"
           variant={ears.state.status === "listening" ? "default" : "outline"}
           aria-pressed={ears.state.status === "listening"}
+          // カメラを見て自分から話しているときは、割り込んで話しかけられる
           disabled={
-            Boolean(activity) ||
+            (Boolean(activity) && !isSceneTurn) ||
             ears.state.status === "loading" ||
             ears.state.status === "transcribing"
           }
@@ -336,7 +364,7 @@ export function CompanionTalkPanel({
           <MicIcon />
           <span className="sr-only">声で話しかける</span>
         </Button>
-        {activity ? (
+        {activity && !(isSceneTurn && draft.trim().length > 0) ? (
           <Button type="button" size="icon" variant="outline" onClick={stopTurn}>
             <SquareIcon />
             <span className="sr-only">止める</span>

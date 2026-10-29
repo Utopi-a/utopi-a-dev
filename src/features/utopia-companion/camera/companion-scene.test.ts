@@ -41,9 +41,11 @@ describe("buildSceneMessages", () => {
 });
 
 describe("buildSceneTurn", () => {
-  it("見えた様子を話しかけとして渡し、記憶にはカメラで見たこととして残す", () => {
+  it("見えた様子を、映っている人を相手本人として話しかけるよう渡し、記憶にはカメラで見たこととして残す", () => {
     expect(buildSceneTurn({ caption: "猫がいる。" })).toEqual({
-      userText: expect.stringMatching(/^（いまカメラに映っているもの: 猫がいる。）\n/),
+      userText: expect.stringMatching(
+        /^（いまカメラに映っているもの: 猫がいる。）\n[\s\S]*映っている人はたぶん相手本人/,
+      ),
       historyText: "（カメラで見た: 猫がいる。）",
     });
   });

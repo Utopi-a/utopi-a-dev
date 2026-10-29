@@ -146,7 +146,8 @@ export function CompanionTalkPanel({
     isIdle: () => activityRef.current === null && voice.level() === 0 && !isListeningRef.current,
     onScene: async (caption) => {
       const { userText, historyText } = buildSceneTurn({ caption });
-      await respond({ userText, historyText });
+      // 見えた様子はもう渡しているので、カメラを見直す道具は渡さない
+      await respond({ userText, historyText, canLook: false });
     },
   });
 
@@ -175,11 +176,22 @@ export function CompanionTalkPanel({
       return;
     }
     setDraft("");
-    await respond({ userText, historyText: userText });
+    await respond({ userText, historyText: userText, canLook: isWatching });
   }
 
-  /** 1 回の返事を作って、表情・声・記憶に反映する。historyText は画面と記憶に残す発言 */
-  async function respond({ userText, historyText }: { userText: string; historyText: string }) {
+  /**
+   * 1 回の返事を作って、表情・声・記憶に反映する。historyText は画面と記憶に残す発言、
+   * canLook はカメラを見る道具を渡すか
+   */
+  async function respond({
+    userText,
+    historyText,
+    canLook,
+  }: {
+    userText: string;
+    historyText: string;
+    canLook: boolean;
+  }) {
     if (activityRef.current) {
       return;
     }
@@ -197,7 +209,7 @@ export function CompanionTalkPanel({
         generate: brain.generate,
         tools: [
           ...buildCompanionTools({ webSearch }),
-          ...(isWatching ? [createCameraTool({ look: lookAtCamera })] : []),
+          ...(canLook ? [createCameraTool({ look: lookAtCamera })] : []),
         ],
         context: {
           fetch: window.fetch.bind(window),

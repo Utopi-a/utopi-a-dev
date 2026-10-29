@@ -4,6 +4,7 @@ import {
   buildSceneTurn,
   hasFrameChanged,
   isSimilarScene,
+  withScene,
 } from "@/features/utopia-companion/camera/companion-scene";
 
 describe("isSimilarScene", () => {
@@ -50,6 +51,15 @@ describe("hasFrameChanged", () => {
 
   it("比べる前の映像がなければ変わったとする", () => {
     expect(hasFrameChanged({ previous: null, current: new Uint8Array(192) })).toBe(true);
+  });
+});
+
+describe("withScene", () => {
+  it("相手の発言に、いまの様子を添える。様子がなければそのまま", () => {
+    expect(withScene({ userText: "後ろに何がある？", caption: "棚がある。" })).toBe(
+      "後ろに何がある？\n\n（いまカメラに映っているもの: 棚がある。映っている人はたぶん相手本人）",
+    );
+    expect(withScene({ userText: "やっほー", caption: "" })).toBe("やっほー");
   });
 });
 

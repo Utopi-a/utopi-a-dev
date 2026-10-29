@@ -12,6 +12,8 @@ import { CompanionCameraControl } from "@/features/utopia-companion/camera/compa
 import {
   buildSceneMessages,
   buildSceneTurn,
+  hasFrameChanged,
+  withScene,
 } from "@/features/utopia-companion/camera/companion-scene";
 import { useCompanionCamera } from "@/features/utopia-companion/camera/use-companion-camera";
 import { useCompanionWatch } from "@/features/utopia-companion/camera/use-companion-watch";
@@ -126,6 +128,33 @@ export function CompanionTalkPanel({
     return splitThinking({ output }).visible;
   }
 
+  /** 最後に目で見た様子と、そのときの映像の縮小画像。映像が変わっていなければ見直さずに使う */
+  const sceneRef = useRef<{ sample: Uint8Array; caption: string } | null>(null);
+
+  async function seeScene({ frame }: { frame: string }) {
+    const sample = camera.sample();
+    const caption = await see({ frame });
+    if (sample && caption) {
+      sceneRef.current = { sample, caption };
+    }
+    return caption;
+  }
+
+  /** いまの様子。前に見たときから映像が変わっていなければ、そのときの説明を使う */
+  async function currentScene() {
+    const sample = camera.sample();
+    const cached = sceneRef.current;
+    if (sample && cached && !hasFrameChanged({ previous: cached.sample, current: sample })) {
+      return cached.caption;
+    }
+    const frame = camera.capture();
+    if (!frame) {
+      return "";
+    }
+    setActivity("カメラを見てる…");
+    return seeScene({ frame });
+  }
+
   async function lookAtCamera(question: string) {
     const frame = camera.capture();
     if (!frame) {
@@ -143,7 +172,7 @@ export function CompanionTalkPanel({
     isEnabled: isWatching && brain.state.status === "awake",
     capture: camera.capture,
     sample: camera.sample,
-    describe: (frame) => see({ frame }),
+    describe: (frame) => seeScene({ frame }),
     isIdle: () => activityRef.current === null && voice.level() === 0 && !isListeningRef.current,
     onScene: async (caption) => {
       const { userText, historyText } = buildSceneTurn({ caption });
@@ -181,8 +210,8 @@ export function CompanionTalkPanel({
   }
 
   /**
-   * 1 回の返事を作って、表情・声・記憶に反映する。historyText は画面と記憶に残す発言、
-   * canLook はカメラを見る道具を渡すか
+   * 1 回の返事を作って、表情・声・記憶に反映する。historyText は画面と記憶に残す発言。
+   * canLook なら、いまの様子を発言に添え、カメラを見る道具も渡す
    */
   async function respond({
     userText,
@@ -204,8 +233,11 @@ export function CompanionTalkPanel({
     const turn = new AbortController();
     turnRef.current = turn;
     try {
+      // 小さいモデルは「後ろに何が見える？」でもカメラを見る道具を呼ばずに「見えない」と答えたので、
+      // 見ている間は様子を先に添えておく。目が失敗しても、様子なしで答えさせる
+      const scene = canLook ? await currentScene().catch(() => "") : "";
       const reply = await runCompanionTurn({
-        userText,
+        userText: withScene({ userText, caption: scene }),
         historyText,
         generate: brain.generate,
         tools: [

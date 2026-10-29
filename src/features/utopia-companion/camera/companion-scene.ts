@@ -66,6 +66,14 @@ export function isSimilarScene({ previous, current }: { previous: string; curren
   return shared / (a.size + b.size - shared) >= 0.5;
 }
 
+/** カメラを一緒に見ている間の相手の発言に、いまの様子を添える。様子がなければそのまま */
+export function withScene({ userText, caption }: { userText: string; caption: string }) {
+  const scene = caption.trim().replace(/。$/, "");
+  return scene
+    ? `${userText}\n\n（いまカメラに映っているもの: ${scene}。映っている人はたぶん相手本人）`
+    : userText;
+}
+
 /**
  * 見えた様子を、頭（ゆーとぴあちゃん）に話しかけとして渡す形にする。
  * 目は人を「男性が写っている」と他人のように書くので、そのまま渡すと話し相手を第三者として語り、

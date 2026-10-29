@@ -12,24 +12,24 @@ function megabytes({ bytes }: { bytes: number }) {
 /** カメラで一緒に見るための切り替えと、映像の小さなプレビュー */
 export function CompanionCameraControl({
   camera,
-  eyesState,
+  visionState,
   onStart,
 }: {
   camera: ReturnType<typeof useCompanionCamera>;
-  eyesState: CompanionBrainState;
+  visionState: CompanionBrainState;
   onStart: () => Promise<void>;
 }) {
   const isOn = camera.state === "on";
   const status =
     camera.state === "denied"
       ? "カメラを使えません。ブラウザ（と OS）の設定で、このサイトにカメラの使用を許可してください"
-      : eyesState.status === "waking"
-        ? eyesState.total > 0 && eyesState.loaded < eyesState.total
-          ? `目を読み込み中 ${megabytes({ bytes: eyesState.loaded })} / ${megabytes({ bytes: eyesState.total })} MB`
+      : visionState.status === "waking"
+        ? visionState.total > 0 && visionState.loaded < visionState.total
+          ? `目を読み込み中 ${megabytes({ bytes: visionState.loaded })} / ${megabytes({ bytes: visionState.total })} MB`
           : "目を準備中…"
-        : eyesState.status === "error"
-          ? eyesState.message
-          : isOn && eyesState.status === "awake"
+        : visionState.status === "error"
+          ? visionState.message
+          : isOn && visionState.status === "awake"
             ? "一緒に見てるよ。気になったことを話すね"
             : null;
 
@@ -48,7 +48,7 @@ export function CompanionCameraControl({
       </Button>
       {status ? (
         <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          {eyesState.status === "waking" ? <Loader2Icon className="size-3 animate-spin" /> : null}
+          {visionState.status === "waking" ? <Loader2Icon className="size-3 animate-spin" /> : null}
           {status}
         </p>
       ) : null}

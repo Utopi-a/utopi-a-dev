@@ -17,8 +17,12 @@ export const COMPANION_MODEL = getLocalLlmModelById({
   modelId: "lfm3-1.7b",
 }) as TransformersLocalLlmModel;
 
-/** カメラに映ったものを見る目は LFM3-VL-2B。カメラを使い始めたときにだけ読み込む */
-export const EYES_MODEL = getLocalLlmModelById({
+/**
+ * カメラを一緒に見ている間は、LFM3-VL-2B が映像を見ながら話す。
+ * 映像を文章にしてから LFM3-1.7B に渡すと、見えていたものが落ちて「見えない」と答えた。
+ * カメラを使い始めたときにだけ読み込む
+ */
+export const VISION_MODEL = getLocalLlmModelById({
   modelId: "lfm3-vl-2b",
 }) as TransformersLocalLlmModel;
 
@@ -181,9 +185,9 @@ export function useCompanionBrain() {
 }
 
 /**
- * カメラを見る目（LFM3-VL-2B）。頭と同時に動かすので、別の Worker で動かす
- * （パイプラインはモジュールごとに 1 つで、同じ場所で読み込むと頭のモデルを外してしまう）
+ * カメラを見ながら話す頭（LFM3-VL-2B）。LFM3-1.7B と同時に読み込んでおくので、別の Worker で動かす
+ * （パイプラインはモジュールごとに 1 つで、同じ場所で読み込むと LFM3-1.7B を外してしまう）
  */
-export function useCompanionEyes() {
-  return useCompanionModel({ model: EYES_MODEL, loadClient: loadWorkerClient });
+export function useCompanionVision() {
+  return useCompanionModel({ model: VISION_MODEL, loadClient: loadWorkerClient });
 }

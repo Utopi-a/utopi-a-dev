@@ -4,17 +4,13 @@ import { Loader2Icon, MicIcon, SendIcon, SquareIcon } from "lucide-react";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import type { InferenceImageAttachment } from "@/features/local-llm/inference-worker/inference-worker-messages";
 import { useIrodoriVoice } from "@/features/local-llm/irodori-tts/use-irodori-voice";
 import { ModelAttribution } from "@/features/local-llm/local-llm-chat-view/model-attribution";
 import { VoiceAttribution } from "@/features/local-llm/local-llm-chat-view/voice-attribution";
 import { VoiceToggle } from "@/features/local-llm/local-llm-chat-view/voice-toggle";
 import { CompanionCameraControl } from "@/features/utopia-companion/camera/companion-camera-control";
-import {
-  buildSceneMessages,
-  buildSceneTurn,
-  hasFrameChanged,
-  withScene,
-} from "@/features/utopia-companion/camera/companion-scene";
+import { buildCameraTurn } from "@/features/utopia-companion/camera/companion-scene";
 import { useCompanionCamera } from "@/features/utopia-companion/camera/use-companion-camera";
 import { useCompanionWatch } from "@/features/utopia-companion/camera/use-companion-watch";
 import { type CompanionStep, runCompanionTurn } from "@/features/utopia-companion/companion-agent";
@@ -28,18 +24,16 @@ import {
   type CompanionExpression,
   parseCompanionReply,
 } from "@/features/utopia-companion/companion-reply";
-import { splitThinking } from "@/features/utopia-companion/companion-thinking";
 import { buildCompanionTools } from "@/features/utopia-companion/companion-toolbox";
-import { createCameraTool } from "@/features/utopia-companion/tools/camera-tool";
 import {
   type CompanionEarsState,
   useCompanionEars,
 } from "@/features/utopia-companion/use-companion-ears";
 import {
   COMPANION_MODEL,
-  EYES_MODEL,
   useCompanionBrain,
-  useCompanionEyes,
+  useCompanionVision,
+  VISION_MODEL,
 } from "@/features/utopia-companion/use-companion-models";
 import {
   clearWebSearchSettings,
@@ -114,54 +108,9 @@ export function CompanionTalkPanel({
   const ears = useCompanionEars({ onHeard: (text) => void talk({ text }) });
   const earsActivity = describeEars({ state: ears.state });
 
-  const eyes = useCompanionEyes();
+  const vision = useCompanionVision();
   const camera = useCompanionCamera();
-  const isWatching = camera.state === "on" && eyes.state.status === "awake";
-
-  /** 目（LFM3-VL）で 1 枚見て、様子か、質問への答えを文章で返す */
-  async function see({ frame, question }: { frame: string; question?: string }) {
-    const output = await eyes.generate({
-      messages: buildSceneMessages({ frame, question }),
-      tools: [],
-      thinking: false,
-    });
-    return splitThinking({ output }).visible;
-  }
-
-  /** 最後に目で見た様子と、そのときの映像の縮小画像。映像が変わっていなければ見直さずに使う */
-  const sceneRef = useRef<{ sample: Uint8Array; caption: string } | null>(null);
-
-  async function seeScene({ frame }: { frame: string }) {
-    const sample = camera.sample();
-    const caption = await see({ frame });
-    if (sample && caption) {
-      sceneRef.current = { sample, caption };
-    }
-    return caption;
-  }
-
-  /** いまの様子。前に見たときから映像が変わっていなければ、そのときの説明を使う */
-  async function currentScene() {
-    const sample = camera.sample();
-    const cached = sceneRef.current;
-    if (sample && cached && !hasFrameChanged({ previous: cached.sample, current: sample })) {
-      return cached.caption;
-    }
-    const frame = camera.capture();
-    if (!frame) {
-      return "";
-    }
-    setActivity("カメラを見てる…");
-    return seeScene({ frame });
-  }
-
-  async function lookAtCamera(question: string) {
-    const frame = camera.capture();
-    if (!frame) {
-      throw new Error("カメラに何も映っていない");
-    }
-    return see({ frame, question });
-  }
+  const isWatching = camera.state === "on" && vision.state.status === "awake";
 
   // 考えている間・話している間・聞いている間は、カメラを見て話しかけない
   const activityRef = useRef(activity);
@@ -172,13 +121,8 @@ export function CompanionTalkPanel({
     isEnabled: isWatching && brain.state.status === "awake",
     capture: camera.capture,
     sample: camera.sample,
-    describe: (frame) => seeScene({ frame }),
     isIdle: () => activityRef.current === null && voice.level() === 0 && !isListeningRef.current,
-    onScene: async (caption) => {
-      const { userText, historyText } = buildSceneTurn({ caption });
-      // 見えた様子はもう渡しているので、カメラを見直す道具は渡さない
-      await respond({ userText, historyText, canLook: false });
-    },
+    onScene: (frame) => respond(buildCameraTurn({ frame })),
   });
 
   const turnRef = useRef<AbortController | null>(null);
@@ -198,6 +142,7 @@ export function CompanionTalkPanel({
   function stopTurn() {
     turnRef.current?.abort();
     brain.interrupt();
+    vision.interrupt();
   }
 
   async function talk({ text }: { text: string }) {
@@ -206,21 +151,25 @@ export function CompanionTalkPanel({
       return;
     }
     setDraft("");
-    await respond({ userText, historyText: userText, canLook: isWatching });
+    // カメラを一緒に見ている間は、いまの映像を添えて、映像を見ながら話すモデルに渡す
+    const frame = isWatching ? camera.capture() : null;
+    await respond(
+      frame ? buildCameraTurn({ frame, text: userText }) : { userText, historyText: userText },
+    );
   }
 
   /**
    * 1 回の返事を作って、表情・声・記憶に反映する。historyText は画面と記憶に残す発言。
-   * canLook なら、いまの様子を発言に添え、カメラを見る道具も渡す
+   * カメラの映像（images）があれば、映像を見ながら話すモデルが答える
    */
   async function respond({
     userText,
     historyText,
-    canLook,
+    images,
   }: {
     userText: string;
     historyText: string;
-    canLook: boolean;
+    images?: InferenceImageAttachment[];
   }) {
     if (activityRef.current) {
       return;
@@ -233,17 +182,12 @@ export function CompanionTalkPanel({
     const turn = new AbortController();
     turnRef.current = turn;
     try {
-      // 小さいモデルは「後ろに何が見える？」でもカメラを見る道具を呼ばずに「見えない」と答えたので、
-      // 見ている間は様子を先に添えておく。目が失敗しても、様子なしで答えさせる
-      const scene = canLook ? await currentScene().catch(() => "") : "";
       const reply = await runCompanionTurn({
-        userText: withScene({ userText, caption: scene }),
+        userText,
+        images,
         historyText,
-        generate: brain.generate,
-        tools: [
-          ...buildCompanionTools({ webSearch }),
-          ...(canLook ? [createCameraTool({ look: lookAtCamera })] : []),
-        ],
+        generate: images ? vision.generate : brain.generate,
+        tools: buildCompanionTools({ webSearch }),
         context: {
           fetch: window.fetch.bind(window),
           storage: localStorage,
@@ -407,11 +351,11 @@ export function CompanionTalkPanel({
 
       <CompanionCameraControl
         camera={camera}
-        eyesState={eyes.state}
+        visionState={vision.state}
         onStart={async () => {
-          // 目（約 1.9 GB）は、カメラが映り始めてから読み込む（許可されなければ取得しない）
+          // 映像を見ながら話すモデル（約 1.9 GB）は、カメラが映り始めてから読み込む（許可されなければ取得しない）
           if (await camera.start()) {
-            void eyes.wake();
+            void vision.wake();
           }
         }}
       />
@@ -448,7 +392,7 @@ export function CompanionTalkPanel({
 
       <div className="space-y-2">
         <ModelAttribution model={COMPANION_MODEL} />
-        {eyes.state.status !== "asleep" ? <ModelAttribution model={EYES_MODEL} /> : null}
+        {vision.state.status !== "asleep" ? <ModelAttribution model={VISION_MODEL} /> : null}
         {voice.state.status !== "off" ? <VoiceAttribution /> : null}
         <p className="text-xs text-muted-foreground">
           調べものをするときだけ、検索する言葉や URL を Wikipedia・Jina

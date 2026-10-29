@@ -4,14 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export type CompanionCameraState = "off" | "starting" | "on" | "denied";
 
-/** 目に渡す画像の長い辺。LFM3-VL は画像が大きいほど画像トークンが増えて遅くなる */
+/** LFM3-VL に渡す画像の長い辺。LFM3-VL は画像が大きいほど画像トークンが増えて遅くなる */
 const FRAME_MAX_SIDE = 512;
 /** 映像が変わったかを比べるための縮小画像の大きさ */
 const SAMPLE_WIDTH = 16;
 const SAMPLE_HEIGHT = 12;
 
 /**
- * 端末のカメラ。映像は画面の小さなプレビューにだけ流し、見るときに 1 枚ずつ JPEG にして目（LFM3-VL）に渡す。
+ * 端末のカメラ。映像は画面の小さなプレビューにだけ流し、話すときに 1 枚ずつ JPEG にして LFM3-VL に渡す。
  * 映像も画像も端末の外には出さない
  */
 export function useCompanionCamera() {

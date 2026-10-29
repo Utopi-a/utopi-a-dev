@@ -20,6 +20,33 @@ export function buildSceneMessages({
   ];
 }
 
+/**
+ * 映像が変わったとみなす、縮小した画像の明るさの差（0〜1）。
+ * Mac の内蔵カメラで、座ったままの人を映し続けると 0.01〜0.02 だった
+ */
+const FRAME_CHANGE_THRESHOLD = 0.05;
+
+/**
+ * 2 枚の縮小画像（明るさの並び）の平均の差で、カメラの前が変わったかを見る。
+ * 目の説明は同じ様子でも毎回言い回しが変わり、文の比較では見分けられなかった
+ */
+export function hasFrameChanged({
+  previous,
+  current,
+}: {
+  previous: Uint8Array | null;
+  current: Uint8Array;
+}) {
+  if (!previous || previous.length !== current.length) {
+    return true;
+  }
+  let total = 0;
+  for (let index = 0; index < current.length; index += 1) {
+    total += Math.abs(previous[index] - current[index]);
+  }
+  return total / current.length / 255 >= FRAME_CHANGE_THRESHOLD;
+}
+
 function bigrams({ text }: { text: string }) {
   const characters = [...text.replace(/[\s、。,.]/g, "")];
   return new Set(characters.slice(1).map((character, index) => characters[index] + character));

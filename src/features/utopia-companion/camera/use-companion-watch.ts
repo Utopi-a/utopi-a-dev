@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { isSimilarScene } from "@/features/utopia-companion/camera/companion-scene";
+import {
+  hasFrameChanged,
+  isSimilarScene,
+} from "@/features/utopia-companion/camera/companion-scene";
 
 /** 次に見るまでの間隔。話し終えて手が空いてから数える */
 const WATCH_INTERVAL_MS = 12_000;
@@ -9,24 +12,27 @@ const WATCH_INTERVAL_MS = 12_000;
 const MAX_QUIET_LOOKS = 3;
 
 /**
- * カメラを一緒に見て、話し続ける。手が空いていれば一定の間隔で 1 枚見て、様子が変わったら話す。
+ * カメラを一緒に見て、話し続ける。手が空いていれば一定の間隔で映像を確かめ、変わっていたら目で見て、
+ * 様子が変わったら話す。映像が変わっていなければ目（LFM3-VL）は動かさない。
  * 話しかけられて考えている間や、話している間は見ない
  */
 export function useCompanionWatch({
   isEnabled,
   capture,
+  sample,
   describe,
   isIdle,
   onScene,
 }: {
   isEnabled: boolean;
   capture: () => string | null;
+  sample: () => Uint8Array | null;
   describe: (frame: string) => Promise<string>;
   isIdle: () => boolean;
   onScene: (caption: string) => Promise<void>;
 }) {
-  const latest = useRef({ capture, describe, isIdle, onScene });
-  latest.current = { capture, describe, isIdle, onScene };
+  const latest = useRef({ capture, sample, describe, isIdle, onScene });
+  latest.current = { capture, sample, describe, isIdle, onScene };
 
   useEffect(() => {
     if (!isEnabled) {
@@ -35,17 +41,27 @@ export function useCompanionWatch({
     let isCancelled = false;
     let timer = 0;
     let previous = "";
+    let previousSample: Uint8Array | null = null;
     let quietLooks = 0;
 
     async function look() {
-      const { capture, describe, isIdle, onScene } = latest.current;
+      const { capture, sample, describe, isIdle, onScene } = latest.current;
       if (!isIdle()) {
+        return;
+      }
+      const current = sample();
+      if (!current) {
+        return;
+      }
+      if (!hasFrameChanged({ previous: previousSample, current }) && quietLooks < MAX_QUIET_LOOKS) {
+        quietLooks += 1;
         return;
       }
       const frame = capture();
       if (!frame) {
         return;
       }
+      previousSample = current;
       const caption = (await describe(frame).catch(() => "")).trim();
       if (isCancelled || caption.length === 0) {
         return;

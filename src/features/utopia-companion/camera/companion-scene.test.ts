@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildSceneMessages,
   buildSceneTurn,
+  hasFrameChanged,
   isSimilarScene,
 } from "@/features/utopia-companion/camera/companion-scene";
 
@@ -37,6 +38,18 @@ describe("buildSceneMessages", () => {
     expect(buildSceneMessages({ frame: "data:x", question: "何色？" })[0].content).toBe(
       "この写真について答えて: 何色？",
     );
+  });
+});
+
+describe("hasFrameChanged", () => {
+  it("座ったままの揺れ程度の差は変わっていないとし、大きく変わったら変わったとする", () => {
+    const previous = new Uint8Array(192).fill(100);
+    expect(hasFrameChanged({ previous, current: new Uint8Array(192).fill(104) })).toBe(false);
+    expect(hasFrameChanged({ previous, current: new Uint8Array(192).fill(130) })).toBe(true);
+  });
+
+  it("比べる前の映像がなければ変わったとする", () => {
+    expect(hasFrameChanged({ previous: null, current: new Uint8Array(192) })).toBe(true);
   });
 });
 

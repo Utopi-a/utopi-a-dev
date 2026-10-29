@@ -142,6 +142,7 @@ export function CompanionTalkPanel({
   useCompanionWatch({
     isEnabled: isWatching && brain.state.status === "awake",
     capture: camera.capture,
+    sample: camera.sample,
     describe: (frame) => see({ frame }),
     isIdle: () => activityRef.current === null && voice.level() === 0 && !isListeningRef.current,
     onScene: async (caption) => {

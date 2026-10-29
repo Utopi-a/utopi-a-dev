@@ -15,6 +15,7 @@ import { useCompanionCamera } from "@/features/utopia-companion/camera/use-compa
 import { useCompanionWatch } from "@/features/utopia-companion/camera/use-companion-watch";
 import { CompanionActionList } from "@/features/utopia-companion/companion-action-list";
 import {
+  asksForAction,
   type CompanionAction,
   type CompanionStep,
   runCompanionTurn,
@@ -201,8 +202,10 @@ export function CompanionTalkPanel({
       await sceneTurn;
     }
     setDraft("");
-    // カメラを一緒に見ている間は、いまの映像を添えて、映像を見ながら話すモデルに渡す
-    const frame = isWatching ? camera.capture() : null;
+    // カメラを一緒に見ている間は、いまの映像を添えて、映像を見ながら話すモデルに渡す。
+    // ただし LFM3-VL は道具をうまく呼べなかった（覚えてと頼んで促しても remember を呼ばない）ので、
+    // 調べて・覚えてなどの頼みごとは、映像を添えずに道具を使える LFM3-1.7B に回す
+    const frame = isWatching && !asksForAction(userText) ? camera.capture() : null;
     await respond(
       frame ? buildCameraTurn({ frame, text: userText }) : { userText, historyText: userText },
     );
@@ -238,7 +241,7 @@ export function CompanionTalkPanel({
         images,
         historyText,
         generate: images ? vision.generate : brain.generate,
-        tools: buildCompanionTools({ webSearch }),
+        tools: images ? [] : buildCompanionTools({ webSearch }),
         context: {
           fetch: window.fetch.bind(window),
           storage: localStorage,

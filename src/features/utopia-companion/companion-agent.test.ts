@@ -144,10 +144,33 @@ describe("runCompanionTurn", () => {
     expect(fetch).toHaveBeenCalledWith("https://r.jina.ai/https://example.com/", expect.anything());
   });
 
+  it("書式どおりでなくても、道具の名前と引数が書いてあれば呼び出して続ける", async () => {
+    const generate = vi
+      .fn<CompanionGenerate>()
+      .mockResolvedValueOnce("[search_wikipedia] 富士山")
+      .mockResolvedValueOnce("[smile] 3776 メートルだよ。");
+
+    const result = await runCompanionTurn({
+      userText: "富士山の高さを調べて",
+      generate,
+      context: { fetch: wikipediaFetch(), storage: createMemoryStorage(), now },
+    });
+
+    expect(result).toMatchObject({
+      speech: "3776 メートルだよ。",
+      actions: [{ description: "ウィキペディアで「富士山」を調べてる…", isSuccess: true }],
+    });
+    expect(generate.mock.calls[1][0].messages.at(-2)).toEqual({
+      role: "assistant",
+      content: "",
+      toolCalls: [{ id: "call-0-0", name: "search_wikipedia", arguments: { query: "富士山" } }],
+    });
+  });
+
   it("道具の名前を文に書いただけなら呼び出すよう促し、呼び出したら続ける", async () => {
     const generate = vi
       .fn<CompanionGenerate>()
-      .mockResolvedValueOnce("[neutral] [search_wikipedia] 「富士山」検索ね。")
+      .mockResolvedValueOnce("[neutral] search_wikipedia を使うね。")
       .mockResolvedValueOnce(toolCall({ name: "search_wikipedia", args: { query: "富士山" } }))
       .mockResolvedValueOnce("[smile] 3776 メートルだよ。");
 
@@ -181,6 +204,26 @@ describe("runCompanionTurn", () => {
     expect(JSON.stringify(readCompanionMemory({ storage }).history)).not.toContain(
       "search_wikipedia",
     );
+  });
+
+  it("覚えてと頼まれたのに道具を使わずに返したら、1 度だけ呼び出すよう促す", async () => {
+    const storage = createMemoryStorage();
+    const generate = vi
+      .fn<CompanionGenerate>()
+      .mockResolvedValueOnce("[smile] 味噌ラーメン、いいね！")
+      .mockResolvedValueOnce(
+        toolCall({ name: "remember", args: { note: "味噌ラーメンが一番好き" } }),
+      )
+      .mockResolvedValueOnce("[smile] 覚えたよ。");
+
+    const result = await runCompanionTurn({
+      userText: "味噌ラーメンが一番好きなんだ。覚えておいて",
+      generate,
+      context: { fetch: vi.fn(), storage, now },
+    });
+
+    expect(result.speech).toBe("覚えたよ。");
+    expect(readCompanionMemory({ storage }).notes).toEqual(["味噌ラーメンが一番好き"]);
   });
 
   it("引数の欠けた呼び出しは失敗として返し、直した呼び出しで続ける", async () => {

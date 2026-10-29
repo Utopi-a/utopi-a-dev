@@ -1,4 +1,7 @@
-import type { InferenceToolCall } from "@/features/local-llm/inference-worker/inference-worker-messages";
+import type {
+  InferenceTool,
+  InferenceToolCall,
+} from "@/features/local-llm/inference-worker/inference-worker-messages";
 
 /** 返答の頭に付けさせる気持ち。Live2D モデルの表情（utopia-expressions の id）と同じ名前にする */
 export const COMPANION_EXPRESSIONS = [
@@ -33,6 +36,56 @@ export function parseToolCalls({ output, idPrefix }: { output: string; idPrefix:
     toolCalls.push({ id: `${idPrefix}-${toolCalls.length}`, name: name.trim(), arguments: args });
   }
   return { toolCalls, text: output.replace(TOOL_CALL_PATTERN, "").trim() };
+}
+
+const LOOSE_CALL_PATTERN = /\[([a-z][a-z_]*)\]\s*(\{[^{}]*\}|[^\n[]*)/g;
+const QUOTES_PATTERN = /^[「『"']+|[」』"']+$/g;
+
+/**
+ * 書式どおりでない呼び出し（`[search_web] 日光東照宮` や `[search_web]\n{"query": "…"}`）を、
+ * 知っている道具の名前なら呼び出しとして拾う。映像を見ながら話す LFM3-VL や思考なしの LFM3-1.7B は、
+ * `<tool_call>` の代わりにこう書くことがあり、促しても書式どおりに書き直さないことがあった。
+ * 引数は JSON か、引数が 1 つの道具なら名前のあとの 1 行を使う
+ */
+export function parseLooseToolCall({
+  text,
+  tools,
+  id,
+}: {
+  text: string;
+  tools: readonly InferenceTool[];
+  id: string;
+}): InferenceToolCall | null {
+  for (const [, name, rest] of text.matchAll(LOOSE_CALL_PATTERN)) {
+    const tool = tools.find((item) => item.function.name === name);
+    if (!tool) {
+      continue;
+    }
+    const keys = Object.keys(tool.function.parameters.properties);
+    const args = rest.startsWith("{")
+      ? parseJsonArguments({ json: rest })
+      : keys.length === 1
+        ? { [keys[0]]: rest.trim().replace(QUOTES_PATTERN, "").trim() }
+        : null;
+    if (args && Object.values(args).some((value) => value.length > 0)) {
+      return { id, name, arguments: args };
+    }
+  }
+  return null;
+}
+
+function parseJsonArguments({ json }: { json: string }) {
+  try {
+    const parsed: unknown = JSON.parse(json);
+    if (typeof parsed !== "object" || parsed === null) {
+      return null;
+    }
+    return Object.fromEntries(
+      Object.entries(parsed).map(([key, value]) => [key, String(value).trim()]),
+    );
+  } catch {
+    return null;
+  }
 }
 
 /**

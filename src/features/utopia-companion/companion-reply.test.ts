@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parseCompanionReply, parseToolCalls } from "@/features/utopia-companion/companion-reply";
+import {
+  parseCompanionReply,
+  parseLooseToolCall,
+  parseToolCalls,
+} from "@/features/utopia-companion/companion-reply";
+import { COMPANION_TOOLS } from "@/features/utopia-companion/companion-toolbox";
 
 describe("parseToolCalls", () => {
   it("LFM3 の <tool_call> から道具の名前と引数を取り出し、残りの文章を返す", () => {
@@ -24,6 +29,29 @@ describe("parseToolCalls", () => {
       toolCalls: [],
       text: "[smile] やあ。",
     });
+  });
+});
+
+describe("parseLooseToolCall", () => {
+  const tools = COMPANION_TOOLS.map((tool) => tool.definition);
+
+  it("知っている道具の名前のあとの 1 行か JSON を、呼び出しとして拾う", () => {
+    expect(
+      parseLooseToolCall({ text: "[search_wikipedia] 「日光東照宮」", tools, id: "call-0-0" }),
+    ).toEqual({ id: "call-0-0", name: "search_wikipedia", arguments: { query: "日光東照宮" } });
+    expect(
+      parseLooseToolCall({
+        text: '[smile] 探すね。[search_wikipedia]\n{"query": "富士山"}\n\n[waiting for result]',
+        tools,
+        id: "x",
+      }),
+    ).toEqual({ id: "x", name: "search_wikipedia", arguments: { query: "富士山" } });
+  });
+
+  it("気持ちのタグや知らない名前、引数のないものは拾わない", () => {
+    expect(parseLooseToolCall({ text: "[smile] やっほー。", tools, id: "x" })).toBeNull();
+    expect(parseLooseToolCall({ text: "[search_web] 富士山", tools, id: "x" })).toBeNull();
+    expect(parseLooseToolCall({ text: "[search_wikipedia]", tools, id: "x" })).toBeNull();
   });
 });
 

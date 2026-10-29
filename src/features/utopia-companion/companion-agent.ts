@@ -10,7 +10,11 @@ import {
   readCompanionMemory,
 } from "@/features/utopia-companion/companion-memory";
 import { buildCompanionSystemPrompt } from "@/features/utopia-companion/companion-persona";
-import { parseCompanionReply, parseToolCalls } from "@/features/utopia-companion/companion-reply";
+import {
+  parseCompanionReply,
+  parseLooseToolCall,
+  parseToolCalls,
+} from "@/features/utopia-companion/companion-reply";
 import { splitThinking } from "@/features/utopia-companion/companion-thinking";
 import {
   type CompanionTool,
@@ -61,6 +65,16 @@ const ANSWER_NOW =
  */
 const PROMISE_PATTERN =
   /(調べ|読ん|読み|見て|見る|探し|探す|開い|開け|確かめ|検索[しす]?|呼ん|呼び|呼ぼ)(て|で)?(み)?(る|う|よう|ます|ね|よ)/;
+/**
+ * 相手がはっきり道具を使う頼みごとをした発言。映像を見ながら話す LFM3-VL は「覚えておいて」に
+ * 「いいね！」とだけ返して remember を呼ばなかったので、道具を使わずに返したら 1 度だけ促す
+ */
+const REQUEST_PATTERN = /(調べ|探し|覚え|読ん|検索し)て/;
+
+/** 相手が道具を使う頼みごと（調べて・覚えてなど）をはっきりしたか */
+export function asksForAction(userText: string) {
+  return REQUEST_PATTERN.test(userText);
+}
 const CALL_MARKUP_PATTERN = /<\/?(tool_call|function|parameter)\b/;
 const ACT_NOW = "（言うだけで終わらせず、いま道具を呼び出して確かめてから話す）";
 
@@ -159,10 +173,22 @@ export async function runCompanionTurn({
     if (!isComplete) {
       break;
     }
-    const { toolCalls, text } = parseToolCalls({ output: visible, idPrefix: `call-${step}` });
+    const parsed = parseToolCalls({ output: visible, idPrefix: `call-${step}` });
+    const loose =
+      parsed.toolCalls.length === 0
+        ? parseLooseToolCall({
+            text: parsed.text,
+            tools: available.map((tool) => tool.definition),
+            id: `call-${step}-0`,
+          })
+        : null;
+    // 書式どおりでない呼び出しを拾ったときは、その文は会話に残さない（まねて書き続けるので）
+    const { toolCalls, text } = loose ? { toolCalls: [loose], text: "" } : parsed;
     if (toolCalls.length === 0) {
       const isPromise =
-        PROMISE_PATTERN.test(text) || mentionsTool({ text, toolNames: available.map(nameOf) });
+        PROMISE_PATTERN.test(text) ||
+        mentionsTool({ text, toolNames: available.map(nameOf) }) ||
+        asksForAction(userText);
       if (!hasNudged && results.size === 0 && available.length > 0 && isPromise) {
         hasNudged = true;
         messages.push({ role: "assistant", content: text }, { role: "user", content: ACT_NOW });

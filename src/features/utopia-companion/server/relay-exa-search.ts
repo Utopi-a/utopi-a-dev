@@ -42,7 +42,8 @@ export async function relayExaSearch({
     body: JSON.stringify({
       query,
       numResults: 5,
-      type: "auto",
+      // auto は応答に 15 秒以上かかることがあった。lite は取得済みの索引だけで返すので速い
+      type: "lite",
       contents: { text: { maxCharacters: 600 } },
     }),
     signal: AbortSignal.timeout(TIMEOUT_MS),

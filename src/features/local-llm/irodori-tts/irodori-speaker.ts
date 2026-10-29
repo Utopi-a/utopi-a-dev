@@ -13,6 +13,8 @@ export type IrodoriSpeaker = {
   speak: (options: { text: string }) => Promise<void>;
   /** 鳴っている音声と、まだ合成していない文を捨てる */
   stop: () => void;
+  /** いま鳴っている音声の大きさ（RMS）。口の動きに使うので毎フレーム読む */
+  level: () => number;
   dispose: () => void;
 };
 
@@ -74,6 +76,10 @@ export async function loadIrodoriSpeaker({
   }
 
   const context = new AudioContext({ sampleRate });
+  const analyser = context.createAnalyser();
+  analyser.fftSize = 1024;
+  analyser.connect(context.destination);
+  const levelSamples = new Float32Array(analyser.fftSize);
   const playing = new Set<AudioBufferSourceNode>();
   let playAt = 0;
   // stop() のたびに進め、合成中だった古い文を鳴らさない
@@ -85,7 +91,7 @@ export async function loadIrodoriSpeaker({
     buffer.copyToChannel(samples, 0);
     const source = context.createBufferSource();
     source.buffer = buffer;
-    source.connect(context.destination);
+    source.connect(analyser);
     source.onended = () => playing.delete(source);
     playAt = Math.max(playAt, context.currentTime);
     source.start(playAt);
@@ -114,6 +120,17 @@ export async function loadIrodoriSpeaker({
       // 失敗した読み上げのあとも、次の読み上げは続けられるようにする
       queue = job.catch(() => undefined);
       return job;
+    },
+    level() {
+      if (playing.size === 0) {
+        return 0;
+      }
+      analyser.getFloatTimeDomainData(levelSamples);
+      let sum = 0;
+      for (const sample of levelSamples) {
+        sum += sample * sample;
+      }
+      return Math.sqrt(sum / levelSamples.length);
     },
     stop() {
       generation += 1;

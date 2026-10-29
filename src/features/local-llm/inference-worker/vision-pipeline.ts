@@ -10,8 +10,10 @@ import {
   RawImage,
   TextStreamer,
 } from "@huggingface/transformers";
+import { toChatTemplateMessage } from "@/features/local-llm/inference-worker/chat-template-message";
 import type {
   InferenceMessage,
+  InferenceTool,
   InferenceWorkerEventSender,
   WorkerModelConfig,
 } from "@/features/local-llm/inference-worker/inference-worker-messages";
@@ -104,7 +106,7 @@ async function buildChatMessagesWithImages({ messages }: { messages: InferenceMe
   const chatMessages = await Promise.all(
     messages.map(async (message) => {
       if (message.role !== "user" || !message.images?.length) {
-        return { role: message.role, content: message.content };
+        return toChatTemplateMessage({ message });
       }
 
       const loadedImages = await Promise.all(
@@ -365,9 +367,11 @@ async function generateQwen3Vl({
 
 async function generateLfm3Vl({
   messages,
+  tools,
   postEvent,
 }: {
   messages: InferenceMessage[];
+  tools?: InferenceTool[];
   postEvent: InferenceWorkerEventSender;
 }) {
   if (loadedPipeline?.kind !== "lfm3-vl") {
@@ -382,10 +386,12 @@ async function generateLfm3Vl({
   }
 
   // Lfm3VlProcessor は画像トークンを画像ごとのパッチ数に展開するため、テンプレートは文字列で受け取ってから渡す
+  // ツールは system の末尾に <tools> として入り、呼び出しは <tool_call><function=…> の形で返る
   const prompt = loadedPipeline.processor.apply_chat_template(chatMessages, {
     add_generation_prompt: true,
     tokenize: false,
     enable_thinking: false,
+    tools: tools?.length ? tools : undefined,
   } as Record<string, unknown>) as string;
   const inputs = await loadedPipeline.processor(images.length > 0 ? images : null, prompt, {
     add_special_tokens: false,
@@ -428,10 +434,12 @@ async function generateLfm3Vl({
 export async function generateVision({
   messages,
   kind,
+  tools,
   postEvent,
 }: {
   messages: InferenceMessage[];
   kind: VisionKind;
+  tools?: InferenceTool[];
   postEvent: InferenceWorkerEventSender;
 }) {
   if (kind === "moondream") {
@@ -440,7 +448,7 @@ export async function generateVision({
   }
 
   if (kind === "lfm3-vl") {
-    await generateLfm3Vl({ messages, postEvent });
+    await generateLfm3Vl({ messages, tools, postEvent });
     return;
   }
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { MicIcon, MicOffIcon } from "lucide-react";
-import { useRef, useState } from "react";
+import { EyeIcon, EyeOffIcon, MicIcon, MicOffIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/features/portfolio/page-header/page-header";
+import { CompanionTalkPanel } from "@/features/utopia-companion/companion-talk-panel";
 import { useVoiceLevel } from "@/features/utopia-live2d/use-voice-level";
 import { utopiaExpressions } from "@/features/utopia-live2d/utopia-expressions";
 import {
@@ -22,6 +23,25 @@ export function UtopiaLive2DView() {
   const handleRef = useRef<Live2DStageHandle | null>(null);
   const [expression, setExpression] = useState<string>(utopiaExpressions[0].id);
   const voice = useVoiceLevel();
+  const speechLevelRef = useRef(0);
+  const mouthLevelRef = useRef(0);
+  const [followsCursor, setFollowsCursor] = useState(false);
+  const followsCursorRef = useRef(followsCursor);
+  followsCursorRef.current = followsCursor;
+  const followCursorRef = useRef(false);
+
+  // 口はマイクの声と、ゆーとぴあちゃんの読み上げの大きいほうで開ける。
+  // 話している間は、カーソルを追うモードでも相手（正面）を見る
+  useEffect(() => {
+    let frame = 0;
+    const tick = () => {
+      mouthLevelRef.current = Math.max(voice.levelRef.current, speechLevelRef.current);
+      followCursorRef.current = followsCursorRef.current && speechLevelRef.current === 0;
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [voice.levelRef]);
 
   function selectExpression(id: string) {
     setExpression(id);
@@ -37,17 +57,32 @@ export function UtopiaLive2DView() {
         description="カーソルを目で追い、まばたきし、髪が揺れます。頭を撫でたり顔をタップしたりすると反応します。"
       />
 
-      <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-start">
-        <UtopiaLive2DStage
-          handleRef={handleRef}
-          voiceLevelRef={voice.levelRef}
-          reactionExpression="shy"
-        />
+      <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-start">
+        {/* 話す欄に幅を残すため、横に並べるときはモデルを小さくする */}
+        <div className="w-full max-w-md lg:w-80 lg:shrink-0">
+          <UtopiaLive2DStage
+            handleRef={handleRef}
+            voiceLevelRef={mouthLevelRef}
+            followCursorRef={followCursorRef}
+            reactionExpression="shy"
+          />
+        </div>
 
-        <div className="w-full space-y-8 sm:max-w-56">
+        <div className="w-full max-w-md min-w-0 space-y-8 lg:max-w-none lg:flex-1">
+          <section className="space-y-3">
+            <h2 className="pf-heading">話す</h2>
+            <CompanionTalkPanel
+              speechLevelRef={speechLevelRef}
+              onReply={({ expression }) => {
+                selectExpression(expression);
+                handleRef.current?.playMotion("Nod");
+              }}
+            />
+          </section>
+
           <section className="space-y-3">
             <h2 className="pf-heading">表情</h2>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-3 gap-2">
               {utopiaExpressions.map(({ id, label }) => (
                 <Button
                   key={id}
@@ -59,6 +94,19 @@ export function UtopiaLive2DView() {
                 </Button>
               ))}
             </div>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="pf-heading">視線</h2>
+            <Button
+              variant={followsCursor ? "default" : "outline"}
+              className="w-full"
+              aria-pressed={followsCursor}
+              onClick={() => setFollowsCursor((prev) => !prev)}
+            >
+              {followsCursor ? <EyeIcon /> : <EyeOffIcon />}
+              カーソルを目で追う
+            </Button>
           </section>
 
           <section className="space-y-3">

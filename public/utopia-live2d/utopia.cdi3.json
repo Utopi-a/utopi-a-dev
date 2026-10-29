@@ -459,6 +459,10 @@
 			"Name": "neckwear"
 		},
 		{
+			"Id": "ArtMeshTopwear",
+			"Name": "topwear 2"
+		},
+		{
 			"Id": "ArtMeshHandwearL",
 			"Name": "handwear-l"
 		},
@@ -467,7 +471,7 @@
 			"Name": "handwear-r"
 		},
 		{
-			"Id": "ArtMeshTopwear",
+			"Id": "ArtMeshTopwear2",
 			"Name": "topwear"
 		},
 		{

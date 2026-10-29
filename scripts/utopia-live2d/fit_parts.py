@@ -9,7 +9,8 @@
   （閉じ口の線は draw_mouth_line.py で描く）
 - 腕: GPT が描き足した袖山が、胴の肩線の手前に二重の山として見える。元絵で腕が見えていた範囲
   （少し広げたもの）に収め、肩の継ぎ目の袖は元絵の画素にする。胴も見えている所は元絵の画素にして肩の線を
-  一本につなぎ、袖の下に隠れる胴は袖ぐりの輪郭線を消して布の色で埋める
+  一本につなぎ、袖の下に隠れる胴は袖ぐりの輪郭線を消して布の色で埋める。肩から二本線の裾まではケープ襟なので
+  袖から分け（cape_side）、胴と一緒に動かす
 - 髪: GPT の髪は内側にも半透明の画素があり、目の上に透明な板のように重なる。内側を不透明にし、
   なめらかな縁だけを残す
 """
@@ -145,6 +146,8 @@ outside = np.pad(outside, 1)
 cv2.floodFill(outside, None, (0, 0), 2)
 figure = outside[1:-1, 1:-1] != 2
 arms = masks["arm_L"] | masks["arm_R"]
+# 脇（袖と胴のすき間）に見える濃い紫の縦の帯。腕ごとの裾の検出で見つけ、胴の脇を GPT の身頃で埋めるときに使う
+armpit_dark = np.zeros(master.shape[:2], bool)
 for side in ("L", "R"):
     arm_mask = masks[f"arm_{side}"]
     visible_arm = cv2.dilate(arm_mask.astype(np.uint8), disk(6 * S)).astype(bool)
@@ -185,6 +188,52 @@ for side in ("L", "R"):
     arm_top = np.nonzero(arm_mask.any(axis=1))[0].min()
     cap = (rows < arm_top + 120 * S) & ~sleeve
     rgba[..., 3] *= 1 - soft(cap, S)
+    # 肩から二本線の裾まではケープ襟で、袖ではない（設定集「衣装構造」: ケープ襟は身頃の上に重なる一枚の布で、
+    # 袖はその裾の下から出る）。腕に持たせると、体を回したときケープが前と横で裂けて折り目に線が出るので、
+    # 裾より上は胴と一緒に動く手前のケープ（cape_side）に分け、腕には裾から下の袖だけを残す
+    # 裾の帯は太い暗い帯。帯につながる細い輪郭線（袖の縁）を拾うと、裾の下まで帯と見なすので、細い線は落とす
+    band = cv2.morphologyEx((sleeve & (luma < 140)).astype(np.uint8), cv2.MORPH_OPEN, disk(4 * S))
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(band, connectivity=8)
+    hem_band = labels == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    columns = np.nonzero(hem_band.any(axis=0))[0]
+    hem_bottom_at = np.array([np.nonzero(hem_band[:, x])[0].max() for x in columns])
+    # 袖の内側の濃い縦の帯も裾の帯につながっているので、その列は裾の下端が下に飛ぶ。裾のなめらかな曲線より
+    # 25px（元絵）以上下に飛んだ列だけ曲線の値にする（外側で裾が下へ反る所は帯のまま残す）
+    keep = np.ones(len(columns), bool)
+    for _ in range(3):
+        curve = np.polyval(np.polyfit(columns[keep], hem_bottom_at[keep], 2), columns)
+        keep = hem_bottom_at - curve < 25 * S
+    hem_bottom_at = np.where(keep, hem_bottom_at, curve)
+    hem_bottom = np.interp(np.arange(master.shape[1]), columns, hem_bottom_at)[None, :]
+    # 下に飛んだ列は、袖と胴のすき間の濃い縦の帯。設定集の身頃の脇は白い布で、帯は腕が動くと浮いた欠片に見えるので、
+    # 胴の側で身頃の脇に置き換える（下の torso の処理）
+    if (~keep).any():
+        near_strip = np.zeros(master.shape[1], bool)
+        near_strip[max(columns[~keep].min() - 8 * S, 0):columns[~keep].max() + 8 * S] = True
+        # 帯の大部分は腕のマスクの中にある。袖の輪郭線（細い線）は袖に残すため、太い所だけを帯とする
+        dark = near_strip[None, :] & (rows > hem_bottom) & (luma < 140) & figure
+        strip = cv2.morphologyEx(dark.astype(np.uint8), cv2.MORPH_OPEN, disk(3 * S)).astype(bool)
+        armpit_dark |= strip | (dark & ~arm_mask)
+        rgba[..., 3] *= 1 - soft(cv2.dilate(strip.astype(np.uint8), disk(S)).astype(bool), S / 2)
+    above_hem = rows <= hem_bottom
+    cape = rgba.copy()
+    cape[..., 3] *= soft(above_hem, S / 2)
+    save(f"cape_side_{side}", cape)
+    # 袖の上端は裾の帯の下に 20px（元絵）潜らせる。潜る所は帯の色ではなく、すぐ下の袖の色を上へ伸ばす
+    # （帯の色のままだと、腕が動いたとき裾の外に帯の切れ端がはみ出す）
+    tuck = 20 * S
+    source_row = np.clip(hem_bottom[0].astype(int) + 3 * S, 0, master.shape[0] - 1)
+    cols = np.arange(master.shape[1])
+    # 伸ばすのはケープに隠れる所だけ（袖の内側の縁は下へ行くほど胴側へ寄るので、ケープの外まで伸ばすと胴の上に四角く出る）
+    tucked = (rows > hem_bottom - tuck) & ~(rows > hem_bottom + 3 * S) & (cape[..., 3] > 128)
+    rgba = np.where(tucked[..., None], rgba[source_row, cols][None, :, :], rgba)
+    rgba[..., 3] *= soft((rows > hem_bottom) | tucked, S / 2)
+    # 裾の内端より胴側の列（袖の内側の濃い縦の帯など）はケープに覆われず、袖の上端が水平な切り口のまま見える。
+    # 腕が動くと胴の上に四角く出るので、その列は裾から下 20px（元絵）でなだらかに透かす
+    hem_row = np.clip(hem_bottom[0].astype(int) - 2 * S, 0, master.shape[0] - 1)
+    uncovered = cape[hem_row, cols, 3] < 128
+    fade = np.clip((rows - hem_bottom) / (20 * S), 0, 1)
+    rgba[..., 3] *= np.where(uncovered[None, :], fade, 1)
     save(f"arm_{side}", rgba)
 
 # 胴: 見えている所は元絵の画素にする。GPT の胴は肩の線が元絵より 30px ほど低く、元絵の肩・袖とつながらない。
@@ -220,6 +269,7 @@ for side in ("L", "R"):
     seams |= cv2.dilate(masks[f"arm_{side}"].astype(np.uint8), disk(3 * S)).astype(bool) & (luma < 190) & ((master[..., 2].astype(np.int16) - master[..., 1].astype(np.int16)) > 50)
 under_sleeves = art_body & (arms | seams | ~figure | ~torso_visible) & ~(under_tie & figure) & ~face_and_neck & (rows > 3300)
 under_sleeves &= cv2.dilate((arms | seams).astype(np.uint8), disk(40 * S)).astype(bool)
+under_sleeves |= art_body & cv2.dilate(armpit_dark.astype(np.uint8), disk(3 * S)).astype(bool)
 # GPT の胴には、袖の下に胴の側面の輪郭線（紫の線）が描かれていて、袖の縫い目のすぐ内側を平行に走る。
 # 腕が動くとこの線が縫い目の横に出て二重に見えるので、袖の下に隠れる所の線は布の色で埋める
 art_luma = art_rgb @ np.array([0.299, 0.587, 0.114], np.float32)

@@ -18,6 +18,8 @@ const order = [
   ["torso", "topwear"],
   ["arm_R", "handwear-r"],
   ["arm_L", "handwear-l"],
+  // 肩から二本線の裾までのケープ襟。胴の服として胴と一緒に動かし、袖（腕）より手前に描く（fit_parts.py）
+  [["cape_side_R", "cape_side_L"], "topwear 2"],
   ["tie", "neckwear"],
   // ブローチは布と一緒に揺らさない（金具なので変形させない）
   ["brooch", "objects"],

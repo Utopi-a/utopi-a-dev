@@ -13,7 +13,12 @@ import { CompanionCameraControl } from "@/features/utopia-companion/camera/compa
 import { buildCameraTurn } from "@/features/utopia-companion/camera/companion-scene";
 import { useCompanionCamera } from "@/features/utopia-companion/camera/use-companion-camera";
 import { useCompanionWatch } from "@/features/utopia-companion/camera/use-companion-watch";
-import { type CompanionStep, runCompanionTurn } from "@/features/utopia-companion/companion-agent";
+import { CompanionActionList } from "@/features/utopia-companion/companion-action-list";
+import {
+  type CompanionAction,
+  type CompanionStep,
+  runCompanionTurn,
+} from "@/features/utopia-companion/companion-agent";
 import {
   type CompanionHistoryEntry,
   clearCompanionMemory,
@@ -81,6 +86,15 @@ export function CompanionTalkPanel({
   const [notes, setNotes] = useState<string[]>([]);
   const [draft, setDraft] = useState("");
   const [activity, setActivity] = useState<string | null>(null);
+  /** 作っている途中の返事で使った道具 */
+  const [turnActions, setTurnActions] = useState<CompanionAction[]>([]);
+  /**
+   * 返事ごとの使った道具。記憶（プロンプトに入る会話）には入れず、この画面を開いている間だけ持つ。
+   * 古い会話の要約で記録の位置がずれるので、位置ではなく記憶に残る返事の文で引く
+   */
+  const [actionsByReply, setActionsByReply] = useState<
+    ReadonlyMap<string, readonly CompanionAction[]>
+  >(new Map());
   const [error, setError] = useState<string | null>(null);
   const [webSearch, setWebSearch] = useState<WebSearchSettings | null>(null);
 
@@ -146,12 +160,21 @@ export function CompanionTalkPanel({
 
   const turnRef = useRef<AbortController | null>(null);
 
+  // 新しい発言が見えるよう、会話の欄を一番下まで送る
+  const logRef = useRef<HTMLOListElement>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 中身が変わるたびに送る
+  useEffect(() => {
+    logRef.current?.scrollTo({ top: logRef.current.scrollHeight });
+  }, [log]);
+
   function describeStep({ step }: { step: CompanionStep }) {
     switch (step.type) {
       case "thinking":
         return "考え中…";
       case "tool":
         return step.description;
+      case "tool-done":
+        return "考え中…";
       case "answering":
         return "まとめてる…";
     }
@@ -204,6 +227,7 @@ export function CompanionTalkPanel({
     activityRef.current = "考え中…";
     setError(null);
     setActivity("考え中…");
+    setTurnActions([]);
     setLog((prev) => [...prev, { role: "user", content: historyText }]);
     voice.stop();
     const turn = new AbortController();
@@ -221,8 +245,19 @@ export function CompanionTalkPanel({
           now: new Date(),
           signal: turn.signal,
         },
-        onStep: (step) => setActivity(describeStep({ step })),
+        onStep: (step) => {
+          setActivity(describeStep({ step }));
+          if (step.type === "tool-done") {
+            setTurnActions((prev) => [...prev, step.action]);
+          }
+        },
       });
+      if (reply.actions.length > 0) {
+        setActionsByReply((prev) =>
+          new Map(prev).set(`[${reply.expression}] ${reply.speech}`, reply.actions),
+        );
+      }
+      setTurnActions([]);
       const memory = readCompanionMemory({ storage: localStorage });
       setLog(memory.history);
       setNotes(memory.notes);
@@ -241,6 +276,7 @@ export function CompanionTalkPanel({
       }
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
+      setTurnActions([]);
       turnRef.current = null;
       activityRef.current = null;
       setActivity(null);
@@ -287,7 +323,7 @@ export function CompanionTalkPanel({
   return (
     <div className="space-y-4">
       {log.length > 0 ? (
-        <ol className="max-h-80 space-y-3 overflow-y-auto text-sm" aria-live="polite">
+        <ol ref={logRef} className="max-h-80 space-y-3 overflow-y-auto text-sm" aria-live="polite">
           {log.map((entry, index) => (
             <li
               // 記憶は追記だけなので、位置で区別してよい
@@ -299,14 +335,22 @@ export function CompanionTalkPanel({
                   : "w-fit max-w-[85%] leading-relaxed"
               }
             >
-              {entry.role === "user"
-                ? entry.content
-                : parseCompanionReply({ text: entry.content }).speech}
+              {entry.role === "user" ? (
+                entry.content
+              ) : (
+                <div className="space-y-1.5">
+                  {actionsByReply.has(entry.content) ? (
+                    <CompanionActionList actions={actionsByReply.get(entry.content) ?? []} />
+                  ) : null}
+                  <p>{parseCompanionReply({ text: entry.content }).speech}</p>
+                </div>
+              )}
             </li>
           ))}
         </ol>
       ) : null}
 
+      {turnActions.length > 0 ? <CompanionActionList actions={turnActions} /> : null}
       {activity ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2Icon className="size-4 animate-spin" />

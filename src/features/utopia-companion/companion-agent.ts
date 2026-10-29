@@ -31,7 +31,16 @@ export type CompanionGenerate = (options: {
 export type CompanionStep =
   | { type: "thinking" }
   | { type: "tool"; call: InferenceToolCall; description: string }
+  | { type: "tool-done"; action: CompanionAction }
   | { type: "answering" };
+
+/** 返事の途中で使った道具と、その結果。道具を本当に使ったかを画面で確かめられるようにする */
+export type CompanionAction = {
+  description: string;
+  isSuccess: boolean;
+  /** 道具がモデルに返した文章（成功: / 失敗: から始まる） */
+  result: string;
+};
 
 /**
  * 1 回の返事で、道具を使って考え直せる回数と、道具を呼べる回数の上限。
@@ -51,7 +60,8 @@ const ANSWER_NOW =
  * （URL を渡しても「読んでみようね」で終わった）ので、1 度だけ、いま呼び出すよう促す
  */
 const PROMISE_PATTERN =
-  /(調べ|読ん|読み|見て|見る|探し|探す|開い|開け|確かめ)(て|で)?(み)?(る|よう|ます|ね|よ)/;
+  /(調べ|読ん|読み|見て|見る|探し|探す|開い|開け|確かめ|検索[しす]?|呼ん|呼び|呼ぼ)(て|で)?(み)?(る|う|よう|ます|ね|よ)/;
+const CALL_MARKUP_PATTERN = /<\/?(tool_call|function|parameter)\b/;
 const ACT_NOW = "（言うだけで終わらせず、いま道具を呼び出して確かめてから話す）";
 
 /** それでも答えられなかったときの返事 */
@@ -63,8 +73,20 @@ const FALLBACK_ANSWER = "[neutral] ごめん、うまく答えられなかった
  */
 const USES_THINKING = false;
 
+/**
+ * 呼び出しを書式どおりに書かず、文の中に道具の名前を書いた返事（「[search_web] 「…」検索ね」など）。
+ * そのまま話して記憶に残すと、次の返事がそれをまねて道具を呼ばなくなる（ブラウザで続けて起きた）
+ */
+function mentionsTool({ text, toolNames }: { text: string; toolNames: readonly string[] }) {
+  return CALL_MARKUP_PATTERN.test(text) || toolNames.some((name) => text.includes(name));
+}
+
 function callKey({ call }: { call: InferenceToolCall }) {
   return JSON.stringify([call.name, Object.entries(call.arguments).sort()]);
+}
+
+function nameOf(tool: CompanionTool) {
+  return tool.definition.function.name;
 }
 
 function throwIfAborted({ signal }: { signal?: AbortSignal }) {
@@ -76,7 +98,7 @@ function throwIfAborted({ signal }: { signal?: AbortSignal }) {
 /**
  * ゆーとぴあちゃんの 1 回の返事。考えて（思考モード）、必要なら道具を使い、結果を見て次の手を決める。
  * 呼び出しは名前と引数を確かめてから実行し、誤りは失敗として返して直させる。
- * 上限に達したら分かったことで答えさせ、気持ち（表情）と読み上げる文に分けて返す。会話は記憶に残す。
+ * 上限に達したら分かったことで答えさせ、気持ち（表情）と読み上げる文、使った道具に分けて返す。会話は記憶に残す。
  */
 export async function runCompanionTurn({
   userText,
@@ -101,6 +123,7 @@ export async function runCompanionTurn({
 }) {
   const memory = readCompanionMemory({ storage: context.storage });
   const available = selectCompanionTools({ tools, userText });
+  const toolNames = tools.map(nameOf);
   const conversation: InferenceMessage[] = [
     {
       role: "system",
@@ -119,6 +142,7 @@ export async function runCompanionTurn({
 
   // 同じ道具を同じ引数で呼び直すのは空回りなので、結果を使い回して答えさせる
   const results = new Map<string, string>();
+  const actions: CompanionAction[] = [];
   let toolCallCount = 0;
   let hasNudged = false;
   let answer = "";
@@ -137,12 +161,15 @@ export async function runCompanionTurn({
     }
     const { toolCalls, text } = parseToolCalls({ output: visible, idPrefix: `call-${step}` });
     if (toolCalls.length === 0) {
-      if (!hasNudged && results.size === 0 && available.length > 0 && PROMISE_PATTERN.test(text)) {
+      const isPromise =
+        PROMISE_PATTERN.test(text) || mentionsTool({ text, toolNames: available.map(nameOf) });
+      if (!hasNudged && results.size === 0 && available.length > 0 && isPromise) {
         hasNudged = true;
         messages.push({ role: "assistant", content: text }, { role: "user", content: ACT_NOW });
         continue;
       }
-      answer = text;
+      // 促しても呼び出しを文で書いたままなら、その文は話さずに答え直させる
+      answer = mentionsTool({ text, toolNames }) ? "" : text;
       break;
     }
     if (toolCalls.every((call) => results.has(callKey({ call })))) {
@@ -158,12 +185,12 @@ export async function runCompanionTurn({
         } else {
           toolCallCount += 1;
           const tool = available.find((item) => item.definition.function.name === call.name);
-          onStep?.({
-            type: "tool",
-            call,
-            description: tool?.describe(call.arguments) ?? "考え中…",
-          });
+          const description = tool?.describe(call.arguments) ?? `${call.name} を呼ぼうとした`;
+          onStep?.({ type: "tool", call, description });
           result = await runCompanionTool({ call, tools: available, context });
+          const action = { description, isSuccess: result.startsWith("成功:"), result };
+          actions.push(action);
+          onStep?.({ type: "tool-done", action });
         }
         results.set(key, result);
       }
@@ -190,7 +217,11 @@ export async function runCompanionTurn({
       tools: [],
       thinking: false,
     });
-    answer = parseToolCalls({ output: splitThinking({ output }).visible, idPrefix: "final" }).text;
+    const { text } = parseToolCalls({
+      output: splitThinking({ output }).visible,
+      idPrefix: "final",
+    });
+    answer = mentionsTool({ text, toolNames }) ? "" : text;
   }
 
   const { expression, speech } = parseCompanionReply({ text: answer || FALLBACK_ANSWER });
@@ -203,5 +234,5 @@ export async function runCompanionTurn({
       { role: "assistant", content: `[${expression}] ${reply}` },
     ],
   });
-  return { expression, speech: reply };
+  return { expression, speech: reply, actions };
 }

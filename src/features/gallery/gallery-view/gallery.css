@@ -1,37 +1,16 @@
 /*
- * 写真の一覧。行の高さを揃え、幅を縦横比に比例させる（justified rows）。
- * 各項目の --ratio（幅 / 高さ）を伸び率と基準幅の両方に掛けるので、
- * 同じ行の写真は同じ割合で伸び、高さが揃う。
- * 行の高さは「その幅で横長の写真が 3 枚前後入る」値にしている。1 行の枚数が少ないほど
- * 行を埋めるための伸びが大きくなり、行ごとの高さの差が目立つため。
+ * 写真の一覧。justified-rows.ts が画面幅ごとに行の分け方を決め、各写真の幅と伸び率を変数で渡す。
+ * 折り返しの位置を計算で決めているので、どの行も端まで埋まり、DOM は 1 つのまま画面幅で並びが変わる。
+ * 基準の幅から 1px 引くのは、割合の丸めで 1 行に収まらず折り返すのを防ぐため。その分は伸び率で埋める。
  */
 
 .gallery-grid {
-  --gallery-row-height: 6.5rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-@media (min-width: 40rem) {
-  .gallery-grid {
-    --gallery-row-height: 10rem;
-  }
-}
-
-@media (min-width: 64rem) {
-  .gallery-grid {
-    --gallery-row-height: 13rem;
-  }
-}
-
-/* 最後の行の余りをここで吸い、写真が引き伸ばされないようにする */
-.gallery-grid::after {
-  content: "";
-  flex-grow: 1000000000;
 }
 
 /*
@@ -45,14 +24,25 @@
 }
 
 .gallery-item {
-  flex-grow: calc(var(--ratio) * 100);
-  flex-basis: calc(var(--ratio) * var(--gallery-row-height));
+  --gallery-basis: var(--basis-phone);
+  --gallery-grow: var(--grow-phone);
+  flex: var(--gallery-grow) 0 calc(var(--gallery-basis) - 1px);
   aspect-ratio: var(--ratio);
-  /*
-   * 伸びを基準の 1.75 倍までに抑える。縦長の写真が数枚だけの行（次が横長で入らないとき）を
-   * 幅いっぱいまで伸ばすと、行の高さが数倍になってしまうため。その行は右に余白が残る。
-   */
-  max-width: min(100%, calc(var(--ratio) * var(--gallery-row-height) * 1.75));
+  min-width: 0;
+}
+
+@media (min-width: 40rem) {
+  .gallery-item {
+    --gallery-basis: var(--basis-tablet);
+    --gallery-grow: var(--grow-tablet);
+  }
+}
+
+@media (min-width: 64rem) {
+  .gallery-item {
+    --gallery-basis: var(--basis-desktop);
+    --gallery-grow: var(--grow-desktop);
+  }
 }
 
 .gallery-link {

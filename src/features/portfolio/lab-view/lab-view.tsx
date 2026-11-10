@@ -19,7 +19,7 @@ export function LabView() {
 
       <LabStudioPanel />
 
-      <ul className="pf-list">
+      <ul className="pf-list pf-list-status">
         {labEntries.map((entry) => (
           <li key={entry.id}>
             <EntryRow

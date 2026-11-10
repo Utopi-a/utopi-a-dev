@@ -3,59 +3,28 @@
 import type { CSSProperties, MouseEvent } from "react";
 import { Suspense } from "react";
 import type { GalleryPhoto } from "@/features/gallery/photo";
-import { type MosaicLayout, type MosaicTile, placeMosaicTiles } from "./mosaic-layout";
+import { type MasonryLayout, type MasonryTile, placeMasonryTiles } from "./masonry-layout";
 import { openPhotoInViewer, PhotoLightbox } from "./photo-lightbox";
 import { photoAltText, photoSrcSet } from "./photo-text";
 
-// 列の数と段の刻みは gallery.css と揃える。幅は各画面幅の代表の値で、実際の幅にはこの比率のまま伸び縮みする。
-const wideScreenSpans = {
-  slim: [3, 3],
-  tall: [3, 6],
-  square: [3, 6],
-  wide: [4, 8],
-  panorama: [12, 12],
-} as const;
-
+// 列の数は gallery.css と揃える。幅は各画面幅の代表の値で、実際の幅にはこの比率のまま伸び縮みする。
 const layouts = {
-  phone: {
-    columns: 6,
-    columnWidth: 50.5,
-    gap: 8,
-    rowUnitsPerColumn: 6,
-    sizing: "pairs",
-    spans: { slim: [3, 3], tall: [3, 6], square: [3, 6], wide: [6, 6], panorama: [6, 6] },
-  },
-  tablet: {
-    columns: 12,
-    columnWidth: 52.7,
-    gap: 8,
-    rowUnitsPerColumn: 6,
-    sizing: "rhythm",
-    spans: wideScreenSpans,
-  },
-  desktop: {
-    columns: 12,
-    columnWidth: 83.33,
-    gap: 8,
-    rowUnitsPerColumn: 12,
-    sizing: "rhythm",
-    spans: wideScreenSpans,
-  },
-} as const satisfies Record<string, MosaicLayout>;
+  phone: { columns: 2, columnWidth: 167.5, gap: 8, placement: "pairs" },
+  tablet: { columns: 2, columnWidth: 356, gap: 8, placement: "shortest-column" },
+  desktop: { columns: 3, columnWidth: 357.33, gap: 8, placement: "shortest-column" },
+} as const satisfies Record<string, MasonryLayout>;
 
-function tileVariables({ tile, name }: { tile: MosaicTile; name: keyof typeof layouts }) {
+function tileVariables({ tile, name }: { tile: MasonryTile; name: keyof typeof layouts }) {
   return {
     [`--column-${name}`]: `${tile.column} / span ${tile.columnSpan}`,
     [`--row-${name}`]: `${tile.row} / span ${tile.rowSpan}`,
   };
 }
 
-function gridImageSizes({ phone, tablet, desktop }: Record<keyof typeof layouts, MosaicTile>) {
-  const tileWidth = (tile: MosaicTile, layout: MosaicLayout) =>
-    tile.columnSpan * layout.columnWidth + (tile.columnSpan - 1) * layout.gap;
-  const viewportWidth = (tile: MosaicTile, columns: number) =>
-    `${Math.ceil((tile.columnSpan / columns) * 100)}vw`;
-  return `(min-width: 64rem) ${Math.ceil(tileWidth(desktop, layouts.desktop))}px, (min-width: 40rem) ${viewportWidth(tablet, layouts.tablet.columns)}, ${viewportWidth(phone, layouts.phone.columns)}`;
+function gridImageSizes({ phone }: { phone: MasonryTile }) {
+  const desktopWidth = Math.ceil(layouts.desktop.columnWidth);
+  const phoneWidth = phone.columnSpan === layouts.phone.columns ? "100vw" : "50vw";
+  return `(min-width: 64rem) ${desktopWidth}px, (min-width: 40rem) 50vw, ${phoneWidth}`;
 }
 
 function shouldLetBrowserHandle({ event }: { event: MouseEvent }) {
@@ -63,10 +32,10 @@ function shouldLetBrowserHandle({ event }: { event: MouseEvent }) {
 }
 
 export function PhotoGrid({ photos }: { photos: GalleryPhoto[] }) {
-  const placed = photos.map((photo) => ({ ratio: photo.width / photo.height }));
-  const phoneTiles = placeMosaicTiles({ photos: placed, layout: layouts.phone });
-  const tabletTiles = placeMosaicTiles({ photos: placed, layout: layouts.tablet });
-  const desktopTiles = placeMosaicTiles({ photos: placed, layout: layouts.desktop });
+  const ratios = photos.map((photo) => photo.width / photo.height);
+  const phoneTiles = placeMasonryTiles({ ratios, layout: layouts.phone });
+  const tabletTiles = placeMasonryTiles({ ratios, layout: layouts.tablet });
+  const desktopTiles = placeMasonryTiles({ ratios, layout: layouts.desktop });
 
   return (
     <>
@@ -103,7 +72,7 @@ export function PhotoGrid({ photos }: { photos: GalleryPhoto[] }) {
                     className="gallery-image"
                     src={photo.variants[0]?.url}
                     srcSet={photoSrcSet({ photo })}
-                    sizes={gridImageSizes({ phone, tablet, desktop })}
+                    sizes={gridImageSizes({ phone })}
                     width={photo.width}
                     height={photo.height}
                     alt={photoAltText({ photo })}

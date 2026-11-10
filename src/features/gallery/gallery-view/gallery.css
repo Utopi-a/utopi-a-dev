@@ -1,6 +1,6 @@
 /*
- * 写真の一覧。大と小のタイルを組み合わせ、行に揃えない。置く場所は mosaic-layout.ts が画面幅ごとに決める。
- * 段の高さは列の幅から計算するので、画面幅が変わってもタイルの形は保たれる。
+ * 写真の一覧。元の縦横比のまま、いちばん背の低い列へ順に積む。置く場所は masonry-layout.ts が画面幅ごとに決める。
+ * 段の高さは列の幅の 1/96 で、列の幅から計算するので、画面幅が変わってもタイルの形は保たれる。
  * 自分の幅は自分のプロパティに使えないので、外側の .gallery-mosaic を基準にする
  */
 .gallery-mosaic {
@@ -17,8 +17,7 @@
 }
 
 .gallery-grid {
-  --gallery-columns: 6;
-  --gallery-row-units: 6;
+  --gallery-columns: 2;
   --gallery-gap: 0.5rem;
   display: grid;
   grid-template-columns: repeat(var(--gallery-columns), minmax(0, 1fr));
@@ -29,7 +28,7 @@
       var(--gallery-columns) +
       var(--gallery-gap)
     ) /
-    var(--gallery-row-units)
+    96
   );
   margin: 0;
   padding: 0;
@@ -43,10 +42,6 @@
 }
 
 @media (min-width: 40rem) {
-  .gallery-grid {
-    --gallery-columns: 12;
-  }
-
   .gallery-item {
     grid-column: var(--column-tablet);
     grid-row: var(--row-tablet);
@@ -55,7 +50,7 @@
 
 @media (min-width: 64rem) {
   .gallery-grid {
-    --gallery-row-units: 12;
+    --gallery-columns: 3;
   }
 
   .gallery-item {

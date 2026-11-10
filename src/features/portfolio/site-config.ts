@@ -9,6 +9,7 @@ export const publicNavItems = [
   { href: "/about", label: "About" },
   { href: "/blog", label: "Blog" },
   { href: "/work", label: "Works" },
+  { href: "/gallery", label: "Gallery" },
   { href: "/lab", label: "Lab" },
 ] as const;
 

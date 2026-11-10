@@ -5,6 +5,7 @@ const publicPages = [
   { path: "/about", heading: "プロフィール" },
   { path: "/work", heading: "制作物" },
   { path: "/blog", heading: "ブログ" },
+  { path: "/gallery", heading: "写真" },
   { path: "/lab", heading: "実験" },
 ] as const;
 

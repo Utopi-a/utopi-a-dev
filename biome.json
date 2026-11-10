@@ -40,6 +40,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["**/gallery/gallery-view/*.tsx", "**/gallery/manage-view/*.tsx"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noImgElement": "off"
+          }
+        }
+      }
     }
   ],
   "files": {

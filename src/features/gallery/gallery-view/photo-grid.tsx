@@ -3,38 +3,59 @@
 import type { CSSProperties, MouseEvent } from "react";
 import { Suspense } from "react";
 import type { GalleryPhoto } from "@/features/gallery/photo";
-import { type JustifiedItem, justifyRows } from "./justified-rows";
+import { type MosaicLayout, type MosaicTile, placeMosaicTiles } from "./mosaic-layout";
 import { openPhotoInViewer, PhotoLightbox } from "./photo-lightbox";
 import { photoAltText, photoSrcSet } from "./photo-text";
 
-// 行の分け方を決める基準の寸法。幅は各画面幅の代表の値で、実際の幅にはこの比率のまま伸び縮みする。
-// スマホは 1 枚を大きく見せたいので、横長が 1 行に 1 枚になる高さを目標にする
-const GAP_REM = 0.5;
-const GAP_PX = 8;
-const layouts = {
-  phone: { containerWidth: 343, targetRowHeight: 230, gap: GAP_PX },
-  tablet: { containerWidth: 720, targetRowHeight: 200, gap: GAP_PX },
-  desktop: { containerWidth: 1088, targetRowHeight: 260, gap: GAP_PX },
+// 列の数と段の刻みは gallery.css と揃える。幅は各画面幅の代表の値で、実際の幅にはこの比率のまま伸び縮みする。
+const wideScreenSpans = {
+  slim: [3, 3],
+  tall: [3, 6],
+  square: [3, 6],
+  wide: [4, 8],
+  panorama: [12, 12],
 } as const;
 
-function layoutVariables({
-  item,
-  ratio,
-  name,
-}: {
-  item: JustifiedItem;
-  ratio: number;
-  name: string;
-}) {
+const layouts = {
+  phone: {
+    columns: 6,
+    columnWidth: 50.5,
+    gap: 8,
+    rowUnitsPerColumn: 6,
+    sizing: "pairs",
+    spans: { slim: [3, 3], tall: [3, 6], square: [3, 6], wide: [6, 6], panorama: [6, 6] },
+  },
+  tablet: {
+    columns: 12,
+    columnWidth: 52.7,
+    gap: 8,
+    rowUnitsPerColumn: 6,
+    sizing: "rhythm",
+    spans: wideScreenSpans,
+  },
+  desktop: {
+    columns: 12,
+    columnWidth: 83.33,
+    gap: 8,
+    rowUnitsPerColumn: 12,
+    sizing: "rhythm",
+    spans: wideScreenSpans,
+  },
+} as const satisfies Record<string, MosaicLayout>;
+
+function tileVariables({ tile, name }: { tile: MosaicTile; name: keyof typeof layouts }) {
   return {
-    [`--basis-${name}`]: `calc((100% - ${item.gapsInRow * GAP_REM}rem) * ${item.share})`,
-    [`--grow-${name}`]: item.fillsRow ? ratio * 100 : 0,
+    [`--column-${name}`]: `${tile.column} / span ${tile.columnSpan}`,
+    [`--row-${name}`]: `${tile.row} / span ${tile.rowSpan}`,
   };
 }
 
-function gridImageSizes({ phone, tablet, desktop }: Record<keyof typeof layouts, JustifiedItem>) {
-  const viewportWidth = (item: JustifiedItem) => `${Math.ceil(item.share * 100)}vw`;
-  return `(min-width: 64rem) ${Math.ceil(desktop.share * layouts.desktop.containerWidth)}px, (min-width: 40rem) ${viewportWidth(tablet)}, ${viewportWidth(phone)}`;
+function gridImageSizes({ phone, tablet, desktop }: Record<keyof typeof layouts, MosaicTile>) {
+  const tileWidth = (tile: MosaicTile, layout: MosaicLayout) =>
+    tile.columnSpan * layout.columnWidth + (tile.columnSpan - 1) * layout.gap;
+  const viewportWidth = (tile: MosaicTile, columns: number) =>
+    `${Math.ceil((tile.columnSpan / columns) * 100)}vw`;
+  return `(min-width: 64rem) ${Math.ceil(tileWidth(desktop, layouts.desktop))}px, (min-width: 40rem) ${viewportWidth(tablet, layouts.tablet.columns)}, ${viewportWidth(phone, layouts.phone.columns)}`;
 }
 
 function shouldLetBrowserHandle({ event }: { event: MouseEvent }) {
@@ -42,59 +63,59 @@ function shouldLetBrowserHandle({ event }: { event: MouseEvent }) {
 }
 
 export function PhotoGrid({ photos }: { photos: GalleryPhoto[] }) {
-  const ratios = photos.map((photo) => photo.width / photo.height);
-  const phoneItems = justifyRows({ ratios, layout: layouts.phone });
-  const tabletItems = justifyRows({ ratios, layout: layouts.tablet });
-  const desktopItems = justifyRows({ ratios, layout: layouts.desktop });
+  const placed = photos.map((photo) => ({ ratio: photo.width / photo.height }));
+  const phoneTiles = placeMosaicTiles({ photos: placed, layout: layouts.phone });
+  const tabletTiles = placeMosaicTiles({ photos: placed, layout: layouts.tablet });
+  const desktopTiles = placeMosaicTiles({ photos: placed, layout: layouts.desktop });
 
   return (
     <>
-      <ul className="gallery-grid">
-        {photos.map((photo, index) => {
-          const ratio = ratios[index];
-          const phone = phoneItems[index];
-          const tablet = tabletItems[index];
-          const desktop = desktopItems[index];
-          return (
-            <li
-              key={photo.id}
-              className="gallery-item"
-              style={
-                {
-                  "--ratio": ratio,
-                  ...layoutVariables({ item: phone, ratio, name: "phone" }),
-                  ...layoutVariables({ item: tablet, ratio, name: "tablet" }),
-                  ...layoutVariables({ item: desktop, ratio, name: "desktop" }),
-                } as CSSProperties
-              }
-            >
-              <a
-                href={`?photo=${encodeURIComponent(photo.id)}`}
-                className="gallery-link"
-                onClick={(event) => {
-                  if (shouldLetBrowserHandle({ event })) {
-                    return;
-                  }
-                  event.preventDefault();
-                  openPhotoInViewer({ id: photo.id });
-                }}
+      <div className="gallery-mosaic">
+        <ul className="gallery-grid">
+          {photos.map((photo, index) => {
+            const phone = phoneTiles[index];
+            const tablet = tabletTiles[index];
+            const desktop = desktopTiles[index];
+            return (
+              <li
+                key={photo.id}
+                className="gallery-item"
+                style={
+                  {
+                    ...tileVariables({ tile: phone, name: "phone" }),
+                    ...tileVariables({ tile: tablet, name: "tablet" }),
+                    ...tileVariables({ tile: desktop, name: "desktop" }),
+                  } as CSSProperties
+                }
               >
-                <img
-                  className="gallery-image"
-                  src={photo.variants[0]?.url}
-                  srcSet={photoSrcSet({ photo })}
-                  sizes={gridImageSizes({ phone, tablet, desktop })}
-                  width={photo.width}
-                  height={photo.height}
-                  alt={photoAltText({ photo })}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </a>
-            </li>
-          );
-        })}
-      </ul>
+                <a
+                  href={`?photo=${encodeURIComponent(photo.id)}`}
+                  className="gallery-link"
+                  onClick={(event) => {
+                    if (shouldLetBrowserHandle({ event })) {
+                      return;
+                    }
+                    event.preventDefault();
+                    openPhotoInViewer({ id: photo.id });
+                  }}
+                >
+                  <img
+                    className="gallery-image"
+                    src={photo.variants[0]?.url}
+                    srcSet={photoSrcSet({ photo })}
+                    sizes={gridImageSizes({ phone, tablet, desktop })}
+                    width={photo.width}
+                    height={photo.height}
+                    alt={photoAltText({ photo })}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
       {/* useSearchParams を使う拡大表示だけを Suspense で包み、一覧はサーバーで描いたまま出す */}
       <Suspense fallback={null}>
         <PhotoLightbox photos={photos} />

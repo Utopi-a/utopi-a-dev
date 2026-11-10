@@ -1,47 +1,66 @@
 /*
- * 写真の一覧。justified-rows.ts が画面幅ごとに行の分け方を決め、各写真の幅と伸び率を変数で渡す。
- * 折り返しの位置を計算で決めているので、どの行も端まで埋まり、DOM は 1 つのまま画面幅で並びが変わる。
- * 基準の幅から 1px 引くのは、割合の丸めで 1 行に収まらず折り返すのを防ぐため。その分は伸び率で埋める。
+ * 写真の一覧。大と小のタイルを組み合わせ、行に揃えない。置く場所は mosaic-layout.ts が画面幅ごとに決める。
+ * 段の高さは列の幅から計算するので、画面幅が変わってもタイルの形は保たれる。
+ * 自分の幅は自分のプロパティに使えないので、外側の .gallery-mosaic を基準にする
  */
+.gallery-mosaic {
+  container-type: inline-size;
+}
+
+/*
+ * 写真は外枠（.site-container）の幅いっぱいに並べ、左 3 列に節見出しを下げる格子には載せない。
+ * ページ見出しも 1 列目から始める。ほかのページの「見出しの左端 = 内容の左端」をここでも保つ
+ */
+.pf-page > .gallery-head,
+.pf-page > .gallery-mosaic {
+  grid-column: 1 / -1;
+}
 
 .gallery-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  --gallery-columns: 6;
+  --gallery-row-units: 6;
+  --gallery-gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(var(--gallery-columns), minmax(0, 1fr));
+  column-gap: var(--gallery-gap);
+  grid-auto-rows: calc(
+    (
+      (100cqw - (var(--gallery-columns) - 1) * var(--gallery-gap)) /
+      var(--gallery-columns) +
+      var(--gallery-gap)
+    ) /
+    var(--gallery-row-units)
+  );
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/*
- * 写真は外枠（.site-container）の幅いっぱいに並べ、左 3 列に節見出しを下げる格子には載せない。
- * 写真だけの画面で左 3 列を空けると、1 枚が小さくなるため。
- * ページ見出しも 1 列目から始める。ほかのページの「見出しの左端 = 内容の左端」をここでも保つ
- */
-.pf-page > .gallery-head,
-.pf-page > .gallery-grid {
-  grid-column: 1 / -1;
-}
-
 .gallery-item {
-  --gallery-basis: var(--basis-phone);
-  --gallery-grow: var(--grow-phone);
-  flex: var(--gallery-grow) 0 calc(var(--gallery-basis) - 1px);
-  aspect-ratio: var(--ratio);
+  grid-column: var(--column-phone);
+  grid-row: var(--row-phone);
   min-width: 0;
 }
 
 @media (min-width: 40rem) {
+  .gallery-grid {
+    --gallery-columns: 12;
+  }
+
   .gallery-item {
-    --gallery-basis: var(--basis-tablet);
-    --gallery-grow: var(--grow-tablet);
+    grid-column: var(--column-tablet);
+    grid-row: var(--row-tablet);
   }
 }
 
 @media (min-width: 64rem) {
+  .gallery-grid {
+    --gallery-row-units: 12;
+  }
+
   .gallery-item {
-    --gallery-basis: var(--basis-desktop);
-    --gallery-grow: var(--grow-desktop);
+    grid-column: var(--column-desktop);
+    grid-row: var(--row-desktop);
   }
 }
 

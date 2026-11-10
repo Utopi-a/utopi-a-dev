@@ -1,54 +1,82 @@
 /**
- * サイトのファビコン・アプリアイコン・OGP 画像を HTML から描画して書き出す。
- * サイト本体と同じ端末内蔵の明朝で組むため、ヒラギノ明朝のある macOS で実行する。
+ * サイトのアバター・ファビコン・アプリアイコン・OGP 画像を、ゆーとぴあちゃんのロゴから書き出す。
+ * OGP の文字はサイトの見出しと同じ Web フォントを Google Fonts から読んで組むので、実行にはネットワークが要る。
  *
  * pnpm icons:render
  */
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "@playwright/test";
 import sharp from "sharp";
 
 const paper = "#FDFCFE";
 const ink = "#1D1C23";
-const muted = "#696770";
-const wisteria = "#724EA0";
-// style 属性の中に埋め込むため、書体名は単引用符で囲む
-const mincho = `'Hiragino Mincho ProN', 'Yu Mincho', serif`;
+const hairline = "#E6E4EA";
+// サイトの見出し（src/lib/theme/site-fonts.ts の siteDisplayFont）と同じ書体。書体を替えたらここも替えて描き直す
+const openGraphFont = { family: "Shippori Mincho B1", weight: 600 };
+const openGraphTexts = ["ゆーとぴあ", "utopi-a.dev"];
+// 使う字だけを text= で頼み、和文の unicode-range の片を拾い損ねないようにする
+const openGraphFontCssUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(
+  openGraphFont.family,
+)}:wght@${openGraphFont.weight}&text=${encodeURIComponent(openGraphTexts.join(""))}&display=block`;
 
+// 原寸（5016px・約 23MB）はリポジトリに入れず、各サイズの元になる縮小版だけを置く
+const logoPath = path.join(
+  process.cwd(),
+  "src",
+  "features",
+  "portfolio",
+  "brand-icons",
+  "source",
+  "utopia-logo-1536.webp",
+);
 const publicDir = path.join(process.cwd(), "public");
 
-/** 明朝の「ゆ」に、名前の傍点と同じ藤色の点を一つ添える */
-function iconHtml({ size, rounded }: { size: number; rounded: boolean }) {
-  return `<!doctype html>
-<html><body style="margin:0">
-<div style="
-  width:${size}px;height:${size}px;box-sizing:border-box;
-  background:${paper};border-radius:${rounded ? "22%" : "0"};
-  display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
-  <span style="
-    font-family:${mincho};font-weight:600;color:${ink};
-    font-size:${size * 0.78}px;line-height:1;transform:translate(-2%, 3%);">ゆ</span>
-  <span style="
-    position:absolute;top:${size * 0.13}px;right:${size * 0.16}px;
-    width:${size * 0.13}px;height:${size * 0.13}px;border-radius:50%;background:${wisteria};"></span>
-</div>
-</body></html>`;
+// 16〜48px では全体を縮めると顔が数ピクセルになって判別できないため、頭まわりに寄せる。
+// 髪の外側に地の濃い紫を少し残し、頭の輪郭が地から浮くようにしている（1536px の座標）
+const faceCrop = { left: 200, top: 170, width: 1100, height: 1100 };
+
+// 角を丸めると輪郭を見せている地の紫が削れて頭の形が崩れるので、四角のまま出す
+async function renderFavicon({ size }: { size: number }) {
+  return (
+    sharp(logoPath)
+      .extract(faceCrop)
+      .resize(size, size, { kernel: "lanczos3" })
+      // 縮小で目元が眠くなるのを、弱いシャープで戻す
+      .sharpen({ sigma: 0.5 })
+      // 元画像にアルファが無くても RGBA にする。ICO の中の PNG が RGB だと Next.js が読めずにビルドが落ちる
+      .ensureAlpha()
+      .png({ compressionLevel: 9 })
+      .toBuffer()
+  );
 }
 
-function openGraphHtml({ avatarDataUrl }: { avatarDataUrl: string }) {
+/** iOS・Android がマスクをかけるので、全面塗りのまま書き出す */
+async function renderAppIcon({ size }: { size: number }) {
+  return (
+    sharp(logoPath)
+      .resize(size, size, { kernel: "lanczos3" })
+      // 減色しても見た目が変わらず、512px で 260KB → 100KB ほどに縮む
+      .png({ palette: true, quality: 90, effort: 10, compressionLevel: 9 })
+      .toBuffer()
+  );
+}
+
+function openGraphHtml({ logoDataUrl }: { logoDataUrl: string }) {
   return `<!doctype html>
-<html><body style="margin:0">
+<html><head><link rel="stylesheet" href="${openGraphFontCssUrl}"></head><body style="margin:0">
 <div style="
-  width:1200px;height:630px;box-sizing:border-box;padding:0 104px 0 112px;background:${paper};
-  display:flex;align-items:center;justify-content:space-between;font-family:${mincho};color:${ink};">
-  <div style="display:flex;flex-direction:column;gap:36px;">
-    <div style="
-      font-size:128px;font-weight:600;line-height:1.25;letter-spacing:0.04em;
-      text-emphasis:'·' ${wisteria};">ゆーとぴあ</div>
-    <div style="font-size:30px;letter-spacing:0.14em;color:${muted};">utopi-a.dev</div>
+  width:1200px;height:630px;box-sizing:border-box;padding:0 112px;background:${paper};
+  display:flex;align-items:center;justify-content:space-between;color:${ink};
+  font-family:'${openGraphFont.family}';font-weight:${openGraphFont.weight};">
+  <div style="display:flex;flex-direction:column;gap:28px;white-space:nowrap;">
+    <!-- Home の .pf-name と同じ字間（palt なし） -->
+    <div style="font-size:112px;line-height:1.15;letter-spacing:-0.04em;">${openGraphTexts[0]}</div>
+    <!-- ヘッダーの .site-brand と同じ扱い -->
+    <div style="font-size:34px;letter-spacing:0.01em;">${openGraphTexts[1]}</div>
   </div>
-  <img src="${avatarDataUrl}" style="width:232px;height:232px;border-radius:50%;box-shadow:0 0 0 2px #E6E4EA;" />
+  <img src="${logoDataUrl}" style="
+    width:384px;height:384px;border-radius:12px;outline:2px solid ${hairline};outline-offset:-2px;" />
 </div>
 </body></html>`;
 }
@@ -80,23 +108,15 @@ function encodeIco({ images }: { images: Array<{ size: number; png: Buffer }> })
 }
 
 async function main() {
-  const browser = await chromium.launch();
-  const page = await browser.newPage({ deviceScaleFactor: 1 });
+  // Home のヒーローは最大 192px で出すので、3x の画面まで荒れない 576px にする。配信時は next/image が縮める
+  await sharp(logoPath)
+    .resize(576, 576, { kernel: "lanczos3" })
+    .webp({ quality: 88 })
+    .toFile(path.join(publicDir, "utopia-avatar.webp"));
 
-  const renderIcon = async ({ size, rounded }: { size: number; rounded: boolean }) => {
-    // 小さいサイズは大きく描いて縮め、明朝の細い線を潰さない
-    const drawSize = Math.max(size, 512);
-    await page.setViewportSize({ width: drawSize, height: drawSize });
-    await page.setContent(iconHtml({ size: drawSize, rounded }));
-    await page.evaluate(() => document.fonts.ready);
-    const shot = await page.screenshot({ omitBackground: true, type: "png" });
-    return sharp(shot).resize(size, size).png().toBuffer();
-  };
-
-  // ホーム画面やタブ用は角丸、iOS・Android がマスクをかけるアプリアイコンは全面塗り
-  const favicon16 = await renderIcon({ size: 16, rounded: true });
-  const favicon32 = await renderIcon({ size: 32, rounded: true });
-  const favicon48 = await renderIcon({ size: 48, rounded: true });
+  const favicon16 = await renderFavicon({ size: 16 });
+  const favicon32 = await renderFavicon({ size: 32 });
+  const favicon48 = await renderFavicon({ size: 48 });
   await writeFile(path.join(publicDir, "favicon.png"), favicon32);
   await writeFile(path.join(publicDir, "icons", "site-icon-32.png"), favicon32);
   await writeFile(
@@ -112,23 +132,38 @@ async function main() {
   for (const size of [180, 192, 512]) {
     await writeFile(
       path.join(publicDir, "icons", `site-icon-${size}.png`),
-      await renderIcon({ size, rounded: false }),
+      await renderAppIcon({ size }),
     );
   }
 
-  const avatar = await readFile(path.join(publicDir, "p0zKKXuf_400x400.jpg"));
-  await page.setViewportSize({ width: 1200, height: 630 });
+  // 置く大きさちょうどに sharp で縮めておき、ブラウザ側の縮小で線が粗くなるのを避ける
+  const logo = await sharp(logoPath).resize(384, 384, { kernel: "lanczos3" }).png().toBuffer();
+  const browser = await chromium.launch();
+  const page = await browser.newPage({
+    deviceScaleFactor: 1,
+    viewport: { width: 1200, height: 630 },
+  });
   await page.setContent(
-    openGraphHtml({ avatarDataUrl: `data:image/jpeg;base64,${avatar.toString("base64")}` }),
+    openGraphHtml({ logoDataUrl: `data:image/png;base64,${logo.toString("base64")}` }),
   );
-  await page.evaluate(() => document.fonts.ready);
+  // 読み込みに失敗すると代わりの書体で黙って描かれるので、字形が揃って読めたかを確かめて止める
+  const loadedFaceCount = await page.evaluate(
+    async ({ family, weight, text }) =>
+      (await document.fonts.load(`${weight} 112px "${family}"`, text)).length,
+    { ...openGraphFont, text: openGraphTexts.join("") },
+  );
+  if (loadedFaceCount === 0) {
+    throw new Error(
+      `OGP の書体 ${openGraphFont.family} を読み込めませんでした: ${openGraphFontCssUrl}`,
+    );
+  }
   await page.screenshot({
     path: path.join(publicDir, "opengraph-image.jpg"),
     type: "jpeg",
-    quality: 90,
+    quality: 88,
   });
-
   await browser.close();
+
   console.log("Brand images written to public/ and src/app/favicon.ico");
 }
 

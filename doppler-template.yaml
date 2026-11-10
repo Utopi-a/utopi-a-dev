@@ -44,6 +44,11 @@ projects:
         NEXT_PUBLIC_APP_URL: "http://localhost:3000"
         AUTH_ALLOW_SIGNUP: "true"
         OWNER_EMAILS: ""
+        GALLERY_STORAGE_ENDPOINT: ""
+        GALLERY_STORAGE_BUCKET: ""
+        GALLERY_STORAGE_ACCESS_KEY_ID: ""
+        GALLERY_STORAGE_SECRET_ACCESS_KEY: ""
+        GALLERY_STORAGE_PUBLIC_URL: ""
 
       stg:
         DATABASE_URL: ""
@@ -65,6 +70,11 @@ projects:
         NEXT_PUBLIC_APP_URL: ""
         AUTH_ALLOW_SIGNUP: "false"
         OWNER_EMAILS: ""
+        GALLERY_STORAGE_ENDPOINT: ""
+        GALLERY_STORAGE_BUCKET: ""
+        GALLERY_STORAGE_ACCESS_KEY_ID: ""
+        GALLERY_STORAGE_SECRET_ACCESS_KEY: ""
+        GALLERY_STORAGE_PUBLIC_URL: ""
 
       ci:
         DATABASE_URL: ""
@@ -89,3 +99,8 @@ projects:
         NEXT_PUBLIC_APP_URL: "https://utopi-a.dev"
         AUTH_ALLOW_SIGNUP: "false"
         OWNER_EMAILS: ""
+        GALLERY_STORAGE_ENDPOINT: ""
+        GALLERY_STORAGE_BUCKET: ""
+        GALLERY_STORAGE_ACCESS_KEY_ID: ""
+        GALLERY_STORAGE_SECRET_ACCESS_KEY: ""
+        GALLERY_STORAGE_PUBLIC_URL: ""

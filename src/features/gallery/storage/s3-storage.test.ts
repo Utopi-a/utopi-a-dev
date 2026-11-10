@@ -16,11 +16,8 @@ function storageWith({ response }: { response: () => Response }) {
 }
 
 function sentRequest({ fetch }: { fetch: ReturnType<typeof vi.fn<typeof globalThis.fetch>> }) {
-  const [input] = fetch.mock.calls[0];
-  if (!(input instanceof Request)) {
-    throw new Error("署名済みの Request が送られていません");
-  }
-  return input;
+  const [input, init] = fetch.mock.calls[0];
+  return { url: String(input), init: init ?? {}, headers: new Headers(init?.headers) };
 }
 
 describe("createS3Storage", () => {
@@ -32,7 +29,7 @@ describe("createS3Storage", () => {
 
     expect(fetch).toHaveBeenCalledTimes(1);
     const request = sentRequest({ fetch });
-    expect(request.method).toBe("PUT");
+    expect(request.init.method).toBe("PUT");
     expect(request.url).toBe(
       "https://account.r2.cloudflarestorage.com/gallery/photos/abc/640.webp",
     );
@@ -41,7 +38,9 @@ describe("createS3Storage", () => {
     );
     expect(request.headers.get("Cache-Control")).toBe("public, max-age=31536000, immutable");
     expect(request.headers.get("Content-Type")).toBe("image/webp");
-    expect(new Uint8Array(await request.arrayBuffer())).toEqual(body);
+    // ストリームで渡すと長さが送られず、R2 が 411 で断ることがあるので、バイト列のまま渡す
+    expect(request.init.body).toBeInstanceOf(Uint8Array);
+    expect(request.init.body).toEqual(body);
   });
 
   it("キーごとに署名付きの DELETE を送る", async () => {
@@ -49,7 +48,11 @@ describe("createS3Storage", () => {
 
     await storage.remove({ keys: ["photos/abc/640.webp", "photos/abc/1280.webp"] });
 
-    const requests = fetch.mock.calls.map(([input]) => input as Request);
+    const requests = fetch.mock.calls.map(([input, init]) => ({
+      url: String(input),
+      method: init?.method,
+      headers: new Headers(init?.headers),
+    }));
     // 並行に送るので、届く順は問わない
     expect(requests.map((request) => `${request.method} ${request.url}`).sort()).toEqual([
       "DELETE https://account.r2.cloudflarestorage.com/gallery/photos/abc/1280.webp",

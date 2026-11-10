@@ -25,7 +25,14 @@ export function createS3Storage({
   }
 
   async function send({ url, init, action }: { url: string; init: RequestInit; action: string }) {
-    const response = await fetch(await client.sign(url, init));
+    // 署名済みの Request をそのまま渡すと本文がストリームになり、長さが送られないことがある
+    // （本番の Vercel で R2 が 411 を返した）。署名だけを受け取り、本文はバイト列のまま渡す。
+    const signed = await client.sign(url, init);
+    const response = await fetch(signed.url, {
+      method: signed.method,
+      headers: signed.headers,
+      body: init.body,
+    });
     if (!response.ok) {
       throw new Error(`保存先の${action}に失敗しました（${response.status}）`);
     }

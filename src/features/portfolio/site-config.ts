@@ -2,7 +2,7 @@ import type { SocialBrandIconId } from "@/features/portfolio/social-icons/social
 
 export const siteProfile = {
   name: "ゆーとぴあ",
-  avatarSrc: "/p0zKKXuf_400x400.jpg",
+  avatarSrc: "/utopia-avatar.webp",
 } as const;
 
 export const publicNavItems = [

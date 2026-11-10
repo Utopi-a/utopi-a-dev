@@ -4,7 +4,9 @@ import { workItems } from "@/features/portfolio/works";
 export function WorksView() {
   return (
     <>
-      <h1 className="pf-title">制作物</h1>
+      <header className="pf-page-head">
+        <h1 className="site-title">制作物</h1>
+      </header>
       <ul className="pf-list">
         {workItems.map((work) => (
           <li key={work.id}>

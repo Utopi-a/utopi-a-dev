@@ -14,20 +14,34 @@
 | 補助テキスト（`muted-foreground`） | `#696770` | `#9F9DA5` |
 | アクセント（`primary`） | 藤 `#724EA0` | 淡い藤 `#C4A8E9` |
 
-- 藤色は傍点、リンクのホバー、フォーカスリング、選択範囲、主要ボタンに限って使う
-- カードや影、グラデーションで区切らず、余白と左揃えで情報を整理する
-- 補助テキストは地・ホバー面のどちらに対しても WCAG AA（4.5:1）以上のコントラストを保つ
+- 藤色はリンクのホバー、ナビの現在地、フォーカスリング、選択範囲、主要ボタンに限って使う
+- カードや影、グラデーションで区切らず、罫線 1 本と余白で情報を整理する
+- 説明文は `--site-text-body`（本文色を地に 2 割寄せた色）、期間や状態などの補足だけ `muted-foreground` にする
+- 補助テキストは地に対して WCAG AA（4.5:1）以上のコントラストを保つ
 
 ### タイポグラフィ
 
-- 端末内蔵の明朝（ヒラギノ明朝・游明朝など）を使い、Web フォントは読み込まない。定義: `src/app/globals.css` の `--font-serif`
-- 和文は `word-break: auto-phrase` で文節単位に改行する（`(site-chrome)/layout.tsx`）
-- 飾りはホームの名前に付けた傍点だけ。名前を押すと表記が巡る（`name-variants`）
+書体の読み込みは `src/lib/theme/site-fonts.ts`、使い分けと文字の段は `src/components/layout/site-chrome.css` の `.site` にまとめ、
+`(site-chrome)/layout.tsx` とモバイルメニューのシートに付ける。実包管理帳簿には届かない（`--font-sans` などグローバルの変数は変えない）。
+
+- 見出し書体は Shippori Mincho B1 の 600（`next/font/google`、`--site-serif`）。ホームの名前、各ページの h1（`.site-title`）、節見出し h2（`.site-heading`）、一覧の項目名（`.pf-entry-title`）、スキルの分類名、ヘッダーの `utopi-a.dev` に使う
+- 本文・ナビ・日付・タグ・ボタンは `--site-sans`。欧文と数字だけ Manrope（latin の可変フォント 1 本）で出し、和文は端末内蔵のヒラギノ角ゴ・游ゴシックに任せる
+- 和文の Web フォントは見出し書体の 1 家族・1 ウェイトだけ。Google の和文フォントは unicode-range で 120 前後の片に分かれ、ページで使う字の片だけが落ちる。本文まで Web フォントにすると Home で 450KB 前後になり予算（Home 300KB・About 600KB 前後）を超えたため、本文の和文は内蔵のままにしている
+- 和文の片は preload できないので `preload: false`、`font-display: swap`。preload するのは Manrope の latin 1 本だけ
+- 代わりの書体は内蔵の明朝（ヒラギノ明朝・游明朝）。和文の字幅はどちらも 1em なので、差し替わっても見出しの折り返しは変わりにくい
+- Shippori Mincho B1 の配信版には `palt` がない。見出しに `palt` をかけると代わりの明朝だけが詰まって差し替えで幅が変わるので、かけない。代わりにホームの名前は字間 -0.04em、h1 は -0.02em で詰める。それより小さい段は詰めない
+- 文字の段は `--site-step--1`〜`--site-step-3` の fluid スケール（360px → 1240px でモバイル 1.2、デスクトップ 1.25 の比）。1 ページで使う段は 3〜4 に絞る
+- 例外はホームの名前（`--site-step-name`、3rem → 6rem）だけ。サイトで唯一の大きな要素にする。押すと表記が巡る（`name-variants`）
+- 本文は行間 1.8、字間 0.02em、`line-break: strict` と `text-wrap: pretty`。`word-break: auto-phrase` は見出しと一覧の項目名に限る（複数行の文にかけると行末が凸凹になる）
 
 ### レイアウト
 
-- ポートフォリオの各ページは `PortfolioPage` の 1 カラムに収め、組版は `portfolio.css`（`pf-` 接頭辞）で定義する
-- 一覧の行は `EntryRow` を使う
+- 外枠は最大 72rem（`.site-container`）。ヘッダー・本文・フッターの左右をそろえる
+- ポートフォリオの各ページは `PortfolioPage` に収め、骨格は `portfolio.css`（`pf-` 接頭辞）で定義する
+- 1024px 以上は 12 カラム。左 3 列に節見出しを `position: sticky` でぶら下げ、ページ見出しと内容は 4 列目から始める。それ未満は縦に積む
+- 一覧の行は `EntryRow` を使う。名前 → 説明 → 補足（期間・状態、`tabular-nums`）の順で、罫線 1 本と余白で区切る
+- 余白は 4px 基準の段（4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96 / 128）だけを使う
+- 動きは操作への応答だけ（色の変化 150ms、`prefers-reduced-motion` では止める）。出現アニメーションは付けない
 
 ## ブラッシュ・ノワール（実包管理帳簿）
 

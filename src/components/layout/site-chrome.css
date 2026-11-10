@@ -1,0 +1,189 @@
+/*
+ * 公開サイト（(site-chrome) 配下）の書体・文字の段・外枠。
+ * 変数を :root ではなく .site に置くのは、実包管理帳簿など別レイアウトの画面へ漏らさないため。
+ * body 直下へポータルされるメニューのシートにも .site を付けて同じ組版にする
+ */
+
+.site {
+  /* 360px → 1240px で伸びる文字の段。rem の項を残して、拡大操作で文字が大きくなるようにする */
+  --site-step--1: 0.875rem;
+  --site-step-0: clamp(1rem, 0.9744rem + 0.1136vw, 1.0625rem);
+  --site-step-1: clamp(1.2rem, 1.1476rem + 0.233vw, 1.3281rem);
+  --site-step-2: clamp(1.44rem, 1.35rem + 0.4vw, 1.66rem);
+  --site-step-3: clamp(1.728rem, 1.586rem + 0.631vw, 2.075rem);
+  /* ホームの名前だけはスケールの外。サイトで唯一の大きな要素にする */
+  --site-step-name: clamp(3rem, 1.7727rem + 5.4545vw, 6rem);
+
+  /*
+   * 書体の読み込みは site-fonts.ts。本文は欧文だけ Web フォントで、和文は後ろの内蔵ゴシックで出る。
+   * 見出しの明朝は Web フォントで、後ろの内蔵明朝は差し替わるまでと読み込めなかったときの代わり。
+   * 和文の字幅はどちらも 1em なので、差し替わっても見出しの折り返しはほぼ変わらない
+   */
+  --site-sans:
+    var(--font-site-latin), "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", YuGothic,
+    sans-serif;
+  --site-serif: var(--font-site-display), "Hiragino Mincho ProN", "Yu Mincho", YuMincho, serif;
+
+  /* 説明文は補足（muted）より一段濃くし、名前・説明・補足の 3 段を濃さで分ける */
+  --site-text-body: color-mix(in oklch, var(--foreground) 80%, var(--background));
+  --site-header-height: 3.5rem;
+  --site-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  font-family: var(--site-sans);
+  font-size: var(--site-step-0);
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+  line-break: strict;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
+}
+
+.site-container {
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: 72rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 40rem) {
+  .site-container {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .site-container {
+    padding-inline: 2rem;
+  }
+}
+
+/*
+ * 明朝は見出しと一覧の項目名だけ。文節での改行（auto-phrase）も 1〜2 行の見出しに限る。
+ * 複数行のリードや本文にかけると、長い文節の手前で行が切れて行末が大きく凸凹になる。
+ * palt は付けない。Shippori Mincho B1 の配信版には palt がなく、付けると代わりの内蔵明朝だけが詰まり、
+ * 差し替えのときに見出しの幅が変わる。
+ * 余白は preflight で 0 になっているので、ここでは margin を指定しない（space-y-* を打ち消さないため）
+ */
+.site-title,
+.site-heading {
+  font-family: var(--site-serif);
+  font-weight: 600;
+  word-break: auto-phrase;
+  text-wrap: balance;
+}
+
+.site-title {
+  font-size: var(--site-step-3);
+  line-height: 1.4;
+  /* palt がない分、大きい h1 だけ字間を少し詰める（名前は -0.04em） */
+  letter-spacing: -0.02em;
+}
+
+.site-heading {
+  font-size: var(--site-step-1);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+.site-lead {
+  max-inline-size: 36em;
+  color: var(--site-text-body);
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: var(--background);
+}
+
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  block-size: var(--site-header-height);
+}
+
+.site-brand {
+  font-family: var(--site-serif);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.site-brand,
+.site-nav-link,
+.site-sheet-link,
+.site-back-link {
+  border-radius: 0.25rem;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  transition: color 150ms var(--site-ease);
+}
+
+.site-brand {
+  color: var(--foreground);
+}
+
+.site-nav-link {
+  padding: 0.25rem 0.5rem;
+  font-size: var(--site-step--1);
+}
+
+.site-sheet-link {
+  padding: 0.5rem;
+  font-size: var(--site-step-2);
+  line-height: 1.5;
+}
+
+.site-back-link {
+  font-size: var(--site-step--1);
+}
+
+.site-brand:hover,
+.site-nav-link:hover,
+.site-sheet-link:hover,
+.site-back-link:hover {
+  color: var(--primary);
+}
+
+.site-nav-link[aria-current="page"],
+.site-sheet-link[aria-current="page"] {
+  color: var(--primary);
+}
+
+.site-brand:focus-visible,
+.site-nav-link:focus-visible,
+.site-sheet-link:focus-visible,
+.site-back-link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.site-footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-block: 2rem;
+  border-block-start: 1px solid var(--border);
+  font-size: var(--site-step--1);
+  color: var(--muted-foreground);
+}
+
+@media (min-width: 40rem) {
+  .site-footer-inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-brand,
+  .site-nav-link,
+  .site-sheet-link,
+  .site-back-link {
+    transition: none;
+  }
+}

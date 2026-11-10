@@ -17,6 +17,7 @@ import {
 import { publicNavItems } from "@/features/portfolio/site-config";
 import { SocialLinks } from "@/features/portfolio/social-links/social-links";
 import { cn } from "@/lib/cn";
+import { siteFontVariables } from "@/lib/theme/site-fonts";
 import { ThemeToggle } from "@/lib/theme/theme-toggle";
 
 type SiteNavMobileSheetProps = {
@@ -31,8 +32,11 @@ export function SiteNavMobileSheet({ pathname }: SiteNavMobileSheetProps) {
           <MenuIcon className="size-5" />
         </Button>
       </SheetTrigger>
-      {/* シートは body 直下へポータルされ、レイアウトのフォント指定を継承しないため個別に付ける */}
-      <SheetContent side="right" className="flex w-[min(100%,20rem)] flex-col gap-0 p-0 font-serif">
+      {/* シートは body 直下へポータルされ、レイアウトの書体と文字の段を継承しないため個別に付ける */}
+      <SheetContent
+        side="right"
+        className={cn("site flex w-[min(100%,20rem)] flex-col gap-0 p-0", siteFontVariables)}
+      >
         <SheetHeader className="sr-only">
           <SheetTitle>メニュー</SheetTitle>
           <SheetDescription>サイト内のページへ移動</SheetDescription>
@@ -48,10 +52,7 @@ export function SiteNavMobileSheet({ pathname }: SiteNavMobileSheetProps) {
                   href={item.href}
                   prefetch={false}
                   aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "rounded-md px-2 py-2.5 text-2xl tracking-wide transition-colors",
-                    active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-                  )}
+                  className="site-sheet-link"
                 >
                   {item.label}
                 </Link>

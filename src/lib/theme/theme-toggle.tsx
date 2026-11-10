@@ -25,7 +25,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       aria-label={isDark ? "ライトモードに切り替え" : "ダークモードに切り替え"}
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
-        "size-8 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50",
+        "size-8 rounded-md text-sm text-muted-foreground transition-colors hover:text-primary disabled:opacity-50",
         className,
       )}
     >

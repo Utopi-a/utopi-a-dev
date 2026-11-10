@@ -70,7 +70,7 @@ export function UtopiaLive2DView() {
 
         <div className="w-full max-w-md min-w-0 space-y-8 lg:max-w-none lg:flex-1">
           <section className="space-y-3">
-            <h2 className="pf-heading">話す</h2>
+            <h2 className="site-heading">話す</h2>
             <CompanionTalkPanel
               speechLevelRef={speechLevelRef}
               onReply={({ expression }) => {
@@ -81,7 +81,7 @@ export function UtopiaLive2DView() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="pf-heading">表情</h2>
+            <h2 className="site-heading">表情</h2>
             <div className="grid grid-cols-3 gap-2">
               {utopiaExpressions.map(({ id, label }) => (
                 <Button
@@ -97,7 +97,7 @@ export function UtopiaLive2DView() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="pf-heading">視線</h2>
+            <h2 className="site-heading">視線</h2>
             <Button
               variant={followsCursor ? "default" : "outline"}
               className="w-full"
@@ -110,7 +110,7 @@ export function UtopiaLive2DView() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="pf-heading">声</h2>
+            <h2 className="site-heading">声</h2>
             <Button
               variant={voice.state === "on" ? "default" : "outline"}
               className="w-full"

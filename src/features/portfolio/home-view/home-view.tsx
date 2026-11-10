@@ -9,31 +9,35 @@ export function HomeView() {
   return (
     <>
       <section className="pf-hero">
-        <h1 className="pf-name">
-          <NameVariants variants={[siteProfile.name, "ユートピア", "utopi-a"]} />
-        </h1>
-        <div className="pf-signs">
-          <Image
-            src={siteProfile.avatarSrc}
-            alt=""
-            width={104}
-            height={104}
-            priority
-            className="pf-avatar"
-          />
+        <Image
+          src={siteProfile.avatarSrc}
+          alt=""
+          width={576}
+          height={576}
+          // 幅を書かないと 1x・2x しか候補が出ないので、表示幅を渡して 3x の画面にも高解像度を選ばせる
+          sizes="(min-width: 64rem) 12rem, 7rem"
+          priority
+          className="pf-avatar"
+        />
+        <div className="pf-hero-text">
+          <h1 className="pf-name">
+            <NameVariants variants={[siteProfile.name, "ユートピア", "utopi-a"]} />
+          </h1>
           <SocialLinks />
         </div>
       </section>
 
       <section className="pf-section">
-        <h2 className="pf-heading">制作物</h2>
-        <ul className="pf-list">
-          {workItems.map((work) => (
-            <li key={work.id}>
-              <EntryRow title={work.title} description={work.description} href={work.href} />
-            </li>
-          ))}
-        </ul>
+        <h2 className="site-heading">制作物</h2>
+        <div className="pf-section-body">
+          <ul className="pf-list">
+            {workItems.map((work) => (
+              <li key={work.id}>
+                <EntryRow title={work.title} description={work.description} href={work.href} />
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
     </>
   );

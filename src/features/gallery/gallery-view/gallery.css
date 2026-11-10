@@ -1,58 +1,67 @@
 /*
- * 写真の一覧。行の高さを揃え、幅を縦横比に比例させる（justified rows）。
- * 各項目の --ratio（幅 / 高さ）を伸び率と基準幅の両方に掛けるので、
- * 同じ行の写真は同じ割合で伸び、高さが揃う。
- * 行の高さは「その幅で横長の写真が 3 枚前後入る」値にしている。1 行の枚数が少ないほど
- * 行を埋めるための伸びが大きくなり、行ごとの高さの差が目立つため。
+ * 写真の一覧。大と小のタイルを組み合わせ、行に揃えない。置く場所は mosaic-layout.ts が画面幅ごとに決める。
+ * 段の高さは列の幅から計算するので、画面幅が変わってもタイルの形は保たれる。
+ * 自分の幅は自分のプロパティに使えないので、外側の .gallery-mosaic を基準にする
  */
+.gallery-mosaic {
+  container-type: inline-size;
+}
+
+/*
+ * 写真は外枠（.site-container）の幅いっぱいに並べ、左 3 列に節見出しを下げる格子には載せない。
+ * ページ見出しも 1 列目から始める。ほかのページの「見出しの左端 = 内容の左端」をここでも保つ
+ */
+.pf-page > .gallery-head,
+.pf-page > .gallery-mosaic {
+  grid-column: 1 / -1;
+}
 
 .gallery-grid {
-  --gallery-row-height: 6.5rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  --gallery-columns: 6;
+  --gallery-row-units: 6;
+  --gallery-gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(var(--gallery-columns), minmax(0, 1fr));
+  column-gap: var(--gallery-gap);
+  grid-auto-rows: calc(
+    (
+      (100cqw - (var(--gallery-columns) - 1) * var(--gallery-gap)) /
+      var(--gallery-columns) +
+      var(--gallery-gap)
+    ) /
+    var(--gallery-row-units)
+  );
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+.gallery-item {
+  grid-column: var(--column-phone);
+  grid-row: var(--row-phone);
+  min-width: 0;
+}
+
 @media (min-width: 40rem) {
   .gallery-grid {
-    --gallery-row-height: 10rem;
+    --gallery-columns: 12;
+  }
+
+  .gallery-item {
+    grid-column: var(--column-tablet);
+    grid-row: var(--row-tablet);
   }
 }
 
 @media (min-width: 64rem) {
   .gallery-grid {
-    --gallery-row-height: 13rem;
+    --gallery-row-units: 12;
   }
-}
 
-/* 最後の行の余りをここで吸い、写真が引き伸ばされないようにする */
-.gallery-grid::after {
-  content: "";
-  flex-grow: 1000000000;
-}
-
-/*
- * 写真は外枠（.site-container）の幅いっぱいに並べ、左 3 列に節見出しを下げる格子には載せない。
- * 写真だけの画面で左 3 列を空けると、1 枚が小さくなるため。
- * ページ見出しも 1 列目から始める。ほかのページの「見出しの左端 = 内容の左端」をここでも保つ
- */
-.pf-page > .gallery-head,
-.pf-page > .gallery-grid {
-  grid-column: 1 / -1;
-}
-
-.gallery-item {
-  flex-grow: calc(var(--ratio) * 100);
-  flex-basis: calc(var(--ratio) * var(--gallery-row-height));
-  aspect-ratio: var(--ratio);
-  /*
-   * 伸びを基準の 1.75 倍までに抑える。縦長の写真が数枚だけの行（次が横長で入らないとき）を
-   * 幅いっぱいまで伸ばすと、行の高さが数倍になってしまうため。その行は右に余白が残る。
-   */
-  max-width: min(100%, calc(var(--ratio) * var(--gallery-row-height) * 1.75));
+  .gallery-item {
+    grid-column: var(--column-desktop);
+    grid-row: var(--row-desktop);
+  }
 }
 
 .gallery-link {

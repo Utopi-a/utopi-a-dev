@@ -296,7 +296,8 @@ src/proxy.ts                       # 保護ルートのガード
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | 課金（将来） |
 | `NEXT_PUBLIC_APP_URL` | サーバー側のオリジン参照用 |
 | `AUTH_ALLOW_SIGNUP` | 新規登録の可否（`true` / `false`）。本番は通常 `false` |
-| `OWNER_EMAILS` | オーナー限定機能用メール（カンマ区切り）。空なら制限なし |
+| `OWNER_EMAILS` | オーナー限定機能用メール（カンマ区切り）。空なら制限なし。ギャラリーの投稿だけは、空だと誰も投稿できない |
+| `GALLERY_STORAGE_ENDPOINT`, `GALLERY_STORAGE_BUCKET`, `GALLERY_STORAGE_ACCESS_KEY_ID`, `GALLERY_STORAGE_SECRET_ACCESS_KEY`, `GALLERY_STORAGE_PUBLIC_URL` | ギャラリーの写真の保存先（Cloudflare R2 の S3 互換 API と公開 URL）。5 つとも空なら開発時は `tmp/gallery-storage` に保存する |
 
 Doppler プロジェクト `utopi-a-dev`、config は `dev` / `stg` / `prd`。  
 詳細は [README の Doppler 節](../README.md#2-環境変数doppler)。

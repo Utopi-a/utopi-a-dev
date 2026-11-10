@@ -16,6 +16,8 @@ function isProtectedPath({ pathname }: { pathname: string }) {
     pathname.startsWith("/lab/studio/") ||
     pathname === "/lab/blog/manage" ||
     pathname.startsWith("/lab/blog/manage/") ||
+    pathname === "/lab/gallery/manage" ||
+    pathname.startsWith("/lab/gallery/manage/") ||
     pathname === "/lab/settings" ||
     pathname.startsWith("/lab/settings/") ||
     pathname === "/lab/ammo-ledger" ||
@@ -77,6 +79,8 @@ export const config = {
     "/lab/studio/:path*",
     "/lab/blog/manage",
     "/lab/blog/manage/:path*",
+    "/lab/gallery/manage",
+    "/lab/gallery/manage/:path*",
     "/lab/settings",
     "/lab/settings/:path*",
     "/lab/ammo-ledger",

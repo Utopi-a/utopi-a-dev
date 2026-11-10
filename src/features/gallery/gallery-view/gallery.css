@@ -1,0 +1,236 @@
+/*
+ * 写真の一覧。行の高さを揃え、幅を縦横比に比例させる（justified rows）。
+ * 各項目の --ratio（幅 / 高さ）を伸び率と基準幅の両方に掛けるので、
+ * 同じ行の写真は同じ割合で伸び、高さが揃う。
+ * 行の高さは「その幅で横長の写真が 3 枚前後入る」値にしている。1 行の枚数が少ないほど
+ * 行を埋めるための伸びが大きくなり、行ごとの高さの差が目立つため。
+ */
+
+.gallery-grid {
+  --gallery-row-height: 6.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 40rem) {
+  .gallery-grid {
+    --gallery-row-height: 10rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .gallery-grid {
+    --gallery-row-height: 13rem;
+  }
+}
+
+/* 最後の行の余りをここで吸い、写真が引き伸ばされないようにする */
+.gallery-grid::after {
+  content: "";
+  flex-grow: 1000000000;
+}
+
+/*
+ * 写真は外枠（.site-container）の幅いっぱいに並べ、左 3 列に節見出しを下げる格子には載せない。
+ * 写真だけの画面で左 3 列を空けると、1 枚が小さくなるため。
+ * ページ見出しも 1 列目から始める。ほかのページの「見出しの左端 = 内容の左端」をここでも保つ
+ */
+.pf-page > .gallery-head,
+.pf-page > .gallery-grid {
+  grid-column: 1 / -1;
+}
+
+.gallery-item {
+  flex-grow: calc(var(--ratio) * 100);
+  flex-basis: calc(var(--ratio) * var(--gallery-row-height));
+  aspect-ratio: var(--ratio);
+  /*
+   * 伸びを基準の 1.75 倍までに抑える。縦長の写真が数枚だけの行（次が横長で入らないとき）を
+   * 幅いっぱいまで伸ばすと、行の高さが数倍になってしまうため。その行は右に余白が残る。
+   */
+  max-width: min(100%, calc(var(--ratio) * var(--gallery-row-height) * 1.75));
+}
+
+.gallery-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+.gallery-link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.gallery-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: var(--muted);
+  transition: opacity 150ms var(--site-ease);
+}
+
+.gallery-link:hover .gallery-image {
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-image {
+    transition: none;
+  }
+}
+
+/*
+ * 拡大表示。写真と撮影情報の帯を 1 枚のプリントとして見せる。
+ * 帯を写真の端に揃えるため、枠の幅を「表示する写真の幅」そのものにする。
+ * 幅は「画面の幅」「写真に使える高さ × 縦横比」「元の幅（引き伸ばさない）」の小さい方で、
+ * 写真に使える高さは、画面の高さから上のバー・下の余白・帯・キャプション 1 行の分を引いたもの。
+ * 帯の中身やキャプションが見込みより長いときだけ、その下が画面からはみ出してスクロールする。
+ */
+.gallery-viewer-frame {
+  /* 上のバー（44px のボタン + 上下 4px）、下の余白 16px、枠の上下の罫線 2px */
+  --viewer-chrome-height: 70px;
+  --viewer-band-height: 0px;
+  --viewer-caption-height: 0px;
+  --viewer-photo-max-height: max(
+    8rem,
+    calc(
+      100dvh -
+      var(--viewer-chrome-height) -
+      var(--viewer-band-height) -
+      var(--viewer-caption-height)
+    )
+  );
+  width: min(
+    100%,
+    calc(var(--viewer-photo-max-height) * var(--ratio) + 2px),
+    calc(var(--photo-width) * 1px + 2px)
+  );
+}
+
+/*
+ * 帯の高さの見込み。帯は枠の幅が 36rem 以上なら左右 2 列（2 行で 4.75rem）、それ未満なら縦積み（4 行で 8rem）。
+ * 枠の幅は写真の高さで決まり、写真の高さは帯の高さで決まるので、まず 2 列だと仮定した幅を出し、
+ * それが 36rem に届かないときだけ縦積みの高さに切り替える（差に大きな数を掛けて min / max で 2 値にする）
+ */
+.gallery-viewer-frame:has(.gallery-viewer-band) {
+  --viewer-row-band-height: 4.75rem;
+  --viewer-row-width: calc(
+    (
+      100dvh -
+      var(--viewer-chrome-height) -
+      var(--viewer-row-band-height) -
+      var(--viewer-caption-height)
+    ) *
+    var(--ratio)
+  );
+  --viewer-band-height: min(
+    8rem,
+    max(
+      var(--viewer-row-band-height),
+      calc(var(--viewer-row-band-height) + (36rem - var(--viewer-row-width)) * 9999)
+    )
+  );
+}
+
+.gallery-viewer-frame:has(.gallery-viewer-caption) {
+  --viewer-caption-height: 2.75rem;
+}
+
+@media (min-width: 40rem) {
+  .gallery-viewer-frame {
+    /* 上のバー（44px のボタン + 上下 8px）、下の余白 24px、枠の上下の罫線 2px */
+    --viewer-chrome-height: 86px;
+  }
+}
+
+.gallery-viewer-print {
+  container-type: inline-size;
+  margin: 0;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+}
+
+.gallery-viewer-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--ratio);
+  background-color: var(--muted);
+}
+
+.gallery-viewer-band {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  line-height: 1.5;
+}
+
+/* 機種名は一覧の項目名と同じ扱いで見出し書体にし、露出の値（ゴシック）と書体の違いで分ける */
+.gallery-viewer-camera {
+  font-family: var(--site-serif);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.gallery-viewer-values {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.gallery-viewer-note,
+.gallery-viewer-position {
+  font-size: var(--site-step--1);
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.gallery-viewer-position {
+  padding-inline: 0.75rem;
+}
+
+.gallery-viewer-caption {
+  margin-block-start: 0.75rem;
+  padding-inline: 1rem;
+  color: var(--site-text-body);
+}
+
+.gallery-viewer-exposure {
+  min-width: 0;
+}
+
+/* 枠が広いときは左に機種とレンズ、右に露出と撮影日。露出の値は 1 行に保ち、足りない分は左を切る */
+@container (min-width: 36rem) {
+  .gallery-viewer-band {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  .gallery-viewer-exposure {
+    flex-shrink: 0;
+    text-align: end;
+  }
+
+  .gallery-viewer-values {
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 40rem) {
+  .gallery-viewer-caption {
+    padding-inline: 0;
+  }
+}

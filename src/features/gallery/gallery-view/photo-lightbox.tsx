@@ -54,22 +54,22 @@ function PhotoInfoBand({ photo }: { photo: GalleryPhoto }) {
     return null;
   }
   return (
-    <figcaption className="gallery-viewer-band flex flex-col gap-2 px-4 py-3 text-sm sm:flex-row sm:items-start sm:justify-between sm:gap-6 sm:px-5">
+    <figcaption className="gallery-viewer-band">
       {camera || lens ? (
         <div className="min-w-0">
-          {camera ? <p className="font-semibold">{camera}</p> : null}
-          {/* スマホ幅で帯が 4 行を超えないよう 1 行で切る。広い画面では 2 行まで折り返す */}
+          {camera ? <p className="gallery-viewer-camera truncate">{camera}</p> : null}
+          {/* 帯の高さを見込みどおりに保つため 1 行で切り、全文は title で読めるようにする */}
           {lens ? (
-            <p className="truncate text-xs text-muted-foreground sm:line-clamp-2 sm:whitespace-normal">
+            <p className="gallery-viewer-note truncate" title={lens}>
               {lens}
             </p>
           ) : null}
         </div>
       ) : null}
       {values.length > 0 || photo.takenAt ? (
-        <div className="min-w-0 sm:ml-auto sm:text-right">
+        <div className="gallery-viewer-exposure">
           {values.length > 0 ? (
-            <p className="flex flex-wrap gap-x-3 font-semibold tabular-nums sm:justify-end">
+            <p className="gallery-viewer-values">
               <span className="sr-only">{spokenExposureValues({ values })}</span>
               {values.map(({ text }) => (
                 <span key={text} aria-hidden="true">
@@ -79,7 +79,7 @@ function PhotoInfoBand({ photo }: { photo: GalleryPhoto }) {
             </p>
           ) : null}
           {photo.takenAt ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="gallery-viewer-note">
               <time dateTime={photo.takenAt}>{formatTakenDate({ takenAt: photo.takenAt })}</time>
             </p>
           ) : null}
@@ -172,7 +172,7 @@ export function PhotoLightbox({ photos }: { photos: GalleryPhoto[] }) {
       {photo ? (
         <div className="flex min-h-full flex-col">
           <div className="flex shrink-0 items-center justify-between p-1 sm:p-2">
-            <p className="px-3 text-sm text-muted-foreground tabular-nums">
+            <p className="gallery-viewer-position">
               {index + 1} / {photos.length}
             </p>
             <Button
@@ -221,11 +221,7 @@ export function PhotoLightbox({ photos }: { photos: GalleryPhoto[] }) {
                 />
                 <PhotoInfoBand photo={photo} />
               </figure>
-              {photo.caption ? (
-                <p className="gallery-viewer-caption mt-3 px-4 text-sm leading-relaxed sm:px-0">
-                  {photo.caption}
-                </p>
-              ) : null}
+              {photo.caption ? <p className="gallery-viewer-caption">{photo.caption}</p> : null}
             </div>
             {/* 縦にスクロールしても押せるよう、画面に対して固定する */}
             {previous ? (

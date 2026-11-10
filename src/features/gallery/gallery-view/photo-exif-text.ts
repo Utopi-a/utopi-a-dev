@@ -18,13 +18,13 @@ function formatFocalLength({ exif }: { exif: GalleryPhotoExif }): ExposureValue 
     if (focalLength35mm === undefined) {
       return null;
     }
-    const text = `35mm 判換算 ${formatMillimeters({ value: focalLength35mm })}`;
+    const text = `換算 ${formatMillimeters({ value: focalLength35mm })}`;
     return { text, spoken: `焦点距離 ${text}` };
   }
   const actual = formatMillimeters({ value: focalLength });
   const text =
     focalLength35mm !== undefined && Math.abs(focalLength35mm - focalLength) >= 1
-      ? `${actual}（35mm 判換算 ${formatMillimeters({ value: focalLength35mm })}）`
+      ? `${actual}（換算 ${formatMillimeters({ value: focalLength35mm })}）`
       : actual;
   return { text, spoken: `焦点距離 ${text}` };
 }

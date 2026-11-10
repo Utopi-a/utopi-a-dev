@@ -210,7 +210,7 @@ describe("GalleryManageView の投稿済みの一覧", () => {
 
     // 既定の照合は空白類（区切りの EN SPACE も）を半角空白 1 つに詰めてから比べる
     expect(
-      screen.getByText("FUJIFILM X-T5 23mm（35mm 判換算 35mm） f/1.4 1/250s ISO 160"),
+      screen.getByText("FUJIFILM X-T5 23mm（換算 35mm） f/1.4 1/250s ISO 160"),
     ).toBeInTheDocument();
   });
 

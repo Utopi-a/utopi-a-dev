@@ -50,13 +50,13 @@ describe("exposureValues", () => {
 
   it("焦点距離は 10mm 未満だけ小数 1 桁にし、換算値が 1mm 以上違えば添える", () => {
     expect(texts({ exif: { focalLength: 6.86, focalLength35mm: 24 } })).toEqual([
-      "6.9mm（35mm 判換算 24mm）",
+      "6.9mm（換算 24mm）",
     ]);
     expect(texts({ exif: { focalLength: 34.6, focalLength35mm: 35 } })).toEqual(["35mm"]);
     expect(texts({ exif: { focalLength: 23, focalLength35mm: 35 } })).toEqual([
-      "23mm（35mm 判換算 35mm）",
+      "23mm（換算 35mm）",
     ]);
-    expect(texts({ exif: { focalLength35mm: 26 } })).toEqual(["35mm 判換算 26mm"]);
+    expect(texts({ exif: { focalLength35mm: 26 } })).toEqual(["換算 26mm"]);
   });
 
   it("絞りは整数なら小数を付けない", () => {
@@ -102,7 +102,7 @@ describe("spokenExposureValues", () => {
         }),
       }),
     ).toBe(
-      "焦点距離 6.8mm（35mm 判換算 24mm）、絞り f/1.8、シャッター速度 1/250 秒、ISO 160、露出補正 +0.7 EV",
+      "焦点距離 6.8mm（換算 24mm）、絞り f/1.8、シャッター速度 1/250 秒、ISO 160、露出補正 +0.7 EV",
     );
     expect(spokenExposureValues({ values: exposureValues({ exif: { exposureTime: 2 } }) })).toBe(
       "シャッター速度 2 秒",

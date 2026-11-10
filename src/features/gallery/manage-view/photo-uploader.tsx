@@ -208,14 +208,19 @@ export function PhotoUploader() {
           <ul className="divide-y divide-border border-y border-border">
             {items.map((item) => (
               <li key={item.key} className="flex items-center gap-3 py-2">
-                {/* プレビューを出せない形式（PC の HEIC など）でも、行の高さが変わらないよう地を敷く */}
-                <img
-                  src={item.previewUrl}
-                  alt=""
-                  className="size-12 shrink-0 bg-muted object-cover"
-                  width={48}
-                  height={48}
-                />
+                {/* プレビューを出せない形式（PC の HEIC など）では、壊れた画像の印を出さず地だけを残す */}
+                <span className="size-12 shrink-0 bg-muted">
+                  <img
+                    src={item.previewUrl}
+                    alt=""
+                    className="size-full object-cover"
+                    width={48}
+                    height={48}
+                    onError={(event) => {
+                      event.currentTarget.hidden = true;
+                    }}
+                  />
+                </span>
                 <div className="min-w-0 flex-1 space-y-0.5">
                   <p className="truncate text-sm">{item.file.name}</p>
                   {item.status === "failed" ? (

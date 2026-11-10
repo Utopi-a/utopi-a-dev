@@ -10,10 +10,12 @@ const statusLabel = {
 export function LabView() {
   return (
     <>
-      <div className="pf-section">
-        <h1 className="pf-title">実験</h1>
-        <p className="pf-lead">認証・ブログ・課金など、個人サイトの裏側の試作を置くエリアです。</p>
-      </div>
+      <header className="pf-page-head">
+        <h1 className="site-title">実験</h1>
+        <p className="site-lead">
+          認証・ブログ・課金など、個人サイトの裏側の試作を置くエリアです。
+        </p>
+      </header>
 
       <LabStudioPanel />
 

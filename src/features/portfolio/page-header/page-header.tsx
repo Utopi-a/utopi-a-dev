@@ -13,19 +13,12 @@ export function PageHeader({ title, description, parent, className }: PageHeader
   return (
     <header className={cn("space-y-4", className)}>
       {parent ? (
-        <Link
-          href={parent.href}
-          className="inline-block text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
+        <Link href={parent.href} className="site-back-link inline-block">
           {parent.label}
         </Link>
       ) : null}
-      <h1 className="text-3xl font-semibold tracking-wide text-balance">{title}</h1>
-      {description ? (
-        <p className="max-w-[36em] leading-relaxed text-muted-foreground text-pretty">
-          {description}
-        </p>
-      ) : null}
+      <h1 className="site-title">{title}</h1>
+      {description ? <p className="site-lead">{description}</p> : null}
     </header>
   );
 }

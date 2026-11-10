@@ -16,7 +16,7 @@ export function SocialLinks({ className }: SocialLinksProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={label}
-            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors duration-150 hover:text-primary focus-visible:outline-2 focus-visible:outline-ring motion-reduce:transition-none"
           >
             <SocialBrandIcon icon={icon} className="size-4 text-current" />
           </a>

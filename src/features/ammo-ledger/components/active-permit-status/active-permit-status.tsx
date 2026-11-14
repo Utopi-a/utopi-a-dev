@@ -6,8 +6,13 @@ import {
   formatPermitExpiryLabel,
 } from "@/features/ammo-ledger/permit/compute-permit-expiry/compute-permit-expiry";
 import { resolvePermitStatus } from "@/features/ammo-ledger/permit/resolve-permit-status/resolve-permit-status";
+import { isUnlicensedAcquisitionPermit } from "@/features/ammo-ledger/schema/acquisition-permit-kind";
 import type { LedgerPurpose } from "@/features/ammo-ledger/schema/ledger-purpose";
 import { ledgerPurposeLabels } from "@/features/ammo-ledger/schema/ledger-purpose";
+import {
+  isUnlicensedAcquisitionPurpose,
+  unlicensedAcquisitionBasisLabels,
+} from "@/features/ammo-ledger/schema/unlicensed-acquisition-quota-schema";
 import { cn } from "@/lib/cn";
 import { formatIsoDateForDisplay } from "@/lib/date/format-iso-date-for-display";
 
@@ -58,6 +63,9 @@ export function ActivePermitStatus({
           <Link href={permitsSettingsHref} className="underline">
             譲受許可
           </Link>
+          {isUnlicensedAcquisitionPurpose(ledgerPurpose)
+            ? `か、${unlicensedAcquisitionBasisLabels[ledgerPurpose]}による無許可譲受の枠`
+            : ""}
           を登録してください。
         </p>
       </div>
@@ -83,6 +91,7 @@ export function ActivePermitStatus({
         <ul className="flex flex-wrap gap-2">
           {visiblePermits.map(({ permit, remaining, status }) => {
             const upcoming = status === "upcoming";
+            const quantityLabel = `${isUnlicensedAcquisitionPermit(permit) ? "上限" : "許可"} ${formatStockQuantity({ quantity: permit.quantity })}`;
             const urgent =
               !upcoming && computeDaysUntilExpiry({ expiresOn: permit.expiresOn, today }) <= 30;
 
@@ -103,8 +112,8 @@ export function ActivePermitStatus({
                 </span>
                 <span className="mt-0.5 block tabular-nums">
                   {upcoming
-                    ? `許可 ${formatStockQuantity({ quantity: permit.quantity })} · ${formatIsoDateForDisplay({ value: permit.grantedOn })}から有効`
-                    : `残り ${remaining.toLocaleString("ja-JP")} / 許可 ${formatStockQuantity({ quantity: permit.quantity })} · ${formatPermitExpiryLabel({ expiresOn: permit.expiresOn, today })}`}
+                    ? `${quantityLabel} · ${formatIsoDateForDisplay({ value: permit.grantedOn })}から有効`
+                    : `残り ${remaining.toLocaleString("ja-JP")} / ${quantityLabel} · ${formatPermitExpiryLabel({ expiresOn: permit.expiresOn, today })}`}
                 </span>
               </li>
             );

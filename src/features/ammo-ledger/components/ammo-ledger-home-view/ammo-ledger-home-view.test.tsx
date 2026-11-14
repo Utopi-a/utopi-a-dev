@@ -132,6 +132,7 @@ describe("AmmoLedgerHomeView の状況サマリ", () => {
   const permit = {
     id: "permit-1",
     userId: "user-1",
+    kind: "permit",
     ledgerPurpose: "shooting",
     name: "12番",
     permitPurpose: "標的射撃",

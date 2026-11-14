@@ -113,6 +113,13 @@
       "when": 1794307242534,
       "tag": "0015_gallery_photo",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794665252021,
+      "tag": "0016_acquisition_permit_kind",
+      "breakpoints": true
     }
   ]
 }

@@ -23,6 +23,7 @@ function buildProfile({ ownerAddress }: { ownerAddress: string | null }) {
 const permit = {
   id: "permit-1",
   userId: "user-1",
+  kind: "permit",
   ledgerPurpose: "shooting",
   name: "許可1",
   permitPurpose: "標的射撃",

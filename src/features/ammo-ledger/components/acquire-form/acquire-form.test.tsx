@@ -99,6 +99,7 @@ const permits = [
   {
     id: "permit-hunting",
     userId: "user-1",
+    kind: "permit",
     ledgerPurpose: "hunting",
     name: "12番",
     permitPurpose: "狩猟",
@@ -112,6 +113,7 @@ const permits = [
   {
     id: "permit-shooting",
     userId: "user-1",
+    kind: "permit",
     ledgerPurpose: "shooting",
     name: "12番",
     permitPurpose: "射撃",
@@ -123,6 +125,54 @@ const permits = [
     updatedAt: new Date("2026-01-01T00:00:00Z"),
   },
 ];
+
+const unlicensedQuota = {
+  id: "quota-hunting",
+  userId: "user-1",
+  kind: "unlicensed",
+  ledgerPurpose: "hunting",
+  name: "無許可譲受",
+  permitPurpose: "狩猟（鳥獣の捕獲）",
+  grantedOn: "2026-10-15",
+  expiresOn: "2027-04-15",
+  quantity: 300,
+  memo: null,
+  createdAt: new Date("2026-10-15T00:00:00Z"),
+  updatedAt: new Date("2026-10-15T00:00:00Z"),
+};
+
+const rifleAmmoType = {
+  ...huntingAmmoType,
+  id: "ammo-rifle",
+  name: ".308 Win",
+  caliber: ".308",
+  cartridgeType: "rifle",
+  gaugeNumber: null,
+  roundsPerBox: 20,
+};
+
+function buildPermitEvent({
+  permitId,
+  occurredOn,
+  quantity,
+}: {
+  permitId: string;
+  occurredOn: string;
+  quantity: number;
+}) {
+  return {
+    id: `grant-${permitId}`,
+    userId: "user-1",
+    permitId,
+    purpose: "hunting",
+    eventKind: "grant",
+    occurredOn,
+    quantity,
+    memo: null,
+    createdAt: new Date(`${occurredOn}T00:00:00Z`),
+    updatedAt: new Date(`${occurredOn}T00:00:00Z`),
+  };
+}
 
 describe("AcquireForm", () => {
   it("弾種の既定用途に有効な許可がなければ警告し、射撃用へ直すと警告を消す", () => {
@@ -140,7 +190,7 @@ describe("AcquireForm", () => {
     expect(screen.getByLabelText("用途区分")).toHaveValue("hunting");
     expect(
       screen.getByText(
-        "この譲受日に有効な狩猟用の譲受許可がありません。用途または許可期間を確認してください。",
+        "この譲受日に有効な狩猟用の譲受許可も、無許可譲受の枠もありません。用途または許可期間を確認してください。",
       ),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
@@ -148,6 +198,9 @@ describe("AcquireForm", () => {
       "href",
       "/lab/ammo-ledger/settings/permits",
     );
+    expect(
+      screen.getByRole("link", { name: "狩猟者登録で無許可譲受の枠を登録する" }),
+    ).toHaveAttribute("href", "/lab/ammo-ledger/settings/permits#unlicensed");
 
     fireEvent.change(screen.getByLabelText("用途区分"), { target: { value: "shooting" } });
 
@@ -217,6 +270,87 @@ describe("AcquireForm", () => {
     expect(
       screen.getByText("許可残 50個 → 記録後 -25個（許可数を超えています）"),
     ).toBeInTheDocument();
+  });
+
+  it("狩猟者登録の無許可譲受の枠だけで保存でき、残りを無許可譲受の上限として示す", () => {
+    const initialWorkspace = {
+      ownerName: "テスト利用者",
+      workspace: buildTestWorkspace({
+        entries: [],
+        permitEvents: [
+          buildPermitEvent({
+            permitId: unlicensedQuota.id,
+            occurredOn: unlicensedQuota.grantedOn,
+            quantity: 300,
+          }),
+        ],
+      }),
+    };
+    render(
+      <AcquireForm
+        ammoTypes={[huntingAmmoType]}
+        stockByAmmoTypeId={{}}
+        permits={[unlicensedQuota]}
+        initialValues={{
+          occurredOn: "2026-11-10",
+          purpose: "hunting",
+          ammoTypeId: "ammo-hunting",
+          boxCount: 1,
+        }}
+      />,
+      { initialWorkspace },
+    );
+
+    expect(screen.queryByText(/この譲受日に有効な/)).not.toBeInTheDocument();
+    expect(screen.getByText("無許可譲受の残り 300個 → 記録後 275個")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "保存" })).toBeEnabled();
+  });
+
+  it("無許可譲受でライフル実包が期間中50個を超えると警告する", () => {
+    const initialWorkspace = {
+      ownerName: "テスト利用者",
+      workspace: buildTestWorkspace({
+        entries: [
+          buildTestEntry({
+            id: "rifle-1",
+            category: "acquire",
+            purpose: "hunting",
+            occurredOn: "2026-11-01",
+            quantity: 40,
+            ammoCartridgeType: "rifle",
+          }),
+        ],
+        permitEvents: [
+          buildPermitEvent({
+            permitId: unlicensedQuota.id,
+            occurredOn: unlicensedQuota.grantedOn,
+            quantity: 300,
+          }),
+        ],
+      }),
+    };
+    render(
+      <AcquireForm
+        ammoTypes={[rifleAmmoType]}
+        stockByAmmoTypeId={{}}
+        permits={[unlicensedQuota]}
+        initialValues={{
+          occurredOn: "2026-11-10",
+          purpose: "hunting",
+          ammoTypeId: rifleAmmoType.id,
+          boxCount: 1,
+        }}
+      />,
+      { initialWorkspace },
+    );
+
+    expect(
+      screen.getByText(
+        "無許可で譲り受けられるライフル実包は50個までです（この期間 40個 → 記録後 60個）",
+      ),
+    ).toBeInTheDocument();
+    // 上限を超えても実際の譲受は記録できるよう、保存は止めない。
+    expect(screen.getByRole("button", { name: "保存" })).toBeEnabled();
   });
 
   it("編集では弾を選び直しても元の用途を保つ", () => {

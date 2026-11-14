@@ -25,6 +25,7 @@ function buildPermit({
   return {
     id,
     userId: "user-1",
+    kind: "permit",
     ledgerPurpose,
     name: "12番",
     permitPurpose: "標的射撃",

@@ -36,6 +36,7 @@ describe("getOpeningBalance", () => {
         {
           id: "permit-1",
           userId: "u1",
+          kind: "permit",
           ledgerPurpose: "shooting",
           name: "12番",
           permitPurpose: "標的射撃",

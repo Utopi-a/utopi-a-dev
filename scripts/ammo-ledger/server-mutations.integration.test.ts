@@ -12,6 +12,7 @@ let saveOpeningBalanceAction: typeof import("@/features/ammo-ledger/opening-bala
 let upsertLedgerProfileAction: typeof import("@/features/ammo-ledger/profile/upsert-ledger-profile/upsert-ledger-profile-action").upsertLedgerProfileAction;
 let getLedgerProfile: typeof import("@/features/ammo-ledger/profile/get-ledger-profile/get-ledger-profile").getLedgerProfile;
 let createTransactionAction: typeof import("@/features/ammo-ledger/transactions/create-transaction/create-transaction-action").createTransactionAction;
+let createUnlicensedAcquisitionQuotaAction: typeof import("@/features/ammo-ledger/permit/create-unlicensed-acquisition-quota/create-unlicensed-acquisition-quota-action").createUnlicensedAcquisitionQuotaAction;
 let reorderLedgerEntryAction: typeof import("@/features/ammo-ledger/transactions/reorder-ledger-entry/reorder-ledger-entry-action").reorderLedgerEntryAction;
 let getDb: typeof import("@/db").getDb | undefined;
 let databaseCreated = false;
@@ -59,6 +60,9 @@ beforeAll(async () => {
   ));
   ({ createTransactionAction } = await import(
     "@/features/ammo-ledger/transactions/create-transaction/create-transaction-action"
+  ));
+  ({ createUnlicensedAcquisitionQuotaAction } = await import(
+    "@/features/ammo-ledger/permit/create-unlicensed-acquisition-quota/create-unlicensed-acquisition-quota-action"
   ));
   ({ reorderLedgerEntryAction } = await import(
     "@/features/ammo-ledger/transactions/reorder-ledger-entry/reorder-ledger-entry-action"
@@ -855,5 +859,64 @@ describe("ammo ledger server mutations against local PostgreSQL", () => {
     expect(result.ok && result.dayOrders).toHaveLength(2);
     const order = Object.fromEntries(rows.map((row) => [row.id, row.day_order]));
     expect(order[second.entry.id]).toBeLessThan(order[first.entry.id]);
+  });
+
+  it("狩猟者登録の無許可譲受の枠で、譲受許可のない狩猟用の譲受を保存できる", async () => {
+    const fixture = await seedLedger({ stock: 0 });
+    const huntingAcquire = {
+      inputKind: "acquire" as const,
+      purpose: "hunting" as const,
+      occurredOn: "2026-11-10",
+      ammoTypeId: fixture.ammoTypeId,
+      counterpartyId: fixture.counterpartyId,
+      outerBoxCount: 0,
+      boxCount: 2,
+      looseRounds: 0,
+    };
+
+    await expect(createTransactionAction(huntingAcquire)).resolves.toMatchObject({ ok: false });
+    await expect(
+      createUnlicensedAcquisitionQuotaAction({
+        ledgerPurpose: "shooting",
+        startsOn: "2026-10-15",
+        endsOn: "2027-04-15",
+      }),
+    ).resolves.toMatchObject({ ok: false });
+
+    await expect(
+      createUnlicensedAcquisitionQuotaAction({
+        ledgerPurpose: "hunting",
+        startsOn: "2026-10-15",
+        endsOn: "2027-04-15",
+        memo: "東京都",
+      }),
+    ).resolves.toEqual({ ok: true });
+
+    const permits = await sql`
+      select p.kind, p.ledger_purpose, p.name, p.permit_purpose, p.granted_on, p.expires_on,
+        p.quantity, p.memo,
+        (select string_agg(e.event_kind || ':' || e.occurred_on || ':' || e.quantity, ',' order by e.event_kind)
+          from ammo_permit_event e where e.permit_id = p.id) as events
+      from ammo_acquisition_permit p where p.user_id = ${fixture.userId} order by p.kind`;
+    expect(permits).toEqual([
+      // 既存の許可は列の既定値で譲受許可のまま
+      expect.objectContaining({ kind: "permit", ledger_purpose: "shooting" }),
+      {
+        kind: "unlicensed",
+        ledger_purpose: "hunting",
+        name: "無許可譲受",
+        permit_purpose: "狩猟（鳥獣の捕獲）",
+        granted_on: "2026-10-15",
+        expires_on: "2027-04-15",
+        quantity: 300,
+        memo: "東京都",
+        events: "expiry:2027-04-15:0,grant:2026-10-15:300",
+      },
+    ]);
+
+    await expect(createTransactionAction(huntingAcquire)).resolves.toMatchObject({
+      ok: true,
+      entry: { category: "acquire", purpose: "hunting", quantity: 50 },
+    });
   });
 });

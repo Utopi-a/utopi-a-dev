@@ -101,6 +101,7 @@ export const ammoAcquisitionPermit = pgTable("ammo_acquisition_permit", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   ledgerPurpose: text("ledger_purpose").notNull(),
+  kind: text("kind").notNull().default("permit"),
   name: text("name").notNull(),
   permitPurpose: text("permit_purpose").notNull(),
   grantedOn: text("granted_on").notNull(),

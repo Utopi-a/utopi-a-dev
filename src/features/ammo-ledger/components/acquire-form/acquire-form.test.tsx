@@ -99,6 +99,7 @@ const permits = [
   {
     id: "permit-hunting",
     userId: "user-1",
+    kind: "permit",
     ledgerPurpose: "hunting",
     name: "12番",
     permitPurpose: "狩猟",
@@ -112,6 +113,7 @@ const permits = [
   {
     id: "permit-shooting",
     userId: "user-1",
+    kind: "permit",
     ledgerPurpose: "shooting",
     name: "12番",
     permitPurpose: "射撃",

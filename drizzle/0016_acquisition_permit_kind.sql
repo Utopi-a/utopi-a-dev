@@ -1,0 +1,1 @@
+ALTER TABLE "ammo_acquisition_permit" ADD COLUMN "kind" text DEFAULT 'permit' NOT NULL;

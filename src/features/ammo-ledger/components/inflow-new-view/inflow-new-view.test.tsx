@@ -44,6 +44,7 @@ vi.mock("@/features/ammo-ledger/components/receive-form/receive-form", () => ({
 const permit = {
   id: "permit-1",
   userId: "user-1",
+  kind: "permit",
   ledgerPurpose: "shooting",
   name: "許可1",
   permitPurpose: "標的射撃",

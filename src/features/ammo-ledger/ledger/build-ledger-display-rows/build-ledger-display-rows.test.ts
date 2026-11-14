@@ -10,6 +10,7 @@ import {
 const permit = {
   id: "permit-1",
   userId: "u1",
+  kind: "permit",
   ledgerPurpose: "shooting",
   name: "12番",
   permitPurpose: "標的射撃",
@@ -24,6 +25,7 @@ const permit = {
 const permit2 = {
   id: "permit-2",
   userId: "u1",
+  kind: "permit",
   ledgerPurpose: "shooting",
   name: "12番",
   permitPurpose: "標的射撃",

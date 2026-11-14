@@ -15,6 +15,7 @@ import {
   type PermitStatus,
   resolvePermitStatus,
 } from "@/features/ammo-ledger/permit/resolve-permit-status/resolve-permit-status";
+import { isUnlicensedAcquisitionPermit } from "@/features/ammo-ledger/schema/acquisition-permit-kind";
 import type { LedgerCategory } from "@/features/ammo-ledger/schema/ledger-category";
 import {
   type LedgerPurpose,
@@ -82,6 +83,7 @@ function formatStatusLabel({ item }: { item: PermitListItem }): string {
 function PermitRow({ item, today }: { item: PermitListItem; today: string }) {
   const { permit, status } = item;
   const isEnded = status === "used_up" || status === "expired";
+  const isUnlicensed = isUnlicensedAcquisitionPermit(permit);
 
   return (
     <MasterListItem className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
@@ -106,9 +108,9 @@ function PermitRow({ item, today }: { item: PermitListItem; today: string }) {
           {formatStatusLabel({ item })}
         </span>
         <span className="mt-0.5 block text-muted-foreground">
-          {ledgerPurposeLabels[permit.ledgerPurpose as LedgerPurpose]} / 付与{" "}
-          {formatIsoDateForDisplay({ value: permit.grantedOn })} / 許可{" "}
-          {formatStockQuantity({ quantity: permit.quantity })} /{" "}
+          {ledgerPurposeLabels[permit.ledgerPurpose as LedgerPurpose]} /{" "}
+          {isUnlicensed ? "開始" : "付与"} {formatIsoDateForDisplay({ value: permit.grantedOn })} /{" "}
+          {isUnlicensed ? "上限" : "許可"} {formatStockQuantity({ quantity: permit.quantity })} /{" "}
           {isEnded
             ? `${formatIsoDateForDisplay({ value: permit.expiresOn })}まで`
             : formatPermitExpiryLabel({ expiresOn: permit.expiresOn, today })}

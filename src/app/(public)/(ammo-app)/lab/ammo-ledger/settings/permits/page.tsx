@@ -4,6 +4,7 @@ import { requireAmmoUser } from "@/features/ammo-ledger/auth/require-ammo-user";
 import { AcquisitionPermitForm } from "@/features/ammo-ledger/components/acquisition-permit-form/acquisition-permit-form";
 import { AcquisitionPermitList } from "@/features/ammo-ledger/components/acquisition-permit-list/acquisition-permit-list";
 import { AmmoLedgerPanel } from "@/features/ammo-ledger/components/ammo-ledger-panel/ammo-ledger-panel";
+import { UnlicensedAcquisitionQuotaForm } from "@/features/ammo-ledger/components/unlicensed-acquisition-quota-form/unlicensed-acquisition-quota-form";
 import { listLedgerEntries } from "@/features/ammo-ledger/ledger/list-ledger-entries/list-ledger-entries";
 import {
   resolveReturnToPath,
@@ -36,7 +37,7 @@ export default async function AcquisitionPermitsSettingsPage({ searchParams }: P
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">譲受許可</h1>
         <p className="text-sm text-muted-foreground">
-          警察から交付された譲受許可を登録します。帳簿の許可残数計算に使われます。
+          警察から交付された譲受許可と、狩猟者登録・捕獲許可による無許可譲受の枠を登録します。帳簿の許可残数計算に使われます。
         </p>
         {returnTo ? (
           <p className="text-sm text-muted-foreground">許可を保存すると、記録の入力に戻ります。</p>
@@ -64,6 +65,12 @@ export default async function AcquisitionPermitsSettingsPage({ searchParams }: P
       <AmmoLedgerPanel title="許可を追加">
         <AcquisitionPermitForm returnTo={returnTo} />
       </AmmoLedgerPanel>
+
+      <div id="unlicensed">
+        <AmmoLedgerPanel title="無許可譲受の枠を追加">
+          <UnlicensedAcquisitionQuotaForm returnTo={returnTo} />
+        </AmmoLedgerPanel>
+      </div>
     </div>
   );
 }
